@@ -1,7 +1,7 @@
 import os
 import ssl
 import shutil
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from deepface import DeepFace
@@ -11,7 +11,6 @@ from youtubesearchpython import VideosSearch
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-# Fix lỗi SSL
 try:
     _create_unverified_https_context = ssl._create_unverified_context
 except AttributeError:
@@ -29,7 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- 1. TỪ KHÓA TÌM KIẾM (MUSIC) ---
+# --- 1. TỪ KHÓA MOOD ---
 MUSIC_KEYWORDS = {
     "happy": "nhạc trẻ remix vui vẻ tiktok", 
     "sad": "nhạc suy tâm trạng buồn",
@@ -40,50 +39,33 @@ MUSIC_KEYWORDS = {
     "disgust": "nhạc chia tay người yêu cũ"
 }
 
-# --- 2. TỪ KHÓA TÌM KIẾM (PODCAST) ---
-# Mapping mood to podcast topics: Business, Healing, Lessons
 PODCAST_KEYWORDS = {
-    "happy": "podcast phát triển bản thân kinh doanh",   # Business/Growth for high energy
-    "sad": "podcast chữa lành tâm hồn",                 # Healing for low energy
-    "angry": "podcast kiểm soát nóng giận cảm xúc",     # Management for anger
-    "neutral": "podcast bài học cuộc sống tri thức",    # Lessons/Knowledge for focus
-    "fear": "podcast thiền bình an vượt qua nỗi sợ",    # Calming/Healing
-    "surprise": "podcast tin tức công nghệ xu hướng",   # News/Trends
-    "disgust": "podcast buông bỏ chữa lành"             # Healing
+    "happy": "podcast phát triển bản thân kinh doanh",
+    "sad": "podcast chữa lành tâm hồn",
+    "angry": "podcast kiểm soát nóng giận cảm xúc",
+    "neutral": "podcast bài học cuộc sống tri thức",
+    "fear": "podcast thiền bình an vượt qua nỗi sợ",
+    "surprise": "podcast tin tức công nghệ xu hướng",
+    "disgust": "podcast buông bỏ chữa lành"
 }
 
-# --- 3. BỘ NHỚ ĐỆM (CACHE) ---
+# --- 2. BỘ NHỚ ĐỆM ---
 CONTENT_CACHE = {} 
-
 BACKUP_CONTENT = [
     {"title": "Podcast Chữa Lành", "link": "https://www.youtube.com/watch?v=2eR3F5jHkG8", "thumbnail": "https://via.placeholder.com/120", "duration": "PODCAST"},
     {"title": "Bài Học Kinh Doanh", "link": "https://www.youtube.com/watch?v=C7Nf1e5-CLQ", "thumbnail": "https://via.placeholder.com/120", "duration": "PODCAST"}
 ]
 
-def search_content_by_mood(mood, content_type="music"):
-    # Tạo key cache unique: ví dụ "happy_music" hoặc "sad_podcast"
-    cache_key = f"{mood}_{content_type}"
-
-    # KIỂM TRA CACHE
-    if cache_key in CONTENT_CACHE:
-        print(f"🚀 Dùng Cache cho: {cache_key}")
-        return CONTENT_CACHE[cache_key]
-
-    # Chọn từ khóa dựa trên loại nội dung
-    if content_type == "podcast":
-        query = PODCAST_KEYWORDS.get(mood, "podcast hay nhất")
-    else:
-        query = MUSIC_KEYWORDS.get(mood, "nhạc trẻ hay nhất")
-    
-    print(f"🔍 Đang tìm {content_type} trên YouTube: {query}...")
-    
+# Hàm tìm kiếm chung
+def perform_youtube_search(query):
     try:
+        print(f"🔍 Searching YouTube: {query}")
         videos_search = VideosSearch(query, limit=10)
         results = videos_search.result()
         
         recommendations = []
         if not results or 'result' not in results:
-            return BACKUP_CONTENT
+            return []
 
         for video in results['result']:
             if video.get('type') != 'video': continue 
@@ -97,28 +79,51 @@ def search_content_by_mood(mood, content_type="music"):
             })
             if len(recommendations) >= 7: break
         
-        if not recommendations: return BACKUP_CONTENT
-
-        # LƯU VÀO CACHE
-        CONTENT_CACHE[cache_key] = recommendations
         return recommendations
-
     except Exception as e:
-        print(f"❌ Lỗi tìm kiếm: {e}")
-        return BACKUP_CONTENT
+        print(f"❌ Search Error: {e}")
+        return []
+
+def search_content_by_mood(mood, content_type="music"):
+    cache_key = f"{mood}_{content_type}"
+    if cache_key in CONTENT_CACHE:
+        return CONTENT_CACHE[cache_key]
+
+    if content_type == "podcast":
+        query = PODCAST_KEYWORDS.get(mood, "podcast hay nhất")
+    else:
+        query = MUSIC_KEYWORDS.get(mood, "nhạc trẻ hay nhất")
+    
+    results = perform_youtube_search(query)
+    
+    if not results: return BACKUP_CONTENT
+    
+    CONTENT_CACHE[cache_key] = results
+    return results
 
 @app.get("/")
 async def serve_index():
     return FileResponse("index.html")
 
+# --- API 1: TÌM KIẾM THEO TÊN (MỚI) ---
+@app.get("/search")
+async def search_manual(q: str = Query(..., min_length=1), type: str = "music"):
+    # Kết hợp từ khóa người dùng nhập + loại (music/podcast) để kết quả chuẩn hơn
+    search_query = f"{q} {type}" if type == "podcast" else f"{q} official mv"
+    
+    results = perform_youtube_search(search_query)
+    if not results: results = BACKUP_CONTENT
+    
+    return {"mood": "manual", "recommendations": results}
+
+# --- API 2: TÌM KIẾM THEO MOOD (CŨ) ---
 @app.post("/recommend")
-async def recommend(file: UploadFile = File(...), type: str = "music"): # Thêm tham số type
+async def recommend(file: UploadFile = File(...), type: str = "music"):
     temp_filename = f"temp_{file.filename}"
     try:
         with open(temp_filename, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # --- AI NHẬN DIỆN ---
         analysis = DeepFace.analyze(
             img_path=temp_filename, 
             actions=['emotion'], 
@@ -131,13 +136,12 @@ async def recommend(file: UploadFile = File(...), type: str = "music"): # Thêm 
         detected_mood = result['dominant_emotion'] 
         print(f"✅ Mood: {detected_mood} | Type: {type}")
 
-        # Tìm kiếm theo mood và type (music/podcast)
         recommendations = search_content_by_mood(detected_mood, content_type=type)
 
         return {"mood": detected_mood, "recommendations": recommendations}
 
     except Exception as e:
-        print(f"💀 Lỗi: {e}")
+        print(f"💀 Error: {e}")
         return {"mood": "error", "recommendations": BACKUP_CONTENT}
     finally:
         if os.path.exists(temp_filename): os.remove(temp_filename)
