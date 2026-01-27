@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Mood AI - Library & Favorites</title>
+    <title>Mood AI - Search & Library</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Icons+Round&display=swap" rel="stylesheet"/>
     <script>
@@ -58,11 +58,7 @@
             width: 100%; height: 3px; cursor: pointer; background: #334155; border-radius: 10px;
         }
         
-        /* Hiệu ứng Toast Notification */
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .toast-enter { animation: slideIn 0.3s forwards; }
     </style>
 </head>
@@ -121,13 +117,13 @@
             <div class="glass-panel p-6 rounded-3xl flex items-center justify-between">
                 <div>
                     <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Detected Emotion</p>
-                    <h2 id="mood-display" class="text-3xl font-black text-red-500 pulse-angry uppercase italic">Waiting...</h2>
+                    <h2 id="mood-display" class="text-3xl font-black text-slate-400 uppercase italic">Waiting...</h2>
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Confidence Score</p>
                     <div class="flex items-center gap-2">
                         <div class="w-24 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div id="confidence-bar" class="bg-red-500 h-full w-0"></div>
+                            <div id="confidence-bar" class="bg-slate-500 h-full w-0"></div>
                         </div>
                         <span id="confidence-text" class="text-sm font-bold">0%</span>
                     </div>
@@ -136,10 +132,24 @@
         </section>
 
         <section class="lg:col-span-7 space-y-6 h-full">
+            
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <span class="material-icons-round text-slate-500">search</span>
+                </div>
+                <input id="search-input" type="text" 
+                    class="w-full pl-12 pr-12 py-4 rounded-2xl bg-white dark:bg-card-dark border border-slate-200 dark:border-white/5 focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-xl shadow-black/5 text-sm font-medium"
+                    placeholder="Tìm tên nghệ sĩ bạn muốn? Gõ vào đây..."
+                />
+                <button id="search-btn" class="absolute inset-y-2 right-2 px-4 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-xl transition-all font-bold text-xs uppercase tracking-wider flex items-center">
+                    Go
+                </button>
+            </div>
+
             <div class="flex items-center justify-between px-2">
                 <div>
                     <h3 class="text-xl font-bold">Tailored for your Mood</h3>
-                    <p id="mood-description" class="text-slate-500 dark:text-slate-400 text-sm">Waiting for mood detection...</p>
+                    <p id="mood-description" class="text-slate-500 dark:text-slate-400 text-sm">Or search manually above</p>
                 </div>
                 <div class="flex gap-2 bg-white/5 p-1 rounded-2xl">
                     <button id="tab-music" onclick="switchTab('music')" class="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 transition-all flex items-center gap-2">
@@ -151,9 +161,9 @@
                 </div>
             </div>
 
-            <div id="recommendations-container" class="space-y-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
+            <div id="recommendations-container" class="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                 <div class="text-center py-8 text-slate-400">
-                    <p>Select your preferred mode (Music or Podcast) and analyze your mood!</p>
+                    <p>Select your preferred mode or search for an artist!</p>
                 </div>
             </div>
         </section>
@@ -216,7 +226,6 @@
                     <button id="more-options-btn" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors">
                         <span class="material-icons-round">more_vert</span>
                     </button>
-                    
                     <div id="options-menu" class="hidden absolute bottom-full right-0 mb-2 w-56 bg-card-dark border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-[fadeIn_0.2s_ease-out] z-[100]">
                         <a id="open-youtube-link" href="#" target="_blank" class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm font-medium text-slate-300 hover:text-white transition-colors border-b border-white/5">
                             <span class="material-icons-round text-lg">open_in_new</span>
@@ -253,6 +262,10 @@
     const tabMusic = document.getElementById('tab-music');
     const tabPodcast = document.getElementById('tab-podcast');
 
+    // Search Elements
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+
     // Player Elements
     const playerTitle = document.getElementById('player-title');
     const playerThumbnail = document.getElementById('player-thumbnail');
@@ -282,9 +295,9 @@
     let isPlayerReady = false;
     let isPlaying = false;
     let updateInterval;
-    let currentTrackData = null; // Lưu data bài đang phát
+    let currentTrackData = null; 
 
-    // Khởi tạo Library từ LocalStorage
+    // Load favorites
     let favorites = JSON.parse(localStorage.getItem('moodAiFavorites')) || [];
     updateLibraryCount();
 
@@ -295,10 +308,39 @@
         "neutral": "Focus and knowledge",
         "fear": "Calm, reassuring content",
         "surprise": "Trending, energetic hits",
-        "disgust": "Healing and emotional release"
+        "disgust": "Healing and emotional release",
+        "manual": "Search results for your request"
     };
 
-    // --- 1. SETUP YOUTUBE API ---
+    // --- 1. SEARCH LOGIC (NEW) ---
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') performSearch();
+    });
+
+    async function performSearch() {
+        const query = searchInput.value.trim();
+        if (!query) return;
+
+        // UI Updates
+        recommendationsContainer.innerHTML = '<div class="text-center py-8 text-slate-400"><p>Searching for "' + query + '"...</p></div>';
+        moodDisplay.innerText = "SEARCH";
+        moodDisplay.className = "text-3xl font-black text-accent uppercase italic";
+        moodDescription.innerText = `Results for artist: ${query}`;
+        confidenceBar.style.width = "0%";
+        confidenceText.innerText = "";
+        
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/search?q=${encodeURIComponent(query)}&type=${currentType}`);
+            const data = await response.json();
+            renderRecommendations(data.recommendations);
+        } catch (error) {
+            console.error(error);
+            recommendationsContainer.innerHTML = '<div class="text-center py-8 text-red-400"><p>Search failed.</p></div>';
+        }
+    }
+
+    // --- 2. YOUTUBE API ---
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -334,7 +376,7 @@
         }
     }
 
-    // --- 2. LOGIC THANH TIẾN TRÌNH ---
+    // --- 3. SEEK BAR ---
     function startProgressLoop() {
         stopProgressLoop();
         updateInterval = setInterval(() => {
@@ -366,7 +408,7 @@
         return `${min}:${sec < 10 ? '0' : ''}${sec}`;
     }
 
-    // --- 3. MENU 3 CHẤM & YÊU THÍCH ---
+    // --- 4. MENU & FAVORITES ---
     moreOptionsBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         optionsMenu.classList.toggle('hidden');
@@ -378,49 +420,38 @@
         }
     });
 
-    // CLICK: THÊM VÀO THƯ VIỆN
     addToFavBtn.addEventListener('click', () => {
         if (!currentTrackData) return;
-
-        // Check trùng
         const exists = favorites.some(fav => fav.link === currentTrackData.link);
         if (!exists) {
             favorites.push(currentTrackData);
             localStorage.setItem('moodAiFavorites', JSON.stringify(favorites));
             updateLibraryCount();
-            renderLibrary(); // Re-render nếu đang mở tab library
-            showToast(`Đã thêm "${currentTrackData.title}" vào Library`, 'success');
+            renderLibrary();
+            showToast(`Added "${currentTrackData.title}" to Library`, 'success');
         } else {
-            showToast('Bài này đã có trong Library rồi!', 'info');
+            showToast('Already in Library!', 'info');
         }
         optionsMenu.classList.add('hidden');
     });
 
-    function updateLibraryCount() {
-        libCountEl.innerText = favorites.length;
-    }
+    function updateLibraryCount() { libCountEl.innerText = favorites.length; }
 
     function showToast(message, type = 'success') {
         const container = document.getElementById('toast-container');
         const toast = document.createElement('div');
         const bgColor = type === 'success' ? 'bg-green-500' : 'bg-slate-700';
-        
         toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl text-white font-bold text-sm ${bgColor} toast-enter`;
-        toast.innerHTML = `
-            <span class="material-icons-round text-sm">${type === 'success' ? 'check_circle' : 'info'}</span>
-            ${message}
-        `;
-        
+        toast.innerHTML = `<span class="material-icons-round text-sm">${type === 'success' ? 'check_circle' : 'info'}</span>${message}`;
         container.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
 
-    // --- 4. NAVIGATION & VIEW LOGIC ---
+    // --- 5. NAVIGATION ---
     window.showView = function(viewName) {
         if (viewName === 'dashboard') {
             viewDashboard.classList.remove('hidden');
             viewLibrary.classList.add('hidden');
-            
             navDashboard.classList.add('bg-primary', 'text-white', 'shadow-lg');
             navDashboard.classList.remove('hover:bg-white/5');
             navLibrary.classList.remove('bg-primary', 'text-white', 'shadow-lg');
@@ -428,12 +459,10 @@
         } else {
             viewDashboard.classList.add('hidden');
             viewLibrary.classList.remove('hidden');
-            
             navLibrary.classList.add('bg-primary', 'text-white', 'shadow-lg');
             navLibrary.classList.remove('hover:bg-white/5');
             navDashboard.classList.remove('bg-primary', 'text-white', 'shadow-lg');
             navDashboard.classList.add('hover:bg-white/5');
-            
             renderLibrary();
         }
     };
@@ -470,21 +499,17 @@
         });
     }
 
-    window.playTrackFromLibrary = function(index) {
-        playTrack(favorites[index]);
-    };
-
+    window.playTrackFromLibrary = function(index) { playTrack(favorites[index]); };
     window.removeFromLibrary = function(index) {
-        const removedItem = favorites[index];
         favorites.splice(index, 1);
         localStorage.setItem('moodAiFavorites', JSON.stringify(favorites));
         renderLibrary();
         updateLibraryCount();
-        showToast(`Đã xóa "${removedItem.title}"`, 'info');
+        showToast('Removed track', 'info');
     };
     
     window.clearLibrary = function() {
-        if(confirm("Bạn có chắc muốn xóa hết thư viện không?")) {
+        if(confirm("Clear all favorites?")) {
             favorites = [];
             localStorage.setItem('moodAiFavorites', JSON.stringify(favorites));
             renderLibrary();
@@ -492,13 +517,13 @@
         }
     }
 
-    // --- 5. PLAYER CONTROLS ---
+    // --- 6. PLAYER CONTROLS ---
     playerPlayBtn.addEventListener('click', () => {
         if (!isPlayerReady) return;
         isPlaying ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
     });
 
-    // --- 6. LOGIC CHÍNH & CAMERA ---
+    // --- 7. MAIN LOGIC ---
     function switchTab(type) {
         currentType = type;
         const activeClass = ['bg-primary', 'text-white', 'shadow-lg', 'shadow-primary/20'];
@@ -516,9 +541,9 @@
             tabMusic.classList.add(...inactiveClass);
         }
         
-        const currentMood = moodDisplay.innerText.toLowerCase();
-        if (currentMood !== "waiting..." && currentMood !== "analyzing...") {
-             recommendationsContainer.innerHTML = `<div class="text-center py-8 text-slate-400"><p>Switched to <b>${type.toUpperCase()}</b> mode.<br>Please click 'Analyze Mood' again.</p></div>`;
+        // Refresh manual search if input exists
+        if (searchInput.value.trim() !== "") {
+             performSearch();
         }
     }
 
@@ -530,6 +555,7 @@
     }
 
     analyzeBtn.addEventListener('click', async () => {
+        searchInput.value = ""; // Clear manual search
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
@@ -539,7 +565,7 @@
     async function sendToBackend(imageBlob) {
         analyzeBtn.disabled = true;
         moodDisplay.innerText = "Analyzing...";
-        moodDisplay.classList.remove('text-red-500', 'text-yellow-500', 'text-blue-500', 'text-green-500', 'text-purple-500', 'text-pink-500', 'text-orange-500');
+        moodDisplay.classList.remove('text-red-500', 'text-yellow-500', 'text-blue-500', 'text-green-500', 'text-purple-500', 'text-pink-500', 'text-orange-500', 'text-accent');
 
         const formData = new FormData();
         formData.append('file', imageBlob, 'capture.jpg');
@@ -606,14 +632,10 @@
     }
 
     function playTrack(item) {
-        // Cập nhật biến toàn cục
         currentTrackData = item;
-        
         playerBar.classList.remove('hidden');
         playerTitle.innerText = item.title;
         playerThumbnail.src = item.thumbnail;
-        
-        // Cập nhật link cho nút "Mở trên YouTube"
         openYoutubeLink.href = item.link;
 
         let videoId = "";
