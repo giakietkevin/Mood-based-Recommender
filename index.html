@@ -196,21 +196,41 @@
             }
         }
 
-        function renderRecommendations(items) {
-            list.innerHTML = "";
-            if (!items || items.length === 0) {
-                list.innerHTML = "<li>Không có dữ liệu gợi ý.</li>";
-                return;
-            }
-            items.forEach(item => {
-                const li = document.createElement('li');
-                li.className = 'recommend-item';
-                // Giả sử item là string tên phim, sau này có thể là object {title, poster...}
-                li.innerText = item; 
-                list.appendChild(li);
-            });
+       function renderRecommendations(items) {
+    list.innerHTML = "";
+    
+    if (!items || items.length === 0) {
+        list.innerHTML = "<li class='recommend-item'>Không tìm thấy gợi ý phù hợp.</li>";
+        return;
+    }
+
+    items.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'recommend-item';
+        
+        // CSS inline cho bố cục ảnh + chữ
+        li.style.display = "flex";
+        li.style.alignItems = "center";
+        li.style.gap = "10px";
+
+        // Ảnh Thumbnail (nếu có)
+        let imgTag = "";
+        if(item.thumbnail) {
+            imgTag = `<img src="${item.thumbnail}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">`;
         }
 
+        // Tạo nội dung HTML
+        li.innerHTML = `
+            ${imgTag}
+            <a href="${item.link}" target="_blank" style="text-decoration: none; color: white; flex: 1;">
+                🎧 ${item.title} <br>
+                <small style="color: #ccc;">${item.duration ? item.duration : ''}</small>
+            </a>
+        `;
+
+        list.appendChild(li);
+    });
+}
         startCamera();
     </script>
 </body>
