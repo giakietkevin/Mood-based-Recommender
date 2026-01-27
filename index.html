@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Mood AI Dashboard Redesign V2</title>
+    <title>Mood AI - Library & Favorites</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Icons+Round&display=swap" rel="stylesheet"/>
     <script>
@@ -12,8 +12,8 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#8B5CF6", // Electric Purple
-                        accent: "#3B82F6", // Electric Blue
+                        primary: "#8B5CF6",
+                        accent: "#3B82F6",
                         "background-light": "#F8FAFC",
                         "background-dark": "#0B0E14",
                         "card-dark": "#161B26",
@@ -30,36 +30,47 @@
         };
     </script>
     <style>
-        .glow-effect {
-            box-shadow: 0 0 40px -10px rgba(139, 92, 246, 0.4);
-        }
-        .pulse-angry {
-            animation: pulse-red 2s infinite;
-        }
+        .glow-effect { box-shadow: 0 0 40px -10px rgba(139, 92, 246, 0.4); }
+        .pulse-angry { animation: pulse-red 2s infinite; }
         @keyframes pulse-red {
             0% { text-shadow: 0 0 0px rgba(239, 68, 68, 0); }
             50% { text-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
             100% { text-shadow: 0 0 0px rgba(239, 68, 68, 0); }
         }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 10px;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         .glass-panel {
-            background: rgba(22, 27, 38, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(22, 27, 38, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        .spin-slow { animation: spin 8s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%;
+            background: #8B5CF6; cursor: pointer; margin-top: -5px; 
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 3px; cursor: pointer; background: #334155; border-radius: 10px;
+        }
+        
+        /* Hiệu ứng Toast Notification */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast-enter { animation: slideIn 0.3s forwards; }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
-<div class="max-w-[1440px] mx-auto p-6 md:p-10">
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300 relative overflow-x-hidden">
+
+<div id="toast-container" class="fixed top-10 right-6 z-[60] flex flex-col gap-3 pointer-events-none"></div>
+
+<div class="max-w-[1440px] mx-auto p-6 md:p-10 pb-40">
     <header class="flex items-center justify-between mb-12">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
@@ -67,24 +78,24 @@
             </div>
             <h1 class="text-2xl font-extrabold tracking-tight">MOOD <span class="text-primary">AI</span></h1>
         </div>
-        <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500 dark:text-slate-400">
-            <a class="text-primary" href="#">Dashboard</a>
-            <a class="hover:text-primary transition-colors" href="#">Library</a>
-            <a class="hover:text-primary transition-colors" href="#">History</a>
-            <a class="hover:text-primary transition-colors" href="#">Settings</a>
-        </nav>
-        <div class="flex items-center gap-4">
-            <button class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-                <span class="material-icons-round">notifications</span>
+        
+        <nav class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 bg-white/5 p-1 rounded-2xl border border-white/5">
+            <button onclick="showView('dashboard')" id="nav-dashboard" class="px-6 py-2 rounded-xl text-white bg-primary shadow-lg shadow-primary/20 transition-all">
+                Dashboard
             </button>
+            <button onclick="showView('library')" id="nav-library" class="px-6 py-2 rounded-xl hover:bg-white/5 hover:text-white transition-all">
+                Library <span id="lib-count" class="ml-1 text-[10px] bg-white/10 px-2 py-0.5 rounded-full">0</span>
+            </button>
+        </nav>
+
+        <div class="flex items-center gap-4">
             <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden border-2 border-primary/20">
                 <img alt="User Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOjeAb-Q0kyJd4o_21Az5ptB2eqIHgYAo8kCazsVL01I5ur84uYvFMyo-g_mwiq0Uy9ly0_S9gASYLY6UxFH3Uta_DItaoFkNpMxMDWnIV_hEXXUmszqQnHjxhJHz5ZxRvRKlngTqw7GxsLi6_GCcSJkryaaMQFqXCx5-bTCU05252LFxHK4Cwv7Eb0OWRFG1KnlKGLjV8sQunQ4lIjE2GYHqWIbDH44f-ZhIOZlphgUAYforu4sVAfos90tjy9qIJurNlcI2fsxY"/>
             </div>
         </div>
     </header>
 
-    <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <!-- CAMERA SECTION -->
+    <main id="view-dashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-[fadeIn_0.5s]">
         <section class="lg:col-span-5 space-y-6">
             <div class="relative group">
                 <div class="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
@@ -107,7 +118,6 @@
                 </div>
             </div>
 
-            <!-- MOOD INFO -->
             <div class="glass-panel p-6 rounded-3xl flex items-center justify-between">
                 <div>
                     <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Detected Emotion</p>
@@ -125,58 +135,112 @@
             </div>
         </section>
 
-        <!-- RECOMMENDATIONS SECTION -->
         <section class="lg:col-span-7 space-y-6 h-full">
             <div class="flex items-center justify-between px-2">
                 <div>
                     <h3 class="text-xl font-bold">Tailored for your Mood</h3>
                     <p id="mood-description" class="text-slate-500 dark:text-slate-400 text-sm">Waiting for mood detection...</p>
                 </div>
-                <div class="flex gap-2">
-                    <button class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center hover:bg-primary hover:text-white transition-all">
-                        <span class="material-icons-round text-sm">filter_list</span>
+                <div class="flex gap-2 bg-white/5 p-1 rounded-2xl">
+                    <button id="tab-music" onclick="switchTab('music')" class="px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 transition-all flex items-center gap-2">
+                        <span class="material-icons-round text-sm">music_note</span> Music
                     </button>
-                    <button class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center hover:bg-primary hover:text-white transition-all">
-                        <span class="material-icons-round text-sm">more_vert</span>
+                    <button id="tab-podcast" onclick="switchTab('podcast')" class="px-4 py-2 rounded-xl hover:bg-white/10 text-slate-400 text-sm font-bold transition-all flex items-center gap-2">
+                        <span class="material-icons-round text-sm">podcasts</span> Podcast
                     </button>
                 </div>
             </div>
 
-            <!-- RECOMMENDATIONS LIST -->
             <div id="recommendations-container" class="space-y-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
                 <div class="text-center py-8 text-slate-400">
-                    <p>No recommendations yet. Analyze your mood to get started!</p>
+                    <p>Select your preferred mode (Music or Podcast) and analyze your mood!</p>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- PLAYER BAR -->
-    <div class="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6">
-        <div id="player-bar" class="glass-panel p-4 rounded-3xl shadow-2xl flex items-center gap-4 bg-white/10 hidden">
-            <div class="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                <img id="player-thumbnail" alt="Current Track" class="w-full h-full object-cover" src=""/>
+    <main id="view-library" class="hidden animate-[fadeIn_0.5s]">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-3xl font-bold">My Library</h2>
+            <button onclick="clearLibrary()" class="text-xs text-red-400 hover:text-red-300 font-bold uppercase tracking-widest px-4 py-2 border border-red-500/30 rounded-lg hover:bg-red-500/10 transition-all">
+                Clear All
+            </button>
+        </div>
+        
+        <div id="library-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             </div>
-            <div class="flex-grow min-w-0">
-                <p id="player-title" class="text-sm font-bold truncate">Loading...</p>
-                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Currently Playing</p>
+        
+        <div id="empty-library-msg" class="text-center py-20 text-slate-500 hidden">
+            <span class="material-icons-round text-6xl opacity-20 mb-4">favorite_border</span>
+            <p>No favorites yet. Start listening and add some tracks!</p>
+        </div>
+    </main>
+
+    <div id="youtube-player-hidden" class="absolute -top-[1000px]"></div>
+
+    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-4 z-50">
+        <div id="player-bar" class="glass-panel p-5 rounded-[24px] shadow-2xl bg-[#161B26]/95 border border-white/10 hidden backdrop-blur-xl flex flex-col gap-4">
+            
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-4 flex-1 min-w-0">
+                    <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border border-white/10 relative shadow-lg">
+                        <img id="player-thumbnail" alt="Track" class="w-full h-full object-cover" src=""/>
+                        <div class="absolute inset-0 bg-black/10 rounded-full"></div>
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <p id="player-title" class="text-sm font-bold truncate text-white">Select a track</p>
+                        <div class="flex items-center gap-2">
+                            <p id="player-status" class="text-[10px] text-primary uppercase tracking-widest font-bold">Ready</p>
+                            <div id="wave-animation" class="hidden flex gap-[2px] items-end h-3">
+                                <span class="w-[2px] h-full bg-primary animate-[pulse_0.5s_ease-in-out_infinite]"></span>
+                                <span class="w-[2px] h-2/3 bg-primary animate-[pulse_0.6s_ease-in-out_infinite]"></span>
+                                <span class="w-[2px] h-full bg-primary animate-[pulse_0.4s_ease-in-out_infinite]"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button class="w-8 h-8 flex items-center justify-center hover:text-white text-slate-400 transition-colors">
+                        <span class="material-icons-round text-xl">skip_previous</span>
+                    </button>
+                    <button id="player-play-btn" class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-all">
+                        <span id="play-icon" class="material-icons-round text-2xl">play_arrow</span>
+                    </button>
+                    <button class="w-8 h-8 flex items-center justify-center hover:text-white text-slate-400 transition-colors">
+                        <span class="material-icons-round text-xl">skip_next</span>
+                    </button>
+                </div>
+
+                <div class="relative">
+                    <button id="more-options-btn" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors">
+                        <span class="material-icons-round">more_vert</span>
+                    </button>
+                    
+                    <div id="options-menu" class="hidden absolute bottom-full right-0 mb-2 w-56 bg-card-dark border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-[fadeIn_0.2s_ease-out] z-[100]">
+                        <a id="open-youtube-link" href="#" target="_blank" class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm font-medium text-slate-300 hover:text-white transition-colors border-b border-white/5">
+                            <span class="material-icons-round text-lg">open_in_new</span>
+                            Mở trên YouTube
+                        </a>
+                        <button id="add-to-fav-btn" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm font-medium text-slate-300 hover:text-primary transition-colors text-left">
+                            <span class="material-icons-round text-lg">favorite</span>
+                            Thêm vào yêu thích
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="flex items-center gap-3">
-                <button class="w-8 h-8 flex items-center justify-center hover:text-primary transition-colors">
-                    <span class="material-icons-round text-xl">skip_previous</span>
-                </button>
-                <button id="player-play-btn" class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/30 hover:scale-105 transition-transform">
-                    <span class="material-icons-round">play_arrow</span>
-                </button>
-                <button class="w-8 h-8 flex items-center justify-center hover:text-primary transition-colors">
-                    <span class="material-icons-round text-xl">skip_next</span>
-                </button>
+
+            <div class="flex items-center gap-3 text-[10px] font-mono font-medium text-slate-400">
+                <span id="current-time">0:00</span>
+                <input id="seek-bar" type="range" min="0" max="100" value="0" class="flex-grow h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer focus:outline-none">
+                <span id="total-duration">0:00</span>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // --- KHAI BÁO BIẾN ---
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const analyzeBtn = document.getElementById('analyze-btn');
@@ -186,39 +250,292 @@
     const moodDescription = document.getElementById('mood-description');
     const recommendationsContainer = document.getElementById('recommendations-container');
     const playerBar = document.getElementById('player-bar');
+    const tabMusic = document.getElementById('tab-music');
+    const tabPodcast = document.getElementById('tab-podcast');
+
+    // Player Elements
+    const playerTitle = document.getElementById('player-title');
+    const playerThumbnail = document.getElementById('player-thumbnail');
+    const playerPlayBtn = document.getElementById('player-play-btn');
+    const playIcon = document.getElementById('play-icon');
+    const playerStatus = document.getElementById('player-status');
+    const waveAnimation = document.getElementById('wave-animation');
+    const seekBar = document.getElementById('seek-bar');
+    const currentTimeEl = document.getElementById('current-time');
+    const totalDurationEl = document.getElementById('total-duration');
+    const moreOptionsBtn = document.getElementById('more-options-btn');
+    const optionsMenu = document.getElementById('options-menu');
+    const openYoutubeLink = document.getElementById('open-youtube-link');
+    const addToFavBtn = document.getElementById('add-to-fav-btn');
+
+    // Library Elements
+    const navDashboard = document.getElementById('nav-dashboard');
+    const navLibrary = document.getElementById('nav-library');
+    const viewDashboard = document.getElementById('view-dashboard');
+    const viewLibrary = document.getElementById('view-library');
+    const libraryContainer = document.getElementById('library-container');
+    const emptyLibraryMsg = document.getElementById('empty-library-msg');
+    const libCountEl = document.getElementById('lib-count');
+
+    let currentType = 'music';
+    let ytPlayer; 
+    let isPlayerReady = false;
+    let isPlaying = false;
+    let updateInterval;
+    let currentTrackData = null; // Lưu data bài đang phát
+
+    // Khởi tạo Library từ LocalStorage
+    let favorites = JSON.parse(localStorage.getItem('moodAiFavorites')) || [];
+    updateLibraryCount();
 
     const moodDescriptions = {
-        "happy": "Upbeat, energetic music for your great mood",
-        "sad": "Emotional, melancholic songs for reflection",
-        "angry": "Aggressive beats & High-energy cinematic",
-        "neutral": "Chill lofi beats for a relaxed vibe",
-        "fear": "Calm, soothing music for relaxation",
-        "surprise": "Trending, energetic hits & surprises",
-        "disgust": "Breakup songs & emotional releases"
+        "happy": "Upbeat, energetic content",
+        "sad": "Healing and soothing content",
+        "angry": "Calming or high-energy release",
+        "neutral": "Focus and knowledge",
+        "fear": "Calm, reassuring content",
+        "surprise": "Trending, energetic hits",
+        "disgust": "Healing and emotional release"
     };
 
-    // Start Camera
+    // --- 1. SETUP YOUTUBE API ---
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function onYouTubeIframeAPIReady() {
+        ytPlayer = new YT.Player('youtube-player-hidden', {
+            height: '0', width: '0', videoId: '',
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+
+    function onPlayerReady(event) { isPlayerReady = true; }
+
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.PLAYING) {
+            isPlaying = true;
+            playIcon.innerText = "pause";
+            playerThumbnail.classList.add("spin-slow");
+            playerStatus.innerText = "Playing";
+            waveAnimation.classList.remove("hidden");
+            startProgressLoop();
+        } else {
+            isPlaying = false;
+            playIcon.innerText = "play_arrow";
+            playerThumbnail.classList.remove("spin-slow");
+            playerStatus.innerText = event.data == YT.PlayerState.PAUSED ? "Paused" : "Finished";
+            waveAnimation.classList.add("hidden");
+            stopProgressLoop();
+        }
+    }
+
+    // --- 2. LOGIC THANH TIẾN TRÌNH ---
+    function startProgressLoop() {
+        stopProgressLoop();
+        updateInterval = setInterval(() => {
+            if (ytPlayer && isPlaying) {
+                const currentTime = ytPlayer.getCurrentTime();
+                const duration = ytPlayer.getDuration();
+                if (duration > 0) {
+                    seekBar.value = (currentTime / duration) * 100;
+                    currentTimeEl.innerText = formatTime(currentTime);
+                    totalDurationEl.innerText = formatTime(duration);
+                }
+            }
+        }, 1000);
+    }
+
+    function stopProgressLoop() { if (updateInterval) clearInterval(updateInterval); }
+
+    seekBar.addEventListener('input', () => {
+        if (ytPlayer && isPlayerReady) {
+            const duration = ytPlayer.getDuration();
+            const seekToTime = (seekBar.value / 100) * duration;
+            ytPlayer.seekTo(seekToTime, true);
+        }
+    });
+
+    function formatTime(seconds) {
+        const min = Math.floor(seconds / 60);
+        const sec = Math.floor(seconds % 60);
+        return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    // --- 3. MENU 3 CHẤM & YÊU THÍCH ---
+    moreOptionsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        optionsMenu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!moreOptionsBtn.contains(e.target) && !optionsMenu.contains(e.target)) {
+            optionsMenu.classList.add('hidden');
+        }
+    });
+
+    // CLICK: THÊM VÀO THƯ VIỆN
+    addToFavBtn.addEventListener('click', () => {
+        if (!currentTrackData) return;
+
+        // Check trùng
+        const exists = favorites.some(fav => fav.link === currentTrackData.link);
+        if (!exists) {
+            favorites.push(currentTrackData);
+            localStorage.setItem('moodAiFavorites', JSON.stringify(favorites));
+            updateLibraryCount();
+            renderLibrary(); // Re-render nếu đang mở tab library
+            showToast(`Đã thêm "${currentTrackData.title}" vào Library`, 'success');
+        } else {
+            showToast('Bài này đã có trong Library rồi!', 'info');
+        }
+        optionsMenu.classList.add('hidden');
+    });
+
+    function updateLibraryCount() {
+        libCountEl.innerText = favorites.length;
+    }
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const bgColor = type === 'success' ? 'bg-green-500' : 'bg-slate-700';
+        
+        toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl text-white font-bold text-sm ${bgColor} toast-enter`;
+        toast.innerHTML = `
+            <span class="material-icons-round text-sm">${type === 'success' ? 'check_circle' : 'info'}</span>
+            ${message}
+        `;
+        
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // --- 4. NAVIGATION & VIEW LOGIC ---
+    window.showView = function(viewName) {
+        if (viewName === 'dashboard') {
+            viewDashboard.classList.remove('hidden');
+            viewLibrary.classList.add('hidden');
+            
+            navDashboard.classList.add('bg-primary', 'text-white', 'shadow-lg');
+            navDashboard.classList.remove('hover:bg-white/5');
+            navLibrary.classList.remove('bg-primary', 'text-white', 'shadow-lg');
+            navLibrary.classList.add('hover:bg-white/5');
+        } else {
+            viewDashboard.classList.add('hidden');
+            viewLibrary.classList.remove('hidden');
+            
+            navLibrary.classList.add('bg-primary', 'text-white', 'shadow-lg');
+            navLibrary.classList.remove('hover:bg-white/5');
+            navDashboard.classList.remove('bg-primary', 'text-white', 'shadow-lg');
+            navDashboard.classList.add('hover:bg-white/5');
+            
+            renderLibrary();
+        }
+    };
+
+    function renderLibrary() {
+        libraryContainer.innerHTML = '';
+        if (favorites.length === 0) {
+            emptyLibraryMsg.classList.remove('hidden');
+            return;
+        }
+        emptyLibraryMsg.classList.add('hidden');
+
+        favorites.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'group relative bg-card-dark rounded-xl overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all border border-white/5';
+            div.innerHTML = `
+                <div class="aspect-video relative overflow-hidden cursor-pointer" onclick='playTrackFromLibrary(${index})'>
+                    <img src="${item.thumbnail}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="material-icons-round text-4xl text-white drop-shadow-lg">play_circle</span>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h4 class="font-bold text-white truncate mb-1" title="${item.title}">${item.title}</h4>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-500">${item.duration || 'Audio'}</span>
+                        <button onclick="removeFromLibrary(${index})" class="text-slate-500 hover:text-red-400 transition-colors">
+                            <span class="material-icons-round text-sm">delete</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            libraryContainer.appendChild(div);
+        });
+    }
+
+    window.playTrackFromLibrary = function(index) {
+        playTrack(favorites[index]);
+    };
+
+    window.removeFromLibrary = function(index) {
+        const removedItem = favorites[index];
+        favorites.splice(index, 1);
+        localStorage.setItem('moodAiFavorites', JSON.stringify(favorites));
+        renderLibrary();
+        updateLibraryCount();
+        showToast(`Đã xóa "${removedItem.title}"`, 'info');
+    };
+    
+    window.clearLibrary = function() {
+        if(confirm("Bạn có chắc muốn xóa hết thư viện không?")) {
+            favorites = [];
+            localStorage.setItem('moodAiFavorites', JSON.stringify(favorites));
+            renderLibrary();
+            updateLibraryCount();
+        }
+    }
+
+    // --- 5. PLAYER CONTROLS ---
+    playerPlayBtn.addEventListener('click', () => {
+        if (!isPlayerReady) return;
+        isPlaying ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+    });
+
+    // --- 6. LOGIC CHÍNH & CAMERA ---
+    function switchTab(type) {
+        currentType = type;
+        const activeClass = ['bg-primary', 'text-white', 'shadow-lg', 'shadow-primary/20'];
+        const inactiveClass = ['hover:bg-white/10', 'text-slate-400'];
+
+        if (type === 'music') {
+            tabMusic.classList.add(...activeClass);
+            tabMusic.classList.remove(...inactiveClass);
+            tabPodcast.classList.remove(...activeClass);
+            tabPodcast.classList.add(...inactiveClass);
+        } else {
+            tabPodcast.classList.add(...activeClass);
+            tabPodcast.classList.remove(...inactiveClass);
+            tabMusic.classList.remove(...activeClass);
+            tabMusic.classList.add(...inactiveClass);
+        }
+        
+        const currentMood = moodDisplay.innerText.toLowerCase();
+        if (currentMood !== "waiting..." && currentMood !== "analyzing...") {
+             recommendationsContainer.innerHTML = `<div class="text-center py-8 text-slate-400"><p>Switched to <b>${type.toUpperCase()}</b> mode.<br>Please click 'Analyze Mood' again.</p></div>`;
+        }
+    }
+
     async function startCamera() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             video.srcObject = stream;
-        } catch (err) {
-            alert("Cannot access camera: " + err);
-        }
+        } catch (err) { alert("Cannot access camera: " + err); }
     }
 
-    // Analyze Button
     analyzeBtn.addEventListener('click', async () => {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
-
-        canvas.toBlob(async (blob) => {
-            await sendToBackend(blob);
-        }, 'image/jpeg');
+        canvas.toBlob(async (blob) => { await sendToBackend(blob); }, 'image/jpeg');
     });
 
-    // Send to Backend
     async function sendToBackend(imageBlob) {
         analyzeBtn.disabled = true;
         moodDisplay.innerText = "Analyzing...";
@@ -226,17 +543,14 @@
 
         const formData = new FormData();
         formData.append('file', imageBlob, 'capture.jpg');
+        const url = new URL('http://127.0.0.1:8000/recommend');
+        url.searchParams.append('type', currentType);
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/recommend', {
-                method: 'POST',
-                body: formData
-            });
-
+            const response = await fetch(url, { method: 'POST', body: formData });
             const data = await response.json();
             displayMood(data.mood);
             renderRecommendations(data.recommendations);
-
         } catch (error) {
             console.error(error);
             moodDisplay.innerText = "Error!";
@@ -245,44 +559,34 @@
         }
     }
 
-    // Display Mood
     function displayMood(mood) {
         const moodColors = {
-            "happy": "text-green-500",
-            "sad": "text-blue-500",
-            "angry": "text-red-500",
-            "neutral": "text-slate-400",
-            "fear": "text-purple-500",
-            "surprise": "text-yellow-500",
-            "disgust": "text-orange-500"
+            "happy": "text-green-500", "sad": "text-blue-500", "angry": "text-red-500",
+            "neutral": "text-slate-400", "fear": "text-purple-500", "surprise": "text-yellow-500", "disgust": "text-orange-500"
         };
-
         moodDisplay.innerText = mood.toUpperCase();
-        moodDisplay.classList.add(moodColors[mood] || "text-slate-400");
+        moodDisplay.className = `text-3xl font-black uppercase italic ${moodColors[mood] || "text-slate-400"}`;
         moodDescription.innerText = moodDescriptions[mood] || "Your mood detected";
         confidenceBar.style.width = "85%";
         confidenceText.innerText = "85%";
     }
 
-    // Render Recommendations
     function renderRecommendations(items) {
         recommendationsContainer.innerHTML = "";
-
         if (!items || items.length === 0) {
             recommendationsContainer.innerHTML = '<div class="text-center py-8 text-slate-400"><p>No recommendations found.</p></div>';
             return;
         }
 
-        items.forEach((item, index) => {
+        items.forEach((item) => {
             const div = document.createElement('div');
             div.className = 'group glass-panel p-4 rounded-2xl flex items-center gap-5 hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-primary/30';
-            
             const thumbnail = item.thumbnail || 'https://via.placeholder.com/80';
             const duration = item.duration || 'N/A';
             
             div.innerHTML = `
                 <div class="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden group-hover:scale-105 transition-transform">
-                    <img alt="Track Thumbnail" class="w-full h-full object-cover" src="${thumbnail}"/>
+                    <img class="w-full h-full object-cover" src="${thumbnail}"/>
                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <span class="material-icons-round text-white">play_arrow</span>
                     </div>
@@ -293,35 +597,41 @@
                             <h4 class="font-bold text-slate-200 truncate group-hover:text-primary transition-colors">${item.title}</h4>
                             <p class="text-xs text-slate-500 dark:text-slate-400">${duration}</p>
                         </div>
-                        <span class="text-xs font-mono text-slate-500">•</span>
-                    </div>
-                    <div class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div class="bg-primary h-full w-[35%] rounded-full"></div>
                     </div>
                 </div>
             `;
-
-            div.addEventListener('click', () => {
-                playTrack(item);
-            });
-
+            div.addEventListener('click', () => { playTrack(item); });
             recommendationsContainer.appendChild(div);
         });
     }
 
-    // Play Track
     function playTrack(item) {
-        document.getElementById('player-title').innerText = item.title;
-        document.getElementById('player-thumbnail').src = item.thumbnail || 'https://via.placeholder.com/48';
+        // Cập nhật biến toàn cục
+        currentTrackData = item;
+        
         playerBar.classList.remove('hidden');
+        playerTitle.innerText = item.title;
+        playerThumbnail.src = item.thumbnail;
+        
+        // Cập nhật link cho nút "Mở trên YouTube"
+        openYoutubeLink.href = item.link;
 
-        // Open YouTube link
-        if (item.link) {
+        let videoId = "";
+        try {
+            if (item.link.includes("v=")) {
+                videoId = item.link.split('v=')[1].split('&')[0];
+            } else if (item.link.includes("youtu.be/")) {
+                videoId = item.link.split('youtu.be/')[1];
+            }
+        } catch(e) { console.error("Error parsing ID", e); }
+
+        if (videoId && ytPlayer && isPlayerReady) {
+            ytPlayer.loadVideoById(videoId);
+        } else {
             window.open(item.link, '_blank');
         }
     }
 
-    // Initialize
     startCamera();
 </script>
 </body>
