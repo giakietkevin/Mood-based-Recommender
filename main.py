@@ -35,7 +35,7 @@ MOOD_KEYWORDS = {
     "sad": "nhạc suy tâm trạng buồn",
     "angry": "nhạc edm bass cực căng",
     "neutral": "nhạc lofi chill tiếng việt dễ ngủ",
-    "fear": "nhạc nhẹ nhàng thư giãn giảm stress",
+    "fear": "nhạc nhẹ nhàng thư giãn giảm stress`",
     "surprise": "nhạc hot trend tiktok hiện nay",
     "disgust": "nhạc chia tay người yêu cũ"
 }
@@ -76,7 +76,7 @@ def search_music_by_mood(mood):
                 "duration": video.get('duration', ''),
                 "thumbnail": thumb
             })
-            if len(recommendations) >= 5: break
+            if len(recommendations) >= 7: break
         
         if not recommendations: return BACKUP_MUSIC
 

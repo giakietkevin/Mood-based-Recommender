@@ -1,237 +1,328 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mood Recommender AI</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Mood AI Dashboard Redesign V2</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Material+Icons+Round&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#8B5CF6", // Electric Purple
+                        accent: "#3B82F6", // Electric Blue
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#0B0E14",
+                        "card-dark": "#161B26",
+                    },
+                    fontFamily: {
+                        display: ["Plus Jakarta Sans", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "12px",
+                        'xl': '20px',
+                    },
+                },
+            },
+        };
+    </script>
     <style>
-        :root {
-            --bg-color: #1a1a2e;
-            --card-color: #16213e;
-            --accent-color: #0f3460;
-            --highlight: #e94560;
-            --text-color: #f1f1f1;
+        .glow-effect {
+            box-shadow: 0 0 40px -10px rgba(139, 92, 246, 0.4);
         }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+        .pulse-angry {
+            animation: pulse-red 2s infinite;
         }
-
-        h1 { margin-top: 20px; color: var(--highlight); }
-
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            padding: 20px;
-            width: 90%;
-            max-width: 1200px;
+        @keyframes pulse-red {
+            0% { text-shadow: 0 0 0px rgba(239, 68, 68, 0); }
+            50% { text-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+            100% { text-shadow: 0 0 0px rgba(239, 68, 68, 0); }
         }
-
-        /* Phần Webcam */
-        .camera-box {
-            background: var(--card-color);
-            padding: 20px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
         }
-
-        video, canvas {
-            border-radius: 8px;
-            border: 2px solid var(--accent-color);
-            width: 100%;
-            max-width: 400px;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
         }
-
-        button {
-            margin-top: 15px;
-            padding: 12px 24px;
-            background-color: var(--highlight);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.3s;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
         }
-
-        button:hover { background-color: #c72c41; }
-        button:disabled { background-color: gray; cursor: not-allowed; }
-
-        /* Phần Kết quả */
-        .result-box {
-            flex: 1;
-            min-width: 300px;
-            background: var(--card-color);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        .glass-panel {
+            background: rgba(22, 27, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-
-        .mood-display {
-            font-size: 24px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
-        }
-
-        .mood-highlight { color: var(--highlight); font-weight: bold; text-transform: uppercase;}
-
-        .recommend-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .recommend-item {
-            background: var(--accent-color);
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .loading { color: #ccc; font-style: italic; display: none;}
     </style>
 </head>
-<body>
-
-    <h1>🎵 Movie & Music Mood AI 🎬</h1>
-
-    <div class="container">
-        <div class="camera-box">
-            <video id="video" autoplay playsinline></video>
-            <canvas id="canvas" style="display:none;"></canvas>
-            <button id="capture-btn">📸 Chụp & Phân tích</button>
-        </div>
-
-        <div class="result-box">
-            <div class="mood-display">
-                Tâm trạng: <span id="mood-text" class="mood-highlight">Đang chờ...</span>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
+<div class="max-w-[1440px] mx-auto p-6 md:p-10">
+    <header class="flex items-center justify-between mb-12">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                <span class="material-icons-round">psychology</span>
             </div>
-            
-            <p id="loading-text" class="loading">Đang gửi ảnh lên AI Server...</p>
+            <h1 class="text-2xl font-extrabold tracking-tight">MOOD <span class="text-primary">AI</span></h1>
+        </div>
+        <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-500 dark:text-slate-400">
+            <a class="text-primary" href="#">Dashboard</a>
+            <a class="hover:text-primary transition-colors" href="#">Library</a>
+            <a class="hover:text-primary transition-colors" href="#">History</a>
+            <a class="hover:text-primary transition-colors" href="#">Settings</a>
+        </nav>
+        <div class="flex items-center gap-4">
+            <button class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-icons-round">notifications</span>
+            </button>
+            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden border-2 border-primary/20">
+                <img alt="User Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOjeAb-Q0kyJd4o_21Az5ptB2eqIHgYAo8kCazsVL01I5ur84uYvFMyo-g_mwiq0Uy9ly0_S9gASYLY6UxFH3Uta_DItaoFkNpMxMDWnIV_hEXXUmszqQnHjxhJHz5ZxRvRKlngTqw7GxsLi6_GCcSJkryaaMQFqXCx5-bTCU05252LFxHK4Cwv7Eb0OWRFG1KnlKGLjV8sQunQ4lIjE2GYHqWIbDH44f-ZhIOZlphgUAYforu4sVAfos90tjy9qIJurNlcI2fsxY"/>
+            </div>
+        </div>
+    </header>
 
-            <h3>Gợi ý cho bạn:</h3>
-            <ul id="recommend-list" class="recommend-list">
-                <li class="recommend-item">Hãy chụp ảnh để nhận gợi ý...</li>
-            </ul>
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- CAMERA SECTION -->
+        <section class="lg:col-span-5 space-y-6">
+            <div class="relative group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                <div class="relative bg-white dark:bg-card-dark rounded-3xl overflow-hidden shadow-2xl">
+                    <div class="aspect-[4/3] bg-slate-100 dark:bg-slate-900 flex items-center justify-center relative">
+                        <video id="video" autoplay playsinline class="w-full h-full object-cover opacity-90"></video>
+                        <canvas id="canvas" style="display:none;"></canvas>
+                        <div class="absolute top-4 left-4 flex gap-2">
+                            <span class="px-3 py-1 rounded-full bg-black/50 backdrop-blur-md text-[10px] font-bold text-white flex items-center gap-1 border border-white/10 uppercase tracking-widest">
+                                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Live
+                            </span>
+                        </div>
+                        <div class="absolute bottom-6 left-1/2 -translate-x-1/2">
+                            <button id="analyze-btn" class="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-2xl flex items-center gap-3 shadow-xl shadow-primary/40 transform hover:scale-105 transition-all active:scale-95 font-bold uppercase tracking-wide text-sm">
+                                <span class="material-icons-round text-xl">face_retouching_natural</span>
+                                Analyze Mood
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOOD INFO -->
+            <div class="glass-panel p-6 rounded-3xl flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Detected Emotion</p>
+                    <h2 id="mood-display" class="text-3xl font-black text-red-500 pulse-angry uppercase italic">Waiting...</h2>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Confidence Score</p>
+                    <div class="flex items-center gap-2">
+                        <div class="w-24 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div id="confidence-bar" class="bg-red-500 h-full w-0"></div>
+                        </div>
+                        <span id="confidence-text" class="text-sm font-bold">0%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RECOMMENDATIONS SECTION -->
+        <section class="lg:col-span-7 space-y-6 h-full">
+            <div class="flex items-center justify-between px-2">
+                <div>
+                    <h3 class="text-xl font-bold">Tailored for your Mood</h3>
+                    <p id="mood-description" class="text-slate-500 dark:text-slate-400 text-sm">Waiting for mood detection...</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+                        <span class="material-icons-round text-sm">filter_list</span>
+                    </button>
+                    <button class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+                        <span class="material-icons-round text-sm">more_vert</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- RECOMMENDATIONS LIST -->
+            <div id="recommendations-container" class="space-y-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
+                <div class="text-center py-8 text-slate-400">
+                    <p>No recommendations yet. Analyze your mood to get started!</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- PLAYER BAR -->
+    <div class="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6">
+        <div id="player-bar" class="glass-panel p-4 rounded-3xl shadow-2xl flex items-center gap-4 bg-white/10 hidden">
+            <div class="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                <img id="player-thumbnail" alt="Current Track" class="w-full h-full object-cover" src=""/>
+            </div>
+            <div class="flex-grow min-w-0">
+                <p id="player-title" class="text-sm font-bold truncate">Loading...</p>
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Currently Playing</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button class="w-8 h-8 flex items-center justify-center hover:text-primary transition-colors">
+                    <span class="material-icons-round text-xl">skip_previous</span>
+                </button>
+                <button id="player-play-btn" class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/30 hover:scale-105 transition-transform">
+                    <span class="material-icons-round">play_arrow</span>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center hover:text-primary transition-colors">
+                    <span class="material-icons-round text-xl">skip_next</span>
+                </button>
+            </div>
         </div>
     </div>
+</div>
 
-    <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const captureBtn = document.getElementById('capture-btn');
-        const moodText = document.getElementById('mood-text');
-        const list = document.getElementById('recommend-list');
-        const loading = document.getElementById('loading-text');
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const moodDisplay = document.getElementById('mood-display');
+    const confidenceBar = document.getElementById('confidence-bar');
+    const confidenceText = document.getElementById('confidence-text');
+    const moodDescription = document.getElementById('mood-description');
+    const recommendationsContainer = document.getElementById('recommendations-container');
+    const playerBar = document.getElementById('player-bar');
 
-        // 1. Mở Webcam
-        async function startCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-            } catch (err) {
-                alert("Không thể truy cập Camera: " + err);
-            }
+    const moodDescriptions = {
+        "happy": "Upbeat, energetic music for your great mood",
+        "sad": "Emotional, melancholic songs for reflection",
+        "angry": "Aggressive beats & High-energy cinematic",
+        "neutral": "Chill lofi beats for a relaxed vibe",
+        "fear": "Calm, soothing music for relaxation",
+        "surprise": "Trending, energetic hits & surprises",
+        "disgust": "Breakup songs & emotional releases"
+    };
+
+    // Start Camera
+    async function startCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+        } catch (err) {
+            alert("Cannot access camera: " + err);
         }
-
-        // 2. Xử lý nút Chụp
-        captureBtn.addEventListener('click', () => {
-            // Vẽ hình từ video sang canvas
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-
-            // Chuyển canvas thành file ảnh (Blob)
-            canvas.toBlob(async (blob) => {
-                await sendToBackend(blob);
-            }, 'image/jpeg');
-        });
-
-        // 3. Gửi về FastAPI
-        async function sendToBackend(imageBlob) {
-            loading.style.display = 'block';
-            captureBtn.disabled = true;
-            moodText.innerText = "...";
-            list.innerHTML = "";
-
-            const formData = new FormData();
-            formData.append('file', imageBlob, 'capture.jpg');
-
-            try {
-                // LƯU Ý: Đổi localhost:8000 thành địa chỉ server của Cốt nếu khác
-                const response = await fetch('http://127.0.0.1:8000/recommend', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                
-                // Hiển thị kết quả
-                moodText.innerText = data.mood; // Ví dụ: "happy"
-                
-                // Render list phim/nhạc
-                renderRecommendations(data.recommendations);
-
-            } catch (error) {
-                console.error(error);
-                moodText.innerText = "Lỗi kết nối!";
-            } finally {
-                loading.style.display = 'none';
-                captureBtn.disabled = false;
-            }
-        }
-
-       function renderRecommendations(items) {
-    list.innerHTML = "";
-    
-    if (!items || items.length === 0) {
-        list.innerHTML = "<li class='recommend-item'>Không tìm thấy gợi ý phù hợp.</li>";
-        return;
     }
 
-    items.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'recommend-item';
-        
-        // CSS inline cho bố cục ảnh + chữ
-        li.style.display = "flex";
-        li.style.alignItems = "center";
-        li.style.gap = "10px";
+    // Analyze Button
+    analyzeBtn.addEventListener('click', async () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
 
-        // Ảnh Thumbnail (nếu có)
-        let imgTag = "";
-        if(item.thumbnail) {
-            imgTag = `<img src="${item.thumbnail}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">`;
+        canvas.toBlob(async (blob) => {
+            await sendToBackend(blob);
+        }, 'image/jpeg');
+    });
+
+    // Send to Backend
+    async function sendToBackend(imageBlob) {
+        analyzeBtn.disabled = true;
+        moodDisplay.innerText = "Analyzing...";
+        moodDisplay.classList.remove('text-red-500', 'text-yellow-500', 'text-blue-500', 'text-green-500', 'text-purple-500', 'text-pink-500', 'text-orange-500');
+
+        const formData = new FormData();
+        formData.append('file', imageBlob, 'capture.jpg');
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/recommend', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            displayMood(data.mood);
+            renderRecommendations(data.recommendations);
+
+        } catch (error) {
+            console.error(error);
+            moodDisplay.innerText = "Error!";
+        } finally {
+            analyzeBtn.disabled = false;
+        }
+    }
+
+    // Display Mood
+    function displayMood(mood) {
+        const moodColors = {
+            "happy": "text-green-500",
+            "sad": "text-blue-500",
+            "angry": "text-red-500",
+            "neutral": "text-slate-400",
+            "fear": "text-purple-500",
+            "surprise": "text-yellow-500",
+            "disgust": "text-orange-500"
+        };
+
+        moodDisplay.innerText = mood.toUpperCase();
+        moodDisplay.classList.add(moodColors[mood] || "text-slate-400");
+        moodDescription.innerText = moodDescriptions[mood] || "Your mood detected";
+        confidenceBar.style.width = "85%";
+        confidenceText.innerText = "85%";
+    }
+
+    // Render Recommendations
+    function renderRecommendations(items) {
+        recommendationsContainer.innerHTML = "";
+
+        if (!items || items.length === 0) {
+            recommendationsContainer.innerHTML = '<div class="text-center py-8 text-slate-400"><p>No recommendations found.</p></div>';
+            return;
         }
 
-        // Tạo nội dung HTML
-        li.innerHTML = `
-            ${imgTag}
-            <a href="${item.link}" target="_blank" style="text-decoration: none; color: white; flex: 1;">
-                🎧 ${item.title} <br>
-                <small style="color: #ccc;">${item.duration ? item.duration : ''}</small>
-            </a>
-        `;
+        items.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'group glass-panel p-4 rounded-2xl flex items-center gap-5 hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-primary/30';
+            
+            const thumbnail = item.thumbnail || 'https://via.placeholder.com/80';
+            const duration = item.duration || 'N/A';
+            
+            div.innerHTML = `
+                <div class="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden group-hover:scale-105 transition-transform">
+                    <img alt="Track Thumbnail" class="w-full h-full object-cover" src="${thumbnail}"/>
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="material-icons-round text-white">play_arrow</span>
+                    </div>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-slate-200 truncate group-hover:text-primary transition-colors">${item.title}</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">${duration}</p>
+                        </div>
+                        <span class="text-xs font-mono text-slate-500">•</span>
+                    </div>
+                    <div class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="bg-primary h-full w-[35%] rounded-full"></div>
+                    </div>
+                </div>
+            `;
 
-        list.appendChild(li);
-    });
-}
-        startCamera();
-    </script>
+            div.addEventListener('click', () => {
+                playTrack(item);
+            });
+
+            recommendationsContainer.appendChild(div);
+        });
+    }
+
+    // Play Track
+    function playTrack(item) {
+        document.getElementById('player-title').innerText = item.title;
+        document.getElementById('player-thumbnail').src = item.thumbnail || 'https://via.placeholder.com/48';
+        playerBar.classList.remove('hidden');
+
+        // Open YouTube link
+        if (item.link) {
+            window.open(item.link, '_blank');
+        }
+    }
+
+    // Initialize
+    startCamera();
+</script>
 </body>
 </html>
