@@ -1,0 +1,16 @@
+# --- Web Framework & API ---
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6  # Cần thiết để upload file ảnh lên FastAPI
+
+# --- AI & Computer Vision (Xử lý ảnh/Cảm xúc) ---
+deepface==0.0.83         # Thư viện lõi nhận diện cảm xúc
+opencv-python==4.9.0.80  # Xử lý ảnh đầu vào (cv2)
+tf-keras                 # DeepFace chạy trên Keras/TensorFlow, cần cài thêm để ổn định
+
+# --- External Services (Gọi API Spotify/TMDB) ---
+requests==2.31.0         # Để gửi HTTP request lấy danh sách phim/nhạc
+
+# --- Utilities (Tiện ích) ---
+python-dotenv==1.0.0     # Để đọc API Key bảo mật từ file .env
+numpy                    # Xử lý mảng số liệu (DeepFace cần cái này)

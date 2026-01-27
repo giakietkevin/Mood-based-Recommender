@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood Recommender AI</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --card-color: #16213e;
+            --accent-color: #0f3460;
+            --highlight: #e94560;
+            --text-color: #f1f1f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 { margin-top: 20px; color: var(--highlight); }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            padding: 20px;
+            width: 90%;
+            max-width: 1200px;
+        }
+
+        /* Phần Webcam */
+        .camera-box {
+            background: var(--card-color);
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        video, canvas {
+            border-radius: 8px;
+            border: 2px solid var(--accent-color);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 12px 24px;
+            background-color: var(--highlight);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover { background-color: #c72c41; }
+        button:disabled { background-color: gray; cursor: not-allowed; }
+
+        /* Phần Kết quả */
+        .result-box {
+            flex: 1;
+            min-width: 300px;
+            background: var(--card-color);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .mood-display {
+            font-size: 24px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .mood-highlight { color: var(--highlight); font-weight: bold; text-transform: uppercase;}
+
+        .recommend-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommend-item {
+            background: var(--accent-color);
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .loading { color: #ccc; font-style: italic; display: none;}
+    </style>
+</head>
+<body>
+
+    <h1>🎵 Movie & Music Mood AI 🎬</h1>
+
+    <div class="container">
+        <div class="camera-box">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <button id="capture-btn">📸 Chụp & Phân tích</button>
+        </div>
+
+        <div class="result-box">
+            <div class="mood-display">
+                Tâm trạng: <span id="mood-text" class="mood-highlight">Đang chờ...</span>
+            </div>
+            
+            <p id="loading-text" class="loading">Đang gửi ảnh lên AI Server...</p>
+
+            <h3>Gợi ý cho bạn:</h3>
+            <ul id="recommend-list" class="recommend-list">
+                <li class="recommend-item">Hãy chụp ảnh để nhận gợi ý...</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureBtn = document.getElementById('capture-btn');
+        const moodText = document.getElementById('mood-text');
+        const list = document.getElementById('recommend-list');
+        const loading = document.getElementById('loading-text');
+
+        // 1. Mở Webcam
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                alert("Không thể truy cập Camera: " + err);
+            }
+        }
+
+        // 2. Xử lý nút Chụp
+        captureBtn.addEventListener('click', () => {
+            // Vẽ hình từ video sang canvas
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            // Chuyển canvas thành file ảnh (Blob)
+            canvas.toBlob(async (blob) => {
+                await sendToBackend(blob);
+            }, 'image/jpeg');
+        });
+
+        // 3. Gửi về FastAPI
+        async function sendToBackend(imageBlob) {
+            loading.style.display = 'block';
+            captureBtn.disabled = true;
+            moodText.innerText = "...";
+            list.innerHTML = "";
+
+            const formData = new FormData();
+            formData.append('file', imageBlob, 'capture.jpg');
+
+            try {
+                // LƯU Ý: Đổi localhost:8000 thành địa chỉ server của Cốt nếu khác
+                const response = await fetch('http://127.0.0.1:8000/recommend', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                // Hiển thị kết quả
+                moodText.innerText = data.mood; // Ví dụ: "happy"
+                
+                // Render list phim/nhạc
+                renderRecommendations(data.recommendations);
+
+            } catch (error) {
+                console.error(error);
+                moodText.innerText = "Lỗi kết nối!";
+            } finally {
+                loading.style.display = 'none';
+                captureBtn.disabled = false;
+            }
+        }
+
+        function renderRecommendations(items) {
+            list.innerHTML = "";
+            if (!items || items.length === 0) {
+                list.innerHTML = "<li>Không có dữ liệu gợi ý.</li>";
+                return;
+            }
+            items.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'recommend-item';
+                // Giả sử item là string tên phim, sau này có thể là object {title, poster...}
+                li.innerText = item; 
+                list.appendChild(li);
+            });
+        }
+
+        startCamera();
+    </script>
+</body>
+</html>
