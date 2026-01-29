@@ -39,6 +39,9 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        
+        .chip-option { @apply px-3 py-1.5 rounded-full text-xs font-medium border border-white/10 text-slate-400 bg-white/5 cursor-pointer transition-all hover:bg-white/10; }
+        .chip-option.active { @apply bg-primary text-white border-primary shadow-lg shadow-primary/20; }
     </style>
 </head>
 <body class="bg-background-dark text-slate-200 min-h-screen font-sans pb-safe-bottom overflow-x-hidden">
@@ -63,14 +66,16 @@
             <div class="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/30"><span class="material-icons-round text-white text-lg">psychology</span></div>
             <span class="text-lg font-display font-bold text-white uppercase tracking-tight">Kiet<span class="text-primary">Sound</span></span>
         </div>
-        <div class="flex gap-1 bg-white/5 p-1 rounded-2xl">
-            <button onclick="showView('dashboard')" id="nav-dashboard" class="px-5 py-2 rounded-xl text-xs font-bold transition-all bg-white/10 text-white">DASHBOARD</button>
-            <button onclick="showView('library')" id="nav-library" class="px-5 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">LIBRARY</button>
+        <div class="flex gap-1 bg-white/5 p-1 rounded-2xl overflow-x-auto no-scrollbar max-w-[200px] md:max-w-none">
+            <button onclick="showView('dashboard')" id="nav-dashboard" class="px-4 py-2 rounded-xl text-[10px] md:text-xs font-bold transition-all bg-white/10 text-white whitespace-nowrap">DASHBOARD</button>
+            <button onclick="showView('studio')" id="nav-studio" class="px-4 py-2 rounded-xl text-[10px] md:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">AI STUDIO</button>
+            <button onclick="showView('library')" id="nav-library" class="px-4 py-2 rounded-xl text-[10px] md:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">LIBRARY</button>
         </div>
     </div>
 </nav>
 
 <main class="max-w-7xl mx-auto px-4 pb-48">
+    
     <div id="view-dashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
         <section class="lg:col-span-5 space-y-4">
             <div id="camera-box" class="aspect-[4/5] md:aspect-[4/3] rounded-[2rem] overflow-hidden glass-card relative shadow-2xl border border-white/10 bg-black">
@@ -118,6 +123,84 @@
             </div>
             <div id="recommendations-container" class="space-y-3 pb-4 min-h-[300px]"></div>
         </section>
+    </div>
+
+    <div id="view-studio" class="hidden animate-fade-in space-y-6">
+        <div class="glass-card rounded-3xl p-6 border border-white/10">
+            <h2 class="text-2xl font-display font-bold text-white mb-6 uppercase flex items-center gap-2">
+                <span class="material-icons-round text-primary">auto_fix_high</span> AI Music Generator
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-5">
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Tên bài hát</label>
+                        <input id="gen-title" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-0" placeholder="Đặt tên cho tác phẩm...">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Lyrics (Lời bài hát)</label>
+                        <textarea id="gen-lyrics" rows="5" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-0" placeholder="Nhập lời bài hát của bạn vào đây..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block"># Styles</label>
+                        <div class="flex flex-wrap gap-2" id="style-options">
+                            </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block"># Moods</label>
+                        <div class="flex flex-wrap gap-2" id="mood-options">
+                            </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block"># Voices</label>
+                            <div class="flex flex-wrap gap-2" id="voice-options">
+                                </div>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block"># Tempos</label>
+                            <div class="flex flex-wrap gap-2" id="tempo-options">
+                                </div>
+                        </div>
+                    </div>
+
+                    <button id="generate-btn" onclick="generateMusic()" class="w-full bg-gradient-to-r from-primary to-purple-600 text-white py-4 rounded-xl font-bold shadow-xl shadow-primary/30 active:scale-95 transition-all">
+                        GENERATE TRACK
+                    </button>
+                </div>
+
+                <div class="flex flex-col justify-center items-center bg-black/20 rounded-2xl border border-white/5 p-8 relative overflow-hidden">
+                    <div id="gen-placeholder" class="text-center space-y-4">
+                        <span class="material-icons-round text-6xl text-white/10">music_note</span>
+                        <p class="text-slate-500 text-sm">Nhập lời và chọn thuộc tính để tạo bài hát.</p>
+                    </div>
+
+                    <div id="gen-loading" class="hidden flex flex-col items-center gap-4">
+                        <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-primary font-bold animate-pulse">AI is composing...</p>
+                    </div>
+
+                    <div id="gen-result" class="hidden w-full space-y-6 relative z-10">
+                        <div class="aspect-square bg-gradient-to-br from-gray-800 to-black rounded-2xl shadow-2xl border border-white/10 flex items-center justify-center relative overflow-hidden group">
+                            <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=60" class="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay">
+                            <div class="absolute inset-0 bg-black/40"></div>
+                            <span class="material-icons-round text-6xl text-white relative z-10 drop-shadow-lg">album</span>
+                        </div>
+                        <div class="text-center">
+                            <h3 id="result-title" class="text-2xl font-bold text-white">Song Title</h3>
+                            <p id="result-meta" class="text-sm text-primary font-medium mt-1">Pop • Happy</p>
+                        </div>
+                        <audio id="result-audio" controls class="w-full custom-audio"></audio>
+                        <a id="download-link" href="#" download class="block w-full text-center bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                            <span class="material-icons-round">download</span> DOWNLOAD MP3
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="view-library" class="hidden animate-fade-in">
@@ -185,6 +268,94 @@
 <div class="fixed top-0 left-0 opacity-0 pointer-events-none" id="youtube-player-hidden"></div>
 
 <script>
+    // --- DATA FOR GENERATOR ---
+    const GEN_DATA = {
+        styles: ["Pop", "Rock", "Punk", "Electronic", "Rap", "Metal", "Hard Rock", "Alternative", "Funk", "Pop Rock", "Pop Punk", "Swing", "Dark Folk", "Lo-Fi", "Sad Rap", "Dubstep", "EDM"],
+        moods: ["Joy", "Sadness", "Anger", "Fear", "Surprise", "Anticipation", "Calmness", "Romantic", "Nostalgia", "Triumph"],
+        voices: ["Soprano", "Alto", "Tenor", "Bass", "Male", "Female"],
+        tempos: ["Fast", "Medium", "Slow"]
+    };
+    
+    let selectedGen = { style: 'Pop', mood: 'Joy', voice: 'Female', tempo: 'Medium' };
+
+    function initGenOptions() {
+        renderChips('style-options', GEN_DATA.styles, 'style');
+        renderChips('mood-options', GEN_DATA.moods, 'mood');
+        renderChips('voice-options', GEN_DATA.voices, 'voice');
+        renderChips('tempo-options', GEN_DATA.tempos, 'tempo');
+    }
+
+    function renderChips(containerId, items, key) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = items.map(item => 
+            `<div onclick="selectChip('${key}', '${item}')" class="chip-option ${selectedGen[key] === item ? 'active' : ''}" data-group="${key}" data-val="${item}">${item}</div>`
+        ).join('');
+    }
+
+    window.selectChip = (key, val) => {
+        selectedGen[key] = val;
+        document.querySelectorAll(`.chip-option[data-group="${key}"]`).forEach(el => {
+            if(el.dataset.val === val) el.classList.add('active');
+            else el.classList.remove('active');
+        });
+    };
+
+    async function generateMusic() {
+        const title = document.getElementById('gen-title').value || "My AI Song";
+        const lyrics = document.getElementById('gen-lyrics').value;
+        
+        if(!lyrics.trim()) { alert("Vui lòng nhập lời bài hát!"); return; }
+
+        // UI State
+        document.getElementById('gen-placeholder').classList.add('hidden');
+        document.getElementById('gen-result').classList.add('hidden');
+        document.getElementById('gen-loading').classList.remove('hidden');
+        document.getElementById('generate-btn').disabled = true;
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('lyrics', lyrics);
+        formData.append('style', selectedGen.style);
+        formData.append('mood', selectedGen.mood);
+        formData.append('voice', selectedGen.voice);
+        formData.append('tempo', selectedGen.tempo);
+
+        try {
+            const resp = await fetch('/generate-music', { method: 'POST', body: formData });
+            const data = await resp.json();
+
+            if(data.status === 'success') {
+                document.getElementById('gen-loading').classList.add('hidden');
+                document.getElementById('gen-result').classList.remove('hidden');
+                
+                document.getElementById('result-title').innerText = data.title;
+                document.getElementById('result-meta').innerText = `${data.style} • ${selectedGen.mood}`;
+                
+                const audio = document.getElementById('result-audio');
+                audio.src = data.file_url;
+                audio.load();
+                
+                document.getElementById('download-link').href = data.file_url;
+                document.getElementById('download-link').download = `${data.title}.mp3`;
+            } else {
+                alert("Error: " + data.message);
+                resetGenUI();
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Generation failed.");
+            resetGenUI();
+        } finally {
+            document.getElementById('generate-btn').disabled = false;
+        }
+    }
+
+    function resetGenUI() {
+        document.getElementById('gen-loading').classList.add('hidden');
+        document.getElementById('gen-placeholder').classList.remove('hidden');
+    }
+
+    // --- MAIN LOGIC (EXISTING) ---
     let ytPlayer, isPlayerReady = false, isPlaying = false, currentTrackData = null, currentPlaylist = [];
     let collections = JSON.parse(localStorage.getItem('moodAiCollections')) || [{ id: 'default', name: 'Yêu thích', items: [] }];
     let activeCollectionId = 'default';
@@ -211,13 +382,10 @@
         isPlaying = (event.data === YT.PlayerState.PLAYING);
         document.getElementById('play-icon').innerText = isPlaying ? "pause" : "play_arrow";
         document.getElementById('player-status-text').innerText = isPlaying ? "Playing" : (event.data === YT.PlayerState.PAUSED ? "Paused" : "Ready");
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-        }
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
         if (event.data === YT.PlayerState.ENDED) playNext();
     }
 
-    // --- LOGIC NHẠC ---
     function playTrack(item) {
         currentTrackData = item;
         document.getElementById('player-bar').classList.remove('hidden');
@@ -225,29 +393,15 @@
         document.getElementById('player-thumbnail').src = item.thumbnail;
         document.getElementById('open-youtube-link').href = item.link;
 
-        // Cập nhật Media Session để hỗ trợ playback background tốt hơn trên mobile (Android Chrome, một phần iOS)
         if ('mediaSession' in navigator) {
-            try {
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: item.title || 'KietSound Pro',
-                    artist: currentType === 'podcast' ? 'Podcast' : 'Music',
-                    album: 'KietSound Pro - Mood AI',
-                    artwork: item.thumbnail ? [
-                        { src: item.thumbnail,   sizes: '96x96',   type: 'image/png' },
-                        { src: item.thumbnail,   sizes: '192x192', type: 'image/png' },
-                        { src: item.thumbnail,   sizes: '512x512', type: 'image/png' }
-                    ] : []
-                });
-            } catch (e) {
-                console.warn('MediaSession metadata error', e);
-            }
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: item.title, artist: 'Mood AI', album: 'KietSound Pro',
+                artwork: [{ src: item.thumbnail, sizes: '512x512', type: 'image/png' }]
+            });
         }
 
         const vId = extractVideoId(item.link);
-        if (vId && isPlayerReady) { 
-            ytPlayer.loadVideoById(vId); 
-            ytPlayer.playVideo(); 
-        }
+        if (vId && isPlayerReady) { ytPlayer.loadVideoById(vId); ytPlayer.playVideo(); }
     }
 
     function extractVideoId(url) {
@@ -265,15 +419,9 @@
     window.togglePlay = () => { if (isPlayerReady) isPlaying ? ytPlayer.pauseVideo() : ytPlayer.playVideo(); };
     document.getElementById('player-play-btn').onclick = togglePlay;
 
-    // --- SEEKBAR & VOLUME ---
     const seekBar = document.getElementById('seek-bar');
-    seekBar.oninput = function() {
-        if (isPlayerReady) ytPlayer.seekTo(ytPlayer.getDuration() * (this.value / 100), true);
-    };
-
-    document.getElementById('volume-slider').oninput = function() {
-        if (isPlayerReady) ytPlayer.setVolume(this.value);
-    };
+    seekBar.oninput = function() { if (isPlayerReady) ytPlayer.seekTo(ytPlayer.getDuration() * (this.value / 100), true); };
+    document.getElementById('volume-slider').oninput = function() { if (isPlayerReady) ytPlayer.setVolume(this.value); };
 
     setInterval(() => {
         if (isPlayerReady && isPlaying) {
@@ -293,7 +441,6 @@
         return `${m < 10 ? '0'+m : m}:${sc < 10 ? '0'+sc : sc}`; 
     }
 
-    // --- CAMERA TOGGLE LOGIC ---
     async function initCamera() { 
         try { 
             stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
@@ -329,7 +476,6 @@
         }
     };
 
-    // --- SEARCH LOGIC ---
     async function performSearch() {
         const q = document.getElementById('search-input').value;
         if (!q.trim()) return;
@@ -349,10 +495,8 @@
         const inactive = "px-4 py-2 rounded-xl text-xs font-bold bg-white/5 text-slate-400 border border-white/5 hover:bg-white/10 transition-all";
         document.getElementById('tab-music').className = type === 'music' ? active : inactive;
         document.getElementById('tab-podcast').className = type === 'podcast' ? active : inactive;
-        if(document.getElementById('search-input').value.trim() !== "") performSearch();
     };
 
-    // --- ANALYZE ---
     document.getElementById('analyze-btn').onclick = async () => {
         if (!isCameraOn) return;
         const btn = document.getElementById('analyze-btn');
@@ -385,10 +529,16 @@
         `).join('') || '<div class="text-center py-20 text-slate-600 italic">No results found.</div>';
     }
 
-    // --- UI ---
     window.showView = (name) => {
         document.getElementById('view-dashboard').classList.toggle('hidden', name !== 'dashboard');
+        document.getElementById('view-studio').classList.toggle('hidden', name !== 'studio');
         document.getElementById('view-library').classList.toggle('hidden', name !== 'library');
+        
+        // Update Nav Active State
+        document.getElementById('nav-dashboard').className = name === 'dashboard' ? 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white/10 text-white whitespace-nowrap' : 'px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap';
+        document.getElementById('nav-studio').className = name === 'studio' ? 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white/10 text-white whitespace-nowrap' : 'px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap';
+        document.getElementById('nav-library').className = name === 'library' ? 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white/10 text-white whitespace-nowrap' : 'px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap';
+
         if(name === 'library') renderLibrary();
     };
 
@@ -417,39 +567,13 @@
         renderLibrary();
     };
 
+    // INIT
     initCamera();
-
-    // --- MEDIA SESSION CONTROL HANDLERS (cho notification & lockscreen controls ở Android Chrome) ---
-    if ('mediaSession' in navigator) {
-        try {
-            navigator.mediaSession.setActionHandler('play', () => {
-                if (isPlayerReady) ytPlayer.playVideo();
-            });
-            navigator.mediaSession.setActionHandler('pause', () => {
-                if (isPlayerReady) ytPlayer.pauseVideo();
-            });
-            navigator.mediaSession.setActionHandler('stop', () => {
-                if (isPlayerReady) ytPlayer.pauseVideo();
-            });
-            navigator.mediaSession.setActionHandler('nexttrack', () => {
-                playNext();
-            });
-        } catch (e) {
-            console.warn('MediaSession action handler error', e);
-        }
-    }
-
-    // --- PWA: REGISTER SERVICE WORKER ---
+    initGenOptions();
+    
+    // Service Worker
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => {
-                    console.log('Service Worker registered', reg.scope);
-                })
-                .catch(err => {
-                    console.warn('Service Worker registration failed', err);
-                });
-        });
+        window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
     }
 </script>
 </body>
