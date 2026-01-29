@@ -1,0 +1,34 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+.git
+.gitignore
+.vscode
+.idea
+*.md
+!README.md
+.env
+.DS_Store
+Thumbs.db
+
+# Generated files
+generated_music/*.mp3
+user_songs.json
+*.wav
+beat_*.wav
+raw_*.mp3
+mel_*.wav
+proc_*.wav
+master_*.wav
+
+# Documentation (không cần trong production)
+CHANGELOG.md
+OPTIMIZATION_GUIDE.md
+WHATS_NEW.md

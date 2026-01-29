@@ -1,11 +1,17 @@
 # Sử dụng Python 3.9
 FROM python:3.9
 
-# Cài đặt thư viện hệ thống (Thêm ffmpeg)
+# Cài đặt thư viện hệ thống (OpenCV, FFmpeg, Audio Processing)
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
-    ffmpeg
+    ffmpeg \
+    rubberband-cli \
+    librubberband-dev \
+    libsndfile1 \
+    libsamplerate0 \
+    libsamplerate0-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Tạo thư mục làm việc
 WORKDIR /code
