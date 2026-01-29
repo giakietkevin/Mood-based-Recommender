@@ -1,0 +1,90 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# Generated Files (Runtime)
+generated_music/*.mp3
+user_songs.json
+
+# Temporary Audio Files
+*.wav
+beat_*.wav
+raw_*.mp3
+mel_*.wav
+proc_*.wav
+master_*.wav
+singing_*.wav
+test_*.wav
+
+# RVC Models (Download at runtime to save space)
+# models/rvc/*.pth
+# models/rvc/*.pt
+# Uncomment above if you want to exclude models
+
+# Local Setup Scripts (Not needed on HF)
+SETUP_AUTO.bat
+setup_auto.sh
+
+# Heavy Documentation (Keep only README & QUICKSTART)
+OPTIMIZATION_GUIDE.md
+CHANGELOG.md
+WHATS_NEW.md
+RVC_INTEGRATION.md
+DEPLOY_GUIDE.md
+SETUP_COMPLETE.md
+DEPLOY_HUGGINGFACE.md
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Backup
+*.bak
+*.backup

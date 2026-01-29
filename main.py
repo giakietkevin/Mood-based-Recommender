@@ -20,6 +20,15 @@ import edge_tts
 from gtts import gTTS
 from pydub import AudioSegment
 
+# RVC Singing Voice Conversion
+try:
+    from rvc_engine import get_rvc_engine
+    RVC_AVAILABLE = True
+    print("✅ RVC Singing Voice available")
+except Exception as e:
+    RVC_AVAILABLE = False
+    print(f"⚠️ RVC not available: {e}")
+
 # --- 1. CẤU HÌNH HỆ THỐNG ---
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
@@ -320,14 +329,32 @@ def apply_pitch_contour(input_path, output_path, mood, tempo, style, intensity=1
             end = total if i == num_segments - 1 else (i + 1) * seg_len
             seg = y[start:end]
             
-            # Pitch shift with better quality
-            seg_shifted = pyrb.pitch_shift(seg, sr, steps)
+            # Pitch shift with better quality + fallback
+            try:
+                seg_shifted = pyrb.pitch_shift(seg, sr, steps)
+            except Exception as e:
+                print(f"⚠️ Pyrubberband pitch shift failed for segment {i}, using librosa: {e}")
+                try:
+                    seg_shifted = librosa.effects.pitch_shift(y=seg, sr=sr, n_steps=steps)
+                except Exception as e2:
+                    print(f"⚠️ Librosa also failed, using original segment: {e2}")
+                    seg_shifted = seg
             
-            # Thêm subtle vibrato cho style cần (Ballad, Soul, Jazz)
-            if style in ["Ballad", "Soul", "Jazz", "R&B"] and len(seg_shifted) > sr // 2:
-                # Vibrato: 5-6 Hz, ±0.3 semitone
-                vibrato_rate = 5.5
-                vibrato_depth = 0.25
+            # Thêm VIBRATO cho giọng hát (áp dụng cho nhiều style hơn)
+            if style in ["Ballad", "Soul", "Jazz", "R&B", "Pop", "Pop Rock", "Indie"] and len(seg_shifted) > sr // 2:
+                # Vibrato parameters theo style
+                if style in ["Ballad", "Soul"]:
+                    vibrato_rate = 5.5    # Chậm, sâu lắng
+                    vibrato_depth = 0.35  # Rõ hơn
+                elif style in ["Jazz", "R&B"]:
+                    vibrato_rate = 6.0    # Trung bình
+                    vibrato_depth = 0.30
+                elif style in ["Pop", "Pop Rock", "Indie"]:
+                    vibrato_rate = 5.8    # Nhẹ nhàng
+                    vibrato_depth = 0.25
+                else:
+                    vibrato_rate = 5.5
+                    vibrato_depth = 0.25
                 t = np.arange(len(seg_shifted)) / sr
                 vibrato_shift = vibrato_depth * np.sin(2 * np.pi * vibrato_rate * t)
                 
@@ -480,16 +507,34 @@ def process_pro_audio(input_path, output_path, target_bpm, current_bpm=100, pitc
         
         # A. Time Stretch (Khớp Tempo) - với quality cao hơn
         if target_bpm > 0 and current_bpm > 0 and abs(target_bpm - current_bpm) > 1:
-            rate = target_bpm / current_bpm
-            # Clamp rate để tránh artifacts
-            rate = max(0.5, min(2.0, rate))
-            y = pyrb.time_stretch(y, sr, rate)
+            try:
+                rate = target_bpm / current_bpm
+                # Clamp rate để tránh artifacts
+                rate = max(0.5, min(2.0, rate))
+                y = pyrb.time_stretch(y, sr, rate)
+            except Exception as e:
+                print(f"⚠️ Time stretch failed (using librosa fallback): {e}")
+                # Fallback to librosa if pyrubberband fails
+                try:
+                    y = librosa.effects.time_stretch(y=y, rate=rate)
+                except:
+                    print("⚠️ Librosa fallback also failed, skipping time stretch")
+                    pass
         
         # B. Pitch Shift (Chỉnh tone giọng)
         if pitch_shift != 0:
-            # Clamp pitch shift
-            pitch_shift = max(-12, min(12, pitch_shift))
-            y = pyrb.pitch_shift(y, sr, pitch_shift)
+            try:
+                # Clamp pitch shift
+                pitch_shift = max(-12, min(12, pitch_shift))
+                y = pyrb.pitch_shift(y, sr, pitch_shift)
+            except Exception as e:
+                print(f"⚠️ Pitch shift failed (using librosa fallback): {e}")
+                # Fallback to librosa
+                try:
+                    y = librosa.effects.pitch_shift(y=y, sr=sr, n_steps=pitch_shift)
+                except:
+                    print("⚠️ Librosa fallback also failed, skipping pitch shift")
+                    pass
         
         # === STAGE 1: CLEANUP & DE-ESSING ===
         board = Pedalboard([
@@ -656,12 +701,32 @@ async def generate_music(
         try: beat_original_bpm = int(beat_source.replace(".mp3","").split("_")[-1])
         except: pass
     
-    # Xử lý Beat với quality cao
-    if beat_source:
-        process_pro_audio(beat_source, beat_proc_path, target_bpm, beat_original_bpm, 0, mood, style)
-        beat_final = AudioSegment.from_wav(beat_proc_path)
-        beat_final = beat_final + resolve_beat_gain(style, mood)
+    # Xử lý Beat với quality cao + fallback
+    if beat_source and os.path.exists(beat_source):
+        try:
+            # Try professional processing
+            success = process_pro_audio(beat_source, beat_proc_path, target_bpm, beat_original_bpm, 0, mood, style)
+            
+            # Check if output file is valid
+            if success and os.path.exists(beat_proc_path) and os.path.getsize(beat_proc_path) > 0:
+                try:
+                    beat_final = AudioSegment.from_wav(beat_proc_path)
+                    beat_final = beat_final + resolve_beat_gain(style, mood)
+                except Exception as e:
+                    print(f"⚠️ Cannot load processed beat, using original: {e}")
+                    # Fallback: Use original beat without processing
+                    beat_final = AudioSegment.from_mp3(beat_source) if beat_source.endswith('.mp3') else AudioSegment.from_wav(beat_source)
+                    beat_final = beat_final + resolve_beat_gain(style, mood)
+            else:
+                print("⚠️ Beat processing failed, using original")
+                # Fallback: Use original beat
+                beat_final = AudioSegment.from_mp3(beat_source) if beat_source.endswith('.mp3') else AudioSegment.from_wav(beat_source)
+                beat_final = beat_final + resolve_beat_gain(style, mood)
+        except Exception as e:
+            print(f"⚠️ Beat processing error, using silence: {e}")
+            beat_final = AudioSegment.silent(duration=10000)
     else:
+        print("⚠️ No beat source found, using silence")
         beat_final = AudioSegment.silent(duration=10000)
 
     # C. CẤU HÌNH GIỌNG (VOICE PROFILE)
@@ -704,22 +769,50 @@ async def generate_music(
         t_mel = f"mel_{uuid.uuid4()}.wav"
         t_proc = f"proc_{uuid.uuid4()}.wav"
         
-        # 1. Text-to-Speech (Có Fallback & Quality boost)
+        # 1. Text-to-Speech với Singing-like Parameters
         tts_success = False
         try:
-            # Edge-TTS với rate điều chỉnh
-            # Slow down cho Ballad, speed up cho Rap
-            rate_adjust = "+0%" # default
-            if style in ["Ballad", "Soul", "Jazz", "Blues"]:
-                rate_adjust = "-5%"
-            elif style in ["Rap", "Hip-Hop", "EDM", "Punk"]:
-                rate_adjust = "+5%"
+            # Edge-TTS với singing-style parameters
+            rate_adjust = "+0%"
+            pitch_adjust = "+0Hz"
             
-            comm = edge_tts.Communicate(line, tts_voice_id, rate=rate_adjust)
+            # Style-specific singing adjustments
+            if style in ["Ballad", "Soul", "Jazz", "Blues"]:
+                rate_adjust = "-10%"     # Chậm hơn để sustain notes
+                pitch_adjust = "+5Hz"    # Tăng pitch nhẹ, expressive hơn
+            elif style in ["Pop", "Pop Rock", "Indie"]:
+                rate_adjust = "+5%"      # Bright, upbeat
+                pitch_adjust = "+10Hz"   # Higher pitch cho pop
+            elif style in ["Rap", "Hip-Hop"]:
+                rate_adjust = "+15%"     # Fast flow
+                pitch_adjust = "-5Hz"    # Lower pitch cho rap
+            elif style in ["Rock", "Metal", "Punk"]:
+                rate_adjust = "+10%"     # Energetic
+                pitch_adjust = "+0Hz"    # Natural
+            elif style in ["EDM", "Electronic", "House", "Techno"]:
+                rate_adjust = "+5%"      # Dance tempo
+                pitch_adjust = "+15Hz"   # Bright, synthetic feel
+            
+            # Thêm prosody marks để giọng "sing-songy" hơn
+            # Thêm emphasis và pauses
+            enhanced_line = line
+            
+            # Thêm pauses tại dấu phẩy/chấm
+            enhanced_line = enhanced_line.replace(',', ' <break time="300ms"/> ')
+            enhanced_line = enhanced_line.replace('.', ' <break time="500ms"/> ')
+            
+            comm = edge_tts.Communicate(
+                enhanced_line, 
+                tts_voice_id, 
+                rate=rate_adjust,
+                pitch=pitch_adjust
+            )
             await comm.save(t_raw)
             tts_success = True
-        except:
+        except Exception as e:
+            print(f"⚠️ Edge-TTS failed: {e}")
             try: 
+                # Fallback: gTTS (basic)
                 gTTS(text=line, lang='vi', slow=(style in ["Ballad", "Soul"])).save(t_raw)
                 tts_success = True
             except: 
@@ -727,6 +820,34 @@ async def generate_music(
         
         if not tts_success or not os.path.exists(t_raw):
             continue
+        
+        # 1.5. Convert TTS to Singing Voice (RVC)
+        if RVC_AVAILABLE:
+            try:
+                voice_type = "female" if "Female" in voice else "male"
+                rvc_engine = get_rvc_engine(voice_type)
+                
+                t_singing = f"singing_{uuid.uuid4()}.wav"
+                
+                # Convert speech to singing
+                rvc_success = rvc_engine.convert_to_singing(
+                    t_raw,
+                    t_singing,
+                    pitch_shift=n_steps
+                )
+                
+                if rvc_success and os.path.exists(t_singing):
+                    # Use singing voice
+                    if os.path.exists(t_raw):
+                        try: os.remove(t_raw)
+                        except: pass
+                    t_raw = t_singing
+                    print("✅ RVC: TTS → Singing voice")
+                else:
+                    print("⚠️ RVC failed, using enhanced TTS")
+                    
+            except Exception as e:
+                print(f"⚠️ RVC conversion error: {e}, using TTS")
         
         # 2. Apply Melodic Contour
         apply_pitch_contour(t_raw, t_mel, mood, tempo, style, intensity=1.4)

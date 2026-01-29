@@ -1,0 +1,32 @@
+# Minimal Requirements (Fallback nếu full version quá nặng)
+# Chỉ bao gồm features cơ bản, không có advanced audio processing
+
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# AI/ML (Core)
+deepface==0.0.83
+tensorflow==2.15.0
+keras==2.15.0
+opencv-python-headless==4.9.0.80
+
+# Utilities
+requests==2.31.0
+python-dotenv==1.0.0
+numpy
+duckduckgo-search
+
+# Basic Audio (Không cần pyrubberband & pedalboard)
+edge-tts==6.1.9
+gTTS==2.5.0
+pydub==0.25.1
+aiofiles==23.2.1
+
+# Lưu ý: Version này không có:
+# - pyrubberband (time stretch & pitch shift nâng cao)
+# - pedalboard (audio effects chuyên nghiệp)
+# - librosa (melody generation)
+# - soundfile (high-quality audio I/O)
+# 
+# Text-to-Music sẽ vẫn hoạt động nhưng chất lượng giảm ~50%
