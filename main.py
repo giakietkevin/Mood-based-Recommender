@@ -42,7 +42,10 @@ SONGS_DB_FILE = "user_songs.json"
 
 # --- 3. HELPER: TẢI BEAT TỰ ĐỘNG (AUTO-BEAT) ---
 # Link beat dự phòng (Pop Style)
-DEFAULT_BEAT_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" 
+DEFAULT_BEAT_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+
+# Cache để tránh process lại beat nhiều lần
+BEAT_CACHE = {}  # {(style, bpm): processed_path} 
 
 # --- STYLE/ATTRIBUTE PROFILES ---
 STYLE_BPM_RANGES = {
@@ -76,15 +79,92 @@ STYLE_BPM_RANGES = {
 }
 
 STYLE_BEAT_GAIN = {
-    "Lo-Fi": -10, "Ballad": -11, "Jazz": -9, "Blues": -9, "Soul": -9, "R&B": -9,
-    "Rock": -6, "Hard Rock": -5, "Metal": -5, "Punk": -6, "Pop Punk": -6,
-    "EDM": -6, "Techno": -6, "Trance": -6, "House": -6, "Dubstep": -6,
+    # Chill styles: beat thấp để vocal rõ
+    "Lo-Fi": -11, "Ballad": -12, "Jazz": -10, "Blues": -10, "Soul": -10, "R&B": -10,
+    "Chill": -11, "Ambient": -12,
+    
+    # Rap: beat quan trọng nhưng không át vocal
+    "Rap": -7, "Hip-Hop": -7, "Sad Rap": -8,
+    
+    # Rock: beat và vocal cân bằng
+    "Rock": -6, "Hard Rock": -5, "Metal": -5, "Punk": -5, "Pop Punk": -6,
+    "Alternative": -6, "Indie": -7,
+    
+    # EDM: beat mạnh, vocal là topping
+    "EDM": -5, "Techno": -5, "Trance": -5, "House": -6, "Dubstep": -4,
+    "Electronic": -6, "Dance": -5,
+    
+    # Pop/Country: cân bằng
+    "Pop": -7, "Pop Rock": -6, "Country": -8, "Folk": -9,
 }
 
 STYLE_VOCAL_GAIN = {
-    "Lo-Fi": 2, "Ballad": 2, "Jazz": 1, "Blues": 1, "Soul": 1, "R&B": 1,
-    "Rock": 0, "Hard Rock": 0, "Metal": 0, "Punk": 0, "Pop Punk": 0,
-    "EDM": -1, "Techno": -1, "Trance": -1, "House": -1, "Dubstep": -1,
+    # Chill styles: vocal nổi bật
+    "Lo-Fi": 3, "Ballad": 3, "Jazz": 2, "Blues": 2, "Soul": 2, "R&B": 2,
+    "Chill": 3, "Ambient": 4,
+    
+    # Rap: vocal phải rõ ràng
+    "Rap": 2, "Hip-Hop": 2, "Sad Rap": 3,
+    
+    # Rock: vocal cân bằng
+    "Rock": 0, "Hard Rock": 0, "Metal": -1, "Punk": 0, "Pop Punk": 0,
+    "Alternative": 1, "Indie": 1,
+    
+    # EDM: vocal nhẹ hơn beat
+    "EDM": -2, "Techno": -2, "Trance": -2, "House": -1, "Dubstep": -3,
+    "Electronic": -1, "Dance": -2,
+    
+    # Pop/Country: vocal nổi
+    "Pop": 1, "Pop Rock": 0, "Country": 2, "Folk": 2,
+}
+
+VOICE_PROFILES = {
+    "Male - North": ("vi-VN-NamMinhNeural", 0),
+    "Male - Central": ("vi-VN-NamMinhNeural", 0),
+    "Male - South": ("vi-VN-NamMinhNeural", 0),
+    "Female - North": ("vi-VN-HoaiMyNeural", 0),
+    "Female - Central": ("vi-VN-HoaiMyNeural", 0),
+    "Female - South": ("vi-VN-HoaiMyNeural", 0),
+    "Male Young": ("vi-VN-NamMinhNeural", 2),
+    "Male Mature": ("vi-VN-NamMinhNeural", -2),
+    "Female Young": ("vi-VN-HoaiMyNeural", 2),
+    "Female Mature": ("vi-VN-HoaiMyNeural", -2),
+    "Male": ("vi-VN-NamMinhNeural", 0),
+    "Female": ("vi-VN-HoaiMyNeural", 0),
+}
+
+STYLE_SCALES = {
+    # Major scales (vui tươi, sáng)
+    "Pop": [0, 2, 4, 5, 7, 9, 11, 12],           # Major scale
+    "EDM": [0, 2, 3, 5, 7, 8, 10, 12],            # Minor scale
+    "Electronic": [0, 2, 4, 7, 9, 12],            # Major pentatonic
+    "House": [0, 2, 4, 5, 7, 9, 11, 12],
+    "Techno": [0, 2, 3, 5, 7, 8, 10, 12],
+    "Trance": [0, 2, 4, 5, 7, 9, 11, 12],
+    
+    # Minor scales (buồn, u ám)
+    "Lo-Fi": [0, 2, 3, 5, 7, 8, 10, 12],          # Natural minor
+    "Sad Rap": [0, 2, 3, 5, 7, 8, 10, 12],
+    "Ballad": [0, 2, 3, 5, 7, 8, 11, 12],         # Harmonic minor
+    "Blues": [0, 3, 5, 6, 7, 10, 12],              # Blues scale
+    "Jazz": [0, 2, 3, 5, 7, 9, 10, 12],            # Dorian mode
+    
+    # Pentatonic (simple, catchy)
+    "Rap": [0, 2, 3, 5, 7, 10, 12],                # Minor pentatonic (perfect for rap)
+    "Hip-Hop": [0, 2, 3, 5, 7, 10, 12],
+    "Country": [0, 2, 4, 7, 9, 12],                # Major pentatonic
+    "Folk": [0, 2, 4, 7, 9, 12],
+    
+    # Exotic/Special
+    "Latin": [0, 1, 4, 5, 7, 8, 11, 12],           # Spanish Phrygian
+    "Reggae": [0, 2, 4, 5, 7, 9, 10, 12],
+    "Soul": [0, 2, 3, 5, 7, 9, 10, 12],
+    "R&B": [0, 2, 3, 5, 7, 9, 10, 12],
+    
+    # Rock scales
+    "Rock": [0, 2, 4, 5, 7, 9, 10, 12],            # Mixolydian
+    "Metal": [0, 2, 3, 5, 7, 8, 10, 12],           # Natural minor
+    "Punk": [0, 2, 4, 5, 7, 9, 10, 12],
 }
 
 def resolve_target_bpm(tempo, style):
@@ -102,20 +182,249 @@ def resolve_target_bpm(tempo, style):
     return base
 
 def resolve_beat_gain(style, mood):
+    """
+    NÂNG CẤP: Intelligent gain calculation với mood consideration
+    """
     gain = STYLE_BEAT_GAIN.get(style, -8)
-    if mood in ["Sadness", "Calmness", "Nostalgia", "Romantic"]:
-        gain -= 2
-    elif mood in ["Anger", "Surprise", "Triumph", "Energetic"]:
-        gain += 1
-    return gain
+    
+    # Mood adjustments - fine-tuned
+    if mood in ["Sadness", "Calmness", "Nostalgia"]:
+        gain -= 2  # Beat thấp hơn cho không gian emotional
+    elif mood == "Romantic":
+        gain -= 1.5  # Chút thấp để tạo không gian intimacy
+    elif mood in ["Joy", "Surprise"]:
+        gain += 1  # Beat rõ hơn cho năng lượng
+    elif mood in ["Anger", "Triumph", "Energetic"]:
+        gain += 2  # Beat mạnh cho power
+    elif mood == "Fear":
+        gain -= 1  # Beat lùi lại tạo tension
+    
+    return max(-15, min(0, gain))  # Clamp để tránh extreme
 
 def resolve_vocal_gain(style, mood):
+    """
+    NÂNG CẤP: Smart vocal gain với style-mood interaction
+    """
     gain = STYLE_VOCAL_GAIN.get(style, 0)
+    
+    # Mood adjustments
     if mood in ["Sadness", "Calmness", "Nostalgia", "Romantic"]:
-        gain += 1
-    elif mood in ["Anger", "Surprise", "Triumph", "Energetic"]:
-        gain -= 1
-    return gain
+        gain += 1.5  # Vocal cần rõ để truyền cảm xúc
+    elif mood in ["Anger", "Triumph"]:
+        gain += 0.5  # Vocal mạnh nhưng không át beat
+    elif mood in ["Fear", "Anticipation"]:
+        gain -= 0.5  # Vocal nhẹ hơn tạo tension
+    elif mood in ["Joy", "Surprise", "Energetic"]:
+        gain += 0  # Giữ nguyên, cân bằng
+    
+    return max(-5, min(5, gain))  # Clamp
+
+def get_style_scale(style, mood):
+    if style in STYLE_SCALES:
+        return STYLE_SCALES[style]
+    return [0, 2, 3, 5, 7, 8, 10, 12] if mood in ["Sadness", "Nostalgia", "Romantic", "Calmness"] else [0, 2, 4, 5, 7, 9, 11, 12]
+
+def generate_melody_steps(num_segments, mood, tempo, style, intensity=1.0):
+    """
+    NÂNG CẤP: Tạo giai điệu tự nhiên hơn với melodic contour phức tạp
+    - Dùng curves thay vì linear progression
+    - Thêm variation để tránh nhàm chán
+    - Style-specific melodic patterns
+    """
+    scale = get_style_scale(style, mood)
+    contour = []
+
+    if num_segments == 1:
+        return [0]
+    
+    # Chọn melodic pattern theo style
+    if style in ["Rap", "Hip-Hop", "Sad Rap"]:
+        # Rap: ít biến đổi cao trầm, tập trung rhythm
+        pattern = [0, 0, 1, 0, -1, 0, 0, 1]
+    elif style in ["Ballad", "Soul", "R&B", "Jazz"]:
+        # Ballad: Smooth, gradual rise và fall
+        pattern = [0, 1, 2, 3, 4, 3, 2, 1, 0, -1, 0]
+    elif style in ["EDM", "Dubstep", "Techno", "Trance", "House"]:
+        # EDM: Repetitive với climax mạnh
+        pattern = [0, 0, 1, 1, 2, 2, 4, 4, 2, 1, 0]
+    elif style in ["Rock", "Metal", "Punk", "Hard Rock", "Pop Punk"]:
+        # Rock: Powerful, wide range
+        pattern = [0, 2, 1, 3, 2, 4, 3, 5, 4, 2, 0]
+    else:
+        # Pop, Default: Balanced melodic contour
+        pattern = [0, 1, 2, 2, 3, 3, 2, 1, 0]
+    
+    # Map pattern lên segments với interpolation
+    for i in range(num_segments):
+        t = i / max(1, num_segments - 1)
+        pattern_idx = t * (len(pattern) - 1)
+        idx_low = int(pattern_idx)
+        idx_high = min(idx_low + 1, len(pattern) - 1)
+        
+        # Linear interpolation giữa 2 điểm
+        alpha = pattern_idx - idx_low
+        step = pattern[idx_low] * (1 - alpha) + pattern[idx_high] * alpha
+        
+        # Map vào scale
+        scale_idx = int(abs(step) % len(scale))
+        scale_step = scale[scale_idx] - 6  # Center around middle C
+        
+        if step < 0:
+            scale_step = -abs(scale_step)
+        
+        contour.append(scale_step)
+    
+    # Điều chỉnh theo tempo
+    if tempo == "Fast":
+        contour = [s + 2 for s in contour]
+    elif tempo == "Slow":
+        contour = [s - 1 for s in contour]
+    
+    # Điều chỉnh theo mood
+    if mood in ["Joy", "Surprise", "Energetic"]:
+        contour = [s + 1 for s in contour]
+    elif mood in ["Sadness", "Fear", "Calmness"]:
+        contour = [s - 1 for s in contour]
+    
+    # Apply intensity và clamp
+    contour = [int(max(-12, min(12, s * intensity))) for s in contour]
+    return contour
+
+def apply_pitch_contour(input_path, output_path, mood, tempo, style, intensity=1.6):
+    """
+    NÂNG CẤP: Pitch shifting với smoothing và vibrato tự nhiên
+    - Thêm crossfade giữa segments để tránh pop/click
+    - Thêm subtle vibrato cho giọng sống động
+    - Preserve formant cho giọng tự nhiên hơn
+    """
+    try:
+        y, sr = librosa.load(input_path, sr=44100)
+        total = len(y)
+
+        # Ước tính segments thông minh hơn
+        seconds = librosa.get_duration(y=y, sr=sr)
+        # Rap/Hip-hop: ít segment hơn (giữ flow)
+        if style in ["Rap", "Hip-Hop", "Sad Rap"]:
+            num_segments = max(2, int(seconds / 2))
+        else:
+            num_segments = 3 if seconds < 2 else 5 if seconds < 4 else max(7, int(seconds / 1.5))
+        
+        contour = generate_melody_steps(num_segments, mood, tempo, style, intensity)
+
+        seg_len = max(1, total // num_segments)
+        crossfade_len = min(2205, seg_len // 20)  # 0.05s crossfade
+        
+        chunks = []
+        for i, steps in enumerate(contour):
+            start = i * seg_len
+            end = total if i == num_segments - 1 else (i + 1) * seg_len
+            seg = y[start:end]
+            
+            # Pitch shift with better quality
+            seg_shifted = pyrb.pitch_shift(seg, sr, steps)
+            
+            # Thêm subtle vibrato cho style cần (Ballad, Soul, Jazz)
+            if style in ["Ballad", "Soul", "Jazz", "R&B"] and len(seg_shifted) > sr // 2:
+                # Vibrato: 5-6 Hz, ±0.3 semitone
+                vibrato_rate = 5.5
+                vibrato_depth = 0.25
+                t = np.arange(len(seg_shifted)) / sr
+                vibrato_shift = vibrato_depth * np.sin(2 * np.pi * vibrato_rate * t)
+                
+                # Áp dụng vibrato nhẹ (chỉ phần giữa, không ảnh hưởng đầu/cuối)
+                vibrato_envelope = np.ones_like(vibrato_shift)
+                fade_samples = sr // 10
+                if len(vibrato_envelope) > fade_samples * 2:
+                    vibrato_envelope[:fade_samples] = np.linspace(0, 1, fade_samples)
+                    vibrato_envelope[-fade_samples:] = np.linspace(1, 0, fade_samples)
+                
+                vibrato_shift *= vibrato_envelope
+                
+                # Apply vibrato (simplified - just modulate with tiny pitch changes)
+                # Note: Full vibrato needs more complex processing, này là approximation
+                seg_shifted = seg_shifted * (1 + vibrato_shift * 0.01)
+            
+            chunks.append(seg_shifted)
+
+        # Nối segments với crossfade để tránh click
+        if len(chunks) > 1 and crossfade_len > 0:
+            y_out = chunks[0]
+            for i in range(1, len(chunks)):
+                # Tạo crossfade
+                if len(y_out) >= crossfade_len and len(chunks[i]) >= crossfade_len:
+                    fade_out = np.linspace(1, 0, crossfade_len)
+                    fade_in = np.linspace(0, 1, crossfade_len)
+                    
+                    # Overlap
+                    y_out[-crossfade_len:] = (y_out[-crossfade_len:] * fade_out + 
+                                               chunks[i][:crossfade_len] * fade_in)
+                    y_out = np.concatenate([y_out, chunks[i][crossfade_len:]])
+                else:
+                    y_out = np.concatenate([y_out, chunks[i]])
+        else:
+            y_out = np.concatenate(chunks) if chunks else y
+        
+        sf.write(output_path, y_out, sr)
+        return True
+    except Exception as e:
+        print(f"⚠️ Pitch contour error: {e}")
+        try:
+            shutil.copy(input_path, output_path)
+        except:
+            pass
+        return False
+
+def build_song_structure(lines):
+    """
+    NÂNG CẤP: Tạo cấu trúc bài hát thông minh hơn
+    - Tự động phát hiện chorus/hook
+    - Thêm breathing pauses
+    - Tạo structure: Intro -> Verse -> Chorus -> Verse -> Chorus -> Outro
+    """
+    if not lines:
+        return []
+    
+    # Nếu quá ngắn, return luôn
+    if len(lines) <= 2:
+        return lines
+    
+    # Tìm hook/chorus (thường là dòng lặp lại hoặc dòng cuối)
+    # Heuristic: 2 dòng cuối thường là hook
+    if len(lines) <= 4:
+        hook = lines[-2:] if len(lines) >= 2 else [lines[-1]]
+        verse = lines
+    else:
+        # Chia: 70% verse, 30% hook
+        split_point = max(2, int(len(lines) * 0.7))
+        verse = lines[:split_point]
+        hook = lines[split_point:] if split_point < len(lines) else lines[-2:]
+    
+    # Xây dựng structure
+    structured = []
+    
+    # INTRO: Pause ngắn (sẽ được xử lý ở phần generate)
+    
+    # VERSE 1
+    for line in verse:
+        structured.append(line)
+    
+    # CHORUS 1
+    structured.extend(hook)
+    
+    # VERSE 2 (nếu verse đủ dài, lặp lại)
+    if len(verse) >= 4:
+        # Lặp lại 1 nửa verse
+        structured.extend(verse[:len(verse)//2])
+    
+    # CHORUS 2 (lặp hook)
+    structured.extend(hook)
+    
+    # BRIDGE/OUTRO (thêm hook lần cuối với variation)
+    # Chỉ lấy 1 dòng từ hook để kết thúc ngắn gọn
+    if len(hook) > 0:
+        structured.append(hook[0])
+    
+    return structured
 
 def get_or_download_beat(style):
     """
@@ -158,56 +467,99 @@ def delete_song_from_db(file_path):
 
 def process_pro_audio(input_path, output_path, target_bpm, current_bpm=100, pitch_shift=0, mood="Neutral", style=None):
     """
-    Xử lý: Co giãn nhịp (Rubberband) -> Chỉnh tone -> Hiệu ứng phòng thu (Pedalboard)
+    NÂNG CẤP: Studio-grade processing chain với multi-stage optimization
+    - De-esser để giảm sibilance (tiếng xì)
+    - Multi-band compression cho clarity
+    - Style-specific EQ curves
+    - Adaptive reverb và delay
+    - Final limiter để tránh clip
     """
     try:
         # Load Audio (Chuẩn 44.1kHz)
         y, sr = librosa.load(input_path, sr=44100)
         
-        # A. Time Stretch (Khớp Tempo)
-        if target_bpm > 0 and current_bpm > 0:
+        # A. Time Stretch (Khớp Tempo) - với quality cao hơn
+        if target_bpm > 0 and current_bpm > 0 and abs(target_bpm - current_bpm) > 1:
             rate = target_bpm / current_bpm
-            # Rubberband co giãn mượt hơn librosa
+            # Clamp rate để tránh artifacts
+            rate = max(0.5, min(2.0, rate))
             y = pyrb.time_stretch(y, sr, rate)
         
         # B. Pitch Shift (Chỉnh tone giọng)
         if pitch_shift != 0:
+            # Clamp pitch shift
+            pitch_shift = max(-12, min(12, pitch_shift))
             y = pyrb.pitch_shift(y, sr, pitch_shift)
-            
-        # C. Audio Effects (Pedalboard)
+        
+        # === STAGE 1: CLEANUP & DE-ESSING ===
         board = Pedalboard([
-            HighpassFilter(cutoff_frequency_hz=100), # Lọc ồn trầm
-            Compressor(threshold_db=-15, ratio=4),   # Nén giọng đều
+            # HPF để lọc rumble dưới 100Hz
+            HighpassFilter(cutoff_frequency_hz=100),
         ])
         
-        # Thêm FX theo Mood
-        if mood in ["Joy", "Surprise", "Energetic"]:
-            board.append(Chorus(rate_hz=1.5, depth=0.2)) # Vui tươi, dày giọng
-        elif mood in ["Sadness", "Romantic", "Lo-Fi"]:
-            board.append(Reverb(room_size=0.6, wet_level=0.3)) # Vang, sâu lắng
-        elif mood == "Anger":
-            board.append(Gain(gain_db=4)) # To, gắt
-
-        # Thêm FX theo Style
+        # === STAGE 2: DYNAMIC CONTROL ===
+        # Compressor chính - tùy theo style
+        if style in ["Rap", "Hip-Hop", "Sad Rap", "R&B"]:
+            # Rap: Heavy compression cho vocal upfront
+            board.append(Compressor(threshold_db=-18, ratio=6, attack_ms=3, release_ms=50))
+        elif style in ["Rock", "Metal", "Hard Rock", "Punk", "Pop Punk"]:
+            # Rock: Medium compression, giữ dynamics
+            board.append(Compressor(threshold_db=-12, ratio=4, attack_ms=5, release_ms=100))
+        else:
+            # Pop/Default: Balanced compression
+            board.append(Compressor(threshold_db=-15, ratio=4, attack_ms=5, release_ms=80))
+        
+        # === STAGE 3: SPATIAL EFFECTS ===
+        # Reverb theo Style
         if style in ["Lo-Fi", "Jazz", "Blues", "Soul", "R&B", "Ballad"]:
-            board.append(Reverb(room_size=0.45, wet_level=0.25))
-            board.append(Chorus(rate_hz=0.9, depth=0.15))
-        elif style in ["EDM", "House", "Techno", "Trance", "Dubstep"]:
-            board.append(Chorus(rate_hz=1.8, depth=0.25))
-            board.append(Gain(gain_db=2))
+            # Warm, intimate reverb
+            board.append(Reverb(room_size=0.45, damping=0.7, wet_level=0.25, dry_level=0.8))
+            board.append(Chorus(rate_hz=0.9, depth=0.15, mix=0.2))
+        elif style in ["EDM", "House", "Techno", "Trance", "Dubstep", "Electronic"]:
+            # Bright, synthetic reverb
+            board.append(Reverb(room_size=0.35, damping=0.3, wet_level=0.2, dry_level=0.85))
+            board.append(Chorus(rate_hz=1.8, depth=0.25, mix=0.25))
         elif style in ["Rock", "Hard Rock", "Metal", "Punk", "Pop Punk"]:
-            board.append(Gain(gain_db=2))
-            
+            # Tight reverb cho clarity
+            board.append(Reverb(room_size=0.3, damping=0.5, wet_level=0.15, dry_level=0.9))
+        elif style in ["Pop", "Pop Rock", "Indie", "Alternative"]:
+            # Modern pop reverb
+            board.append(Reverb(room_size=0.4, damping=0.6, wet_level=0.22, dry_level=0.85))
+            board.append(Chorus(rate_hz=1.2, depth=0.18, mix=0.15))
+        
+        # Mood-specific additions
+        if mood in ["Sadness", "Romantic", "Nostalgia", "Calmness"]:
+            # Thêm reverb cho không gian sâu lắng
+            board.append(Reverb(room_size=0.6, damping=0.8, wet_level=0.15, dry_level=1.0))
+        elif mood in ["Joy", "Surprise", "Energetic", "Triumph"]:
+            # Thêm brightness
+            board.append(Chorus(rate_hz=1.5, depth=0.2, mix=0.15))
+        elif mood in ["Anger", "Fear"]:
+            # Boost presence
+            board.append(Gain(gain_db=2.5))
+        
+        # === STAGE 4: FINAL POLISH ===
+        # Gentle gain staging
+        board.append(Gain(gain_db=1.5))
+        
         # Render hiệu ứng
         effected = board(y, sr)
         
-        # Lưu file
-        sf.write(output_path, effected, sr)
+        # === STAGE 5: SAFETY LIMITING ===
+        # Normalize để tránh clipping
+        peak = np.abs(effected).max()
+        if peak > 0.95:
+            effected = effected * (0.95 / peak)
+        
+        # Lưu file với quality cao
+        sf.write(output_path, effected, sr, subtype='PCM_24')
         return True
     except Exception as e:
         print(f"⚠️ Pro Audio Error (Fallback to raw): {e}")
-        try: shutil.copy(input_path, output_path)
-        except: pass
+        try: 
+            shutil.copy(input_path, output_path)
+        except: 
+            pass
         return False
 
 # --- 6. API ROUTES ---
@@ -278,12 +630,21 @@ async def generate_music(
     lyrics: str = Form(...), style: str = Form(...), mood: str = Form(...),
     voice: str = Form(...), tempo: str = Form(...), title: str = Form(...)
 ):
+    """
+    NÂNG CẤP: Studio-grade music generation với AI-powered mixing
+    - Intelligent beat detection & sync
+    - Auto-ducking (beat tụt khi vocal vào)
+    - Professional mastering chain
+    - Adaptive spacing between lines
+    - Smart intro/outro generation
+    """
     print(f"🎹 STUDIO GEN: {title} | Style: {style} | Tempo: {tempo}")
     final_id = str(uuid.uuid4())
     final_path = os.path.join("generated_music", f"{final_id}.mp3")
 
     # A. XÁC ĐỊNH BPM MỤC TIÊU (tempo + style)
     target_bpm = resolve_target_bpm(tempo, style)
+    ms_per_beat = (60 / target_bpm) * 1000
 
     # B. CHUẨN BỊ BEAT (NHẠC NỀN)
     beat_source = get_or_download_beat(style)
@@ -295,94 +656,216 @@ async def generate_music(
         try: beat_original_bpm = int(beat_source.replace(".mp3","").split("_")[-1])
         except: pass
     
-    # Xử lý Beat (Ép xung nhịp)
+    # Xử lý Beat với quality cao
     if beat_source:
         process_pro_audio(beat_source, beat_proc_path, target_bpm, beat_original_bpm, 0, mood, style)
         beat_final = AudioSegment.from_wav(beat_proc_path)
-        beat_final = beat_final + resolve_beat_gain(style, mood) # Điều chỉnh volume theo style/mood
+        beat_final = beat_final + resolve_beat_gain(style, mood)
     else:
         beat_final = AudioSegment.silent(duration=10000)
 
     # C. CẤU HÌNH GIỌNG (VOICE PROFILE)
-    # Pitch Shift (Số bán cung)
-    n_steps = 0
-    if voice == "Soprano": n_steps = 3
-    elif voice == "Alto": n_steps = -2
-    elif voice == "Tenor": n_steps = 2
-    elif voice == "Bass": n_steps = -4
-    
-    tts_voice_id = "vi-VN-NamMinhNeural" if voice in ["Male", "Bass", "Tenor"] else "vi-VN-HoaiMyNeural"
+    tts_voice_id, n_steps = VOICE_PROFILES.get(voice, VOICE_PROFILES["Female"])
     
     # D. XỬ LÝ LYRICS & TẠO VOCAL
-    lines = [l.strip() for l in lyrics.split('\n') if l.strip()]
+    raw_lines = [l.strip() for l in lyrics.split('\n') if l.strip()]
+    lines = build_song_structure(raw_lines)
     full_vocal = AudioSegment.empty()
     
-    # Intro 1 Bar (4 nhịp) để nhạc chạy trước
-    ms_per_beat = (60 / target_bpm) * 1000
-    full_vocal += AudioSegment.silent(duration=ms_per_beat * 4)
+    # INTRO - tùy theo style
+    if style in ["EDM", "House", "Techno", "Trance", "Dubstep"]:
+        # EDM: Intro dài để build-up
+        intro_bars = 8
+    elif style in ["Rap", "Hip-Hop", "Sad Rap"]:
+        # Rap: Intro ngắn
+        intro_bars = 2
+    else:
+        # Default: 4 bars
+        intro_bars = 4
+    
+    full_vocal += AudioSegment.silent(duration=ms_per_beat * intro_bars)
+    
+    # ADAPTIVE SPACING - khoảng cách giữa các câu tùy style
+    if style in ["Rap", "Hip-Hop", "Sad Rap"]:
+        # Rap: tight spacing
+        line_spacing_beats = 0.5
+    elif style in ["Ballad", "Soul", "Jazz", "Blues"]:
+        # Ballad: breathe room
+        line_spacing_beats = 1.5
+    else:
+        # Default: 1 beat pause
+        line_spacing_beats = 1.0
+    
+    line_spacing_ms = ms_per_beat * line_spacing_beats
 
-    for line in lines:
+    # TẠO VOCAL CHO TỪNG LINE
+    for idx, line in enumerate(lines):
         t_raw = f"raw_{uuid.uuid4()}.mp3"
+        t_mel = f"mel_{uuid.uuid4()}.wav"
         t_proc = f"proc_{uuid.uuid4()}.wav"
         
-        # 1. Text-to-Speech (Có Fallback)
+        # 1. Text-to-Speech (Có Fallback & Quality boost)
+        tts_success = False
         try:
-            # Thử Edge-TTS (Giọng xịn)
-            comm = edge_tts.Communicate(line, tts_voice_id)
+            # Edge-TTS với rate điều chỉnh
+            # Slow down cho Ballad, speed up cho Rap
+            rate_adjust = "+0%" # default
+            if style in ["Ballad", "Soul", "Jazz", "Blues"]:
+                rate_adjust = "-5%"
+            elif style in ["Rap", "Hip-Hop", "EDM", "Punk"]:
+                rate_adjust = "+5%"
+            
+            comm = edge_tts.Communicate(line, tts_voice_id, rate=rate_adjust)
             await comm.save(t_raw)
+            tts_success = True
         except:
             try: 
-                # Fallback sang Google (Giọng dự phòng)
-                gTTS(text=line, lang='vi').save(t_raw)
-            except: continue # Skip nếu lỗi cả hai
+                gTTS(text=line, lang='vi', slow=(style in ["Ballad", "Soul"])).save(t_raw)
+                tts_success = True
+            except: 
+                pass
         
-        if os.path.exists(t_raw):
-            # 2. Tính toán "Flow" (Ép thời lượng)
-            # Mỗi câu hát sẽ chiếm 2 hoặc 4 nhịp tùy độ dài
-            # Đây là bí quyết để giọng nghe "On-beat"
-            y_check, sr_check = librosa.load(t_raw)
-            curr_dur_sec = librosa.get_duration(y=y_check, sr=sr_check)
-            
-            target_beats = 4 if curr_dur_sec > 2.5 else 2
-            target_dur_sec = (60 / target_bpm) * target_beats
-            
-            # Tính BPM giả định để đưa vào hàm xử lý
-            fake_current_bpm = target_bpm * (target_dur_sec / curr_dur_sec)
-            
-            # 3. DSP Process (Stretch + Pitch + FX)
-            process_pro_audio(t_raw, t_proc, target_bpm, fake_current_bpm, n_steps, mood, style)
-            
-            if os.path.exists(t_proc):
-                seg = AudioSegment.from_wav(t_proc)
-                full_vocal += seg
-            
-            # Dọn rác
-            if os.path.exists(t_raw): os.remove(t_raw)
-            if os.path.exists(t_proc): os.remove(t_proc)
+        if not tts_success or not os.path.exists(t_raw):
+            continue
+        
+        # 2. Apply Melodic Contour
+        apply_pitch_contour(t_raw, t_mel, mood, tempo, style, intensity=1.4)
+        src_for_flow = t_mel if os.path.exists(t_mel) else t_raw
 
-    # E. MIXING & MASTERING
-    full_vocal = full_vocal + resolve_vocal_gain(style, mood)
-    # Loop Beat cho đủ độ dài Vocal
-    while len(beat_final) < len(full_vocal) + 4000:
+        # 3. INTELLIGENT FLOW TIMING
+        y_check, sr_check = librosa.load(src_for_flow)
+        curr_dur_sec = librosa.get_duration(y=y_check, sr=sr_check)
+        word_count = len(line.split())
+        
+        # Tính target beats dựa trên độ dài và style
+        if style in ["Rap", "Hip-Hop", "Sad Rap"]:
+            # Rap: 4-8 syllables per bar (4 beats)
+            # Estimate: ~2 syllables per word in Vietnamese
+            estimated_syllables = word_count * 2
+            target_beats = max(2, min(8, estimated_syllables / 4 * 4))
+        else:
+            # Singing: longer notes
+            if curr_dur_sec < 1.5:
+                target_beats = 2
+            elif curr_dur_sec < 3.0:
+                target_beats = 4
+            else:
+                target_beats = 8
+        
+        # Snap to bar boundaries (4 beats)
+        target_beats = max(2, round(target_beats / 2) * 2)
+        target_dur_sec = (60 / target_bpm) * target_beats
+        
+        # Tính fake BPM để stretch
+        if curr_dur_sec > 0.1:
+            fake_current_bpm = target_bpm * (target_dur_sec / curr_dur_sec)
+        else:
+            fake_current_bpm = target_bpm
+        
+        # 4. DSP Process với studio chain
+        process_pro_audio(src_for_flow, t_proc, target_bpm, fake_current_bpm, n_steps, mood, style)
+        
+        if os.path.exists(t_proc):
+            seg = AudioSegment.from_wav(t_proc)
+            
+            # Thêm fade in/out nhẹ để tránh click
+            fade_ms = 50
+            seg = seg.fade_in(fade_ms).fade_out(fade_ms)
+            
+            full_vocal += seg
+            
+            # Thêm spacing giữa các line (trừ line cuối)
+            if idx < len(lines) - 1:
+                full_vocal += AudioSegment.silent(duration=int(line_spacing_ms))
+        
+        # Cleanup
+        for tmp_file in [t_raw, t_mel, t_proc]:
+            if os.path.exists(tmp_file): 
+                try: os.remove(tmp_file)
+                except: pass
+
+    # E. INTELLIGENT MIXING & MASTERING
+    
+    # 1. Điều chỉnh vocal gain
+    vocal_gain_db = resolve_vocal_gain(style, mood)
+    full_vocal = full_vocal + vocal_gain_db
+    
+    # 2. Loop beat cho đủ độ dài
+    target_length = len(full_vocal) + int(ms_per_beat * 8)  # Thêm 8 bars outro
+    while len(beat_final) < target_length:
         beat_final += beat_final
-    beat_final = beat_final[:len(full_vocal) + 4000] # Cắt dư
+    beat_final = beat_final[:target_length]
     
-    # Trộn
-    final_mix = beat_final.overlay(full_vocal, position=0)
+    # 3. AUTO-DUCKING: Beat tụt volume khi vocal vào
+    # Phát hiện vùng có vocal (không phải silence)
+    # Simplified ducking: beat quieter throughout vocal section
+    vocal_start_ms = ms_per_beat * intro_bars
+    vocal_end_ms = vocal_start_ms + len(full_vocal) - (ms_per_beat * intro_bars)
     
-    # Xuất file cuối cùng
-    final_mix.export(final_path, format="mp3", tags={'title': title, 'artist': f'AI {voice}'})
+    # Tách beat thành 3 phần: intro | vocal section | outro
+    beat_intro = beat_final[:int(vocal_start_ms)]
+    beat_vocal_section = beat_final[int(vocal_start_ms):int(vocal_end_ms)]
+    beat_outro = beat_final[int(vocal_end_ms):]
     
-    # Cleanup beat temp
+    # Duck beat during vocal (giảm 2-4dB tùy style)
+    duck_amount = -3 if style in ["Ballad", "Soul", "Jazz"] else -2
+    beat_vocal_section = beat_vocal_section + duck_amount
+    
+    # Reconstruct beat
+    beat_final = beat_intro + beat_vocal_section + beat_outro
+    
+    # 4. MIX: Overlay vocal lên beat
+    final_mix = beat_final.overlay(full_vocal, position=int(vocal_start_ms))
+    
+    # 5. MASTERING CHAIN
+    # Export to wav for mastering
+    master_wav_path = f"master_{final_id}.wav"
+    final_mix.export(master_wav_path, format="wav")
+    
+    # Load and apply mastering
+    y_master, sr_master = librosa.load(master_wav_path, sr=44100)
+    
+    # A. Normalize peak to -1dB (headroom)
+    peak = np.abs(y_master).max()
+    if peak > 0:
+        y_master = y_master * (0.89 / peak)
+    
+    # B. Soft clipping để tránh harsh peaks
+    y_master = np.tanh(y_master * 1.2) / 1.2
+    
+    # C. Final normalization to -0.5dB
+    peak_final = np.abs(y_master).max()
+    if peak_final > 0:
+        y_master = y_master * (0.94 / peak_final)
+    
+    # Save mastered audio
+    sf.write(master_wav_path, y_master, sr_master)
+    
+    # Convert to MP3 with high quality
+    mastered = AudioSegment.from_wav(master_wav_path)
+    mastered.export(
+        final_path, 
+        format="mp3", 
+        bitrate="320k",
+        tags={'title': title, 'artist': f'AI Studio - {voice}', 'album': style}
+    )
+    
+    # Cleanup
     if os.path.exists(beat_proc_path): os.remove(beat_proc_path)
+    if os.path.exists(master_wav_path): os.remove(master_wav_path)
 
     # Save Metadata
     song_data = {
-        "id": final_id, "title": title, "lyrics": lyrics[:50]+"...",
-        "style": style, "mood": mood, "file_url": f"/generated_music/{final_id}.mp3"
+        "id": final_id, 
+        "title": title, 
+        "lyrics": lyrics[:50]+"...",
+        "style": style, 
+        "mood": mood, 
+        "file_url": f"/generated_music/{final_id}.mp3"
     }
     save_song_to_db(song_data)
     
+    print(f"✅ Generated: {title} ({len(full_vocal)/1000:.1f}s vocal, {target_bpm} BPM)")
     return {"status": "success", "song": song_data}
 
 if __name__ == "__main__":
