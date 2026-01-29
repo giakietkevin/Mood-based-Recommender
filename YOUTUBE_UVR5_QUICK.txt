@@ -1,0 +1,272 @@
+================================================================================
+  YOUTUBE + UVR5 - SETUP NHANH NHẤT (30 PHÚT)
+  Không cần links có thể hỏng - 100% Reliable!
+================================================================================
+
+🎯 4 BƯỚC ĐƠN GIẢN:
+
+================================================================================
+BƯỚC 1: DOWNLOAD UVR5 (5 phút)
+================================================================================
+
+1. Vào: https://ultimatevocalremover.com/
+
+2. Click "DOWNLOAD" button (miễn phí!)
+
+3. Chọn version:
+   - Windows: Ultimate-Vocal-Remover-v5.x.x-Windows.exe
+   - Mac: Ultimate-Vocal-Remover-v5.x.x-MacOS.dmg
+   - Linux: Ultimate-Vocal-Remover-v5.x.x-Linux.AppImage
+
+4. Install → Next → Next → Install → Done!
+
+✅ XONG BƯỚC 1!
+
+================================================================================
+BƯỚC 2: TẢI VIETNAMESE SONGS (10 phút)
+================================================================================
+
+CÁCH A - DÙNG ONLINE TOOL (DỄ NHẤT):
+-------------------------------------
+
+1. Mở: https://ytmp3.cc/
+   (hoặc: https://y2mate.com/, https://savefrom.net/)
+
+2. Tìm 5-10 bài hát Vietnamese trên YouTube:
+   
+   KHUYẾN NGHỊ:
+   - Sơn Tùng M-TP: Chúng Ta Của Hiện Tại, Lạc Trôi
+   - Đen: Bài Này Chill Phết, Anh Đếch Cần Gì
+   - AMEE: Anh Nhà Ở Đâu Thế, Điều Buồn Nhất
+   - Hoàng Thùy Linh: See Tình
+   - Binz: Bigcityboi
+   
+   (Chọn bài có giọng rõ, ít auto-tune!)
+
+3. Copy YouTube link của mỗi bài
+
+4. Paste vào ytmp3.cc
+
+5. Click "Convert" → "Download"
+
+6. Lưu vào folder: downloads\
+
+7. Lặp lại cho 5-10 bài
+
+CÁCH B - DÙNG YT-DLP (NHANH HƠN):
+-----------------------------------
+
+# Install yt-dlp
+pip install yt-dlp
+
+# Tải 1 bài
+yt-dlp -x --audio-format wav -o "downloads/%(title)s.%(ext)s" [YOUTUBE_URL]
+
+# Ví dụ:
+yt-dlp -x --audio-format wav -o "downloads/%(title)s.%(ext)s" "https://www.youtube.com/watch?v=knW7-x7Y7RE"
+
+✅ XONG BƯỚC 2! (Có 5-10 bài trong downloads/)
+
+================================================================================
+BƯỚC 3: EXTRACT VOCALS VỚI UVR5 (10 phút)
+================================================================================
+
+1. Mở UVR5 (app vừa install)
+
+2. Settings:
+   - Model: "MDX-Net" hoặc "VR Architecture"
+   - Output folder: để mặc định
+
+3. Drag & drop TẤT CẢ bài nhạc từ downloads/ vào UVR5
+
+4. Click "START PROCESSING"
+
+5. Đợi 10-15 phút (2-3 phút/bài)
+
+6. Khi xong sẽ có files:
+   - [song_name]_Vocals.wav (CẦN FILE NÀY!)
+   - [song_name]_Instrumental.wav (không cần)
+
+✅ XONG BƯỚC 3! (Có 5-10 *_Vocals.wav files)
+
+================================================================================
+BƯỚC 4: COPY VÀO PROJECT (2 phút)
+================================================================================
+
+# Tạo folder
+mkdir dataset
+mkdir dataset\raw
+
+# Copy tất cả vocals
+copy *_Vocals.wav dataset\raw\
+
+# Hoặc từ Output folder của UVR5:
+copy "C:\Users\[YOUR_NAME]\Documents\Ultimate Vocal Remover 5\Separated\*_Vocals.wav" dataset\raw\
+
+# Verify
+dir dataset\raw\*.wav
+
+# Nên thấy: 5-10 files
+
+✅ XONG BƯỚC 4! DATASET READY! 🎉
+
+================================================================================
+TEST DATASET
+================================================================================
+
+# Play 1 file test
+start dataset\raw\[any_file].wav
+
+# Nghe thử:
+- ✅ Chỉ có vocals (no music)
+- ✅ Giọng rõ ràng
+- ✅ Không có background noise
+
+→ Perfect! Ready to train!
+
+================================================================================
+NEXT: TRAIN RVC MODEL
+================================================================================
+
+Bây giờ dataset đã ready, làm theo:
+
+1. Upload dataset\raw\ lên Google Drive
+
+2. Mở: RVC_TRAINING_COLAB.ipynb
+
+3. Follow training steps (đã có sẵn trong notebook)
+
+4. Đợi 2-3 giờ → Done!
+
+================================================================================
+TIMELINE
+================================================================================
+
+BƯỚC 1: Download UVR5         →  5 phút
+BƯỚC 2: Tải songs            → 10 phút  
+BƯỚC 3: Extract vocals       → 10 phút
+BƯỚC 4: Copy vào project     →  2 phút
+---------------------------------------------------
+TOTAL:                         27 phút! ⚡
+
+Training (Colab):              2-3 giờ
+GRAND TOTAL:                   ~3 giờ
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Q: ytmp3.cc không hoạt động?
+A: Dùng alternatives:
+   - https://y2mate.com/
+   - https://savefrom.net/
+   - https://yt5s.com/
+   - Hoặc install yt-dlp (Cách B)
+
+Q: UVR5 lỗi?
+A: 
+   - Check GPU/CPU trong Settings
+   - Chọn model khác (thử "VR Architecture")
+   - Restart UVR5
+
+Q: Vocals không clean?
+A:
+   - Trong UVR5, chọn model "MDX-Net (High Quality)"
+   - Hoặc chạy lại với settings khác nhau
+
+Q: File quá lớn?
+A:
+   - Chỉ cần 5 bài (10-15 phút total audio) là đủ!
+   - Không cần nhiều quá
+
+================================================================================
+RECOMMENDED SONGS (EASY TO FIND & GOOD QUALITY)
+================================================================================
+
+V-POP:
+- Sơn Tùng M-TP - Chúng Ta Của Hiện Tại
+- Sơn Tùng M-TP - Lạc Trôi
+- AMEE - Anh Nhà Ở Đâu Thế
+- Hoàng Thùy Linh - See Tình
+
+RAP:
+- Đen - Bài Này Chill Phết
+- Đen ft. MIN - Anh Đếch Cần Gì
+- Binz - Bigcityboi
+
+BALLAD:
+- Mỹ Tâm - Ước Gì
+- Đức Phúc - Hạ Còn Vương Nắng
+
+→ MIX STYLES = BETTER MODEL! 🎵
+
+================================================================================
+TẠI SAO CÁCH NÀY TỐT HƠN DOWNLOAD DATASET?
+================================================================================
+
+VIVOS/Common Voice:
+❌ Links bị hỏng (404)
+❌ Download failed
+❌ Phụ thuộc vào server khác
+❌ Speech data (not singing)
+❌ Lower quality cho singing voice
+
+YOUTUBE + UVR5:
+✅ Luôn hoạt động (YouTube luôn có)
+✅ Không phụ thuộc links
+✅ Data từ bài hát THẬT = BEST cho singing!
+✅ Chọn được giọng ca sĩ nào
+✅ Control quality 100%
+✅ FREE, EASY, FAST
+
+→ WINNER: YouTube + UVR5! 🏆
+
+================================================================================
+LINKS QUAN TRỌNG
+================================================================================
+
+UVR5: https://ultimatevocalremover.com/
+Online YouTube Downloader: https://ytmp3.cc/
+Alternative 1: https://y2mate.com/
+Alternative 2: https://savefrom.net/
+yt-dlp (CLI tool): https://github.com/yt-dlp/yt-dlp
+
+================================================================================
+CHECKLIST
+================================================================================
+
+TRƯỚC KHI BẮT ĐẦU:
+[ ] Internet OK
+[ ] ~500MB free space
+[ ] 30 phút rảnh
+
+SAU BƯỚC 1:
+[ ] UVR5 installed
+[ ] UVR5 mở được
+
+SAU BƯỚC 2:
+[ ] 5-10 bài trong downloads/
+[ ] Files là MP3 hoặc WAV
+[ ] Total: 10-20 phút audio
+
+SAU BƯỚC 3:
+[ ] 5-10 *_Vocals.wav files
+[ ] Play test 1 file → chỉ có vocals
+[ ] No background music
+
+SAU BƯỚC 4:
+[ ] Files trong dataset\raw\
+[ ] dir dataset\raw\*.wav → thấy files
+[ ] Ready to train!
+
+================================================================================
+                          BẮT ĐẦU NGAY! 🚀
+================================================================================
+
+BƯỚC 1 → https://ultimatevocalremover.com/ → DOWNLOAD!
+
+Easy, Fast, Reliable! 💪
+
+================================================================================
+                            GOOD LUCK! 🎤🎵
+================================================================================
