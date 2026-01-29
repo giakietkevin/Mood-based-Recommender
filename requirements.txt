@@ -2,11 +2,11 @@ fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 deepface==0.0.83
-tensorflow==2.15.0
-keras==2.15.0
-opencv-python-headless==4.9.0.80
-requests==2.31.0
-python-dotenv==1.0.0
-numpy<2
-# Dùng DuckDuckGo để lách luật chặn IP của YouTube
+edge-tts==6.1.9
+pydub==0.25.1
+aiofiles==23.2.1
 duckduckgo-search
+# Thêm librosa và soundfile để xử lý pitch/time stretch xịn hơn
+librosa==0.10.1 
+soundfile==0.12.1
+numpy
