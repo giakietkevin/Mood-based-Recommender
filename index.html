@@ -160,12 +160,16 @@
                                 <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Tên bài hát</label>
                                 <input id="gen-title" class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-0 transition-colors placeholder-slate-600" placeholder="Đặt tên cho tác phẩm...">
                             </div>
-                            <div class="p-4 rounded-xl bg-white/5 border border-white/5">
-                                <p class="text-[10px] text-slate-400 uppercase font-bold mb-2">Quick Tips</p>
-                                <ul class="text-xs text-slate-300 space-y-1 list-disc pl-4">
-                                    <li>Mỗi dòng là một câu hát (Bar).</li>
-                                    <li>Dùng dấu chấm để ngắt nghỉ.</li>
-                                    <li>Chọn Tempo phù hợp với độ dài câu.</li>
+                            <div class="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20">
+                                <p class="text-[10px] text-primary uppercase font-bold mb-2 flex items-center gap-1">
+                                    <span class="material-icons-round text-xs">lightbulb</span> Pro Tips
+                                </p>
+                                <ul class="text-xs text-slate-300 space-y-1.5 leading-relaxed">
+                                    <li><strong>Mỗi dòng = 1 câu hát</strong> - Xuống dòng để AI bắt nhịp tốt hơn</li>
+                                    <li><strong>Rap:</strong> Câu ngắn, nhiều chữ → chọn Fast/Medium</li>
+                                    <li><strong>Ballad:</strong> Câu dài, ít chữ → chọn Slow</li>
+                                    <li><strong>Hook/Chorus:</strong> 2-3 dòng cuối sẽ tự động lặp lại</li>
+                                    <li><strong>Dấu câu:</strong> Dùng dấu chấm (.) để tạo pauses tự nhiên</li>
                                 </ul>
                             </div>
                         </div>
@@ -208,7 +212,19 @@
                         <button id="generate-btn" onclick="generateMusic()" class="group w-full bg-gradient-to-r from-primary to-orange-600 text-white py-4 rounded-xl font-bold text-lg shadow-xl shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3">
                             <span class="material-icons-round group-hover:animate-spin">album</span> GENERATE TRACK
                         </button>
-                        <p id="gen-status" class="text-center text-xs text-primary font-bold h-4 mt-3 opacity-0 transition-opacity"></p>
+                        
+                        <!-- Progress bar -->
+                        <div id="gen-progress-container" class="mt-3 opacity-0 transition-opacity">
+                            <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+                                <span id="gen-step-text">Đang xử lý...</span>
+                                <span id="gen-time-text">~30s</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div id="gen-progress-bar" class="h-full bg-gradient-to-r from-primary to-purple-600 transition-all duration-500 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <p id="gen-status" class="text-center text-xs text-primary font-bold h-4 mt-2 opacity-0 transition-opacity"></p>
                     </div>
                 </div>
             </div>
@@ -296,7 +312,10 @@
             "Calmness", "Romantic", "Nostalgia", "Triumph"
         ],
         voices: [
-            "Soprano", "Alto", "Tenor", "Bass", "Male", "Female"
+            "Male - North", "Male - Central", "Male - South",
+            "Female - North", "Female - Central", "Female - South",
+            "Male Young", "Male Mature", "Female Young", "Female Mature",
+            "Male", "Female"
         ],
         tempos: [
             "Fast", "Medium", "Slow"
@@ -399,26 +418,56 @@
     };
 
     // ==========================================
-    // 3. MUSIC GENERATION LOGIC
+    // 3. MUSIC GENERATION LOGIC (UPGRADED)
     // ==========================================
     async function generateMusic() {
         const title = document.getElementById('gen-title').value;
         const lyrics = document.getElementById('gen-lyrics').value;
         const btn = document.getElementById('generate-btn');
         const status = document.getElementById('gen-status');
+        const progressContainer = document.getElementById('gen-progress-container');
+        const progressBar = document.getElementById('gen-progress-bar');
+        const stepText = document.getElementById('gen-step-text');
+        const timeText = document.getElementById('gen-time-text');
 
         if (!lyrics.trim()) {
-            alert("Vui lòng nhập lời bài hát (Lyrics)!");
+            alert("⚠️ Vui lòng nhập lời bài hát (Lyrics)!");
             document.getElementById('gen-lyrics').focus();
             return;
         }
 
+        // Estimate time based on lyrics length
+        const lineCount = lyrics.split('\n').filter(l => l.trim()).length;
+        const estimatedTime = Math.max(20, lineCount * 3); // ~3s per line
+        
         // Loading State
         btn.disabled = true;
         btn.classList.add('opacity-70', 'cursor-not-allowed');
-        btn.innerHTML = `<span class="material-icons-round animate-spin">autorenew</span> PROCESSING...`;
-        status.style.opacity = '1';
-        status.innerText = "AI đang xử lý giọng hát & phối khí...";
+        btn.innerHTML = `<span class="material-icons-round animate-spin">autorenew</span> GENERATING...`;
+        
+        // Show progress
+        progressContainer.style.opacity = '1';
+        progressBar.style.width = '0%';
+        
+        // Simulate progress (since backend doesn't send real-time updates)
+        const progressSteps = [
+            { percent: 15, text: "🎤 Tạo giọng hát (TTS)...", time: 5 },
+            { percent: 35, text: "🎵 Xử lý giai điệu (Pitch)...", time: 8 },
+            { percent: 55, text: "🎹 Đồng bộ với beat...", time: 10 },
+            { percent: 75, text: "🎚️ Thêm hiệu ứng audio...", time: 12 },
+            { percent: 90, text: "🎼 Mixing & Mastering...", time: 15 },
+        ];
+        
+        let currentStep = 0;
+        const progressInterval = setInterval(() => {
+            if (currentStep < progressSteps.length) {
+                const step = progressSteps[currentStep];
+                progressBar.style.width = `${step.percent}%`;
+                stepText.innerText = step.text;
+                timeText.innerText = `~${Math.max(0, estimatedTime - step.time)}s`;
+                currentStep++;
+            }
+        }, (estimatedTime * 1000) / progressSteps.length);
 
         const formData = new FormData();
         formData.append('title', title.trim() || "Untitled Song");
@@ -435,27 +484,48 @@
             });
             const data = await response.json();
 
+            clearInterval(progressInterval);
+
             if (data.status === 'success') {
-                status.innerText = "Hoàn tất!";
-                status.classList.replace('text-primary', 'text-green-500');
+                // Complete progress
+                progressBar.style.width = '100%';
+                stepText.innerText = "✅ Hoàn thành!";
+                timeText.innerText = "0s";
                 
+                status.style.opacity = '1';
+                status.innerText = "🎉 Bài hát đã sẵn sàng!";
+                status.classList.add('text-green-500');
+                
+                // Load and play
                 await loadMySongs();
-                playTrack(data.song, 'local');
+                
+                // Auto-play after a short delay
+                setTimeout(() => {
+                    playTrack(data.song, 'local');
+                }, 500);
             } else {
-                status.innerText = "Lỗi: " + data.message;
+                progressBar.style.width = '0%';
+                status.style.opacity = '1';
+                status.innerText = "❌ Lỗi: " + (data.message || "Không xác định");
+                status.classList.add('text-red-500');
             }
         } catch (error) {
+            clearInterval(progressInterval);
             console.error(error);
-            status.innerText = "Lỗi kết nối đến Server.";
+            progressBar.style.width = '0%';
+            status.style.opacity = '1';
+            status.innerText = "❌ Lỗi kết nối đến Server.";
+            status.classList.add('text-red-500');
         } finally {
-            // Reset Button
+            // Reset UI after delay
             setTimeout(() => {
                 btn.disabled = false;
                 btn.classList.remove('opacity-70', 'cursor-not-allowed');
                 btn.innerHTML = `<span class="material-icons-round">album</span> GENERATE TRACK`;
+                progressContainer.style.opacity = '0';
                 status.style.opacity = '0';
-                status.classList.replace('text-green-500', 'text-primary');
-            }, 2000);
+                status.classList.remove('text-green-500', 'text-red-500');
+            }, 3000);
         }
     }
 
