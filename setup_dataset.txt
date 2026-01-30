@@ -1,0 +1,396 @@
+================================================================================
+  HƯỚNG DẪN SETUP DATASET & TRAIN GIỌNG HÁT (100% FREE)
+  Step-by-Step - Đơn Giản - Dễ Hiểu
+================================================================================
+
+TỔNG QUAN:
+----------
+- Thời gian: 3-4 giờ
+- Chi phí: $0 (100% FREE)
+- Kết quả: Giọng hát thật sự (75-90% chất lượng)
+
+================================================================================
+BƯỚC 1: CHUẨN BỊ DATASET (30-60 phút)
+================================================================================
+
+⚠️  LƯU Ý: Nếu automatic download bị lỗi, xem file: MANUAL_DATASET.md
+   (Có 3 cách manual dễ dàng, YouTube+UVR5 là tốt nhất!)
+
+OPTION A - TỰ ĐỘNG (Thử trước):
+----------------------------------
+1. Mở Terminal/CMD
+2. Chạy lệnh:
+   
+   python download_dataset.py
+
+3. Nếu thành công: Đợi 10-20 phút (download 2GB)
+4. Nếu lỗi 404: Xem OPTION B hoặc C bên dưới
+5. Dataset sẽ có trong: dataset/raw/
+6. Xong! ✓
+
+OPTION B - YOUTUBE + UVR5 (KHUYẾN NGHỊ NHẤT!):
+-----------------------------------------------
+1. Download UVR5: https://ultimatevocalremover.com/
+2. Tải 5-10 bài hát Vietnamese từ YouTube
+3. Mở UVR5, drag & drop các bài vào
+4. Click "Start Processing" → Extract vocals
+5. Copy các file *_Vocals.wav vào: dataset/raw/
+6. Xong! ✓
+   
+   → XEM CHI TIẾT: MANUAL_DATASET.md (Option 1)
+   → CHẤT LƯỢNG TỐT NHẤT CHO SINGING! ⭐⭐⭐⭐⭐
+
+OPTION C - THỦ CÔNG (VIVOS hoặc Common Voice):
+---------------------
+1. Tải VIVOS dataset:
+   Link: https://www.openslr.org/resources/104/vivos.tar.gz
+   
+2. Giải nén file:
+   - Windows: Dùng 7-Zip hoặc WinRAR
+   - Mac/Linux: tar -xzf vivos.tar.gz
+
+3. Copy file WAV vào: dataset/raw/
+   - Tìm các file .wav trong vivos/train/
+   - Copy tất cả vào dataset/raw/
+
+4. Kiểm tra:
+   - Folder dataset/raw/ có ~200+ files .wav
+   - Tổng dung lượng ~1-2GB
+   - Xong! ✓
+
+OPTION C - EXTRACT TỪ YOUTUBE:
+--------------------------------
+1. Download UVR5:
+   Link: https://ultimatevocalremover.com/
+
+2. Tải 5-10 bài hát Vietnamese:
+   - V-Pop, Ballad, Rap, etc.
+   - Chọn giọng ca sĩ rõ ràng
+
+3. Mở UVR5:
+   - Drag & drop các bài vào UVR5
+   - Click "Start Processing"
+   - Đợi 2-5 phút/bài
+
+4. Lấy file vocals:
+   - File output: [tên_bài]_Vocals.wav
+   - Copy vào dataset/raw/
+   - Tổng ~10-30 phút audio
+
+5. Xong! ✓
+
+================================================================================
+BƯỚC 2: UPLOAD LÊN GOOGLE COLAB (5 phút)
+================================================================================
+
+1. Mở Google Drive: https://drive.google.com
+
+2. Tạo folder mới: "RVC_Training"
+
+3. Upload 2 thứ vào folder này:
+   a) File: RVC_TRAINING_COLAB.ipynb
+   b) Folder: dataset/raw/ (chứa audio files)
+
+4. Click chuột phải RVC_TRAINING_COLAB.ipynb
+   → Chọn "Open with Google Colaboratory"
+
+5. Xong! ✓
+
+================================================================================
+BƯỚC 3: SETUP COLAB (5 phút)
+================================================================================
+
+1. Enable GPU (QUAN TRỌNG!):
+   - Click menu: Runtime → Change runtime type
+   - Hardware accelerator: chọn "T4 GPU"
+   - Click Save
+
+2. Mount Google Drive:
+   - Chạy cell đầu tiên (click icon ▶)
+   - Click link hiện ra
+   - Login Google account
+   - Copy code
+   - Paste vào ô
+   - Enter
+
+3. Xong! ✓
+
+================================================================================
+BƯỚC 4: FIX LỖI FAISS (2 phút)
+================================================================================
+
+Tìm cell có dòng:
+   !pip install faiss-gpu -q
+
+Thay thế bằng:
+   !pip install faiss-cpu==1.7.4 -q
+
+Hoặc xóa dòng đó và thêm:
+   !pip install -q faiss-cpu==1.7.4
+
+Xong! ✓
+
+================================================================================
+BƯỚC 5: CHẠY TRAINING (2-3 giờ)
+================================================================================
+
+1. Click menu: Runtime → Run all
+   (Hoặc nhấn Ctrl + F9)
+
+2. Notebook sẽ tự động chạy các bước:
+   [✓] Clone RVC repository (2 mins)
+   [✓] Install dependencies (5 mins)
+   [✓] Download models (3 mins)
+   [✓] Upload dataset (đã có rồi)
+   [✓] Preprocess audio (10 mins)
+   [✓] Extract F0 (5 mins)
+   [✓] Extract features (10 mins)
+   [✓] Build index (2 mins)
+   [✓] Train model (2-3 giờ) ← Chờ ở đây!
+   [✓] Test model (2 mins)
+   [✓] Package model (1 min)
+
+3. Chờ đợi:
+   - Giữ tab Colab mở
+   - Không tắt browser
+   - Không đóng tab
+   - Có thể làm việc khác trong lúc đợi
+
+4. Theo dõi progress:
+   - Loss số giảm dần = tốt
+   - Epoch tăng dần: 50, 100, 150... 300
+   - Mất ~2-3 giờ cho 300 epochs
+
+5. Xong khi thấy:
+   "✅ Training complete!"
+
+================================================================================
+BƯỚC 6: DOWNLOAD MODEL (5 phút)
+================================================================================
+
+1. Sau khi training xong, tìm cell "Download Model"
+
+2. Chạy cell đó (click ▶)
+
+3. File zip sẽ tự động download:
+   Tên: vietnamese_singer_trained.zip
+   Size: ~100-200MB
+
+4. Lưu file này vào máy!
+
+5. Xong! ✓
+
+================================================================================
+BƯỚC 7: INTEGRATE VÀO APP (5 phút)
+================================================================================
+
+1. Giải nén file vietnamese_singer_trained.zip
+
+2. Sẽ có 2 files:
+   - G_[số].pth (model file)
+   - added_[hash].index (index file)
+
+3. Đổi tên files:
+   - G_[số].pth → vietnamese_singer.pth
+   - added_[hash].index → vietnamese_singer.index
+
+4. Copy vào project:
+   models/rvc/vietnamese_singer.pth
+   models/rvc/vietnamese_singer.index
+
+5. Xong! ✓
+
+================================================================================
+BƯỚC 8: CHẠY & TEST (5 phút)
+================================================================================
+
+1. Mở Terminal/CMD trong project folder
+
+2. Chạy server:
+   python main.py
+
+3. Mở browser:
+   http://localhost:7860
+
+4. Vào tab STUDIO
+
+5. Nhập lời bài hát:
+   Hôm nay trời đẹp quá.
+   Em có muốn đi chơi không?
+   Cùng anh dạo phố này.
+   Tay trong tay em nhé.
+
+6. Chọn:
+   - Style: Pop
+   - Mood: Joy
+   - Voice: Female
+   - Tempo: Medium
+
+7. Click: GENERATE TRACK
+
+8. Chờ 30-60 giây
+
+9. Nghe kết quả → GIỌNG HÁT THẬT! 🎤
+
+10. Xong! ✓
+
+================================================================================
+TROUBLESHOOTING - GIẢI QUYẾT LỖI
+================================================================================
+
+LỖI 1: "faiss-gpu install failed"
+→ Fix: Thay faiss-gpu bằng faiss-cpu==1.7.4
+
+LỖI 2: "CUDA out of memory"
+→ Fix: Giảm BATCH_SIZE = 4 (trong training cell)
+
+LỖI 3: "Session disconnected"
+→ Fix: Refresh Colab, reconnect, tiếp tục
+
+LỖI 4: "Model not found"
+→ Fix: Check file names, copy lại vào models/rvc/
+
+LỖI 5: "Download failed"
+→ Fix: Manual download từ Colab files panel
+
+LỖI 6: Vẫn nghe như giọng đọc
+→ Fix: Train lại với nhiều data hơn (20-30 mins)
+
+LỖI 7: Generate quá chậm
+→ Bình thường: 30-60s
+→ Nếu >2 mins: Check CPU/RAM, close apps khác
+
+================================================================================
+TIPS - MẸO HAY
+================================================================================
+
+TIP 1: Dataset càng nhiều, chất lượng càng tốt
+       - 10 mins → 70%
+       - 20 mins → 80%
+       - 30 mins → 90%
+
+TIP 2: Diverse dataset = tốt hơn
+       - Nhiều style: Pop, Ballad, Rap
+       - Nhiều cao độ: Cao, trung, thấp
+       - Nhiều tempo: Nhanh, vừa, chậm
+
+TIP 3: Clean vocals = quan trọng
+       - Không có nhạc nền
+       - Không reverb/echo quá nhiều
+       - Giọng rõ ràng
+
+TIP 4: Train lâu hơn = tốt hơn
+       - 200 epochs: OK
+       - 300 epochs: Good (recommended)
+       - 500 epochs: Better
+       - 1000 epochs: Best (nếu có thời gian)
+
+TIP 5: Test định kỳ
+       - Sau 100 epochs: Test
+       - Sau 200 epochs: Test
+       - Sau 300 epochs: Test
+       - Chọn checkpoint tốt nhất
+
+TIP 6: Backup model
+       - Save vào Drive
+       - Save vào máy local
+       - Đừng để mất!
+
+TIP 7: Train nhiều voices
+       - Female voice
+       - Male voice
+       - Different styles
+       → Users có nhiều lựa chọn!
+
+================================================================================
+TIMELINE - THỜI GIAN DỰ KIẾN
+================================================================================
+
+DAY 1 (Evening):
+19:00 - 19:30  Chuẩn bị dataset (30 mins)
+19:30 - 19:40  Upload lên Colab (10 mins)
+19:40 - 19:50  Setup & fix (10 mins)
+19:50 - 22:50  Training (3 giờ) ← Leave it running
+22:50 - 23:00  Download model (10 mins)
+
+DAY 2 (Morning):
+09:00 - 09:05  Integrate model (5 mins)
+09:05 - 09:10  Test generate (5 mins)
+09:10+         Enjoy singing voice! 🎵
+
+TOTAL: ~4 giờ (nhưng chỉ làm việc ~1 giờ, còn lại chờ)
+
+================================================================================
+CHECKLIST - KIỂM TRA TRƯỚC KHI BẮT ĐẦU
+================================================================================
+
+[ ] Google account (FREE)
+[ ] Google Drive có ít nhất 3GB trống
+[ ] Internet ổn định (download 2GB)
+[ ] Browser hiện đại (Chrome/Firefox/Edge)
+[ ] 3-4 giờ rảnh (hoặc để chạy overnight)
+[ ] Python installed (nếu chạy local)
+[ ] Đã đọc hướng dẫn này 😊
+
+================================================================================
+LINKS - LIÊN KẾT QUAN TRỌNG
+================================================================================
+
+Dataset:
+→ VIVOS: https://www.openslr.org/resources/104/vivos.tar.gz
+→ Common Voice: https://commonvoice.mozilla.org/vi/datasets
+→ UVR5: https://ultimatevocalremover.com/
+
+Google Colab:
+→ Colab: https://colab.research.google.com/
+→ Drive: https://drive.google.com/
+
+RVC Info:
+→ GitHub: https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI
+→ Docs: (trong project folder của bạn)
+
+================================================================================
+KẾT QUẢ - MONG ĐỢI GÌ?
+================================================================================
+
+TRƯỚC (TTS only):
+❌ Giọng đọc (robotic)
+❌ Không vibrato
+❌ Không cảm xúc
+❌ Quality: 50-60%
+
+SAU (RVC trained):
+✅ Giọng HÁT thật sự
+✅ Vibrato tự nhiên
+✅ Cảm xúc rõ ràng
+✅ Breath sounds
+✅ Quality: 75-90%
+
+Improvement: +50% quality! 🚀
+
+================================================================================
+HỖ TRỢ - NẾU CẦN GIÚP
+================================================================================
+
+1. Đọc lại hướng dẫn này
+2. Check file COLAB_FIXES.md
+3. Check file DATASET_LINKS.md
+4. Google: "RVC training tutorial"
+5. RVC GitHub issues
+
+================================================================================
+KẾT LUẬN
+================================================================================
+
+✅ 100% FREE
+✅ Không cần code
+✅ Chỉ cần follow từng bước
+✅ 3-4 giờ → Giọng hát thật!
+
+Sẵn sàng? Bắt đầu từ BƯỚC 1! 🚀
+
+Good luck! 🎤🎵
+
+================================================================================
+                            END OF GUIDE
+================================================================================
