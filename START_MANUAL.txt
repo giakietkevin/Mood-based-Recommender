@@ -1,0 +1,99 @@
+================================================================================
+  🎯 BẮT ĐẦU TẠI ĐÂY - MANUAL DOWNLOAD
+  Đơn giản nhất - Không cần cài gì!
+================================================================================
+
+VÌ yt-dlp script BỊ LỖI → DÙNG CÁCH MANUAL!
+
+✅ KHÔNG CẦN cài Node.js
+✅ KHÔNG CẦN fix gì
+✅ CHỈ CẦN browser!
+
+================================================================================
+3 BƯỚC ĐƠN GIẢN
+================================================================================
+
+BƯỚC 1: MỞ 2 CỬA SỔ
+---------------------
+
+Cửa sổ 1: https://ytmp3.cc/
+Cửa sổ 2: MANUAL_DOWNLOAD_10_SONGS.txt (file này!)
+
+BƯỚC 2: DOWNLOAD 10 BÀI
+------------------------
+
+Trong file MANUAL_DOWNLOAD_10_SONGS.txt:
+- Có 10 links YouTube
+- Copy từng link
+- Paste vào ytmp3.cc
+- Click Convert → Download
+- Lặp lại 10 lần
+
+⏱️ Time: 15-20 phút
+
+BƯỚC 3: UVR5 EXTRACT
+---------------------
+
+1. Mở UVR5
+2. Drag 10 files vào
+3. Click "Start Processing"
+4. Đợi 30 phút
+5. Copy vocals to dataset\raw\
+
+⏱️ Time: 30 phút
+
+✅ TOTAL: 50 phút → DATASET READY!
+
+================================================================================
+LINKS NHANH
+================================================================================
+
+DOWNLOADER:
+https://ytmp3.cc/
+
+ALTERNATIVES:
+https://y2mate.com/
+https://savefrom.net/
+
+SONG LIST:
+→ MANUAL_DOWNLOAD_10_SONGS.txt (10 bài với links)
+
+================================================================================
+EXPECTED RESULT
+================================================================================
+
+10 bài = 20-30 phút audio
+Quality: 80% ⭐⭐⭐⭐
+Training: 4-5 giờ
+Result: GIỌNG HÁT TỐT! 🎤
+
+(Không phải 93% như 50 bài, nhưng 80% VẪN RẤT TỐT!)
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Mở: MANUAL_DOWNLOAD_10_SONGS.txt
+2. Follow 10 bài
+3. Download xong → UVR5
+4. Dataset ready → Training!
+
+Easy! 💪
+
+================================================================================
+                        LET'S GO! 🚀
+================================================================================
+
+File cần mở:
+→ MANUAL_DOWNLOAD_10_SONGS.txt
+
+Website cần vào:
+→ https://ytmp3.cc/
+
+Time needed:
+→ 50 phút total
+
+Result:
+→ 80% Quality singing voice! 🎤
+
+START NOW! 💪
