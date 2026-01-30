@@ -1,0 +1,332 @@
+================================================================================
+  🔧 NOTEBOOK FIXES - VERSION 2 (IMPROVED!)
+================================================================================
+
+FILE: RVC_Training_Vietnamese_Singer.ipynb
+
+ĐÃ FIX CÁC VẤN ĐỀ:
+✅ Cell 7 không tìm thấy files
+✅ Working directory issues
+✅ Path handling
+✅ Upload instructions rõ ràng hơn
+✅ Thêm cell auto-fix nếu upload nhầm
+
+================================================================================
+CHANGES SUMMARY
+================================================================================
+
+CELL 6 (IMPROVED):
+------------------
+✅ Check working directory trước
+✅ Use absolute path
+✅ Show folder structure
+✅ Chi tiết hơn upload instructions
+✅ Warn about common mistakes
+
+NEW! CELL 6B (HELPER):
+----------------------
+✅ Search .wav files ở wrong locations
+✅ Auto-move files to correct folder
+✅ Hữu ích nếu user upload nhầm
+✅ Optional - chỉ run nếu Cell 7 fail
+
+CELL 7 (FIXED):
+---------------
+✅ Force working directory
+✅ Use absolute path for checking
+✅ Better error messages
+✅ Show upload instructions nếu no files
+✅ Suggest running Cell 6B if needed
+
+================================================================================
+NEW WORKFLOW
+================================================================================
+
+OLD (16 CELLS):
+--------------
+Cell 1-5:  Setup
+Cell 6:    Create folder
+[Upload]   Manual upload
+Cell 7:    Verify
+Cell 8-12: Preprocessing
+Cell 13:   Training
+Cell 14-16: Download
+
+NEW (17 CELLS):
+--------------
+Cell 1-5:  Setup
+Cell 6:    Create folder + Better instructions
+[Upload]   Manual upload
+Cell 6B:   Search & auto-move if wrong location (Optional!)
+Cell 7:    Verify with better checking
+Cell 8-13: Preprocessing
+Cell 14:   Training
+Cell 15-17: Download
+
+================================================================================
+WHEN TO USE CELL 6B
+================================================================================
+
+RUN CELL 6B IF:
+---------------
+✅ Cell 7 shows "No .wav files found"
+✅ You uploaded files but can't find them
+✅ Files might be in wrong folder
+✅ Cell 7 shows "Files found: 0"
+
+SKIP CELL 6B IF:
+----------------
+❌ Cell 7 shows "Dataset ready" (12 files found)
+❌ You haven't uploaded yet
+❌ You're sure files are in correct location
+
+→ Cell 6B is OPTIONAL HELPER!
+
+================================================================================
+COMMON ISSUES & SOLUTIONS
+================================================================================
+
+ISSUE 1: "Files found: 0" in Cell 7
+------------------------------------
+CAUSE: Files not uploaded or wrong location
+
+SOLUTION:
+1. Check Files panel (left side)
+2. Look for your 12 .wav files
+3. If in /content/ or wrong folder:
+   → Run Cell 6B to auto-move!
+4. If not uploaded yet:
+   → Upload to dataset/raw/ folder
+5. Run Cell 7 again
+
+ISSUE 2: "Folder not found" in Cell 7
+--------------------------------------
+CAUSE: Cell 6 not run or failed
+
+SOLUTION:
+1. Run Cell 6 again
+2. Check output for errors
+3. Then upload files
+4. Run Cell 7
+
+ISSUE 3: Files uploaded but Cell 7 can't find them
+---------------------------------------------------
+CAUSE: Uploaded to wrong location
+
+SOLUTION:
+1. Run Cell 6B (auto-search & move!)
+2. Or manually:
+   - Find files in Files panel
+   - Drag to dataset/raw/ folder
+3. Run Cell 7 again
+
+ISSUE 4: Working directory changed
+-----------------------------------
+CAUSE: Colab disconnected or cells run out of order
+
+SOLUTION:
+1. Run Cell 3 again (%cd command)
+2. Run Cell 6 again
+3. Continue with Cell 7
+
+================================================================================
+CELL 6 VS CELL 6B VS CELL 7
+================================================================================
+
+CELL 6: CREATE FOLDER
+----------------------
+Purpose: Create dataset/raw/ folder
+When: Always run!
+Output: Folder created + upload instructions
+
+CELL 6B: AUTO-FIX HELPER
+-------------------------
+Purpose: Find & move misplaced files
+When: Only if Cell 7 fails (optional!)
+Output: Files moved to correct location
+
+CELL 7: VERIFY DATASET
+----------------------
+Purpose: Check files uploaded correctly
+When: After upload complete
+Output: List files + confirm ready
+
+WORKFLOW:
+---------
+1. Run Cell 6 → Create folder
+2. Upload files manually → TO dataset/raw/
+3. Run Cell 7 → Check files
+4. If Cell 7 fails:
+   a. Run Cell 6B → Auto-fix
+   b. Run Cell 7 again → Should pass!
+5. If Cell 7 passes → Continue Cell 8!
+
+================================================================================
+VERIFICATION CHECKLIST
+================================================================================
+
+BEFORE CONTINUING TO CELL 8:
+-----------------------------
+
+□ Cell 7 shows: "Files found: 12" (or 10+)
+□ Cell 7 shows: "Total: ~550 MB"
+□ Cell 7 shows: "🎉 DATASET READY FOR TRAINING!"
+□ Cell 7 shows: "✅ Proceed to Cell 8!"
+
+IF ANY ABOVE MISSING:
+---------------------
+→ DO NOT continue to Cell 8!
+→ Fix upload issue first!
+→ Run Cell 6B if needed!
+→ Re-run Cell 7 until success!
+
+================================================================================
+DETAILED UPLOAD INSTRUCTIONS
+================================================================================
+
+STEP-BY-STEP:
+-------------
+
+1. RUN CELL 6:
+   - Creates dataset/raw/ folder
+   - Shows absolute path
+   - Shows upload instructions
+
+2. OPEN FILES PANEL:
+   - Click 📁 icon on LEFT side
+   - You'll see folder tree
+
+3. NAVIGATE TO FOLDER:
+   - Expand: Retrieval-based-Voice-Conversion-WebUI
+   - Expand: dataset
+   - Click: raw (folder should be EMPTY)
+
+4. UPLOAD FILES:
+   - Click 📤 Upload icon (top of Files panel)
+   - OR: Click 3-dots menu → Upload
+   - Select 12 .wav files from your computer
+   - Location: C:\Mood-based-Recommender\dataset\raw\
+   - Click Open
+
+5. WAIT FOR UPLOAD:
+   - Progress bar shows at bottom
+   - Each file ~30-70 MB
+   - Total ~550 MB
+   - Takes 5-10 minutes depending on internet
+   - You'll see files appearing in raw/ folder
+
+6. VERIFY UPLOAD:
+   - Count files in raw/ folder (should be 12)
+   - Check sizes (each ~30-70 MB)
+   - All files should have .wav extension
+
+7. RUN CELL 7:
+   - Should show: "Files found: 12"
+   - Should show: "Total: ~550 MB"
+   - Should show: "🎉 DATASET READY!"
+
+8. IF CELL 7 FAILS:
+   - Run Cell 6B (auto-fix)
+   - Run Cell 7 again
+   - Should pass!
+
+9. PROCEED TO CELL 8:
+   - Only after Cell 7 success!
+
+================================================================================
+WHY THESE FIXES?
+================================================================================
+
+PROBLEM: Working directory confusion
+SOLUTION: Force correct directory in Cells 6 & 7
+
+PROBLEM: Relative path issues
+SOLUTION: Use absolute paths for verification
+
+PROBLEM: Files uploaded to wrong location
+SOLUTION: Cell 6B auto-searches & moves
+
+PROBLEM: Unclear error messages
+SOLUTION: Better instructions & troubleshooting
+
+PROBLEM: Hard to debug upload issues
+SOLUTION: Show folder structure, absolute paths
+
+→ NOW MORE ROBUST & USER-FRIENDLY!
+
+================================================================================
+TESTING STRATEGY
+================================================================================
+
+TEST CASE 1: Normal flow (files in correct location)
+-----------------------------------------------------
+1. Run Cell 6 → ✅
+2. Upload to dataset/raw/ → ✅
+3. Skip Cell 6B → ✅
+4. Run Cell 7 → ✅ Pass!
+
+TEST CASE 2: Files in wrong location (/content/)
+-------------------------------------------------
+1. Run Cell 6 → ✅
+2. Upload to /content/ (mistake!) → ❌
+3. Run Cell 7 → ❌ Fail (0 files)
+4. Run Cell 6B → ✅ Auto-move!
+5. Run Cell 7 → ✅ Pass!
+
+TEST CASE 3: Files in dataset/ instead of dataset/raw/
+-------------------------------------------------------
+1. Run Cell 6 → ✅
+2. Upload to dataset/ (mistake!) → ❌
+3. Run Cell 7 → ❌ Fail (0 files)
+4. Run Cell 6B → ✅ Auto-move!
+5. Run Cell 7 → ✅ Pass!
+
+TEST CASE 4: No files uploaded yet
+-----------------------------------
+1. Run Cell 6 → ✅
+2. Don't upload → ❌
+3. Run Cell 7 → ❌ Fail (0 files)
+4. Follow upload instructions
+5. Upload to dataset/raw/ → ✅
+6. Run Cell 7 → ✅ Pass!
+
+→ ALL CASES COVERED!
+
+================================================================================
+SUMMARY
+================================================================================
+
+IMPROVEMENTS:
+-------------
+✅ Better path handling (absolute paths)
+✅ Force working directory
+✅ Auto-fix helper (Cell 6B)
+✅ Clearer instructions
+✅ Better error messages
+✅ Upload verification
+✅ Folder structure display
+
+NEW FEATURES:
+-------------
+✅ Cell 6B: Auto-search & move files
+✅ Cell 6: Show folder structure
+✅ Cell 7: Better path verification
+✅ Cell 7: Helpful error messages
+
+USER BENEFITS:
+--------------
+✅ Easier to upload correctly
+✅ Auto-fix if upload wrong location
+✅ Clear error messages
+✅ Less confusion
+✅ More robust workflow
+
+→ MUCH BETTER THAN VERSION 1!
+
+================================================================================
+                    🎉 NOTEBOOK READY TO USE!
+================================================================================
+
+FILE: RVC_Training_Vietnamese_Singer.ipynb (VERSION 2)
+
+UPLOAD TO COLAB & START TRAINING! 🚀
