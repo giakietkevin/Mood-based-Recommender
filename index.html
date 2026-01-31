@@ -83,6 +83,7 @@
             <div class="flex gap-1 bg-white/5 p-1 rounded-2xl">
                 <button onclick="showView('dashboard')" id="nav-dashboard" class="px-5 py-2 rounded-xl text-xs font-bold transition-all bg-white/10 text-white shadow-sm">HOME</button>
                 <button onclick="showView('studio')" id="nav-studio" class="px-5 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">STUDIO</button>
+                <button onclick="showView('guide')" id="nav-guide" class="px-5 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">GUIDE</button>
             </div>
         </div>
     </div>
@@ -248,6 +249,291 @@
             </div>
         </div>
     </div>
+
+    <!-- GUIDE VIEW -->
+    <div id="view-guide" class="hidden max-w-5xl mx-auto animate-fade-in">
+        <div class="glass-card rounded-[2rem] p-8 md:p-12 border border-white/10">
+            <!-- Header -->
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center gap-3 bg-primary/10 px-5 py-2 rounded-full border border-primary/20 mb-4">
+                    <span class="material-icons-round text-primary text-2xl">menu_book</span>
+                    <span class="text-primary font-bold text-sm uppercase tracking-wide">User Guide</span>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-display font-bold text-white mb-3">Hướng Dẫn Sử Dụng</h1>
+                <p class="text-slate-400 text-lg">KietSound Pro - AI Music Studio</p>
+            </div>
+
+            <!-- Feature Cards -->
+            <div class="space-y-8">
+                
+                <!-- Feature 1: Mood Detection -->
+                <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary to-orange-600 rounded-xl flex items-center justify-center">
+                            <span class="material-icons-round text-white text-2xl">mood</span>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-white mb-2">🎭 1. Nhận Diện Cảm Xúc (Mood Detection)</h3>
+                            <p class="text-slate-400 mb-4">Tự động phát hiện cảm xúc qua khuôn mặt và gợi ý nhạc phù hợp.</p>
+                            
+                            <div class="space-y-3 text-sm">
+                                <div class="flex items-start gap-2">
+                                    <span class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
+                                    <div>
+                                        <p class="text-white font-semibold">Bước 1: Chụp ảnh khuôn mặt</p>
+                                        <p class="text-slate-400">Click <strong>"Scan My Mood"</strong> hoặc upload ảnh từ máy</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
+                                    <div>
+                                        <p class="text-white font-semibold">Bước 2: AI phân tích cảm xúc</p>
+                                        <p class="text-slate-400">Hệ thống nhận diện: Joy, Sadness, Anger, Fear, Surprise, Calm, Romantic...</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
+                                    <div>
+                                        <p class="text-white font-semibold">Bước 3: Nhận gợi ý nhạc/podcast</p>
+                                        <p class="text-slate-400">5 đề xuất YouTube phù hợp với tâm trạng hiện tại</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 p-3 bg-primary/10 rounded-xl border border-primary/20">
+                                <p class="text-xs text-primary font-bold mb-1">💡 Pro Tips:</p>
+                                <ul class="text-xs text-slate-300 space-y-1">
+                                    <li>• Đảm bảo ánh sáng tốt để AI nhận diện chính xác</li>
+                                    <li>• Khuôn mặt nhìn thẳng camera, tránh che khuất</li>
+                                    <li>• Có thể chọn "Music" hoặc "Podcast" trước khi scan</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2: AI Music Generator -->
+                <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+                            <span class="material-icons-round text-white text-2xl">auto_fix_high</span>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-white mb-2">🎹 2. Tạo Nhạc AI (Text-to-Music)</h3>
+                            <p class="text-slate-400 mb-4">Biến lời bài hát thành bài hát hoàn chỉnh với giọng hát AI chuyên nghiệp!</p>
+                            
+                            <div class="space-y-3 text-sm">
+                                <div class="flex items-start gap-2">
+                                    <span class="material-icons-round text-purple-400 text-lg mt-0.5">lyrics</span>
+                                    <div>
+                                        <p class="text-white font-semibold">Nhập Lời Bài Hát</p>
+                                        <p class="text-slate-400"><strong>Mỗi dòng = 1 câu hát.</strong> Xuống dòng để AI bắt nhịp tốt hơn.</p>
+                                        <div class="mt-2 p-2 bg-black/30 rounded-lg font-mono text-xs text-slate-300">
+                                            Ví dụ:<br>
+                                            Hôm nay trời đẹp quá<br>
+                                            Em có muốn đi chơi không?<br>
+                                            Chúng ta cùng nhau đi dạo<br>
+                                            Dưới ánh hoàng hôn
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-2">
+                                    <span class="material-icons-round text-purple-400 text-lg mt-0.5">palette</span>
+                                    <div>
+                                        <p class="text-white font-semibold">Chọn Style (30+ thể loại)</p>
+                                        <p class="text-slate-400 mb-2">Pop, Rock, Rap, EDM, Ballad, Jazz, Blues, R&B, Metal, Punk...</p>
+                                        <div class="flex flex-wrap gap-1">
+                                            <span class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Pop</span>
+                                            <span class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Ballad</span>
+                                            <span class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Rap</span>
+                                            <span class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">EDM</span>
+                                            <span class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Jazz</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-2">
+                                    <span class="material-icons-round text-purple-400 text-lg mt-0.5">sentiment_satisfied</span>
+                                    <div>
+                                        <p class="text-white font-semibold">Chọn Mood (10+ tâm trạng)</p>
+                                        <p class="text-slate-400">Joy, Sadness, Romantic, Calmness, Anger, Triumph...</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-2">
+                                    <span class="material-icons-round text-purple-400 text-lg mt-0.5">record_voice_over</span>
+                                    <div>
+                                        <p class="text-white font-semibold">Chọn Giọng Hát (12 giọng)</p>
+                                        <p class="text-slate-400">Male/Female • North/Central/South • Young/Mature</p>
+                                        <p class="text-green-400 text-xs mt-1">🎤 Sử dụng RVC AI - Giọng hát chân thực như người thật!</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-2">
+                                    <span class="material-icons-round text-purple-400 text-lg mt-0.5">speed</span>
+                                    <div>
+                                        <p class="text-white font-semibold">Chọn Tempo (Fast/Medium/Slow)</p>
+                                        <p class="text-slate-400">Fast: EDM, Rap • Medium: Pop • Slow: Ballad</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                                <p class="text-xs text-purple-400 font-bold mb-2">💡 Pro Tips - Để Có Bài Hát Hay Nhất:</p>
+                                <ul class="text-xs text-slate-300 space-y-1.5">
+                                    <li><strong>✓ Rap/Hip-Hop:</strong> Câu ngắn, nhiều chữ → chọn Fast/Medium tempo</li>
+                                    <li><strong>✓ Ballad/Soul:</strong> Câu dài, ít chữ → chọn Slow tempo</li>
+                                    <li><strong>✓ Hook/Chorus:</strong> 2-3 dòng cuối sẽ tự động lặp lại làm điệp khúc</li>
+                                    <li><strong>✓ Dấu câu:</strong> Dùng dấu chấm (.) để tạo pauses tự nhiên</li>
+                                    <li><strong>✓ Độ dài:</strong> 4-8 câu là tối ưu (quá dài → bài hát sẽ lâu)</li>
+                                    <li><strong>✓ Giọng hát:</strong> Chọn giọng phù hợp với style (Male cho Rock, Female cho Pop)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Music Library -->
+                <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center">
+                            <span class="material-icons-round text-white text-2xl">library_music</span>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-white mb-2">📚 3. Thư Viện Nhạc (My Library)</h3>
+                            <p class="text-slate-400 mb-4">Quản lý tất cả bài hát AI đã tạo.</p>
+                            
+                            <div class="space-y-3 text-sm">
+                                <div class="flex items-start gap-2">
+                                    <span class="material-icons-round text-blue-400 text-lg mt-0.5">play_circle</span>
+                                    <div>
+                                        <p class="text-white font-semibold">Phát nhạc</p>
+                                        <p class="text-slate-400">Click bài hát để phát ngay • Mini player xuất hiện ở bottom</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="material-icons-round text-blue-400 text-lg mt-0.5">download</span>
+                                    <div>
+                                        <p class="text-white font-semibold">Tải về</p>
+                                        <p class="text-slate-400">Format: MP3 320kbps • Chất lượng studio</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="material-icons-round text-blue-400 text-lg mt-0.5">delete</span>
+                                    <div>
+                                        <p class="text-white font-semibold">Xóa bài hát</p>
+                                        <p class="text-slate-400">Click icon thùng rác • Xác nhận để xóa vĩnh viễn</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 4: Audio Quality -->
+                <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
+                            <span class="material-icons-round text-white text-2xl">high_quality</span>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-white mb-2">🎚️ 4. Chất Lượng Âm Thanh</h3>
+                            <p class="text-slate-400 mb-4">Studio-grade audio processing - Gần như chuyên nghiệp!</p>
+                            
+                            <div class="grid md:grid-cols-2 gap-4 text-sm">
+                                <div class="space-y-2">
+                                    <p class="text-white font-semibold">Vocal Processing:</p>
+                                    <ul class="text-slate-400 space-y-1 text-xs">
+                                        <li>• RVC AI singing voice (giọng hát thật)</li>
+                                        <li>• Pitch contouring (cao trầm tự nhiên)</li>
+                                        <li>• Crossfade transitions (mượt mà)</li>
+                                        <li>• Vibrato effects (Ballad, Soul)</li>
+                                    </ul>
+                                </div>
+                                <div class="space-y-2">
+                                    <p class="text-white font-semibold">Mixing & Mastering:</p>
+                                    <ul class="text-slate-400 space-y-1 text-xs">
+                                        <li>• Auto-ducking (beat tự động nhường vocal)</li>
+                                        <li>• Multi-band compression</li>
+                                        <li>• Style-specific EQ</li>
+                                        <li>• Professional limiter (-0.5dB)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="mt-12 pt-10 border-t border-white/10">
+                <h2 class="text-2xl font-bold text-white mb-6 text-center">❓ Câu Hỏi Thường Gặp</h2>
+                
+                <div class="space-y-4">
+                    <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
+                        <summary class="font-semibold text-white flex items-center justify-between">
+                            <span>Tốn bao lâu để tạo 1 bài hát?</span>
+                            <span class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
+                        </summary>
+                        <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                            Thời gian: <strong>20-60 giây</strong> tùy độ dài lyrics. Bài 4-6 câu ~30s. Bài 8-10 câu ~60s.
+                        </p>
+                    </details>
+
+                    <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
+                        <summary class="font-semibold text-white flex items-center justify-between">
+                            <span>Giọng hát có thật không?</span>
+                            <span class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
+                        </summary>
+                        <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                            Giọng hát được tạo bằng <strong>RVC AI</strong> (Retrieval-based Voice Conversion) - công nghệ deep learning tiên tiến nhất hiện nay. 
+                            Chất lượng gần như người thật (~95% studio recording).
+                        </p>
+                    </details>
+
+                    <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
+                        <summary class="font-semibold text-white flex items-center justify-between">
+                            <span>Có thể tạo bài hát dài không?</span>
+                            <span class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
+                        </summary>
+                        <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                            Có! Nhưng nên giới hạn <strong>8-12 câu</strong> cho tối ưu. Quá dài → mất nhiều thời gian xử lý và có thể ảnh hưởng chất lượng.
+                        </p>
+                    </details>
+
+                    <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
+                        <summary class="font-semibold text-white flex items-center justify-between">
+                            <span>Tại sao bài hát bị ngắt quãng?</span>
+                            <span class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
+                        </summary>
+                        <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                            Đã được fix! Hiện tại có <strong>crossfade 300ms</strong> giữa các câu + spacing phù hợp với từng style. 
+                            Nếu vẫn gặp vấn đề, thử chọn style Ballad/Soul (spacing dài hơn).
+                        </p>
+                    </details>
+
+                    <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
+                        <summary class="font-semibold text-white flex items-center justify-between">
+                            <span>Có tính phí không?</span>
+                            <span class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
+                        </summary>
+                        <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                            <strong>100% MIỄN PHÍ!</strong> Không giới hạn số lượng bài hát. Không watermark. Tải về MP3 320kbps full quality.
+                        </p>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="mt-10 text-center">
+                <button onclick="showView('dashboard')" class="px-8 py-3 bg-primary hover:bg-primary/80 text-white font-bold rounded-xl transition-all inline-flex items-center gap-2">
+                    <span class="material-icons-round">arrow_back</span> Quay Về Trang Chủ
+                </button>
+            </div>
+        </div>
+    </div>
 </main>
 
 <div id="player-bar" class="fixed bottom-0 left-0 w-full z-[100] glass-card border-t border-white/10 hidden pb-safe-bottom bg-[#090A0C]/95 transition-transform duration-300 transform translate-y-full">
@@ -375,24 +661,38 @@
     window.showView = (viewName) => {
         const dash = document.getElementById('view-dashboard');
         const studio = document.getElementById('view-studio');
+        const guide = document.getElementById('view-guide');
         const navDash = document.getElementById('nav-dashboard');
         const navStudio = document.getElementById('nav-studio');
+        const navGuide = document.getElementById('nav-guide');
 
+        // Hide all views
+        dash.classList.add('hidden');
+        studio.classList.add('hidden');
+        guide.classList.add('hidden');
+
+        // Reset all nav buttons
+        navDash.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
+        navDash.classList.add('text-slate-400');
+        navStudio.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
+        navStudio.classList.add('text-slate-400');
+        navGuide.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
+        navGuide.classList.add('text-slate-400');
+
+        // Show selected view and activate button
         if (viewName === 'dashboard') {
             dash.classList.remove('hidden');
-            studio.classList.add('hidden');
-            navDash.classList.replace('text-slate-400', 'bg-white/10');
-            navDash.classList.add('text-white');
-            navStudio.classList.replace('bg-white/10', 'text-slate-400');
-            navStudio.classList.remove('text-white');
-        } else {
-            dash.classList.add('hidden');
+            navDash.classList.remove('text-slate-400');
+            navDash.classList.add('bg-white/10', 'text-white', 'shadow-sm');
+        } else if (viewName === 'studio') {
             studio.classList.remove('hidden');
-            navStudio.classList.replace('text-slate-400', 'bg-white/10');
-            navStudio.classList.add('text-white');
-            navDash.classList.replace('bg-white/10', 'text-slate-400');
-            navDash.classList.remove('text-white');
+            navStudio.classList.remove('text-slate-400');
+            navStudio.classList.add('bg-white/10', 'text-white', 'shadow-sm');
             loadMySongs(); // Refresh library
+        } else if (viewName === 'guide') {
+            guide.classList.remove('hidden');
+            navGuide.classList.remove('text-slate-400');
+            navGuide.classList.add('bg-white/10', 'text-white', 'shadow-sm');
         }
     };
 
