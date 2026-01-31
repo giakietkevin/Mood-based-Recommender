@@ -870,12 +870,12 @@ async def generate_music(
                         try: os.remove(t_raw)
                         except: pass
                     t_raw = t_singing
-                    print("✅ RVC: TTS → Singing voice")
+                    print("[OK] RVC: TTS -> Singing voice")
                 else:
-                    print("⚠️ RVC failed, using enhanced TTS")
+                    print("[WARNING] RVC failed, using enhanced TTS")
                     
             except Exception as e:
-                print(f"⚠️ RVC conversion error: {e}, using TTS")
+                print(f"[WARNING] RVC conversion error: {e}, using TTS")
         
         # 2. Apply Melodic Contour
         apply_pitch_contour(t_raw, t_mel, mood, tempo, style, intensity=1.4)
