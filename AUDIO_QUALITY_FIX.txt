@@ -1,0 +1,118 @@
+================================================================================
+  🎵 FIX AUDIO QUALITY - BÀI HÁT LIÊN TỤC HƠN
+================================================================================
+
+NGÀY: 2026-01-31
+
+
+VẤN ĐỀ TRC ĐÓ:
+================================================================================
+
+1. ❌ Bài hát KHÔNG LIÊN TỤC - bị đứt quãng giữa các câu
+2. ❌ BỊ NGẮT NHỊP - transitions không smooth
+3. ❌ NHIỀU GIỌNG LOẠN - volume không đồng đều giữa các line
+
+
+NGUYÊN NHÂN:
+================================================================================
+
+1. Fade in/out quá ngắn (50ms) → click sounds
+2. KHÔNG CÓ CROSSFADE giữa các câu → âm thanh cắt gãy
+3. Spacing quá ít cho Ballad/Soul (1.5 beats) → cảm giác vội vã
+4. Volume không normalize giữa các line → line to, line nhỏ
+
+
+ĐÃ FIX:
+================================================================================
+
+✅ 1. CROSSFADE GIỮA CÁC CÂU (300ms)
+   - Âm thanh từ câu này "chảy" sang câu kia
+   - Không còn cắt gãy đột ngột
+   
+   Code:
+   ```python
+   if len(full_vocal) > 0 and idx > 0:
+       full_vocal = full_vocal.append(seg, crossfade=300)
+   ```
+
+✅ 2. TĂNG FADE IN/OUT (50ms → 150ms)
+   - Mượt mà hơn khi bắt đầu/kết thúc mỗi câu
+   - Loại bỏ click sounds
+   
+   Code:
+   ```python
+   fade_ms = 150  # Tăng từ 50ms
+   seg = seg.fade_in(fade_ms).fade_out(fade_ms)
+   ```
+
+✅ 3. TĂNG SPACING CHO BALLAD/SOUL
+   - Ballad: 1.5 → 2.5 beats (tăng 67%)
+   - Default: 1.0 → 1.5 beats (tăng 50%)
+   - Rap vẫn giữ 0.5 beats (tight)
+   
+   Code:
+   ```python
+   if style in ["Ballad", "Soul", "Jazz", "Blues"]:
+       line_spacing_beats = 2.5  # Breathe room!
+   ```
+
+✅ 4. NORMALIZE VOLUME GIỮA CÁC LINE
+   - Mỗi line được normalize về -20dBFS
+   - Volume đồng đều, không có line to/nhỏ
+   
+   Code:
+   ```python
+   target_dBFS = -20.0
+   change_in_dBFS = target_dBFS - seg.dBFS
+   seg = seg.apply_gain(change_in_dBFS)
+   ```
+
+
+KẾT QUẢ MONG ĐỢI:
+================================================================================
+
+✅ Bài hát LIÊN TỤC, không còn đứt quãng
+✅ Transitions MƯỢT MÀ giữa các câu
+✅ Volume ĐỒNG ĐỀU, không có line to/nhỏ
+✅ Spacing PHÙ HỢP với từng style:
+   - Ballad/Soul: Thư thái, có breathe room
+   - Rap: Tight, nhanh
+   - Pop/Rock: Vừa phải
+
+✅ Âm thanh CHUYÊN NGHIỆP hơn, giống studio recording!
+
+
+TECHNICAL DETAILS:
+================================================================================
+
+File thay đổi: main.py
+
+Locations:
+- Line 781-791: Increased spacing (Ballad: 1.5→2.5, Default: 1.0→1.5)
+- Line 917-928: Added normalization (-20dBFS target)
+- Line 920-936: Increased fade (50→150ms), added crossfade (300ms)
+
+No breaking changes - backward compatible với code hiện tại.
+
+
+TEST NGAY:
+================================================================================
+
+1. Deploy lên Hugging Face
+2. Test với style "Ballad" - lyrics có 5-6 câu
+3. Nghe xem:
+   ✓ Có mượt hơn không?
+   ✓ Có liên tục hơn không?
+   ✓ Volume có đều không?
+
+
+COMMIT & PUSH:
+================================================================================
+
+git add main.py
+git commit -m "improve audio continuity with crossfade and normalization"
+git push origin main
+git push huggingface main --force
+
+
+================================================================================

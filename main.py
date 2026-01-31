@@ -783,11 +783,11 @@ async def generate_music(
         # Rap: tight spacing
         line_spacing_beats = 0.5
     elif style in ["Ballad", "Soul", "Jazz", "Blues"]:
-        # Ballad: breathe room
-        line_spacing_beats = 1.5
+        # Ballad: breathe room - TĂNG LÊN!
+        line_spacing_beats = 2.5  # Tăng từ 1.5 → 2.5 beats
     else:
-        # Default: 1 beat pause
-        line_spacing_beats = 1.0
+        # Default: 1.5 beats pause (tăng từ 1.0)
+        line_spacing_beats = 1.5
     
     line_spacing_ms = ms_per_beat * line_spacing_beats
 
@@ -917,11 +917,23 @@ async def generate_music(
         if os.path.exists(t_proc):
             seg = AudioSegment.from_wav(t_proc)
             
-            # Thêm fade in/out nhẹ để tránh click
-            fade_ms = 50
+            # Normalize volume của từng line để đồng đều
+            # Tránh line này to, line kia nhỏ
+            target_dBFS = -20.0  # Target loudness
+            change_in_dBFS = target_dBFS - seg.dBFS
+            seg = seg.apply_gain(change_in_dBFS)
+            
+            # Thêm fade in/out để smooth transitions
+            fade_ms = 150  # Tăng từ 50ms → 150ms
             seg = seg.fade_in(fade_ms).fade_out(fade_ms)
             
-            full_vocal += seg
+            # CROSSFADE giữa các line để liên tục hơn
+            if len(full_vocal) > 0 and idx > 0:
+                # Crossfade 300ms với line trước
+                crossfade_ms = 300
+                full_vocal = full_vocal.append(seg, crossfade=crossfade_ms)
+            else:
+                full_vocal += seg
             
             # Thêm spacing giữa các line (trừ line cuối)
             if idx < len(lines) - 1:
