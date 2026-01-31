@@ -8,7 +8,15 @@ import requests
 import numpy as np
 import librosa
 import soundfile as sf
-import pyrubberband as pyrb 
+
+# Pyrubberband - optional, fallback to librosa if not available
+try:
+    import pyrubberband as pyrb
+    PYRB_AVAILABLE = True
+except ImportError:
+    PYRB_AVAILABLE = False
+    print("WARNING: pyrubberband not available, using librosa fallback for pitch/tempo")
+
 from pedalboard import Pedalboard, Reverb, Compressor, Gain, Chorus, HighpassFilter
 from fastapi import FastAPI, UploadFile, File, Query, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,10 +32,10 @@ from pydub import AudioSegment
 try:
     from rvc_engine import get_rvc_engine
     RVC_AVAILABLE = True
-    print("✅ RVC Singing Voice available")
+    print("[OK] RVC Singing Voice available")
 except Exception as e:
     RVC_AVAILABLE = False
-    print(f"⚠️ RVC not available: {e}")
+    print(f"[WARNING] RVC not available: {e}")
 
 # --- 1. CẤU HÌNH HỆ THỐNG ---
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
@@ -330,14 +338,22 @@ def apply_pitch_contour(input_path, output_path, mood, tempo, style, intensity=1
             seg = y[start:end]
             
             # Pitch shift with better quality + fallback
-            try:
-                seg_shifted = pyrb.pitch_shift(seg, sr, steps)
-            except Exception as e:
-                print(f"⚠️ Pyrubberband pitch shift failed for segment {i}, using librosa: {e}")
+            if PYRB_AVAILABLE:
+                try:
+                    seg_shifted = pyrb.pitch_shift(seg, sr, steps)
+                except Exception as e:
+                    print(f"[WARNING] Pyrubberband pitch shift failed for segment {i}, using librosa: {e}")
+                    try:
+                        seg_shifted = librosa.effects.pitch_shift(y=seg, sr=sr, n_steps=steps)
+                    except Exception as e2:
+                        print(f"[WARNING] Librosa also failed, using original segment: {e2}")
+                        seg_shifted = seg
+            else:
+                # Use librosa directly if pyrubberband not available
                 try:
                     seg_shifted = librosa.effects.pitch_shift(y=seg, sr=sr, n_steps=steps)
-                except Exception as e2:
-                    print(f"⚠️ Librosa also failed, using original segment: {e2}")
+                except Exception as e:
+                    print(f"⚠️ Librosa pitch shift failed, using original segment: {e}")
                     seg_shifted = seg
             
             # Thêm VIBRATO cho giọng hát (áp dụng cho nhiều style hơn)
@@ -507,34 +523,46 @@ def process_pro_audio(input_path, output_path, target_bpm, current_bpm=100, pitc
         
         # A. Time Stretch (Khớp Tempo) - với quality cao hơn
         if target_bpm > 0 and current_bpm > 0 and abs(target_bpm - current_bpm) > 1:
-            try:
-                rate = target_bpm / current_bpm
-                # Clamp rate để tránh artifacts
-                rate = max(0.5, min(2.0, rate))
-                y = pyrb.time_stretch(y, sr, rate)
-            except Exception as e:
-                print(f"⚠️ Time stretch failed (using librosa fallback): {e}")
-                # Fallback to librosa if pyrubberband fails
+            rate = target_bpm / current_bpm
+            # Clamp rate để tránh artifacts
+            rate = max(0.5, min(2.0, rate))
+            
+            if PYRB_AVAILABLE:
+                try:
+                    y = pyrb.time_stretch(y, sr, rate)
+                except Exception as e:
+                    print(f"⚠️ Pyrubberband time stretch failed, using librosa: {e}")
+                    try:
+                        y = librosa.effects.time_stretch(y=y, rate=rate)
+                    except:
+                        print("⚠️ Librosa fallback also failed, skipping time stretch")
+            else:
+                # Use librosa directly if pyrubberband not available
                 try:
                     y = librosa.effects.time_stretch(y=y, rate=rate)
-                except:
-                    print("⚠️ Librosa fallback also failed, skipping time stretch")
-                    pass
+                except Exception as e:
+                    print(f"⚠️ Time stretch failed, skipping: {e}")
         
         # B. Pitch Shift (Chỉnh tone giọng)
         if pitch_shift != 0:
-            try:
-                # Clamp pitch shift
-                pitch_shift = max(-12, min(12, pitch_shift))
-                y = pyrb.pitch_shift(y, sr, pitch_shift)
-            except Exception as e:
-                print(f"⚠️ Pitch shift failed (using librosa fallback): {e}")
-                # Fallback to librosa
+            # Clamp pitch shift
+            pitch_shift = max(-12, min(12, pitch_shift))
+            
+            if PYRB_AVAILABLE:
+                try:
+                    y = pyrb.pitch_shift(y, sr, pitch_shift)
+                except Exception as e:
+                    print(f"⚠️ Pyrubberband pitch shift failed, using librosa: {e}")
+                    try:
+                        y = librosa.effects.pitch_shift(y=y, sr=sr, n_steps=pitch_shift)
+                    except:
+                        print("⚠️ Librosa fallback also failed, skipping pitch shift")
+            else:
+                # Use librosa directly
                 try:
                     y = librosa.effects.pitch_shift(y=y, sr=sr, n_steps=pitch_shift)
-                except:
-                    print("⚠️ Librosa fallback also failed, skipping pitch shift")
-                    pass
+                except Exception as e:
+                    print(f"⚠️ Pitch shift failed, skipping: {e}")
         
         # === STAGE 1: CLEANUP & DE-ESSING ===
         board = Pedalboard([

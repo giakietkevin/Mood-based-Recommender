@@ -2,8 +2,8 @@ fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 deepface==0.0.83
-tensorflow==2.15.0
-keras==2.15.0
+tensorflow>=2.16.1
+keras>=2.15.0
 opencv-python-headless==4.9.0.80
 requests==2.31.0
 python-dotenv==1.0.0
@@ -17,7 +17,7 @@ pydub==0.25.1
 aiofiles==23.2.1
 librosa==0.10.1
 soundfile==0.12.1
-pyrubberband==0.3.0
+# pyrubberband==0.3.0  # Has issues with Python 3.12, fallback in code
 pedalboard==0.9.9
 scipy>=1.10.0
 tqdm>=4.65.0

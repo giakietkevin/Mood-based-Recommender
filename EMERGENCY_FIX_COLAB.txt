@@ -1,0 +1,68 @@
+================================================================================
+  🚨 EMERGENCY FIX FOR COLAB - DOUBLE NESTED FOLDER ISSUE
+================================================================================
+
+PROBLEM:
+--------
+Git cloned into wrong location, creating double nested folder:
+/content/Retrieval-based-Voice-Conversion-WebUI/Retrieval-based-Voice-Conversion-WebUI/
+
+SOLUTION:
+---------
+Move everything up one level!
+
+================================================================================
+RUN THESE COMMANDS IN NEW COLAB CELL
+================================================================================
+
+CREATE NEW CELL IN COLAB AND RUN:
+
+```python
+# Emergency Fix: Move files up one level
+import os
+import shutil
+
+print("Fixing double nested folder...")
+
+# Check if double nested
+if os.path.exists('/content/Retrieval-based-Voice-Conversion-WebUI/Retrieval-based-Voice-Conversion-WebUI'):
+    print("✅ Found double nested folder!")
+    
+    # Move everything up
+    src = '/content/Retrieval-based-Voice-Conversion-WebUI/Retrieval-based-Voice-Conversion-WebUI'
+    dest_parent = '/content/RVC-temp'
+    
+    # Move to temp
+    shutil.move(src, dest_parent)
+    
+    # Remove old folder
+    shutil.rmtree('/content/Retrieval-based-Voice-Conversion-WebUI')
+    
+    # Rename temp to correct name
+    shutil.move(dest_parent, '/content/Retrieval-based-Voice-Conversion-WebUI')
+    
+    print("✅ Fixed! Structure now correct!")
+    print(f"Location: /content/Retrieval-based-Voice-Conversion-WebUI")
+else:
+    print("No double nesting found")
+
+# Verify
+os.chdir('/content/Retrieval-based-Voice-Conversion-WebUI')
+print(f"\n✅ Working directory: {os.getcwd()}")
+
+# Check if infer folder exists
+if os.path.exists('infer'):
+    print("✅ infer folder found!")
+else:
+    print("❌ infer folder not found - something still wrong!")
+
+# List structure
+!ls -la | head -20
+```
+
+AFTER RUNNING THIS:
+-------------------
+1. Re-run Cell 9 (preprocess)
+2. Should work now!
+
+================================================================================

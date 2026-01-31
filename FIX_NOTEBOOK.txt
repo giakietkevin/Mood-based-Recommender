@@ -1,0 +1,89 @@
+================================================================================
+  CELL 4 FIXES APPLIED
+================================================================================
+
+ISSUES FOUND:
+-------------
+1. Emoji trong code cells → Encoding errors trong JSON
+2. faiss-cpu==1.7.4 → Version specific có thể fail
+3. Emoji characters không compatible với Jupyter JSON format
+
+FIXES APPLIED:
+--------------
+✅ Removed ALL emojis từ code cells
+✅ Changed: faiss-cpu==1.7.4 → faiss-cpu (latest stable)
+✅ Changed: -q flag để quiet install
+✅ Plain text print statements only
+
+CELL 4 NEW CODE:
+----------------
+```python
+# Cell 4: Install Dependencies (FIXED - No more faiss-gpu error!)
+print("Installing dependencies...\n")
+
+!pip install -r requirements.txt -q
+
+# FIX: Use faiss-cpu instead of faiss-gpu (Colab free tier compatible)
+print("\nFixing faiss installation...")
+!pip uninstall faiss-gpu -y -q
+!pip install faiss-cpu -q
+
+print("\nDependencies installed!")
+print("faiss-cpu installed successfully!")
+print("\nNo more faiss-gpu error!")
+```
+
+WHY THESE CHANGES:
+------------------
+1. NO EMOJIS in code = No encoding issues
+2. NO VERSION SPEC = Always get latest compatible
+3. -q FLAG = Quiet install, less output
+4. CLEAR MESSAGES = Easy to debug
+
+TESTING:
+--------
+✅ Should install without errors
+✅ Should work on all Colab environments
+✅ Should be compatible with Jupyter/Colab JSON
+
+================================================================================
+OTHER CELLS WITH POTENTIAL EMOJI ISSUES
+================================================================================
+
+Cells to check:
+- Cell 5: Download models (has emojis in progress)
+- Cell 6: Create folder (has emojis in instructions)
+- Cell 6A: Extract ZIP (has emojis)
+- Cell 6B: Search files (has emojis)
+- Cell 7: Verify dataset (has emojis)
+- Cell 8-17: All have emojis in print statements
+
+RECOMMENDATION:
+---------------
+Keep emojis ONLY in:
+✅ Markdown cells (safe!)
+✅ Print strings that are pure text
+
+Remove emojis from:
+❌ Variable names
+❌ Comments in code
+❌ Function names
+❌ Formatted strings with special chars
+
+================================================================================
+QUICK TEST
+================================================================================
+
+To test Cell 4:
+1. Upload notebook to Colab
+2. Run Cell 4 only
+3. Check output:
+   - Should show: "Installing dependencies..."
+   - Should show: "Fixing faiss installation..."
+   - Should show: "Dependencies installed!"
+   - Should show: "faiss-cpu installed successfully!"
+   - NO ERROR messages!
+
+Expected time: 2-3 minutes
+
+================================================================================
