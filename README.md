@@ -5,7 +5,7 @@ colorFrom: pink
 colorTo: blue
 sdk: docker
 pinned: false
-short_description: AI-powered music generation with mood detection and text-to-music
+short_description: AI music generation with mood detection & singing voice
 ---
 
 # 🎵 KietSound Pro - AI Music Studio
