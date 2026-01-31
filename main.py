@@ -66,7 +66,7 @@ BEAT_CACHE = {}  # {(style, bpm): processed_path}
 
 # --- STYLE/ATTRIBUTE PROFILES ---
 STYLE_BPM_RANGES = {
-    "Lo-Fi": (70, 90),
+    "Lo-Fi": (70, 90), "LoFi": (70, 90),
     "Jazz": (80, 120),
     "Blues": (70, 110),
     "Ballad": (60, 80),
@@ -76,19 +76,23 @@ STYLE_BPM_RANGES = {
     "Trance": (128, 140),
     "Dubstep": (140, 150),
     "Rap": (85, 100),
+    "Hip-Hop": (85, 100),
+    "Sad Rap": (70, 85), "SadRap": (70, 85),
     "Reggae": (70, 90),
     "Latin": (90, 120),
     "Rock": (110, 140),
-    "Hard Rock": (115, 150),
+    "Hard Rock": (115, 150), "HardRock": (115, 150),
     "Metal": (120, 160),
     "Punk": (150, 180),
     "Pop": (95, 120),
-    "Pop Rock": (100, 130),
-    "Pop Punk": (140, 170),
-    "R&B": (80, 100),
+    "Pop Rock": (100, 130), "PopRock": (100, 130),
+    "Pop Punk": (140, 170), "PopPunk": (140, 170),
+    "R&B": (80, 100), "RnB": (80, 100),
     "Soul": (75, 95),
     "Swing": (120, 160),
     "Country": (90, 120),
+    "Folk": (90, 110),
+    "Dark Folk": (80, 100), "DarkFolk": (80, 100),
     "Indie": (90, 120),
     "Alternative": (90, 120),
     "Funk": (95, 120),
@@ -97,14 +101,14 @@ STYLE_BPM_RANGES = {
 
 STYLE_BEAT_GAIN = {
     # Chill styles: beat thấp để vocal rõ
-    "Lo-Fi": -11, "Ballad": -12, "Jazz": -10, "Blues": -10, "Soul": -10, "R&B": -10,
+    "Lo-Fi": -11, "LoFi": -11, "Ballad": -12, "Jazz": -10, "Blues": -10, "Soul": -10, "R&B": -10, "RnB": -10,
     "Chill": -11, "Ambient": -12,
     
     # Rap: beat quan trọng nhưng không át vocal
-    "Rap": -7, "Hip-Hop": -7, "Sad Rap": -8,
+    "Rap": -7, "Hip-Hop": -7, "Sad Rap": -8, "SadRap": -8,
     
     # Rock: beat và vocal cân bằng
-    "Rock": -6, "Hard Rock": -5, "Metal": -5, "Punk": -5, "Pop Punk": -6,
+    "Rock": -6, "Hard Rock": -5, "HardRock": -5, "Metal": -5, "Punk": -5, "Pop Punk": -6, "PopPunk": -6,
     "Alternative": -6, "Indie": -7,
     
     # EDM: beat mạnh, vocal là topping
@@ -112,19 +116,22 @@ STYLE_BEAT_GAIN = {
     "Electronic": -6, "Dance": -5,
     
     # Pop/Country: cân bằng
-    "Pop": -7, "Pop Rock": -6, "Country": -8, "Folk": -9,
+    "Pop": -7, "Pop Rock": -6, "PopRock": -6, "Country": -8, "Folk": -9, "Dark Folk": -9, "DarkFolk": -9,
+    
+    # Latin/Reggae/Swing
+    "Latin": -7, "Reggae": -7, "Swing": -7, "Funk": -6,
 }
 
 STYLE_VOCAL_GAIN = {
     # Chill styles: vocal nổi bật
-    "Lo-Fi": 3, "Ballad": 3, "Jazz": 2, "Blues": 2, "Soul": 2, "R&B": 2,
+    "Lo-Fi": 3, "LoFi": 3, "Ballad": 3, "Jazz": 2, "Blues": 2, "Soul": 2, "R&B": 2, "RnB": 2,
     "Chill": 3, "Ambient": 4,
     
     # Rap: vocal phải rõ ràng
-    "Rap": 2, "Hip-Hop": 2, "Sad Rap": 3,
+    "Rap": 2, "Hip-Hop": 2, "Sad Rap": 3, "SadRap": 3,
     
     # Rock: vocal cân bằng
-    "Rock": 0, "Hard Rock": 0, "Metal": -1, "Punk": 0, "Pop Punk": 0,
+    "Rock": 0, "Hard Rock": 0, "HardRock": 0, "Metal": -1, "Punk": 0, "Pop Punk": 0, "PopPunk": 0,
     "Alternative": 1, "Indie": 1,
     
     # EDM: vocal nhẹ hơn beat
@@ -132,7 +139,10 @@ STYLE_VOCAL_GAIN = {
     "Electronic": -1, "Dance": -2,
     
     # Pop/Country: vocal nổi
-    "Pop": 1, "Pop Rock": 0, "Country": 2, "Folk": 2,
+    "Pop": 1, "Pop Rock": 0, "PopRock": 0, "Country": 2, "Folk": 2, "Dark Folk": 2, "DarkFolk": 2,
+    
+    # Latin/Reggae/Swing
+    "Latin": 1, "Reggae": 1, "Swing": 1, "Funk": 0,
 }
 
 VOICE_PROFILES = {
@@ -153,15 +163,20 @@ VOICE_PROFILES = {
 STYLE_SCALES = {
     # Major scales (vui tươi, sáng)
     "Pop": [0, 2, 4, 5, 7, 9, 11, 12],           # Major scale
+    "Pop Rock": [0, 2, 4, 5, 7, 9, 10, 12],      # Mixolydian
+    "PopRock": [0, 2, 4, 5, 7, 9, 10, 12],
     "EDM": [0, 2, 3, 5, 7, 8, 10, 12],            # Minor scale
     "Electronic": [0, 2, 4, 7, 9, 12],            # Major pentatonic
     "House": [0, 2, 4, 5, 7, 9, 11, 12],
     "Techno": [0, 2, 3, 5, 7, 8, 10, 12],
     "Trance": [0, 2, 4, 5, 7, 9, 11, 12],
+    "Dubstep": [0, 2, 3, 5, 7, 8, 10, 12],
     
     # Minor scales (buồn, u ám)
     "Lo-Fi": [0, 2, 3, 5, 7, 8, 10, 12],          # Natural minor
+    "LoFi": [0, 2, 3, 5, 7, 8, 10, 12],
     "Sad Rap": [0, 2, 3, 5, 7, 8, 10, 12],
+    "SadRap": [0, 2, 3, 5, 7, 8, 10, 12],
     "Ballad": [0, 2, 3, 5, 7, 8, 11, 12],         # Harmonic minor
     "Blues": [0, 3, 5, 6, 7, 10, 12],              # Blues scale
     "Jazz": [0, 2, 3, 5, 7, 9, 10, 12],            # Dorian mode
@@ -171,17 +186,28 @@ STYLE_SCALES = {
     "Hip-Hop": [0, 2, 3, 5, 7, 10, 12],
     "Country": [0, 2, 4, 7, 9, 12],                # Major pentatonic
     "Folk": [0, 2, 4, 7, 9, 12],
+    "Dark Folk": [0, 2, 3, 5, 7, 8, 10, 12],       # Natural minor
+    "DarkFolk": [0, 2, 3, 5, 7, 8, 10, 12],
     
     # Exotic/Special
     "Latin": [0, 1, 4, 5, 7, 8, 11, 12],           # Spanish Phrygian
     "Reggae": [0, 2, 4, 5, 7, 9, 10, 12],
     "Soul": [0, 2, 3, 5, 7, 9, 10, 12],
     "R&B": [0, 2, 3, 5, 7, 9, 10, 12],
+    "RnB": [0, 2, 3, 5, 7, 9, 10, 12],
+    "Funk": [0, 2, 3, 5, 7, 9, 10, 12],            # Dorian
+    "Swing": [0, 2, 4, 5, 7, 9, 11, 12],           # Major
     
     # Rock scales
     "Rock": [0, 2, 4, 5, 7, 9, 10, 12],            # Mixolydian
+    "Hard Rock": [0, 2, 3, 5, 7, 8, 10, 12],       # Natural minor
+    "HardRock": [0, 2, 3, 5, 7, 8, 10, 12],
     "Metal": [0, 2, 3, 5, 7, 8, 10, 12],           # Natural minor
     "Punk": [0, 2, 4, 5, 7, 9, 10, 12],
+    "Pop Punk": [0, 2, 4, 5, 7, 9, 11, 12],        # Major
+    "PopPunk": [0, 2, 4, 5, 7, 9, 11, 12],
+    "Alternative": [0, 2, 3, 5, 7, 8, 10, 12],     # Natural minor
+    "Indie": [0, 2, 3, 5, 7, 8, 11, 12],           # Harmonic minor
 }
 
 def resolve_target_bpm(tempo, style):
@@ -473,11 +499,31 @@ def get_or_download_beat(style):
     """
     Tìm beat trong thư mục theo Style. 
     Nếu không có, tự tải beat mẫu về để không bị lỗi "hát chay".
+    
+    IMPROVED: Better matching logic for style names with spaces/hyphens
     """
-    # Tìm file có tên chứa style (vd: "Pop_120.mp3")
-    beat_files = [f for f in os.listdir("beats") if style.lower().replace(" ","") in f.lower().replace(" ","") and f.endswith(".mp3")]
+    # Normalize style name: remove spaces, hyphens, lowercase
+    # "Hard Rock" → "hardrock", "Pop-Punk" → "poppunk"
+    normalized_style = style.lower().replace(" ", "").replace("-", "")
+    
+    # Tìm file có tên match với normalized style
+    # Check both exact match and contains
+    beat_files = []
+    for f in os.listdir("beats"):
+        if not f.endswith(".mp3"):
+            continue
+        # Normalize filename too
+        normalized_filename = f.lower().replace(" ", "").replace("-", "").replace("_", "")
+        
+        # Check if style is in filename (e.g., "hardrock" in "hardrock135.mp3")
+        if normalized_style in normalized_filename:
+            beat_files.append(f)
     
     if beat_files:
+        # Prefer exact match, fallback to first match
+        exact_matches = [f for f in beat_files if normalized_style == f.lower().replace("_", "").replace(".mp3", "").replace("0123456789", "")]
+        if exact_matches:
+            return os.path.join("beats", exact_matches[0])
         return os.path.join("beats", beat_files[0])
     
     # Fallback: Tải beat mặc định
