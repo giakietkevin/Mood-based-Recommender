@@ -88,3 +88,7 @@ htmlcov/
 # Backup
 *.bak
 *.backup
+
+# Word / báo cáo cá nhân (HF từ chối binary lớn nếu commit nhầm)
+*.docx
+*.doc
