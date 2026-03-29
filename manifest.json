@@ -1,21 +1,51 @@
 {
-  "name": "Mood AI",
-  "short_name": "MoodAI",
+  "id": "/",
+  "name": "KietSound Pro - AI Music Studio",
+  "short_name": "KietSound",
+  "description": "Nhận diện cảm xúc, gợi ý nhạc và tạo bài hát AI với giọng RVC.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "browser"],
   "background_color": "#090A0C",
-  "theme_color": "#FF6F61",
-  "orientation": "portrait",
+  "theme_color": "#090A0C",
+  "orientation": "any",
+  "categories": ["music", "entertainment"],
+  "lang": "vi",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/12204/12204300.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/12204/12204300.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/12204/12204300.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Trang chủ",
+      "short_name": "Home",
+      "description": "Mood scan & gợi ý YouTube",
+      "url": "/",
+      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/12204/12204300.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Studio AI",
+      "short_name": "Studio",
+      "description": "Tạo nhạc từ lời bài hát",
+      "url": "/?view=studio",
+      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/12204/12204300.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

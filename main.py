@@ -686,6 +686,17 @@ def process_pro_audio(input_path, output_path, target_bpm, current_bpm=100, pitc
 @app.get("/")
 async def serve_index(): return FileResponse("index.html")
 
+
+@app.get("/manifest.json")
+async def serve_manifest():
+    return FileResponse("manifest.json", media_type="application/manifest+json")
+
+
+@app.get("/sw.js")
+async def serve_service_worker():
+    return FileResponse("sw.js", media_type="application/javascript")
+
+
 @app.get("/my-songs")
 async def get_my_songs(): return load_songs_db()
 

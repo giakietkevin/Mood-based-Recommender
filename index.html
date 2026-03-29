@@ -2,12 +2,16 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+    <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
     <title>KietSound Pro - AI Music Studio</title>
     
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#090A0C">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#090A0C">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/12204/12204300.png">
 
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;700&display=swap" rel="stylesheet"/>
@@ -27,7 +31,11 @@
     </script>
 
     <style type="text/tailwindcss">
-        body { background-color: #090A0C; color: #e2e8f0; overscroll-behavior-y: none; }
+        html { -webkit-text-size-adjust: 100%; }
+        body { background-color: #090A0C; color: #e2e8f0; overscroll-behavior-y: none; min-height: 100vh; min-height: 100dvh; overflow-x: hidden; }
+        .safe-nav-pad { padding-top: max(0.75rem, env(safe-area-inset-top)); }
+        .pb-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+        .mb-player-safe { margin-bottom: env(safe-area-inset-bottom, 0px); }
         
         /* Glassmorphism Card */
         .glass-card { 
@@ -64,27 +72,29 @@
         @keyframes scan { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
     </style>
 </head>
-<body class="bg-bg-dark min-h-screen pb-32 font-sans selection:bg-primary selection:text-white">
+<body class="bg-bg-dark min-h-screen min-h-[100dvh] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] font-sans selection:bg-primary selection:text-white">
 
-<nav class="sticky top-0 z-50 px-4 py-3 glass-card border-b border-white/5 mb-6">
-    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        <div class="flex items-center gap-2">
-            <div class="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/20"><span class="material-icons-round text-white text-xl">equalizer</span></div>
-            <span class="text-xl font-display font-bold text-white uppercase tracking-tight">Kiet<span class="text-primary">Sound</span></span>
+<nav class="sticky top-0 z-50 px-3 sm:px-4 py-3 safe-nav-pad glass-card border-b border-white/5 mb-4 sm:mb-6">
+    <div class="max-w-7xl mx-auto flex flex-col gap-3">
+        <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-2 min-w-0 flex-shrink">
+                <div class="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/20 flex-shrink-0"><span class="material-icons-round text-white text-xl">equalizer</span></div>
+                <span class="text-lg sm:text-xl font-display font-bold text-white uppercase tracking-tight truncate">Kiet<span class="text-primary">Sound</span></span>
+            </div>
+            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0 min-w-0">
+                <div class="flex flex-col text-right min-w-0 max-w-[100px] sm:max-w-[170px]">
+                    <span class="text-[10px] uppercase text-slate-500 font-bold tracking-wide hidden sm:block">Account</span>
+                    <span id="user-display" class="text-[10px] sm:text-xs font-bold text-white truncate text-right">Guest</span>
+                </div>
+                <button id="login-btn" class="px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all whitespace-nowrap">
+                    LOGIN
+                </button>
+            </div>
         </div>
-        <div class="flex items-center gap-3">
-            <div class="hidden sm:flex flex-col text-right max-w-[170px]">
-                <span class="text-[10px] uppercase text-slate-500 font-bold tracking-wide">Account</span>
-                <span id="user-display" class="text-xs font-bold text-white truncate">Guest</span>
-            </div>
-            <button id="login-btn" class="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all">
-                LOGIN
-            </button>
-            <div class="flex gap-1 bg-white/5 p-1 rounded-2xl">
-                <button onclick="showView('dashboard')" id="nav-dashboard" class="px-5 py-2 rounded-xl text-xs font-bold transition-all bg-white/10 text-white shadow-sm">HOME</button>
-                <button onclick="showView('studio')" id="nav-studio" class="px-5 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">STUDIO</button>
-                <button onclick="showView('guide')" id="nav-guide" class="px-5 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">GUIDE</button>
-            </div>
+        <div class="flex w-full gap-0.5 sm:gap-1 bg-white/5 p-1 rounded-2xl">
+            <button type="button" onclick="showView('dashboard')" id="nav-dashboard" class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all bg-white/10 text-white shadow-sm">HOME</button>
+            <button type="button" onclick="showView('studio')" id="nav-studio" class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all">STUDIO</button>
+            <button type="button" onclick="showView('guide')" id="nav-guide" class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all">GUIDE</button>
         </div>
     </div>
 </nav>
@@ -118,10 +128,12 @@
         </section>
 
         <section class="lg:col-span-7 space-y-4">
-            <div class="glass-card rounded-2xl p-2 pl-4 flex items-center gap-3 border border-white/10 focus-within:border-primary/50 transition-colors">
-                <span class="material-icons-round text-slate-500">search</span>
-                <input id="search-input" class="flex-1 bg-transparent border-none focus:ring-0 text-white h-10 placeholder-slate-600 font-medium" placeholder="Tìm bài hát Youtube..."/>
-                <button onclick="performSearch()" class="bg-white text-black px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">GO</button>
+            <div class="glass-card rounded-2xl p-2 sm:p-2 pl-3 sm:pl-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 border border-white/10 focus-within:border-primary/50 transition-colors">
+                <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    <span class="material-icons-round text-slate-500 flex-shrink-0">search</span>
+                    <input id="search-input" class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-white h-10 placeholder-slate-600 font-medium text-sm" placeholder="Tìm bài hát Youtube..." enterkeyhint="search"/>
+                </div>
+                <button type="button" onclick="performSearch()" class="w-full sm:w-auto shrink-0 bg-white text-black px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">GO</button>
             </div>
             <div class="flex gap-2">
                 <button id="type-music" onclick="switchType('music')" class="flex-1 py-3 rounded-xl font-bold text-xs bg-primary text-white shadow-lg transition-all flex items-center justify-center gap-2"><span class="material-icons-round text-sm">music_note</span> MUSIC</button>
@@ -135,7 +147,7 @@
                 <button onclick="document.getElementById('search-input').value='Piano Focus'; performSearch()" class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-slate-300 hover:bg-white/10">#Piano</button>
             </div>
 
-            <div id="recommendations-container" class="space-y-3 pb-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+            <div id="recommendations-container" class="space-y-3 pb-4 max-h-[min(500px,52vh)] sm:max-h-[500px] overflow-y-auto custom-scrollbar">
                 <div class="text-center py-20 opacity-30">
                     <span class="material-icons-round text-6xl mb-2">queue_music</span>
                     <p class="text-sm font-bold">Search or Scan Mood to start</p>
@@ -146,12 +158,12 @@
 
     <div id="view-studio" class="hidden grid lg:grid-cols-12 gap-6 animate-fade-in">
         <div class="lg:col-span-8 space-y-6">
-            <div class="glass-card rounded-[2rem] p-6 md:p-8 border border-white/10">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-display font-bold text-white flex items-center gap-2">
-                        <span class="material-icons-round text-primary">auto_fix_high</span> AI Generator
+            <div class="glass-card rounded-[2rem] p-5 sm:p-6 md:p-8 border border-white/10">
+                <div class="flex flex-col xs:flex-row xs:items-start sm:items-center justify-between gap-3 mb-6">
+                    <h2 class="text-xl sm:text-2xl font-display font-bold text-white flex items-center gap-2 min-w-0">
+                        <span class="material-icons-round text-primary flex-shrink-0">auto_fix_high</span> <span class="truncate">AI Generator</span>
                     </h2>
-                    <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold border border-primary/20">Pro Mode</span>
+                    <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold border border-primary/20 self-start sm:self-auto">Pro Mode</span>
                 </div>
                 
                 <div class="space-y-6">
@@ -197,7 +209,7 @@
                             <div class="flex flex-wrap gap-2" id="mood-options"></div>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             <div>
                                 <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1"># Voices</label>
                                 <div class="flex flex-wrap gap-2" id="voice-options"></div>
@@ -232,7 +244,7 @@
         </div>
 
         <div class="lg:col-span-4 space-y-4">
-            <div class="glass-card rounded-[2rem] p-6 h-[85vh] flex flex-col sticky top-24">
+            <div class="glass-card rounded-[2rem] p-4 sm:p-6 min-h-[240px] max-h-[min(70vh,640px)] lg:max-h-none lg:h-[85vh] flex flex-col lg:sticky lg:top-20">
                 <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
                     <h3 class="font-bold text-white flex items-center gap-2">
                         <span class="material-icons-round text-primary">library_music</span> My Library
@@ -252,15 +264,15 @@
 
     <!-- GUIDE VIEW -->
     <div id="view-guide" class="hidden max-w-5xl mx-auto animate-fade-in">
-        <div class="glass-card rounded-[2rem] p-8 md:p-12 border border-white/10">
+        <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 md:p-12 border border-white/10">
             <!-- Header -->
-            <div class="text-center mb-10">
-                <div class="inline-flex items-center gap-3 bg-primary/10 px-5 py-2 rounded-full border border-primary/20 mb-4">
-                    <span class="material-icons-round text-primary text-2xl">menu_book</span>
-                    <span class="text-primary font-bold text-sm uppercase tracking-wide">User Guide</span>
+            <div class="text-center mb-8 sm:mb-10">
+                <div class="inline-flex items-center gap-2 sm:gap-3 bg-primary/10 px-4 sm:px-5 py-2 rounded-full border border-primary/20 mb-4 max-w-full">
+                    <span class="material-icons-round text-primary text-xl sm:text-2xl flex-shrink-0">menu_book</span>
+                    <span class="text-primary font-bold text-xs sm:text-sm uppercase tracking-wide truncate">User Guide</span>
                 </div>
-                <h1 class="text-4xl md:text-5xl font-display font-bold text-white mb-3">Hướng Dẫn Sử Dụng</h1>
-                <p class="text-slate-400 text-lg">KietSound Pro - AI Music Studio</p>
+                <h1 class="text-2xl sm:text-4xl md:text-5xl font-display font-bold text-white mb-3 leading-tight px-1">Hướng Dẫn Sử Dụng</h1>
+                <p class="text-slate-400 text-base sm:text-lg">KietSound Pro - AI Music Studio</p>
             </div>
 
             <!-- Feature Cards -->
@@ -536,44 +548,44 @@
     </div>
 </main>
 
-<div id="player-bar" class="fixed bottom-0 left-0 w-full z-[100] glass-card border-t border-white/10 hidden pb-safe-bottom bg-[#090A0C]/95 transition-transform duration-300 transform translate-y-full">
+<div id="player-bar" class="fixed bottom-0 left-0 right-0 w-full max-w-[100vw] z-[100] glass-card border-t border-white/10 hidden pb-safe-bottom bg-[#090A0C]/95 transition-transform duration-300 transform translate-y-full">
     <div class="relative w-full h-1 bg-white/10 cursor-pointer group">
         <div id="progress-fill" class="h-full bg-primary w-0 relative">
             <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4 p-3 md:p-4">
-        <div class="flex items-center gap-3 min-w-0 w-1/3">
-            <div class="relative w-12 h-12 flex-shrink-0 group">
-                <img id="player-thumb" class="w-full h-full rounded-xl bg-black/50 object-cover border border-white/10" src="https://via.placeholder.com/40">
+    <div class="max-w-7xl mx-auto flex items-center gap-2 sm:gap-4 p-2.5 sm:p-3 md:p-4 min-w-0">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 basis-0">
+            <div class="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 group">
+                <img id="player-thumb" class="w-full h-full rounded-xl bg-black/50 object-cover border border-white/10" src="https://via.placeholder.com/40" alt="">
                 <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-xl">
                     <span class="material-icons-round text-white text-sm">open_in_full</span>
                 </div>
             </div>
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1 overflow-hidden">
                 <div id="player-title-container" class="w-full overflow-hidden">
-                    <p id="player-title" class="text-sm font-bold text-white truncate">Select a song</p>
+                    <p id="player-title" class="text-xs sm:text-sm font-bold text-white truncate">Select a song</p>
                 </div>
-                <p id="player-desc" class="text-[10px] text-slate-400 font-medium uppercase tracking-wide truncate">Ready</p>
+                <p id="player-desc" class="text-[9px] sm:text-[10px] text-slate-400 font-medium uppercase tracking-wide truncate">Ready</p>
             </div>
         </div>
         
-        <div class="flex items-center gap-4">
-            <button class="text-slate-400 hover:text-white transition-colors hidden md:block"><span class="material-icons-round">skip_previous</span></button>
-            <button id="play-btn" onclick="toggleMainPlay()" class="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all">
+        <div class="flex items-center justify-center gap-1 sm:gap-4 flex-shrink-0">
+            <button type="button" class="text-slate-400 hover:text-white transition-colors hidden md:block" aria-hidden="true"><span class="material-icons-round">skip_previous</span></button>
+            <button type="button" id="play-btn" onclick="toggleMainPlay()" class="w-11 h-11 sm:w-12 sm:h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all touch-manipulation" aria-label="Play or pause">
                 <span id="play-icon" class="material-icons-round text-2xl">play_arrow</span>
             </button>
-            <button class="text-slate-400 hover:text-white transition-colors hidden md:block"><span class="material-icons-round">skip_next</span></button>
+            <button type="button" class="text-slate-400 hover:text-white transition-colors hidden md:block" aria-hidden="true"><span class="material-icons-round">skip_next</span></button>
         </div>
 
-        <div class="flex items-center justify-end gap-3 w-1/3">
-            <div class="hidden md:flex items-center gap-2 group">
-                <span class="material-icons-round text-slate-500 text-xs">volume_up</span>
-                <input type="range" class="w-20 accent-primary h-1" min="0" max="100" value="100" oninput="setVolume(this.value)">
+        <div class="flex items-center justify-end gap-1 sm:gap-3 flex-shrink-0 basis-[7.5rem] sm:basis-auto min-w-0">
+            <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 max-w-[5.5rem] sm:max-w-none">
+                <span class="material-icons-round text-slate-500 text-xs flex-shrink-0 hidden sm:inline">volume_up</span>
+                <input type="range" class="w-full sm:w-20 accent-primary h-1 min-w-[3rem]" min="0" max="100" value="100" oninput="setVolume(this.value)" aria-label="Volume">
             </div>
-            <a id="download-btn" href="#" download class="p-2 text-slate-400 hover:text-primary transition-colors hidden" title="Download MP3">
-                <span class="material-icons-round">download</span>
+            <a id="download-btn" href="#" download class="p-1.5 sm:p-2 text-slate-400 hover:text-primary transition-colors hidden flex-shrink-0" title="Download MP3">
+                <span class="material-icons-round text-lg sm:text-2xl">download</span>
             </a>
         </div>
     </div>
@@ -615,6 +627,7 @@
     let ytPlayer;
     let isYtReady = false;
     let localAudio = document.getElementById('local-audio');
+    let searchEnterBound = false;
 
     // ==========================================
     // 2. UI INITIALIZATION & CHIPS
@@ -627,9 +640,21 @@
         
         loadMySongs();
         initCamera();
-        
-        // Setup default view
-        showView('dashboard');
+
+        const searchInput = document.getElementById('search-input');
+        if (searchInput && !searchEnterBound) {
+            searchEnterBound = true;
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') performSearch();
+            });
+        }
+
+        const initialView = new URLSearchParams(window.location.search).get('view');
+        if (initialView === 'studio' || initialView === 'guide') {
+            showView(initialView);
+        } else {
+            showView('dashboard');
+        }
     }
 
     function renderChips(containerId, dataArray, key) {
@@ -694,6 +719,13 @@
             navGuide.classList.remove('text-slate-400');
             navGuide.classList.add('bg-white/10', 'text-white', 'shadow-sm');
         }
+
+        try {
+            const url = new URL(window.location.href);
+            if (viewName === 'dashboard') url.searchParams.delete('view');
+            else url.searchParams.set('view', viewName);
+            history.replaceState({}, '', url);
+        } catch (e) { /* file:// or restricted */ }
     };
 
     window.switchType = (type) => {
@@ -869,7 +901,7 @@
                     </div>
 
                     <button onclick="event.stopPropagation(); deleteSong('${song.file_url}')" 
-                            class="w-8 h-8 rounded-full hover:bg-red-500/20 text-slate-500 hover:text-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                            class="w-9 h-9 sm:w-8 sm:h-8 rounded-full hover:bg-red-500/20 text-slate-500 hover:text-red-500 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all touch-manipulation">
                         <span class="material-icons-round text-sm">delete</span>
                     </button>
                 </div>
@@ -1186,6 +1218,13 @@
             loginBtn.classList.remove("bg-primary");
         }
     });
+</script>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
+        });
+    }
 </script>
 </body>
 </html>
