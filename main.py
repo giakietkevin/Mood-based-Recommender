@@ -56,6 +56,18 @@ os.makedirs("beats", exist_ok=True)
 app.mount("/generated_music", StaticFiles(directory="generated_music"), name="generated_music")
 
 SONGS_DB_FILE = "user_songs.json"
+FAVORITES_DB_FILE = "user_favorites.json"
+PLAYLISTS_DB_FILE = "user_playlists.json"
+FILMS_DB_FILE = "user_films.json"
+
+def load_json_db(file_path, default=dict):
+    if not os.path.exists(file_path): return default()
+    try:
+        with open(file_path, "r", encoding="utf-8") as f: return json.load(f)
+    except: return default()
+
+def save_json_db(file_path, data):
+    with open(file_path, "w", encoding="utf-8") as f: json.dump(data, f, ensure_ascii=False, indent=2)
 
 # --- 3. HELPER: TẢI BEAT TỰ ĐỘNG (AUTO-BEAT) ---
 # Link beat dự phòng (Pop Style)
@@ -709,6 +721,141 @@ async def delete_song(url: str = Query(...)):
         delete_song_from_db(url)
         return {"status": "success"}
     except: return {"status": "error"}
+
+# --- FAVORITES API ---
+@app.get("/favorites")
+async def get_favorites(uid: str = Query(...)):
+    if not uid: return []
+    db = load_json_db(FAVORITES_DB_FILE, dict)
+    return db.get(uid, [])
+
+@app.post("/favorites/toggle")
+async def toggle_favorite(uid: str = Form(...), song: str = Form(...)):
+    if not uid: return {"status": "error", "message": "Missing user ID"}
+    db = load_json_db(FAVORITES_DB_FILE, dict)
+    user_favs = db.get(uid, [])
+    
+    song_dict = json.loads(song)
+    song_id = song_dict.get("link") or song_dict.get("file_url")
+    
+    exists_idx = -1
+    for i, s in enumerate(user_favs):
+        s_id = s.get("link") or s.get("file_url")
+        if s_id == song_id:
+            exists_idx = i
+            break
+            
+    if exists_idx >= 0:
+        user_favs.pop(exists_idx)
+        action = "removed"
+    else:
+        if "link" in song_dict:
+            song_dict["type"] = "youtube"
+        else:
+            song_dict["type"] = "local"
+        user_favs.insert(0, song_dict)
+        action = "added"
+        
+    db[uid] = user_favs
+    save_json_db(FAVORITES_DB_FILE, db)
+    return {"status": "success", "action": action}
+
+# --- PLAYLISTS API ---
+@app.get("/playlists")
+async def get_playlists(uid: str = Query(...)):
+    if not uid: return []
+    db = load_json_db(PLAYLISTS_DB_FILE, dict)
+    return db.get(uid, [])
+
+@app.post("/playlists")
+async def create_playlist(uid: str = Form(...), name: str = Form(...)):
+    if not uid or not name: return {"status": "error"}
+    db = load_json_db(PLAYLISTS_DB_FILE, dict)
+    user_playlists = db.get(uid, [])
+    
+    new_pl = {
+        "id": f"pl_{str(uuid.uuid4())[:8]}",
+        "name": name,
+        "songs": []
+    }
+    user_playlists.append(new_pl)
+    db[uid] = user_playlists
+    save_json_db(PLAYLISTS_DB_FILE, db)
+    return {"status": "success", "playlist": new_pl}
+
+@app.post("/playlists/song")
+async def toggle_playlist_song(uid: str = Form(...), playlist_id: str = Form(...), song: str = Form(...)):
+    if not uid or not playlist_id: return {"status": "error"}
+    db = load_json_db(PLAYLISTS_DB_FILE, dict)
+    user_playlists = db.get(uid, [])
+    
+    song_dict = json.loads(song)
+    song_id_to_check = song_dict.get("link") or song_dict.get("file_url")
+    
+    action = "error"
+    for pl in user_playlists:
+        if pl["id"] == playlist_id:
+            exists_idx = -1
+            for i, s in enumerate(pl["songs"]):
+                s_id = s.get("link") or s.get("file_url")
+                if s_id == song_id_to_check:
+                    exists_idx = i
+                    break
+            
+            if exists_idx >= 0:
+                pl["songs"].pop(exists_idx)
+                action = "removed"
+            else:
+                if "link" in song_dict:
+                    song_dict["type"] = "youtube"
+                else:
+                    song_dict["type"] = "local"
+                pl["songs"].append(song_dict)
+                action = "added"
+            break
+            
+    db[uid] = user_playlists
+    save_json_db(PLAYLISTS_DB_FILE, db)
+    return {"status": "success", "action": action}
+
+# --- FILM HISTORY API ---
+@app.get("/films")
+async def get_films(uid: str = Query(...)):
+    if not uid: return []
+    db = load_json_db(FILMS_DB_FILE, dict)
+    return db.get(uid, [])
+
+@app.post("/films")
+async def save_film(uid: str = Form(...), film: str = Form(...)):
+    if not uid: return {"status": "error"}
+    db = load_json_db(FILMS_DB_FILE, dict)
+    user_films = db.get(uid, [])
+    
+    film_dict = json.loads(film)
+    magnet = film_dict.get("magnet")
+    
+    # Remove old entry if exists (to bump to top)
+    user_films = [f for f in user_films if f.get("magnet") != magnet]
+    
+    # Add to beginning
+    user_films.insert(0, film_dict)
+    
+    # limit history to 50
+    user_films = user_films[:50]
+    
+    db[uid] = user_films
+    save_json_db(FILMS_DB_FILE, db)
+    return {"status": "success", "action": "added", "films": user_films}
+
+@app.delete("/films")
+async def delete_film(uid: str = Query(...), magnet: str = Query(...)):
+    if not uid: return {"status": "error"}
+    db = load_json_db(FILMS_DB_FILE, dict)
+    user_films = db.get(uid, [])
+    user_films = [f for f in user_films if f.get("magnet") != magnet]
+    db[uid] = user_films
+    save_json_db(FILMS_DB_FILE, db)
+    return {"status": "success", "action": "deleted", "films": user_films}
 
 @app.get("/search")
 async def search(q: str, type: str="music"):

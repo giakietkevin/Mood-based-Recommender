@@ -21,6 +21,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -105,11 +106,15 @@
             </div>
             <div class="flex w-full gap-0.5 sm:gap-1 bg-white/5 p-1 rounded-2xl">
                 <button type="button" onclick="showView('dashboard')" id="nav-dashboard"
-                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all bg-white/10 text-white shadow-sm">HOME</button>
+                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all bg-white/10 text-white shadow-sm whitespace-nowrap">HOME</button>
                 <button type="button" onclick="showView('studio')" id="nav-studio"
-                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all">STUDIO</button>
+                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">STUDIO</button>
+                <button type="button" onclick="showView('library')" id="nav-library"
+                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">LIBRARY</button>
+                <button type="button" onclick="showView('film')" id="nav-film"
+                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">FILM</button>
                 <button type="button" onclick="showView('guide')" id="nav-guide"
-                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all">GUIDE</button>
+                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">GUIDE</button>
             </div>
         </div>
     </nav>
@@ -321,6 +326,140 @@
                             <span class="material-icons-round text-4xl mb-2">hourglass_empty</span>
                             <p class="text-xs">Loading library...</p>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIBRARY VIEW -->
+        <div id="view-library" class="hidden grid lg:grid-cols-12 gap-6 animate-fade-in">
+            <div class="lg:col-span-6 space-y-4">
+                <div class="glass-card rounded-[2rem] p-4 sm:p-6 min-h-[400px] lg:h-[85vh] flex flex-col">
+                    <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
+                        <h3 class="font-bold text-white flex items-center gap-2 text-xl">
+                            <span class="material-icons-round text-red-500">favorite</span> Bài Hát Yêu Thích
+                        </h3>
+                    </div>
+                    <div id="library-favorites-list" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                        <div class="flex flex-col items-center justify-center h-40 opacity-50">
+                            <span class="material-icons-round text-4xl mb-2">favorite_border</span>
+                            <p class="text-xs">Chưa có bài hát yêu thích nào.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-6 space-y-4">
+                <div class="glass-card rounded-[2rem] p-4 sm:p-6 min-h-[400px] lg:h-[85vh] flex flex-col relative">
+                    <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
+                        <h3 class="font-bold text-white flex items-center gap-2 text-xl">
+                            <span class="material-icons-round text-blue-400">queue_music</span> Playlists
+                        </h3>
+                        <button onclick="document.getElementById('playlist-modal').classList.remove('opacity-0', 'pointer-events-none')" class="p-2 bg-primary/20 text-primary hover:bg-primary hover:text-[#0a0a0a] rounded-full transition-all flex items-center justify-center">
+                            <span class="material-icons-round text-sm">add</span>
+                        </button>
+                    </div>
+                    <div id="library-playlists-list" class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                        <div class="flex flex-col items-center justify-center h-40 opacity-50">
+                            <span class="material-icons-round text-4xl mb-2">library_music</span>
+                            <p class="text-xs">Chưa có playlist nào.</p>
+                        </div>
+                    </div>
+                    <!-- Playlist details overlay -->
+                    <div id="playlist-details-overlay" class="absolute inset-0 z-10 bg-bg-dark rounded-[2rem] p-4 sm:p-6 flex flex-col transition-transform transform translate-x-full duration-300">
+                        <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
+                            <button onclick="document.getElementById('playlist-details-overlay').classList.add('translate-x-full')" class="p-2 text-slate-400 hover:text-white rounded-full flex items-center justify-center">
+                                <span class="material-icons-round">arrow_back</span>
+                            </button>
+                            <h3 id="playlist-details-title" class="font-bold text-white text-lg truncate flex-1 ml-2">Playlist Name</h3>
+                        </div>
+                        <div id="playlist-details-list" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+        <!-- FILM STATION VIEW -->
+        <div id="view-film-station" class="hidden grid lg:grid-cols-12 gap-6 animate-fade-in">
+            <div class="lg:col-span-8 space-y-4">
+                <div class="glass-card rounded-[2rem] p-4 sm:p-6 flex flex-col items-center">
+                    <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                        <span class="material-icons-round text-primary">movie</span> KietFilm Player
+                    </h2>
+                    
+                    <!-- Player Area -->
+                    <div id="film-player-wrapper" class="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl relative border border-white/10 flex items-center justify-center mb-4">
+                        <div id="film-pl-placeholder" class="text-center p-6 text-slate-500">
+                            <span class="material-icons-round text-5xl mb-2 opacity-50">smart_display</span>
+                            <p class="text-sm font-bold">Chưa có video nào đang phát</p>
+                            <p class="text-xs mt-1">Dán Magnet link vào ô bên dưới để bắt đầu Stream.</p>
+                        </div>
+                        <div id="film-output" class="absolute inset-0 w-full h-full hidden">
+                            <!-- WebTorrent will inject video element here -->
+                        </div>
+                        <!-- Progress overlay details -->
+                        <div id="film-progress-overlay" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 hidden flex-col justify-end transition-opacity">
+                            <div class="flex items-center justify-between text-[10px] text-white font-bold mb-1">
+                                <span><span id="film-downloaded">0 MB</span> / <span id="film-total">0 MB</span></span>
+                                <span><span class="text-green-400" id="film-speed">0 KB/s</span> ↓</span>
+                                <span><span class="text-blue-400" id="film-peers">0</span> Peers</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+                                <div id="film-progress-bar" class="h-full bg-primary w-0 transition-all duration-300"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="w-full space-y-4">
+                        <form onsubmit="startFilmStream(event)" class="relative">
+                            <input type="text" id="film-magnet-input" placeholder="Dán Magnet Link vào đây (magnet:?xt=urn:btih:...)" 
+                                   class="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-24 py-3 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-500 shadow-inner">
+                            <span class="material-icons-round absolute left-3 top-3.5 text-slate-400 text-sm">link</span>
+                            <button type="submit" id="btn-stream-film" class="absolute right-1 top-1 bottom-1 bg-primary text-[#0a0a0a] hover:bg-white font-bold text-xs px-4 rounded-lg transition-colors flex items-center gap-1 shadow-lg shadow-primary/20">
+                                <span class="material-icons-round text-sm">play_arrow</span> STREAM
+                            </button>
+                        </form>
+                        
+                        <div class="flex items-center justify-between gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                            <div class="flex items-center gap-2 text-sm text-slate-300 min-w-0">
+                                <span class="material-icons-round text-primary flex-shrink-0">subtitles</span>
+                                <span class="truncate" id="sub-file-name">Subtitle: Trống</span>
+                            </div>
+                            <label class="bg-white/10 hover:bg-white/20 cursor-pointer text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                                Tải Sub
+                                <input type="file" accept=".srt,.vtt" id="film-sub-input" onchange="handleSubUpload(event)" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 space-y-6">
+                <!-- History -->
+                <div class="glass-card rounded-[2rem] p-5">
+                    <h3 class="font-bold text-white flex items-center gap-2 mb-4">
+                        <span class="material-icons-round text-primary">history</span> Lịch sử Film (Gần đây)
+                    </h3>
+                    <div id="film-history-list" class="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar pr-2">
+                        <div class="text-center p-4 text-slate-500 text-xs italic">
+                            Chưa có lịch sử.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guide -->
+                <div class="glass-card rounded-[2rem] p-5 border-l-4 border-blue-500">
+                    <h3 class="font-bold text-white flex items-center gap-2 mb-3">
+                        <span class="material-icons-round text-blue-400">info</span> Hướng dẫn WebTorrent
+                    </h3>
+                    <div class="text-[11px] text-slate-400 space-y-3 leading-relaxed">
+                        <p><strong>1. Magnet Link là gì?</strong> KietFilm dùng công nghệ P2P WebTorrent. Bạn cần lấy link báo dạng <code>magnet:?xt=...</code> trên các trang chia sẻ phim mã nguồn mở.</p>
+                        <p><strong>2. Vấn đề Seeders:</strong> Công nghệ trình duyệt YÊU CẦU định dạng WebRTC. Một số link Magnet cũ, ít người stream trên web sẽ KHÔNG TẢI ĐƯỢC (Đứng ở 0 B/s).</p>
+                        <p><strong>3. Subtitles:</strong> Tải file phụ đề <code>.srt</code> trên mạng về, bấm nút "Tải Sub" để đính kèm tự động vào Video.</p>
+                        <p class="text-yellow-400/80">⚠️ Do chạy thẳng trên trình duyệt, RAM có thể đầy sau vài tiếng. Hãy F5 web nếu thấy lag nhé!</p>
                     </div>
                 </div>
             </div>
@@ -744,6 +883,28 @@
         </div>
     </div>
 
+    <!-- MODAL ADD TO PLAYLIST -->
+    <div id="playlist-modal" class="fixed inset-0 z-[200] bg-black/80 flex flex-col items-center justify-center p-4 backdrop-blur-md transition-all duration-300 opacity-0 pointer-events-none">
+        <div class="w-full max-w-sm glass-card rounded-2xl overflow-hidden shadow-2xl border border-white/10 p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-white text-lg flex items-center gap-2"><span class="material-icons-round text-blue-400">playlist_add</span> Add to Playlist</h3>
+                <button onclick="closePlaylistModal()" class="text-slate-400 hover:text-white"><span class="material-icons-round">close</span></button>
+            </div>
+            
+            <div class="mb-4 space-y-2">
+                <input type="text" id="new-playlist-name" placeholder="Tên playlist mới..." class="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-primary focus:ring-0">
+                <button onclick="createNewPlaylist(event)" class="w-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-2 rounded-xl transition-colors">TẠO PLAYLIST</button>
+            </div>
+            
+            <div class="h-px bg-white/10 mb-4 w-full"></div>
+            
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Thêm vào playlist có sẵn</p>
+            <div id="modal-playlists-list" class="max-h-48 overflow-y-auto space-y-1 custom-scrollbar">
+                <!-- Playlists rendered here -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==========================================
         // 1. DATA CONFIGURATION (FULL LIST)
@@ -778,6 +939,18 @@
         let isYtReady = false;
         let localAudio = document.getElementById('local-audio');
         let searchEnterBound = false;
+        
+        // Data states
+        window.currentUserUid = null;
+        let myFavorites = [];
+        let myPlaylists = [];
+        let songToPlaylist = null;
+        
+        // Film Station states
+        let filmHistory = [];
+        const torrentClient = new WebTorrent();
+        let currentTorrent = null;
+        window.currentSubtitleUrl = null;
 
         window.toggleYtVideo = () => {
             const modal = document.getElementById('yt-video-modal');
@@ -847,14 +1020,20 @@
         window.showView = (viewName) => {
             const dash = document.getElementById('view-dashboard');
             const studio = document.getElementById('view-studio');
+            const library = document.getElementById('view-library');
+            const film = document.getElementById('view-film-station');
             const guide = document.getElementById('view-guide');
             const navDash = document.getElementById('nav-dashboard');
             const navStudio = document.getElementById('nav-studio');
+            const navLibrary = document.getElementById('nav-library');
+            const navFilm = document.getElementById('nav-film');
             const navGuide = document.getElementById('nav-guide');
 
             // Hide all views
             dash.classList.add('hidden');
             studio.classList.add('hidden');
+            library.classList.add('hidden');
+            film.classList.add('hidden');
             guide.classList.add('hidden');
 
             // Reset all nav buttons
@@ -862,6 +1041,10 @@
             navDash.classList.add('text-slate-400');
             navStudio.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
             navStudio.classList.add('text-slate-400');
+            navLibrary.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
+            navLibrary.classList.add('text-slate-400');
+            navFilm.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
+            navFilm.classList.add('text-slate-400');
             navGuide.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
             navGuide.classList.add('text-slate-400');
 
@@ -875,6 +1058,23 @@
                 navStudio.classList.remove('text-slate-400');
                 navStudio.classList.add('bg-white/10', 'text-white', 'shadow-sm');
                 loadMySongs(); // Refresh library
+            } else if (viewName === 'library') {
+                library.classList.remove('hidden');
+                navLibrary.classList.remove('text-slate-400');
+                navLibrary.classList.add('bg-white/10', 'text-white', 'shadow-sm');
+                if (!window.currentUserUid) {
+                    alert("Vui lòng Login để xem Library cá nhân nhé!");
+                } else {
+                    loadFavorites();
+                    loadPlaylists();
+                }
+            } else if (viewName === 'film') {
+                film.classList.remove('hidden');
+                navFilm.classList.remove('text-slate-400');
+                navFilm.classList.add('bg-white/10', 'text-white', 'shadow-sm');
+                if (window.currentUserUid) {
+                    loadFilmHistory();
+                }
             } else if (viewName === 'guide') {
                 guide.classList.remove('hidden');
                 navGuide.classList.remove('text-slate-400');
@@ -1061,10 +1261,13 @@
                         </div>
                     </div>
 
-                    <button onclick="event.stopPropagation(); deleteSong('${song.file_url}')" 
-                            class="w-9 h-9 sm:w-8 sm:h-8 rounded-full hover:bg-red-500/20 text-slate-500 hover:text-red-500 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all touch-manipulation">
-                        <span class="material-icons-round text-sm">delete</span>
-                    </button>
+                    <div class="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
+                        ${window.getActionButtonsHTML(song, 'local')}
+                        <button onclick="event.stopPropagation(); deleteSong('${song.file_url}')" 
+                                class="w-8 h-8 rounded-full hover:bg-red-500/20 text-slate-500 hover:text-red-500 flex items-center justify-center transition-all touch-manipulation shadow-none">
+                            <span class="material-icons-round text-sm">delete</span>
+                        </button>
+                    </div>
                 </div>
             `).join('');
 
@@ -1235,9 +1438,7 @@
                         <h4 class="font-bold text-sm text-white truncate leading-tight mb-1">${item.title}</h4>
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${currentType === 'podcast' ? 'Podcast' : 'Youtube Music'}</p>
                     </div>
-                    <button class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white">
-                        <span class="material-icons-round text-sm">play_arrow</span>
-                    </button>
+                    ${window.getActionButtonsHTML(item, 'youtube')}
                 </div>
             `).join('');
             } catch (e) {
@@ -1299,9 +1500,7 @@
                             <h4 class="font-bold text-sm text-white truncate leading-tight mb-1">${item.title}</h4>
                             <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Mood: ${data.mood}</p>
                         </div>
-                         <button class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white">
-                            <span class="material-icons-round text-sm">play_arrow</span>
-                        </button>
+                        ${window.getActionButtonsHTML(item, 'youtube')}
                     </div>
                 `).join('');
 
@@ -1316,7 +1515,417 @@
         };
 
         // ==========================================
-        // 7. INITIALIZATION
+        // 7. LIBRARY & PLAYLIST LOGIC
+        // ==========================================
+        window.getActionButtonsHTML = (song, mode) => {
+            const songStr = encodeURIComponent(JSON.stringify(song));
+            const songId = song.link || song.file_url;
+            const isFav = myFavorites.some(f => (f.link || f.file_url) === songId);
+            
+            return `
+            <div class="flex items-center gap-1">
+                <button onclick="toggleFavorite(event, '${songStr}')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-colors" title="Yêu thích">
+                    <span class="material-icons-round text-sm ${isFav ? 'text-red-500' : ''}" data-fav-id="${songId}">${isFav ? 'favorite' : 'favorite_border'}</span>
+                </button>
+                <button onclick="openPlaylistModal(event, '${songStr}')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-colors" title="Thêm vào Playlist">
+                    <span class="material-icons-round text-sm">playlist_add</span>
+                </button>
+                <button class="w-8 h-8 rounded-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center text-primary transition-colors">
+                    <span class="material-icons-round text-sm">play_arrow</span>
+                </button>
+            </div>
+            `;
+        };
+
+        window.loadFavorites = async () => {
+            if (!window.currentUserUid) return;
+            try {
+                const res = await fetch(`/favorites?uid=${window.currentUserUid}`);
+                myFavorites = await res.json();
+                renderLibraryFavorites();
+                updateAllFavIcons();
+            } catch(e) {}
+        };
+
+        window.loadPlaylists = async () => {
+            if (!window.currentUserUid) return;
+            try {
+                const res = await fetch(`/playlists?uid=${window.currentUserUid}`);
+                myPlaylists = await res.json();
+                renderLibraryPlaylists();
+            } catch(e) {}
+        };
+
+        window.toggleFavorite = async (e, songStr) => {
+            e.stopPropagation();
+            if (!window.currentUserUid) {
+                alert("Vui lòng đăng nhập để sử dụng tính năng Yêu thích!");
+                return;
+            }
+            try {
+                const formData = new FormData();
+                formData.append('uid', window.currentUserUid);
+                formData.append('song', decodeURIComponent(songStr));
+                
+                // Optimistic Update UI
+                const song = JSON.parse(decodeURIComponent(songStr));
+                const songId = song.link || song.file_url;
+                const favIndex = myFavorites.findIndex(f => (f.link || f.file_url) === songId);
+                if (favIndex >= 0) {
+                    myFavorites.splice(favIndex, 1);
+                } else {
+                    myFavorites.unshift(song);
+                }
+                renderLibraryFavorites();
+                updateAllFavIcons();
+
+                await fetch('/favorites/toggle', {method: 'POST', body: formData});
+            } catch(e) {}
+        };
+
+        window.updateAllFavIcons = () => {
+            document.querySelectorAll('[data-fav-id]').forEach(el => {
+                const id = el.getAttribute('data-fav-id');
+                const isFav = myFavorites.some(f => (f.link || f.file_url) === id);
+                el.innerText = isFav ? 'favorite' : 'favorite_border';
+                el.classList.toggle('text-red-500', isFav);
+            });
+        };
+
+        window.renderLibraryFavorites = () => {
+            const container = document.getElementById('library-favorites-list');
+            if (myFavorites.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-40 opacity-50">
+                        <span class="material-icons-round text-4xl mb-2">favorite_border</span>
+                        <p class="text-xs">Chưa có bài hát yêu thích nào.</p>
+                    </div>`;
+                return;
+            }
+            container.innerHTML = myFavorites.map(song => buildSongCardHTML(song)).join('');
+        };
+
+        window.renderLibraryPlaylists = () => {
+            const container = document.getElementById('library-playlists-list');
+            if (myPlaylists.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-40 opacity-50">
+                        <span class="material-icons-round text-4xl mb-2">library_music</span>
+                        <p class="text-xs">Chưa có playlist nào.</p>
+                    </div>`;
+                return;
+            }
+            container.innerHTML = myPlaylists.map(pl => `
+                <div class="glass-card p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/10 transition-colors" onclick="openPlaylistDetails('${pl.id}')">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-12 h-12 rounded-lg bg-black/30 flex items-center justify-center text-blue-400">
+                            <span class="material-icons-round">queue_music</span>
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-white text-sm truncate">${pl.name}</h4>
+                            <p class="text-xs text-slate-400">${pl.songs.length} bài hát</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        function buildSongCardHTML(item) {
+            const mode = (item.type === 'youtube' || item.link) ? 'youtube' : 'local';
+            const thumb = item.thumbnail || "https://cdn-icons-png.flaticon.com/512/12204/12204300.png";
+            return `
+            <div class="glass-card p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
+                 onclick='playTrack(${JSON.stringify(item).replace(/'/g, "&#39;")}, "${mode}")'>
+                <div class="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                    <img src="${thumb}" class="w-12 h-12 rounded-lg object-cover shadow-md bg-black/20">
+                    <div class="min-w-0">
+                        <h4 class="font-bold text-sm text-white truncate leading-tight mb-0.5">${item.title}</h4>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${mode === 'youtube' ? 'Youtube Music' : (item.style || 'Local Music')}</p>
+                    </div>
+                </div>
+                ${window.getActionButtonsHTML(item, mode)}
+            </div>`;
+        }
+
+        window.openPlaylistDetails = (playlistId) => {
+            const pl = myPlaylists.find(p => p.id === playlistId);
+            if(!pl) return;
+            document.getElementById('playlist-details-title').innerText = pl.name;
+            const container = document.getElementById('playlist-details-list');
+            if(pl.songs.length === 0){
+                container.innerHTML = `<p class="text-center text-slate-500 text-[10px] py-4">Playlist rỗng.</p>`;
+            } else {
+                container.innerHTML = pl.songs.map(song => buildSongCardHTML(song)).join('');
+            }
+            document.getElementById('playlist-details-overlay').classList.remove('translate-x-full');
+            updateAllFavIcons();
+        };
+
+        // Modal Logic
+        window.openPlaylistModal = (e, songStr) => {
+            e.stopPropagation();
+            if (!window.currentUserUid) {
+                alert("Vui lòng đăng nhập để thêm vào Playlist!");
+                return;
+            }
+            songToPlaylist = decodeURIComponent(songStr);
+            window.renderPlaylistModalList();
+            document.getElementById('playlist-modal').classList.remove('opacity-0', 'pointer-events-none');
+        };
+
+        window.closePlaylistModal = () => {
+            document.getElementById('playlist-modal').classList.add('opacity-0', 'pointer-events-none');
+        };
+
+        window.renderPlaylistModalList = () => {
+            const container = document.getElementById('modal-playlists-list');
+            if (myPlaylists.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 text-[10px] text-center italic py-2">Bạn chưa có playlist nào.</p>`;
+                return;
+            }
+            container.innerHTML = myPlaylists.map(pl => {
+                const songObj = JSON.parse(songToPlaylist);
+                const songId = songObj.link || songObj.file_url;
+                const isInPl = pl.songs.some(s => (s.link || s.file_url) === songId);
+                return `
+                <div class="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 cursor-pointer" onclick="toggleSongInPlaylist('${pl.id}')">
+                    <span class="text-xs text-white font-bold truncate pr-2">${pl.name}</span>
+                    ${isInPl ? '<span class="material-icons-round text-sm text-green-400">check_circle</span>' : '<span class="material-icons-round text-sm text-slate-500 hover:text-white transition-colors">add_circle_outline</span>'}
+                </div>
+            `;
+            }).join('');
+        };
+
+        window.createNewPlaylist = async (e) => {
+            e.stopPropagation();
+            const input = document.getElementById('new-playlist-name');
+            const name = input.value.trim();
+            if (!name) return;
+            
+            const formData = new FormData();
+            formData.append('uid', window.currentUserUid);
+            formData.append('name', name);
+            
+            try {
+                const res = await fetch('/playlists', {method: 'POST', body: formData});
+                const data = await res.json();
+                if(data.status==='success') {
+                    myPlaylists.push(data.playlist);
+                    input.value = '';
+                    window.renderPlaylistModalList();
+                    window.renderLibraryPlaylists();
+                    // auto add current song to new playlist
+                    if (songToPlaylist) {
+                        await toggleSongInPlaylist(data.playlist.id);
+                    }
+                }
+            } catch(err){}
+        };
+
+        window.toggleSongInPlaylist = async (playlistId) => {
+            if (!songToPlaylist) return;
+            const formData = new FormData();
+            formData.append('uid', window.currentUserUid);
+            formData.append('playlist_id', playlistId);
+            formData.append('song', songToPlaylist);
+            
+            try {
+                // Optimistic UI update
+                const pl = myPlaylists.find(p => p.id === playlistId);
+                const songObj = JSON.parse(songToPlaylist);
+                const songId = songObj.link || songObj.file_url;
+                const idx = pl.songs.findIndex(s => (s.link || s.file_url) === songId);
+                if(idx >= 0) pl.songs.splice(idx, 1);
+                else pl.songs.push(songObj);
+                window.renderPlaylistModalList();
+                window.renderLibraryPlaylists();
+                if(!document.getElementById('playlist-details-overlay').classList.contains('translate-x-full')) {
+                    // refresh if details is open
+                    openPlaylistDetails(playlistId);
+                }
+                
+                await fetch('/playlists/song', {method: 'POST', body: formData});
+            } catch(e) {}
+        };
+
+        // ==========================================
+        // 8. FILM STATION LOGIC (WEBTORRENT)
+        // ==========================================
+        window.startFilmStream = (e) => {
+            if(e) e.preventDefault();
+            const input = document.getElementById('film-magnet-input');
+            const magnetURI = input.value.trim();
+            if(!magnetURI) return;
+            
+            window.streamTorrent(magnetURI);
+            saveFilmHistory(magnetURI, "Đang tải tên metadata...");
+        };
+
+        window.streamTorrent = (magnetURI) => {
+            const placeholder = document.getElementById('film-pl-placeholder');
+            const output = document.getElementById('film-output');
+            const overlay = document.getElementById('film-progress-overlay');
+            const inputTarget = document.getElementById('film-magnet-input');
+            
+            inputTarget.value = magnetURI;
+            placeholder.classList.add('hidden');
+            output.classList.remove('hidden');
+            overlay.classList.remove('hidden', 'opacity-0');
+            overlay.classList.add('flex', 'opacity-100');
+            
+            if (currentTorrent) {
+                torrentClient.remove(currentTorrent.infoHash);
+                currentTorrent = null;
+            }
+            output.innerHTML = '';
+            
+            // Add progress indicators before fetching
+            document.getElementById('film-speed').innerText = "Connecting...";
+            document.getElementById('film-peers').innerText = "0";
+            document.getElementById('film-progress-bar').style.width = "0%";
+            document.getElementById('film-downloaded').innerText = "0 MB";
+            document.getElementById('film-total').innerText = "? MB";
+            
+            torrentClient.add(magnetURI, function (torrent) {
+                currentTorrent = torrent;
+                
+                saveFilmHistory(magnetURI, torrent.name);
+                
+                const file = torrent.files.find(function (file) {
+                    return file.name.endsWith('.mp4') || file.name.endsWith('.mkv') || file.name.endsWith('.webm') || file.name.endsWith('.avi');
+                });
+                
+                const targetFile = file || torrent.files.reduce((a, b) => a.length > b.length ? a : b);
+
+                targetFile.appendTo('#film-output', {
+                    autoplay: true,
+                    muted: false
+                }, function(err, elem) {
+                    if(err) return;
+                    elem.classList.add('w-full', 'h-full', 'object-contain', 'bg-black');
+                    elem.controls = true;
+                    elem.id = 'film-video-player';
+                    window.applySubtitleTrack();
+                });
+                
+                torrent.on('download', function (bytes) {
+                    updateFilmProgressUI(torrent);
+                });
+                torrent.on('done', function() {
+                    updateFilmProgressUI(torrent);
+                    document.getElementById('film-speed').innerText = "Hoàn tất";
+                    // fade out overlay slightly after done
+                    setTimeout(() => overlay.classList.replace('opacity-100', 'opacity-0'), 3000);
+                });
+            });
+        };
+
+        function updateFilmProgressUI(torrent) {
+            const speed = window.formatBytes(torrent.downloadSpeed) + '/s';
+            const downloaded = window.formatBytes(torrent.downloaded);
+            const total = window.formatBytes(torrent.length);
+            const progress = (torrent.progress * 100).toFixed(1);
+            
+            document.getElementById('film-speed').innerText = speed;
+            document.getElementById('film-downloaded').innerText = downloaded;
+            document.getElementById('film-total').innerText = total;
+            document.getElementById('film-peers').innerText = torrent.numPeers;
+            document.getElementById('film-progress-bar').style.width = progress + '%';
+        }
+
+        window.formatBytes = (bytes, decimals = 1) => {
+            if (!+bytes) return '0 B';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+        };
+
+        window.handleSubUpload = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            document.getElementById('sub-file-name').innerText = `Subtitle: ${file.name}`;
+            
+            if(window.currentSubtitleUrl) URL.revokeObjectURL(window.currentSubtitleUrl);
+            window.currentSubtitleUrl = URL.createObjectURL(file);
+            window.applySubtitleTrack();
+        };
+
+        window.applySubtitleTrack = () => {
+            const video = document.getElementById('film-video-player');
+            if(!video || !window.currentSubtitleUrl) return;
+            
+            const existing = video.querySelectorAll('track');
+            existing.forEach(t => t.remove());
+            
+            const track = document.createElement('track');
+            track.src = window.currentSubtitleUrl;
+            track.kind = 'subtitles';
+            track.srclang = 'vi';
+            track.label = 'Custom Subtitle';
+            track.default = true;
+            
+            video.appendChild(track);
+        };
+
+        // --- Film History Logic ---
+        window.loadFilmHistory = async () => {
+            if (!window.currentUserUid) return;
+            try {
+                const res = await fetch(`/films?uid=${window.currentUserUid}`);
+                filmHistory = await res.json();
+                renderFilmHistory();
+            } catch(e) {}
+        };
+
+        window.saveFilmHistory = async (magnet, name) => {
+            if (!window.currentUserUid) return;
+            const existIndex = filmHistory.findIndex(f => f.magnet === magnet);
+            if(existIndex >= 0) {
+                if(name && name !== "Đang tải tên metadata...") filmHistory[existIndex].name = name;
+                const item = filmHistory.splice(existIndex, 1)[0];
+                filmHistory.unshift(item);
+            } else {
+                filmHistory.unshift({magnet, name: name || "Unknown Film"});
+            }
+            renderFilmHistory();
+            
+            const formData = new FormData();
+            formData.append('uid', window.currentUserUid);
+            formData.append('film', JSON.stringify({magnet, name}));
+            fetch('/films', {method: 'POST', body: formData}).catch(console.error);
+        };
+
+        window.removeFilmHistory = (e, magnet) => {
+            e.stopPropagation();
+            if (!window.currentUserUid) return;
+            filmHistory = filmHistory.filter(f => f.magnet !== magnet);
+            renderFilmHistory();
+            fetch(`/films?uid=${window.currentUserUid}&magnet=${encodeURIComponent(magnet)}`, {method: 'DELETE'}).catch(console.error);
+        };
+
+        window.renderFilmHistory = () => {
+            const container = document.getElementById('film-history-list');
+            if(!filmHistory || filmHistory.length === 0) {
+                container.innerHTML = `<div class="text-center p-4 text-slate-500 text-xs italic">Chưa có lịch sử.</div>`;
+                return;
+            }
+            container.innerHTML = filmHistory.map(f => `
+                <div class="glass-card p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/10 transition-colors border border-transparent hover:border-white/10" onclick="streamTorrent('${f.magnet}')">
+                    <div class="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                        <span class="material-icons-round text-primary flex-shrink-0 text-lg">movie</span>
+                        <span class="text-xs text-white truncate font-bold">${f.name}</span>
+                    </div>
+                    <button onclick="removeFilmHistory(event, '${f.magnet}')" class="text-slate-500 hover:text-red-500 flex-shrink-0 ml-1 p-1">
+                        <span class="material-icons-round text-sm">delete</span>
+                    </button>
+                </div>
+            `).join('');
+        };
+
+        // ==========================================
+        // 9. INITIALIZATION
         // ==========================================
         window.addEventListener('DOMContentLoaded', initUI);
 
@@ -1367,15 +1976,25 @@
         }
 
         onAuthStateChanged(auth, (user) => {
-            if (!userDisplay || !loginBtn) return;
+                if (!userDisplay || !loginBtn) return;
 
             if (user) {
+                window.currentUserUid = user.uid;
                 const label = user.email || user.displayName || "User";
                 userDisplay.textContent = `Hi, ${label}`;
                 loginBtn.textContent = "LOGOUT";
                 loginBtn.classList.remove("bg-white/10");
                 loginBtn.classList.add("bg-primary", "text-white");
+                loadFavorites();
+                loadPlaylists();
+                loadFilmHistory();
             } else {
+                window.currentUserUid = null;
+                myFavorites = [];
+                myPlaylists = [];
+                filmHistory = [];
+                updateAllFavIcons();
+                renderFilmHistory();
                 userDisplay.textContent = "Guest";
                 loginBtn.textContent = "LOGIN";
                 loginBtn.classList.add("bg-white/10");
