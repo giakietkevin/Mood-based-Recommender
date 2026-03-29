@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport" />
     <title>KietSound Pro - AI Music Studio</title>
-    
+
     <link rel="manifest" href="/manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,17 +14,19 @@
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#090A0C">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/12204/12204300.png">
 
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;700&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
-    
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script>
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
-                    colors: { primary: "#FF6F61", "bg-dark": "#090A0C" },
+                    colors: { primary: "#C6A87C", "bg-dark": "#0A0A0A" },
                     fontFamily: { sans: ["Inter", "sans-serif"], display: ["Outfit", "sans-serif"] },
                 },
             },
@@ -39,10 +42,11 @@
         
         /* Glassmorphism Card */
         .glass-card { 
-            background: rgba(23, 25, 30, 0.95); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08); 
+            background: rgba(15, 15, 15, 0.6); 
+            backdrop-filter: blur(24px); 
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.04); 
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
 
         /* Chips / Tags */
@@ -50,7 +54,7 @@
             @apply px-3 py-1.5 rounded-lg text-[11px] font-bold border border-white/10 text-slate-400 bg-white/5 cursor-pointer hover:bg-white/10 whitespace-nowrap transition-all select-none; 
         }
         .chip-option.active { 
-            @apply bg-primary text-white border-primary shadow-lg shadow-primary/30; 
+            @apply bg-primary text-[#0a0a0a] border-primary shadow-lg shadow-primary/30; 
         }
 
         /* Scrollbar An/Hien */
@@ -61,829 +65,986 @@
 
         /* Sliders */
         input[type=range] { -webkit-appearance: none; background: transparent; cursor: pointer; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #FF6F61; margin-top: -6px; border: 2px solid white; box-shadow: 0 0 10px rgba(255,111,97,0.5); }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #C6A87C; margin-top: -6px; border: 2px solid white; box-shadow: 0 0 10px rgba(198,168,124,0.3); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; }
 
         /* Animation */
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
         
-        .scan-line { height: 2px; background: linear-gradient(to right, transparent, #FF6F61, transparent); position: absolute; width: 100%; top: 0; animation: scan 3s linear infinite; }
+        .scan-line { height: 2px; background: linear-gradient(to right, transparent, #C6A87C, transparent); position: absolute; width: 100%; top: 0; animation: scan 3s linear infinite; }
         @keyframes scan { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
     </style>
 </head>
-<body class="bg-bg-dark min-h-screen min-h-[100dvh] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] font-sans selection:bg-primary selection:text-white">
 
-<nav class="sticky top-0 z-50 px-3 sm:px-4 py-3 safe-nav-pad glass-card border-b border-white/5 mb-4 sm:mb-6">
-    <div class="max-w-7xl mx-auto flex flex-col gap-3">
-        <div class="flex items-center justify-between gap-2 min-w-0">
-            <div class="flex items-center gap-2 min-w-0 flex-shrink">
-                <div class="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/20 flex-shrink-0"><span class="material-icons-round text-white text-xl">equalizer</span></div>
-                <span class="text-lg sm:text-xl font-display font-bold text-white uppercase tracking-tight truncate">Kiet<span class="text-primary">Sound</span></span>
-            </div>
-            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0 min-w-0">
-                <div class="flex flex-col text-right min-w-0 max-w-[100px] sm:max-w-[170px]">
-                    <span class="text-[10px] uppercase text-slate-500 font-bold tracking-wide hidden sm:block">Account</span>
-                    <span id="user-display" class="text-[10px] sm:text-xs font-bold text-white truncate text-right">Guest</span>
+<body
+    class="bg-bg-dark min-h-screen min-h-[100dvh] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] font-sans selection:bg-primary selection:text-white">
+
+    <nav class="sticky top-0 z-50 px-3 sm:px-4 py-3 safe-nav-pad glass-card border-b border-white/5 mb-4 sm:mb-6">
+        <div class="max-w-7xl mx-auto flex flex-col gap-3">
+            <div class="flex items-center justify-between gap-2 min-w-0">
+                <div class="flex items-center gap-2 min-w-0 flex-shrink">
+                    <div class="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/20 flex-shrink-0"><span
+                            class="material-icons-round text-white text-xl">equalizer</span></div>
+                    <span
+                        class="text-lg sm:text-xl font-display font-bold text-white uppercase tracking-tight truncate">Kiet<span
+                            class="text-primary">Sound</span></span>
                 </div>
-                <button id="login-btn" class="px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all whitespace-nowrap">
-                    LOGIN
-                </button>
-            </div>
-        </div>
-        <div class="flex w-full gap-0.5 sm:gap-1 bg-white/5 p-1 rounded-2xl">
-            <button type="button" onclick="showView('dashboard')" id="nav-dashboard" class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all bg-white/10 text-white shadow-sm">HOME</button>
-            <button type="button" onclick="showView('studio')" id="nav-studio" class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all">STUDIO</button>
-            <button type="button" onclick="showView('guide')" id="nav-guide" class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all">GUIDE</button>
-        </div>
-    </div>
-</nav>
-
-<main class="max-w-7xl mx-auto px-4">
-    
-    <div id="view-dashboard" class="grid lg:grid-cols-12 gap-6 animate-fade-in">
-        <section class="lg:col-span-5 space-y-4">
-            <div class="aspect-[4/3] rounded-[2rem] overflow-hidden glass-card relative bg-black shadow-2xl border border-white/10 group">
-                <video id="video" autoplay playsinline class="w-full h-full object-cover opacity-80 transition-opacity group-hover:opacity-100"></video>
-                <canvas id="canvas" class="hidden"></canvas>
-                
-                <div id="scan-effect" class="absolute inset-0 pointer-events-none opacity-50"><div class="scan-line"></div></div>
-                
-                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent flex flex-col justify-end p-6">
-                    <button id="analyze-btn" class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-xl shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2">
-                        <span class="material-icons-round">face_retouching_natural</span> ANALYZE MOOD
+                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0 min-w-0">
+                    <div class="flex flex-col text-right min-w-0 max-w-[100px] sm:max-w-[170px]">
+                        <span
+                            class="text-[10px] uppercase text-slate-500 font-bold tracking-wide hidden sm:block">Account</span>
+                        <span id="user-display"
+                            class="text-[10px] sm:text-xs font-bold text-white truncate text-right">Guest</span>
+                    </div>
+                    <button id="login-btn"
+                        class="px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all whitespace-nowrap">
+                        LOGIN
                     </button>
                 </div>
             </div>
+            <div class="flex w-full gap-0.5 sm:gap-1 bg-white/5 p-1 rounded-2xl">
+                <button type="button" onclick="showView('dashboard')" id="nav-dashboard"
+                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all bg-white/10 text-white shadow-sm">HOME</button>
+                <button type="button" onclick="showView('studio')" id="nav-studio"
+                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all">STUDIO</button>
+                <button type="button" onclick="showView('guide')" id="nav-guide"
+                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all">GUIDE</button>
+            </div>
+        </div>
+    </nav>
 
-            <div class="glass-card rounded-2xl p-6 flex justify-between items-center border-l-4 border-primary">
-                <div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Detected Mood</p>
-                    <h2 id="mood-display" class="text-3xl font-display font-bold text-white uppercase">Ready</h2>
-                </div>
-                <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                    <span class="material-icons-round text-primary text-2xl animate-pulse">sensors</span>
-                </div>
-            </div>
-        </section>
+    <main class="max-w-7xl mx-auto px-4">
 
-        <section class="lg:col-span-7 space-y-4">
-            <div class="glass-card rounded-2xl p-2 sm:p-2 pl-3 sm:pl-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 border border-white/10 focus-within:border-primary/50 transition-colors">
-                <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                    <span class="material-icons-round text-slate-500 flex-shrink-0">search</span>
-                    <input id="search-input" class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-white h-10 placeholder-slate-600 font-medium text-sm" placeholder="Tìm bài hát Youtube..." enterkeyhint="search"/>
-                </div>
-                <button type="button" onclick="performSearch()" class="w-full sm:w-auto shrink-0 bg-white text-black px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">GO</button>
-            </div>
-            <div class="flex gap-2">
-                <button id="type-music" onclick="switchType('music')" class="flex-1 py-3 rounded-xl font-bold text-xs bg-primary text-white shadow-lg transition-all flex items-center justify-center gap-2"><span class="material-icons-round text-sm">music_note</span> MUSIC</button>
-                <button id="type-podcast" onclick="switchType('podcast')" class="flex-1 py-3 rounded-xl font-bold text-xs bg-white/5 text-slate-400 transition-all flex items-center justify-center gap-2"><span class="material-icons-round text-sm">podcasts</span> PODCAST</button>
-            </div>
-            
-            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
-                <span class="text-xs font-bold text-slate-500 px-2">TRENDING:</span>
-                <button onclick="document.getElementById('search-input').value='Chill Lofi'; performSearch()" class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-slate-300 hover:bg-white/10">#Lofi</button>
-                <button onclick="document.getElementById('search-input').value='Nhạc trẻ remix'; performSearch()" class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-slate-300 hover:bg-white/10">#Remix</button>
-                <button onclick="document.getElementById('search-input').value='Piano Focus'; performSearch()" class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-slate-300 hover:bg-white/10">#Piano</button>
-            </div>
+        <div id="view-dashboard" class="grid lg:grid-cols-12 gap-6 animate-fade-in">
+            <section class="lg:col-span-5 space-y-4">
+                <div
+                    class="aspect-[4/3] rounded-[2rem] overflow-hidden glass-card relative bg-black shadow-2xl border border-white/10 group">
+                    <video id="video" autoplay playsinline
+                        class="w-full h-full object-cover opacity-80 transition-opacity group-hover:opacity-100"></video>
+                    <canvas id="canvas" class="hidden"></canvas>
 
-            <div id="recommendations-container" class="space-y-3 pb-4 max-h-[min(500px,52vh)] sm:max-h-[500px] overflow-y-auto custom-scrollbar">
-                <div class="text-center py-20 opacity-30">
-                    <span class="material-icons-round text-6xl mb-2">queue_music</span>
-                    <p class="text-sm font-bold">Search or Scan Mood to start</p>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <div id="view-studio" class="hidden grid lg:grid-cols-12 gap-6 animate-fade-in">
-        <div class="lg:col-span-8 space-y-6">
-            <div class="glass-card rounded-[2rem] p-5 sm:p-6 md:p-8 border border-white/10">
-                <div class="flex flex-col xs:flex-row xs:items-start sm:items-center justify-between gap-3 mb-6">
-                    <h2 class="text-xl sm:text-2xl font-display font-bold text-white flex items-center gap-2 min-w-0">
-                        <span class="material-icons-round text-primary flex-shrink-0">auto_fix_high</span> <span class="truncate">AI Generator</span>
-                    </h2>
-                    <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold border border-primary/20 self-start sm:self-auto">Pro Mode</span>
-                </div>
-                
-                <div class="space-y-6">
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Tên bài hát</label>
-                                <input id="gen-title" class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-0 transition-colors placeholder-slate-600" placeholder="Đặt tên cho tác phẩm...">
-                            </div>
-                            <div class="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20">
-                                <p class="text-[10px] text-primary uppercase font-bold mb-2 flex items-center gap-1">
-                                    <span class="material-icons-round text-xs">lightbulb</span> Pro Tips
-                                </p>
-                                <ul class="text-xs text-slate-300 space-y-1.5 leading-relaxed">
-                                    <li><strong>Mỗi dòng = 1 câu hát</strong> - Xuống dòng để AI bắt nhịp tốt hơn</li>
-                                    <li><strong>Rap:</strong> Câu ngắn, nhiều chữ → chọn Fast/Medium</li>
-                                    <li><strong>Ballad:</strong> Câu dài, ít chữ → chọn Slow</li>
-                                    <li><strong>Hook/Chorus:</strong> 2-3 dòng cuối sẽ tự động lặp lại</li>
-                                    <li><strong>Dấu câu:</strong> Dùng dấu chấm (.) để tạo pauses tự nhiên</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Lyrics (Lời bài hát)</label>
-                            <textarea id="gen-lyrics" rows="8" class="w-full h-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-sm focus:border-primary focus:ring-0 transition-colors placeholder-slate-600 resize-none leading-relaxed" 
-                            placeholder="Nhập lời bài hát vào đây...&#10;Xuống dòng để AI bắt nhịp tốt hơn...&#10;&#10;Ví dụ:&#10;Hôm nay trời đẹp quá&#10;Em có muốn đi chơi không?"></textarea>
-                        </div>
+                    <div id="scan-effect" class="absolute inset-0 pointer-events-none opacity-50">
+                        <div class="scan-line"></div>
                     </div>
 
-                    <div class="h-px bg-white/10 w-full"></div>
-
-                    <div class="space-y-5">
-                        <div>
-                            <div class="flex justify-between items-end mb-2">
-                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block ml-1"># Style (70+)</label>
-                                <span class="text-[10px] text-primary cursor-pointer hover:underline" onclick="resetChips()">Reset All</span>
-                            </div>
-                            <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar p-1" id="style-options"></div>
-                        </div>
-
-                        <div>
-                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1"># Moods</label>
-                            <div class="flex flex-wrap gap-2" id="mood-options"></div>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                            <div>
-                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1"># Voices</label>
-                                <div class="flex flex-wrap gap-2" id="voice-options"></div>
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1"># Tempos</label>
-                                <div class="flex flex-wrap gap-2" id="tempo-options"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pt-4">
-                        <button id="generate-btn" onclick="generateMusic()" class="group w-full bg-gradient-to-r from-primary to-orange-600 text-white py-4 rounded-xl font-bold text-lg shadow-xl shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3">
-                            <span class="material-icons-round group-hover:animate-spin">album</span> GENERATE TRACK
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent flex flex-col justify-end p-6">
+                        <button id="analyze-btn"
+                            class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-xl shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <span class="material-icons-round">face_retouching_natural</span> ANALYZE MOOD
                         </button>
-                        
-                        <!-- Progress bar -->
-                        <div id="gen-progress-container" class="mt-3 opacity-0 transition-opacity">
-                            <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
-                                <span id="gen-step-text">Đang xử lý...</span>
-                                <span id="gen-time-text">~30s</span>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 flex justify-between items-center border-l-4 border-primary">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Detected Mood</p>
+                        <h2 id="mood-display" class="text-3xl font-display font-bold text-white uppercase">Ready</h2>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                        <span class="material-icons-round text-primary text-2xl animate-pulse">sensors</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="lg:col-span-7 space-y-4">
+                <div
+                    class="glass-card rounded-2xl p-2 sm:p-2 pl-3 sm:pl-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 border border-white/10 focus-within:border-primary/50 transition-colors">
+                    <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                        <span class="material-icons-round text-slate-500 flex-shrink-0">search</span>
+                        <input id="search-input"
+                            class="flex-1 min-w-0 bg-transparent border-none focus:ring-0 text-white h-10 placeholder-slate-600 font-medium text-sm"
+                            placeholder="Tìm bài hát Youtube..." enterkeyhint="search" />
+                    </div>
+                    <button type="button" onclick="performSearch()"
+                        class="w-full sm:w-auto shrink-0 bg-white text-black px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">GO</button>
+                </div>
+                <div class="flex gap-2">
+                    <button id="type-music" onclick="switchType('music')"
+                        class="flex-1 py-3 rounded-xl font-bold text-xs bg-primary text-white shadow-lg transition-all flex items-center justify-center gap-2"><span
+                            class="material-icons-round text-sm">music_note</span> MUSIC</button>
+                    <button id="type-podcast" onclick="switchType('podcast')"
+                        class="flex-1 py-3 rounded-xl font-bold text-xs bg-white/5 text-slate-400 transition-all flex items-center justify-center gap-2"><span
+                            class="material-icons-round text-sm">podcasts</span> PODCAST</button>
+                </div>
+
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+                    <span class="text-xs font-bold text-slate-500 px-2">TRENDING:</span>
+                    <button onclick="document.getElementById('search-input').value='Chill Lofi'; performSearch()"
+                        class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-slate-300 hover:bg-white/10">#Lofi</button>
+                    <button onclick="document.getElementById('search-input').value='Nhạc trẻ remix'; performSearch()"
+                        class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-slate-300 hover:bg-white/10">#Remix</button>
+                    <button onclick="document.getElementById('search-input').value='Piano Focus'; performSearch()"
+                        class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-slate-300 hover:bg-white/10">#Piano</button>
+                </div>
+
+                <div id="recommendations-container"
+                    class="space-y-3 pb-4 max-h-[min(500px,52vh)] sm:max-h-[500px] overflow-y-auto custom-scrollbar">
+                    <div class="text-center py-20 opacity-30">
+                        <span class="material-icons-round text-6xl mb-2">queue_music</span>
+                        <p class="text-sm font-bold">Search or Scan Mood to start</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="view-studio" class="hidden grid lg:grid-cols-12 gap-6 animate-fade-in">
+            <div class="lg:col-span-8 space-y-6">
+                <div class="glass-card rounded-[2rem] p-5 sm:p-6 md:p-8 border border-white/10">
+                    <div class="flex flex-col xs:flex-row xs:items-start sm:items-center justify-between gap-3 mb-6">
+                        <h2
+                            class="text-xl sm:text-2xl font-display font-bold text-white flex items-center gap-2 min-w-0">
+                            <span class="material-icons-round text-primary flex-shrink-0">auto_fix_high</span> <span
+                                class="truncate">AI Generator</span>
+                        </h2>
+                        <span
+                            class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold border border-primary/20 self-start sm:self-auto">Pro
+                            Mode</span>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="space-y-4">
+                                <div>
+                                    <label
+                                        class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Tên
+                                        bài hát</label>
+                                    <input id="gen-title"
+                                        class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary focus:ring-0 transition-colors placeholder-slate-600"
+                                        placeholder="Đặt tên cho tác phẩm...">
+                                </div>
+                                <div
+                                    class="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20">
+                                    <p
+                                        class="text-[10px] text-primary uppercase font-bold mb-2 flex items-center gap-1">
+                                        <span class="material-icons-round text-xs">lightbulb</span> Pro Tips
+                                    </p>
+                                    <ul class="text-xs text-slate-300 space-y-1.5 leading-relaxed">
+                                        <li><strong>Mỗi dòng = 1 câu hát</strong> - Xuống dòng để AI bắt nhịp tốt hơn
+                                        </li>
+                                        <li><strong>Rap:</strong> Câu ngắn, nhiều chữ → chọn Fast/Medium</li>
+                                        <li><strong>Ballad:</strong> Câu dài, ít chữ → chọn Slow</li>
+                                        <li><strong>Hook/Chorus:</strong> 2-3 dòng cuối sẽ tự động lặp lại</li>
+                                        <li><strong>Dấu câu:</strong> Dùng dấu chấm (.) để tạo pauses tự nhiên</li>
+                                    </ul>
+                                </div>
                             </div>
-                            <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                <div id="gen-progress-bar" class="h-full bg-gradient-to-r from-primary to-purple-600 transition-all duration-500 rounded-full" style="width: 0%"></div>
+                            <div>
+                                <label
+                                    class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Lyrics
+                                    (Lời bài hát)</label>
+                                <textarea id="gen-lyrics" rows="8"
+                                    class="w-full h-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-sm focus:border-primary focus:ring-0 transition-colors placeholder-slate-600 resize-none leading-relaxed"
+                                    placeholder="Nhập lời bài hát vào đây...&#10;Xuống dòng để AI bắt nhịp tốt hơn...&#10;&#10;Ví dụ:&#10;Hôm nay trời đẹp quá&#10;Em có muốn đi chơi không?"></textarea>
                             </div>
                         </div>
-                        
-                        <p id="gen-status" class="text-center text-xs text-primary font-bold h-4 mt-2 opacity-0 transition-opacity"></p>
+
+                        <div class="h-px bg-white/10 w-full"></div>
+
+                        <div class="space-y-5">
+                            <div>
+                                <div class="flex justify-between items-end mb-2">
+                                    <label
+                                        class="text-xs font-bold text-slate-400 uppercase tracking-wider block ml-1">#
+                                        Style (70+)</label>
+                                    <span class="text-[10px] text-primary cursor-pointer hover:underline"
+                                        onclick="resetChips()">Reset All</span>
+                                </div>
+                                <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar p-1"
+                                    id="style-options"></div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">#
+                                    Moods</label>
+                                <div class="flex flex-wrap gap-2" id="mood-options"></div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                <div>
+                                    <label
+                                        class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">#
+                                        Voices</label>
+                                    <div class="flex flex-wrap gap-2" id="voice-options"></div>
+                                </div>
+                                <div>
+                                    <label
+                                        class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">#
+                                        Tempos</label>
+                                    <div class="flex flex-wrap gap-2" id="tempo-options"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4">
+                            <button id="generate-btn" onclick="generateMusic()"
+                                class="group w-full bg-primary text-[#0a0a0a] hover:brightness-110 py-4 rounded-xl font-bold text-lg shadow-xl shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+                                <span class="material-icons-round group-hover:animate-spin">album</span> GENERATE TRACK
+                            </button>
+
+                            <!-- Progress bar -->
+                            <div id="gen-progress-container" class="mt-3 opacity-0 transition-opacity">
+                                <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+                                    <span id="gen-step-text">Đang xử lý...</span>
+                                    <span id="gen-time-text">~30s</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                    <div id="gen-progress-bar"
+                                        class="h-full bg-gradient-to-r from-primary to-purple-600 transition-all duration-500 rounded-full"
+                                        style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <p id="gen-status"
+                                class="text-center text-xs text-primary font-bold h-4 mt-2 opacity-0 transition-opacity">
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 space-y-4">
+                <div
+                    class="glass-card rounded-[2rem] p-4 sm:p-6 min-h-[240px] max-h-[min(70vh,640px)] lg:max-h-none lg:h-[85vh] flex flex-col lg:sticky lg:top-20">
+                    <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
+                        <h3 class="font-bold text-white flex items-center gap-2">
+                            <span class="material-icons-round text-primary">library_music</span> My Library
+                        </h3>
+                        <span id="library-count" class="px-2 py-0.5 bg-white/10 rounded text-[10px] font-bold">0
+                            songs</span>
+                    </div>
+
+                    <div id="my-songs-list" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                        <div class="flex flex-col items-center justify-center h-40 opacity-50">
+                            <span class="material-icons-round text-4xl mb-2">hourglass_empty</span>
+                            <p class="text-xs">Loading library...</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="lg:col-span-4 space-y-4">
-            <div class="glass-card rounded-[2rem] p-4 sm:p-6 min-h-[240px] max-h-[min(70vh,640px)] lg:max-h-none lg:h-[85vh] flex flex-col lg:sticky lg:top-20">
-                <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
-                    <h3 class="font-bold text-white flex items-center gap-2">
-                        <span class="material-icons-round text-primary">library_music</span> My Library
-                    </h3>
-                    <span id="library-count" class="px-2 py-0.5 bg-white/10 rounded text-[10px] font-bold">0 songs</span>
-                </div>
-                
-                <div id="my-songs-list" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                    <div class="flex flex-col items-center justify-center h-40 opacity-50">
-                        <span class="material-icons-round text-4xl mb-2">hourglass_empty</span>
-                        <p class="text-xs">Loading library...</p>
+        <!-- GUIDE VIEW -->
+        <div id="view-guide" class="hidden max-w-5xl mx-auto animate-fade-in">
+            <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 md:p-12 border border-white/10">
+                <!-- Header -->
+                <div class="text-center mb-8 sm:mb-10">
+                    <div
+                        class="inline-flex items-center gap-2 sm:gap-3 bg-primary/10 px-4 sm:px-5 py-2 rounded-full border border-primary/20 mb-4 max-w-full">
+                        <span
+                            class="material-icons-round text-primary text-xl sm:text-2xl flex-shrink-0">menu_book</span>
+                        <span class="text-primary font-bold text-xs sm:text-sm uppercase tracking-wide truncate">User
+                            Guide</span>
                     </div>
+                    <h1
+                        class="text-2xl sm:text-4xl md:text-5xl font-display font-bold text-white mb-3 leading-tight px-1">
+                        Hướng Dẫn Sử Dụng</h1>
+                    <p class="text-slate-400 text-base sm:text-lg">KietSound Pro - AI Music Studio</p>
+                </div>
+
+                <!-- Feature Cards -->
+                <div class="space-y-8">
+
+                    <!-- Feature 1: Mood Detection -->
+                    <div
+                        class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
+                        <div class="flex items-start gap-4">
+                            <div
+                                class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary to-orange-600 rounded-xl flex items-center justify-center">
+                                <span class="material-icons-round text-white text-2xl">mood</span>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-white mb-2">🎭 1. Nhận Diện Cảm Xúc (Mood Detection)
+                                </h3>
+                                <p class="text-slate-400 mb-4">Tự động phát hiện cảm xúc qua khuôn mặt và gợi ý nhạc phù
+                                    hợp.</p>
+
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex items-start gap-2">
+                                        <span
+                                            class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
+                                        <div>
+                                            <p class="text-white font-semibold">Bước 1: Chụp ảnh khuôn mặt</p>
+                                            <p class="text-slate-400">Click <strong>"Scan My Mood"</strong> hoặc upload
+                                                ảnh từ máy</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span
+                                            class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
+                                        <div>
+                                            <p class="text-white font-semibold">Bước 2: AI phân tích cảm xúc</p>
+                                            <p class="text-slate-400">Hệ thống nhận diện: Joy, Sadness, Anger, Fear,
+                                                Surprise, Calm, Romantic...</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span
+                                            class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
+                                        <div>
+                                            <p class="text-white font-semibold">Bước 3: Nhận gợi ý nhạc/podcast</p>
+                                            <p class="text-slate-400">5 đề xuất YouTube phù hợp với tâm trạng hiện tại
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 p-3 bg-primary/10 rounded-xl border border-primary/20">
+                                    <p class="text-xs text-primary font-bold mb-1">💡 Pro Tips:</p>
+                                    <ul class="text-xs text-slate-300 space-y-1">
+                                        <li>• Đảm bảo ánh sáng tốt để AI nhận diện chính xác</li>
+                                        <li>• Khuôn mặt nhìn thẳng camera, tránh che khuất</li>
+                                        <li>• Có thể chọn "Music" hoặc "Podcast" trước khi scan</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature 2: AI Music Generator -->
+                    <div
+                        class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
+                        <div class="flex items-start gap-4">
+                            <div
+                                class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+                                <span class="material-icons-round text-white text-2xl">auto_fix_high</span>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-white mb-2">🎹 2. Tạo Nhạc AI (Text-to-Music)</h3>
+                                <p class="text-slate-400 mb-4">Biến lời bài hát thành bài hát hoàn chỉnh với giọng hát
+                                    AI chuyên nghiệp!</p>
+
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-icons-round text-purple-400 text-lg mt-0.5">lyrics</span>
+                                        <div>
+                                            <p class="text-white font-semibold">Nhập Lời Bài Hát</p>
+                                            <p class="text-slate-400"><strong>Mỗi dòng = 1 câu hát.</strong> Xuống dòng
+                                                để AI bắt nhịp tốt hơn.</p>
+                                            <div
+                                                class="mt-2 p-2 bg-black/30 rounded-lg font-mono text-xs text-slate-300">
+                                                Ví dụ:<br>
+                                                Hôm nay trời đẹp quá<br>
+                                                Em có muốn đi chơi không?<br>
+                                                Chúng ta cùng nhau đi dạo<br>
+                                                Dưới ánh hoàng hôn
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-icons-round text-purple-400 text-lg mt-0.5">palette</span>
+                                        <div>
+                                            <p class="text-white font-semibold">Chọn Style (30+ thể loại)</p>
+                                            <p class="text-slate-400 mb-2">Pop, Rock, Rap, EDM, Ballad, Jazz, Blues,
+                                                R&B, Metal, Punk...</p>
+                                            <div class="flex flex-wrap gap-1">
+                                                <span
+                                                    class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Pop</span>
+                                                <span
+                                                    class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Ballad</span>
+                                                <span
+                                                    class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Rap</span>
+                                                <span
+                                                    class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">EDM</span>
+                                                <span
+                                                    class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Jazz</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-start gap-2">
+                                        <span
+                                            class="material-icons-round text-purple-400 text-lg mt-0.5">sentiment_satisfied</span>
+                                        <div>
+                                            <p class="text-white font-semibold">Chọn Mood (10+ tâm trạng)</p>
+                                            <p class="text-slate-400">Joy, Sadness, Romantic, Calmness, Anger,
+                                                Triumph...</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-start gap-2">
+                                        <span
+                                            class="material-icons-round text-purple-400 text-lg mt-0.5">record_voice_over</span>
+                                        <div>
+                                            <p class="text-white font-semibold">Chọn Giọng Hát (12 giọng)</p>
+                                            <p class="text-slate-400">Male/Female • North/Central/South • Young/Mature
+                                            </p>
+                                            <p class="text-green-400 text-xs mt-1">🎤 Sử dụng RVC AI - Giọng hát chân
+                                                thực như người thật!</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-icons-round text-purple-400 text-lg mt-0.5">speed</span>
+                                        <div>
+                                            <p class="text-white font-semibold">Chọn Tempo (Fast/Medium/Slow)</p>
+                                            <p class="text-slate-400">Fast: EDM, Rap • Medium: Pop • Slow: Ballad</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                                    <p class="text-xs text-purple-400 font-bold mb-2">💡 Pro Tips - Để Có Bài Hát Hay
+                                        Nhất:</p>
+                                    <ul class="text-xs text-slate-300 space-y-1.5">
+                                        <li><strong>✓ Rap/Hip-Hop:</strong> Câu ngắn, nhiều chữ → chọn Fast/Medium tempo
+                                        </li>
+                                        <li><strong>✓ Ballad/Soul:</strong> Câu dài, ít chữ → chọn Slow tempo</li>
+                                        <li><strong>✓ Hook/Chorus:</strong> 2-3 dòng cuối sẽ tự động lặp lại làm điệp
+                                            khúc</li>
+                                        <li><strong>✓ Dấu câu:</strong> Dùng dấu chấm (.) để tạo pauses tự nhiên</li>
+                                        <li><strong>✓ Độ dài:</strong> 4-8 câu là tối ưu (quá dài → bài hát sẽ lâu)</li>
+                                        <li><strong>✓ Giọng hát:</strong> Chọn giọng phù hợp với style (Male cho Rock,
+                                            Female cho Pop)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature 3: Music Library -->
+                    <div
+                        class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
+                        <div class="flex items-start gap-4">
+                            <div
+                                class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center">
+                                <span class="material-icons-round text-white text-2xl">library_music</span>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-white mb-2">📚 3. Thư Viện Nhạc (My Library)</h3>
+                                <p class="text-slate-400 mb-4">Quản lý tất cả bài hát AI đã tạo.</p>
+
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex items-start gap-2">
+                                        <span
+                                            class="material-icons-round text-blue-400 text-lg mt-0.5">play_circle</span>
+                                        <div>
+                                            <p class="text-white font-semibold">Phát nhạc</p>
+                                            <p class="text-slate-400">Click bài hát để phát ngay • Mini player xuất hiện
+                                                ở bottom</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-icons-round text-blue-400 text-lg mt-0.5">download</span>
+                                        <div>
+                                            <p class="text-white font-semibold">Tải về</p>
+                                            <p class="text-slate-400">Format: MP3 320kbps • Chất lượng studio</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="material-icons-round text-blue-400 text-lg mt-0.5">delete</span>
+                                        <div>
+                                            <p class="text-white font-semibold">Xóa bài hát</p>
+                                            <p class="text-slate-400">Click icon thùng rác • Xác nhận để xóa vĩnh viễn
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature 4: Audio Quality -->
+                    <div
+                        class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
+                        <div class="flex items-start gap-4">
+                            <div
+                                class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
+                                <span class="material-icons-round text-white text-2xl">high_quality</span>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-white mb-2">🎚️ 4. Chất Lượng Âm Thanh</h3>
+                                <p class="text-slate-400 mb-4">Studio-grade audio processing - Gần như chuyên nghiệp!
+                                </p>
+
+                                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                                    <div class="space-y-2">
+                                        <p class="text-white font-semibold">Vocal Processing:</p>
+                                        <ul class="text-slate-400 space-y-1 text-xs">
+                                            <li>• RVC AI singing voice (giọng hát thật)</li>
+                                            <li>• Pitch contouring (cao trầm tự nhiên)</li>
+                                            <li>• Crossfade transitions (mượt mà)</li>
+                                            <li>• Vibrato effects (Ballad, Soul)</li>
+                                        </ul>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <p class="text-white font-semibold">Mixing & Mastering:</p>
+                                        <ul class="text-slate-400 space-y-1 text-xs">
+                                            <li>• Auto-ducking (beat tự động nhường vocal)</li>
+                                            <li>• Multi-band compression</li>
+                                            <li>• Style-specific EQ</li>
+                                            <li>• Professional limiter (-0.5dB)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- FAQ Section -->
+                <div class="mt-12 pt-10 border-t border-white/10">
+                    <h2 class="text-2xl font-bold text-white mb-6 text-center">❓ Câu Hỏi Thường Gặp</h2>
+
+                    <div class="space-y-4">
+                        <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
+                            <summary class="font-semibold text-white flex items-center justify-between">
+                                <span>Tốn bao lâu để tạo 1 bài hát?</span>
+                                <span
+                                    class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
+                            </summary>
+                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                                Thời gian: <strong>20-60 giây</strong> tùy độ dài lyrics. Bài 4-6 câu ~30s. Bài 8-10 câu
+                                ~60s.
+                            </p>
+                        </details>
+
+                        <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
+                            <summary class="font-semibold text-white flex items-center justify-between">
+                                <span>Giọng hát có thật không?</span>
+                                <span
+                                    class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
+                            </summary>
+                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                                Giọng hát được tạo bằng <strong>RVC AI</strong> (Retrieval-based Voice Conversion) -
+                                công nghệ deep learning tiên tiến nhất hiện nay.
+                                Chất lượng gần như người thật (~95% studio recording).
+                            </p>
+                        </details>
+
+                        <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
+                            <summary class="font-semibold text-white flex items-center justify-between">
+                                <span>Có thể tạo bài hát dài không?</span>
+                                <span
+                                    class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
+                            </summary>
+                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                                Có! Nhưng nên giới hạn <strong>8-12 câu</strong> cho tối ưu. Quá dài → mất nhiều thời
+                                gian xử lý và có thể ảnh hưởng chất lượng.
+                            </p>
+                        </details>
+
+                        <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
+                            <summary class="font-semibold text-white flex items-center justify-between">
+                                <span>Tại sao bài hát bị ngắt quãng?</span>
+                                <span
+                                    class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
+                            </summary>
+                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                                Đã được fix! Hiện tại có <strong>crossfade 300ms</strong> giữa các câu + spacing phù hợp
+                                với từng style.
+                                Nếu vẫn gặp vấn đề, thử chọn style Ballad/Soul (spacing dài hơn).
+                            </p>
+                        </details>
+
+                        <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
+                            <summary class="font-semibold text-white flex items-center justify-between">
+                                <span>Có tính phí không?</span>
+                                <span
+                                    class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
+                            </summary>
+                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                                <strong>100% MIỄN PHÍ!</strong> Không giới hạn số lượng bài hát. Không watermark. Tải về
+                                MP3 320kbps full quality.
+                            </p>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- Back Button -->
+                <div class="mt-10 text-center">
+                    <button onclick="showView('dashboard')"
+                        class="px-8 py-3 bg-primary hover:bg-primary/80 text-white font-bold rounded-xl transition-all inline-flex items-center gap-2">
+                        <span class="material-icons-round">arrow_back</span> Quay Về Trang Chủ
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- GUIDE VIEW -->
-    <div id="view-guide" class="hidden max-w-5xl mx-auto animate-fade-in">
-        <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 md:p-12 border border-white/10">
-            <!-- Header -->
-            <div class="text-center mb-8 sm:mb-10">
-                <div class="inline-flex items-center gap-2 sm:gap-3 bg-primary/10 px-4 sm:px-5 py-2 rounded-full border border-primary/20 mb-4 max-w-full">
-                    <span class="material-icons-round text-primary text-xl sm:text-2xl flex-shrink-0">menu_book</span>
-                    <span class="text-primary font-bold text-xs sm:text-sm uppercase tracking-wide truncate">User Guide</span>
+    <div id="player-bar"
+        class="fixed bottom-0 left-0 right-0 w-full max-w-[100vw] z-[100] glass-card border-t border-white/10 hidden pb-safe-bottom bg-[#090A0C]/95 transition-transform duration-300 transform translate-y-full">
+        <div class="relative w-full h-1 bg-white/10 cursor-pointer group">
+            <div id="progress-fill" class="h-full bg-primary w-0 relative">
+                <div
+                    class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity">
                 </div>
-                <h1 class="text-2xl sm:text-4xl md:text-5xl font-display font-bold text-white mb-3 leading-tight px-1">Hướng Dẫn Sử Dụng</h1>
-                <p class="text-slate-400 text-base sm:text-lg">KietSound Pro - AI Music Studio</p>
             </div>
+        </div>
 
-            <!-- Feature Cards -->
-            <div class="space-y-8">
-                
-                <!-- Feature 1: Mood Detection -->
-                <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary to-orange-600 rounded-xl flex items-center justify-center">
-                            <span class="material-icons-round text-white text-2xl">mood</span>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-xl font-bold text-white mb-2">🎭 1. Nhận Diện Cảm Xúc (Mood Detection)</h3>
-                            <p class="text-slate-400 mb-4">Tự động phát hiện cảm xúc qua khuôn mặt và gợi ý nhạc phù hợp.</p>
-                            
-                            <div class="space-y-3 text-sm">
-                                <div class="flex items-start gap-2">
-                                    <span class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
-                                    <div>
-                                        <p class="text-white font-semibold">Bước 1: Chụp ảnh khuôn mặt</p>
-                                        <p class="text-slate-400">Click <strong>"Scan My Mood"</strong> hoặc upload ảnh từ máy</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-2">
-                                    <span class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
-                                    <div>
-                                        <p class="text-white font-semibold">Bước 2: AI phân tích cảm xúc</p>
-                                        <p class="text-slate-400">Hệ thống nhận diện: Joy, Sadness, Anger, Fear, Surprise, Calm, Romantic...</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-2">
-                                    <span class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
-                                    <div>
-                                        <p class="text-white font-semibold">Bước 3: Nhận gợi ý nhạc/podcast</p>
-                                        <p class="text-slate-400">5 đề xuất YouTube phù hợp với tâm trạng hiện tại</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-4 p-3 bg-primary/10 rounded-xl border border-primary/20">
-                                <p class="text-xs text-primary font-bold mb-1">💡 Pro Tips:</p>
-                                <ul class="text-xs text-slate-300 space-y-1">
-                                    <li>• Đảm bảo ánh sáng tốt để AI nhận diện chính xác</li>
-                                    <li>• Khuôn mặt nhìn thẳng camera, tránh che khuất</li>
-                                    <li>• Có thể chọn "Music" hoặc "Podcast" trước khi scan</li>
-                                </ul>
-                            </div>
-                        </div>
+        <div class="max-w-7xl mx-auto flex items-center gap-2 sm:gap-4 p-2.5 sm:p-3 md:p-4 min-w-0">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 basis-0">
+                <div class="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 group">
+                    <img id="player-thumb"
+                        class="w-full h-full rounded-xl bg-black/50 object-cover border border-white/10"
+                        src="https://via.placeholder.com/40" alt="">
+                    <div
+                        class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-xl">
+                        <span class="material-icons-round text-white text-sm">open_in_full</span>
                     </div>
                 </div>
-
-                <!-- Feature 2: AI Music Generator -->
-                <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                            <span class="material-icons-round text-white text-2xl">auto_fix_high</span>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-xl font-bold text-white mb-2">🎹 2. Tạo Nhạc AI (Text-to-Music)</h3>
-                            <p class="text-slate-400 mb-4">Biến lời bài hát thành bài hát hoàn chỉnh với giọng hát AI chuyên nghiệp!</p>
-                            
-                            <div class="space-y-3 text-sm">
-                                <div class="flex items-start gap-2">
-                                    <span class="material-icons-round text-purple-400 text-lg mt-0.5">lyrics</span>
-                                    <div>
-                                        <p class="text-white font-semibold">Nhập Lời Bài Hát</p>
-                                        <p class="text-slate-400"><strong>Mỗi dòng = 1 câu hát.</strong> Xuống dòng để AI bắt nhịp tốt hơn.</p>
-                                        <div class="mt-2 p-2 bg-black/30 rounded-lg font-mono text-xs text-slate-300">
-                                            Ví dụ:<br>
-                                            Hôm nay trời đẹp quá<br>
-                                            Em có muốn đi chơi không?<br>
-                                            Chúng ta cùng nhau đi dạo<br>
-                                            Dưới ánh hoàng hôn
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-start gap-2">
-                                    <span class="material-icons-round text-purple-400 text-lg mt-0.5">palette</span>
-                                    <div>
-                                        <p class="text-white font-semibold">Chọn Style (30+ thể loại)</p>
-                                        <p class="text-slate-400 mb-2">Pop, Rock, Rap, EDM, Ballad, Jazz, Blues, R&B, Metal, Punk...</p>
-                                        <div class="flex flex-wrap gap-1">
-                                            <span class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Pop</span>
-                                            <span class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Ballad</span>
-                                            <span class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Rap</span>
-                                            <span class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">EDM</span>
-                                            <span class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Jazz</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-start gap-2">
-                                    <span class="material-icons-round text-purple-400 text-lg mt-0.5">sentiment_satisfied</span>
-                                    <div>
-                                        <p class="text-white font-semibold">Chọn Mood (10+ tâm trạng)</p>
-                                        <p class="text-slate-400">Joy, Sadness, Romantic, Calmness, Anger, Triumph...</p>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-start gap-2">
-                                    <span class="material-icons-round text-purple-400 text-lg mt-0.5">record_voice_over</span>
-                                    <div>
-                                        <p class="text-white font-semibold">Chọn Giọng Hát (12 giọng)</p>
-                                        <p class="text-slate-400">Male/Female • North/Central/South • Young/Mature</p>
-                                        <p class="text-green-400 text-xs mt-1">🎤 Sử dụng RVC AI - Giọng hát chân thực như người thật!</p>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-start gap-2">
-                                    <span class="material-icons-round text-purple-400 text-lg mt-0.5">speed</span>
-                                    <div>
-                                        <p class="text-white font-semibold">Chọn Tempo (Fast/Medium/Slow)</p>
-                                        <p class="text-slate-400">Fast: EDM, Rap • Medium: Pop • Slow: Ballad</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-4 p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                                <p class="text-xs text-purple-400 font-bold mb-2">💡 Pro Tips - Để Có Bài Hát Hay Nhất:</p>
-                                <ul class="text-xs text-slate-300 space-y-1.5">
-                                    <li><strong>✓ Rap/Hip-Hop:</strong> Câu ngắn, nhiều chữ → chọn Fast/Medium tempo</li>
-                                    <li><strong>✓ Ballad/Soul:</strong> Câu dài, ít chữ → chọn Slow tempo</li>
-                                    <li><strong>✓ Hook/Chorus:</strong> 2-3 dòng cuối sẽ tự động lặp lại làm điệp khúc</li>
-                                    <li><strong>✓ Dấu câu:</strong> Dùng dấu chấm (.) để tạo pauses tự nhiên</li>
-                                    <li><strong>✓ Độ dài:</strong> 4-8 câu là tối ưu (quá dài → bài hát sẽ lâu)</li>
-                                    <li><strong>✓ Giọng hát:</strong> Chọn giọng phù hợp với style (Male cho Rock, Female cho Pop)</li>
-                                </ul>
-                            </div>
-                        </div>
+                <div class="min-w-0 flex-1 overflow-hidden">
+                    <div id="player-title-container" class="w-full overflow-hidden">
+                        <p id="player-title" class="text-xs sm:text-sm font-bold text-white truncate">Select a song</p>
                     </div>
-                </div>
-
-                <!-- Feature 3: Music Library -->
-                <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center">
-                            <span class="material-icons-round text-white text-2xl">library_music</span>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-xl font-bold text-white mb-2">📚 3. Thư Viện Nhạc (My Library)</h3>
-                            <p class="text-slate-400 mb-4">Quản lý tất cả bài hát AI đã tạo.</p>
-                            
-                            <div class="space-y-3 text-sm">
-                                <div class="flex items-start gap-2">
-                                    <span class="material-icons-round text-blue-400 text-lg mt-0.5">play_circle</span>
-                                    <div>
-                                        <p class="text-white font-semibold">Phát nhạc</p>
-                                        <p class="text-slate-400">Click bài hát để phát ngay • Mini player xuất hiện ở bottom</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-2">
-                                    <span class="material-icons-round text-blue-400 text-lg mt-0.5">download</span>
-                                    <div>
-                                        <p class="text-white font-semibold">Tải về</p>
-                                        <p class="text-slate-400">Format: MP3 320kbps • Chất lượng studio</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-2">
-                                    <span class="material-icons-round text-blue-400 text-lg mt-0.5">delete</span>
-                                    <div>
-                                        <p class="text-white font-semibold">Xóa bài hát</p>
-                                        <p class="text-slate-400">Click icon thùng rác • Xác nhận để xóa vĩnh viễn</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 4: Audio Quality -->
-                <div class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
-                            <span class="material-icons-round text-white text-2xl">high_quality</span>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-xl font-bold text-white mb-2">🎚️ 4. Chất Lượng Âm Thanh</h3>
-                            <p class="text-slate-400 mb-4">Studio-grade audio processing - Gần như chuyên nghiệp!</p>
-                            
-                            <div class="grid md:grid-cols-2 gap-4 text-sm">
-                                <div class="space-y-2">
-                                    <p class="text-white font-semibold">Vocal Processing:</p>
-                                    <ul class="text-slate-400 space-y-1 text-xs">
-                                        <li>• RVC AI singing voice (giọng hát thật)</li>
-                                        <li>• Pitch contouring (cao trầm tự nhiên)</li>
-                                        <li>• Crossfade transitions (mượt mà)</li>
-                                        <li>• Vibrato effects (Ballad, Soul)</li>
-                                    </ul>
-                                </div>
-                                <div class="space-y-2">
-                                    <p class="text-white font-semibold">Mixing & Mastering:</p>
-                                    <ul class="text-slate-400 space-y-1 text-xs">
-                                        <li>• Auto-ducking (beat tự động nhường vocal)</li>
-                                        <li>• Multi-band compression</li>
-                                        <li>• Style-specific EQ</li>
-                                        <li>• Professional limiter (-0.5dB)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- FAQ Section -->
-            <div class="mt-12 pt-10 border-t border-white/10">
-                <h2 class="text-2xl font-bold text-white mb-6 text-center">❓ Câu Hỏi Thường Gặp</h2>
-                
-                <div class="space-y-4">
-                    <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
-                        <summary class="font-semibold text-white flex items-center justify-between">
-                            <span>Tốn bao lâu để tạo 1 bài hát?</span>
-                            <span class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
-                        </summary>
-                        <p class="text-slate-400 text-sm mt-3 leading-relaxed">
-                            Thời gian: <strong>20-60 giây</strong> tùy độ dài lyrics. Bài 4-6 câu ~30s. Bài 8-10 câu ~60s.
-                        </p>
-                    </details>
-
-                    <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
-                        <summary class="font-semibold text-white flex items-center justify-between">
-                            <span>Giọng hát có thật không?</span>
-                            <span class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
-                        </summary>
-                        <p class="text-slate-400 text-sm mt-3 leading-relaxed">
-                            Giọng hát được tạo bằng <strong>RVC AI</strong> (Retrieval-based Voice Conversion) - công nghệ deep learning tiên tiến nhất hiện nay. 
-                            Chất lượng gần như người thật (~95% studio recording).
-                        </p>
-                    </details>
-
-                    <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
-                        <summary class="font-semibold text-white flex items-center justify-between">
-                            <span>Có thể tạo bài hát dài không?</span>
-                            <span class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
-                        </summary>
-                        <p class="text-slate-400 text-sm mt-3 leading-relaxed">
-                            Có! Nhưng nên giới hạn <strong>8-12 câu</strong> cho tối ưu. Quá dài → mất nhiều thời gian xử lý và có thể ảnh hưởng chất lượng.
-                        </p>
-                    </details>
-
-                    <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
-                        <summary class="font-semibold text-white flex items-center justify-between">
-                            <span>Tại sao bài hát bị ngắt quãng?</span>
-                            <span class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
-                        </summary>
-                        <p class="text-slate-400 text-sm mt-3 leading-relaxed">
-                            Đã được fix! Hiện tại có <strong>crossfade 300ms</strong> giữa các câu + spacing phù hợp với từng style. 
-                            Nếu vẫn gặp vấn đề, thử chọn style Ballad/Soul (spacing dài hơn).
-                        </p>
-                    </details>
-
-                    <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
-                        <summary class="font-semibold text-white flex items-center justify-between">
-                            <span>Có tính phí không?</span>
-                            <span class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
-                        </summary>
-                        <p class="text-slate-400 text-sm mt-3 leading-relaxed">
-                            <strong>100% MIỄN PHÍ!</strong> Không giới hạn số lượng bài hát. Không watermark. Tải về MP3 320kbps full quality.
-                        </p>
-                    </details>
+                    <p id="player-desc"
+                        class="text-[9px] sm:text-[10px] text-slate-400 font-medium uppercase tracking-wide truncate">
+                        Ready</p>
                 </div>
             </div>
 
-            <!-- Back Button -->
-            <div class="mt-10 text-center">
-                <button onclick="showView('dashboard')" class="px-8 py-3 bg-primary hover:bg-primary/80 text-white font-bold rounded-xl transition-all inline-flex items-center gap-2">
-                    <span class="material-icons-round">arrow_back</span> Quay Về Trang Chủ
+            <div class="flex items-center justify-center gap-1 sm:gap-4 flex-shrink-0">
+                <button type="button" class="text-slate-400 hover:text-white transition-colors hidden md:block"
+                    aria-hidden="true"><span class="material-icons-round">skip_previous</span></button>
+                <button type="button" id="play-btn" onclick="toggleMainPlay()"
+                    class="w-11 h-11 sm:w-12 sm:h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all touch-manipulation"
+                    aria-label="Play or pause">
+                    <span id="play-icon" class="material-icons-round text-2xl">play_arrow</span>
                 </button>
+                <button type="button" class="text-slate-400 hover:text-white transition-colors hidden md:block"
+                    aria-hidden="true"><span class="material-icons-round">skip_next</span></button>
+            </div>
+
+            <div
+                class="flex items-center justify-end gap-1 sm:gap-3 flex-shrink-0 basis-[7.5rem] sm:basis-auto min-w-0">
+                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 max-w-[5.5rem] sm:max-w-none">
+                    <span
+                        class="material-icons-round text-slate-500 text-xs flex-shrink-0 hidden sm:inline">volume_up</span>
+                    <input type="range" class="w-full sm:w-20 accent-primary h-1 min-w-[3rem]" min="0" max="100"
+                        value="100" oninput="setVolume(this.value)" aria-label="Volume">
+                </div>
+                <button id="yt-video-btn" type="button"
+                    class="p-1.5 sm:p-2 text-slate-400 hover:text-primary transition-colors hidden flex-shrink-0"
+                    title="Watch Video" onclick="toggleYtVideo()">
+                    <span class="material-icons-round text-lg sm:text-2xl">smart_display</span>
+                </button>
+                <a id="download-btn" href="#" download
+                    class="p-1.5 sm:p-2 text-slate-400 hover:text-primary transition-colors hidden flex-shrink-0"
+                    title="Download MP3">
+                    <span class="material-icons-round text-lg sm:text-2xl">download</span>
+                </a>
             </div>
         </div>
     </div>
-</main>
 
-<div id="player-bar" class="fixed bottom-0 left-0 right-0 w-full max-w-[100vw] z-[100] glass-card border-t border-white/10 hidden pb-safe-bottom bg-[#090A0C]/95 transition-transform duration-300 transform translate-y-full">
-    <div class="relative w-full h-1 bg-white/10 cursor-pointer group">
-        <div id="progress-fill" class="h-full bg-primary w-0 relative">
-            <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        </div>
-    </div>
-
-    <div class="max-w-7xl mx-auto flex items-center gap-2 sm:gap-4 p-2.5 sm:p-3 md:p-4 min-w-0">
-        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 basis-0">
-            <div class="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 group">
-                <img id="player-thumb" class="w-full h-full rounded-xl bg-black/50 object-cover border border-white/10" src="https://via.placeholder.com/40" alt="">
-                <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-xl">
-                    <span class="material-icons-round text-white text-sm">open_in_full</span>
-                </div>
-            </div>
-            <div class="min-w-0 flex-1 overflow-hidden">
-                <div id="player-title-container" class="w-full overflow-hidden">
-                    <p id="player-title" class="text-xs sm:text-sm font-bold text-white truncate">Select a song</p>
-                </div>
-                <p id="player-desc" class="text-[9px] sm:text-[10px] text-slate-400 font-medium uppercase tracking-wide truncate">Ready</p>
-            </div>
-        </div>
-        
-        <div class="flex items-center justify-center gap-1 sm:gap-4 flex-shrink-0">
-            <button type="button" class="text-slate-400 hover:text-white transition-colors hidden md:block" aria-hidden="true"><span class="material-icons-round">skip_previous</span></button>
-            <button type="button" id="play-btn" onclick="toggleMainPlay()" class="w-11 h-11 sm:w-12 sm:h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all touch-manipulation" aria-label="Play or pause">
-                <span id="play-icon" class="material-icons-round text-2xl">play_arrow</span>
+    <audio id="local-audio" class="hidden" onended="onTrackEnded()" ontimeupdate="onTrackUpdate()"></audio>
+    <div id="yt-video-modal"
+        class="fixed inset-0 z-[200] bg-black/95 flex flex-col items-center justify-center p-4 backdrop-blur-xl transition-all duration-300 opacity-0 pointer-events-none">
+        <div
+            class="w-full max-w-5xl aspect-video relative rounded-2xl overflow-hidden shadow-2xl bg-black border border-white/5 ring-1 ring-white/10">
+            <button onclick="toggleYtVideo()"
+                class="absolute top-4 right-4 z-[210] w-10 h-10 bg-black/60 hover:bg-primary hover:text-black rounded-full flex items-center justify-center text-white transition-all backdrop-blur-md">
+                <span class="material-icons-round">close</span>
             </button>
-            <button type="button" class="text-slate-400 hover:text-white transition-colors hidden md:block" aria-hidden="true"><span class="material-icons-round">skip_next</span></button>
-        </div>
-
-        <div class="flex items-center justify-end gap-1 sm:gap-3 flex-shrink-0 basis-[7.5rem] sm:basis-auto min-w-0">
-            <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 max-w-[5.5rem] sm:max-w-none">
-                <span class="material-icons-round text-slate-500 text-xs flex-shrink-0 hidden sm:inline">volume_up</span>
-                <input type="range" class="w-full sm:w-20 accent-primary h-1 min-w-[3rem]" min="0" max="100" value="100" oninput="setVolume(this.value)" aria-label="Volume">
-            </div>
-            <a id="download-btn" href="#" download class="p-1.5 sm:p-2 text-slate-400 hover:text-primary transition-colors hidden flex-shrink-0" title="Download MP3">
-                <span class="material-icons-round text-lg sm:text-2xl">download</span>
-            </a>
+            <div id="yt-player" class="w-full h-full pointer-events-auto"></div>
         </div>
     </div>
-</div>
 
-<audio id="local-audio" class="hidden" onended="onTrackEnded()" ontimeupdate="onTrackUpdate()"></audio>
-<div id="yt-player-hidden" class="fixed top-0 left-0 opacity-0 pointer-events-none w-1 h-1"></div>
+    <script>
+        // ==========================================
+        // 1. DATA CONFIGURATION (FULL LIST)
+        // ==========================================
+        const OPTS = {
+            styles: [
+                "Pop", "Rock", "Punk", "Electronic", "Rap", "Metal", "Hard Rock",
+                "Alternative", "Funk", "Pop Rock", "Pop Punk", "Swing", "Dark Folk",
+                "Lo-Fi", "Sad Rap", "Dubstep", "EDM", "Ballad", "R&B", "Jazz", "Blues",
+                "Country", "Soul", "Reggae", "Latin", "House", "Techno", "Trance", "Indie"
+            ],
+            moods: [
+                "Joy", "Sadness", "Anger", "Fear", "Surprise", "Anticipation",
+                "Calmness", "Romantic", "Nostalgia", "Triumph"
+            ],
+            voices: [
+                "Male - North", "Male - Central", "Male - South",
+                "Female - North", "Female - Central", "Female - South",
+                "Male Young", "Male Mature", "Female Young", "Female Mature",
+                "Male", "Female"
+            ],
+            tempos: [
+                "Fast", "Medium", "Slow"
+            ]
+        };
 
-<script>
-    // ==========================================
-    // 1. DATA CONFIGURATION (FULL LIST)
-    // ==========================================
-    const OPTS = {
-        styles: [
-            "Pop", "Rock", "Punk", "Electronic", "Rap", "Metal", "Hard Rock", 
-            "Alternative", "Funk", "Pop Rock", "Pop Punk", "Swing", "Dark Folk", 
-            "Lo-Fi", "Sad Rap", "Dubstep", "EDM", "Ballad", "R&B", "Jazz", "Blues",
-            "Country", "Soul", "Reggae", "Latin", "House", "Techno", "Trance", "Indie"
-        ],
-        moods: [
-            "Joy", "Sadness", "Anger", "Fear", "Surprise", "Anticipation", 
-            "Calmness", "Romantic", "Nostalgia", "Triumph"
-        ],
-        voices: [
-            "Male - North", "Male - Central", "Male - South",
-            "Female - North", "Female - Central", "Female - South",
-            "Male Young", "Male Mature", "Female Young", "Female Mature",
-            "Male", "Female"
-        ],
-        tempos: [
-            "Fast", "Medium", "Slow"
-        ]
-    };
+        // State Variables
+        let genState = { style: 'Pop', mood: 'Joy', voice: 'Female', tempo: 'Medium' };
+        let currentMode = 'local'; // 'local' | 'youtube'
+        let currentType = 'music'; // 'music' | 'podcast'
+        let ytPlayer;
+        let isYtReady = false;
+        let localAudio = document.getElementById('local-audio');
+        let searchEnterBound = false;
 
-    // State Variables
-    let genState = { style: 'Pop', mood: 'Joy', voice: 'Female', tempo: 'Medium' };
-    let currentMode = 'local'; // 'local' | 'youtube'
-    let currentType = 'music'; // 'music' | 'podcast'
-    let ytPlayer;
-    let isYtReady = false;
-    let localAudio = document.getElementById('local-audio');
-    let searchEnterBound = false;
+        window.toggleYtVideo = () => {
+            const modal = document.getElementById('yt-video-modal');
+            if (modal.classList.contains('opacity-0')) {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modal.classList.add('opacity-100', 'pointer-events-auto');
+            } else {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.classList.remove('opacity-100', 'pointer-events-auto');
+            }
+        };
 
-    // ==========================================
-    // 2. UI INITIALIZATION & CHIPS
-    // ==========================================
-    function initUI() {
-        renderChips('style-options', OPTS.styles, 'style');
-        renderChips('mood-options', OPTS.moods, 'mood');
-        renderChips('voice-options', OPTS.voices, 'voice');
-        renderChips('tempo-options', OPTS.tempos, 'tempo');
-        
-        loadMySongs();
-        initCamera();
+        // ==========================================
+        // 2. UI INITIALIZATION & CHIPS
+        // ==========================================
+        function initUI() {
+            renderChips('style-options', OPTS.styles, 'style');
+            renderChips('mood-options', OPTS.moods, 'mood');
+            renderChips('voice-options', OPTS.voices, 'voice');
+            renderChips('tempo-options', OPTS.tempos, 'tempo');
 
-        const searchInput = document.getElementById('search-input');
-        if (searchInput && !searchEnterBound) {
-            searchEnterBound = true;
-            searchInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') performSearch();
-            });
+            loadMySongs();
+            initCamera();
+
+            const searchInput = document.getElementById('search-input');
+            if (searchInput && !searchEnterBound) {
+                searchEnterBound = true;
+                searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') performSearch();
+                });
+            }
+
+            const initialView = new URLSearchParams(window.location.search).get('view');
+            if (initialView === 'studio' || initialView === 'guide') {
+                showView(initialView);
+            } else {
+                showView('dashboard');
+            }
         }
 
-        const initialView = new URLSearchParams(window.location.search).get('view');
-        if (initialView === 'studio' || initialView === 'guide') {
-            showView(initialView);
-        } else {
-            showView('dashboard');
-        }
-    }
-
-    function renderChips(containerId, dataArray, key) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = dataArray.map(item => 
-            `<div onclick="selectChip('${key}', '${item}')" 
+        function renderChips(containerId, dataArray, key) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = dataArray.map(item =>
+                `<div onclick="selectChip('${key}', '${item}')" 
                   class="chip-option ${genState[key] === item ? 'active' : ''}" 
                   data-group="${key}" 
                   data-value="${item}">
                 ${item}
             </div>`
-        ).join('');
-    }
-
-    window.selectChip = (key, value) => {
-        genState[key] = value;
-        // Update UI classes
-        document.querySelectorAll(`[data-group="${key}"]`).forEach(el => {
-            if (el.dataset.value === value) el.classList.add('active');
-            else el.classList.remove('active');
-        });
-    };
-
-    window.resetChips = () => {
-        genState = { style: 'Pop', mood: 'Joy', voice: 'Female', tempo: 'Medium' };
-        initUI(); // Re-render
-    };
-
-    window.showView = (viewName) => {
-        const dash = document.getElementById('view-dashboard');
-        const studio = document.getElementById('view-studio');
-        const guide = document.getElementById('view-guide');
-        const navDash = document.getElementById('nav-dashboard');
-        const navStudio = document.getElementById('nav-studio');
-        const navGuide = document.getElementById('nav-guide');
-
-        // Hide all views
-        dash.classList.add('hidden');
-        studio.classList.add('hidden');
-        guide.classList.add('hidden');
-
-        // Reset all nav buttons
-        navDash.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
-        navDash.classList.add('text-slate-400');
-        navStudio.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
-        navStudio.classList.add('text-slate-400');
-        navGuide.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
-        navGuide.classList.add('text-slate-400');
-
-        // Show selected view and activate button
-        if (viewName === 'dashboard') {
-            dash.classList.remove('hidden');
-            navDash.classList.remove('text-slate-400');
-            navDash.classList.add('bg-white/10', 'text-white', 'shadow-sm');
-        } else if (viewName === 'studio') {
-            studio.classList.remove('hidden');
-            navStudio.classList.remove('text-slate-400');
-            navStudio.classList.add('bg-white/10', 'text-white', 'shadow-sm');
-            loadMySongs(); // Refresh library
-        } else if (viewName === 'guide') {
-            guide.classList.remove('hidden');
-            navGuide.classList.remove('text-slate-400');
-            navGuide.classList.add('bg-white/10', 'text-white', 'shadow-sm');
+            ).join('');
         }
 
-        try {
-            const url = new URL(window.location.href);
-            if (viewName === 'dashboard') url.searchParams.delete('view');
-            else url.searchParams.set('view', viewName);
-            history.replaceState({}, '', url);
-        } catch (e) { /* file:// or restricted */ }
-    };
-
-    window.switchType = (type) => {
-        currentType = type;
-        const musicBtn = document.getElementById('type-music');
-        const podcastBtn = document.getElementById('type-podcast');
-
-        if (type === 'music') {
-            musicBtn.classList.add('bg-primary', 'text-white', 'shadow-lg');
-            musicBtn.classList.remove('bg-white/5', 'text-slate-400');
-            podcastBtn.classList.remove('bg-primary', 'text-white', 'shadow-lg');
-            podcastBtn.classList.add('bg-white/5', 'text-slate-400');
-        } else {
-            podcastBtn.classList.add('bg-primary', 'text-white', 'shadow-lg');
-            podcastBtn.classList.remove('bg-white/5', 'text-slate-400');
-            musicBtn.classList.remove('bg-primary', 'text-white', 'shadow-lg');
-            musicBtn.classList.add('bg-white/5', 'text-slate-400');
-        }
-
-        const query = document.getElementById('search-input').value.trim();
-        if (query) performSearch();
-    };
-
-    // ==========================================
-    // 3. MUSIC GENERATION LOGIC (UPGRADED)
-    // ==========================================
-    async function generateMusic() {
-        const title = document.getElementById('gen-title').value;
-        const lyrics = document.getElementById('gen-lyrics').value;
-        const btn = document.getElementById('generate-btn');
-        const status = document.getElementById('gen-status');
-        const progressContainer = document.getElementById('gen-progress-container');
-        const progressBar = document.getElementById('gen-progress-bar');
-        const stepText = document.getElementById('gen-step-text');
-        const timeText = document.getElementById('gen-time-text');
-
-        if (!lyrics.trim()) {
-            alert("⚠️ Vui lòng nhập lời bài hát (Lyrics)!");
-            document.getElementById('gen-lyrics').focus();
-            return;
-        }
-
-        // Estimate time based on lyrics length
-        const lineCount = lyrics.split('\n').filter(l => l.trim()).length;
-        const estimatedTime = Math.max(20, lineCount * 3); // ~3s per line
-        
-        // Loading State
-        btn.disabled = true;
-        btn.classList.add('opacity-70', 'cursor-not-allowed');
-        btn.innerHTML = `<span class="material-icons-round animate-spin">autorenew</span> GENERATING...`;
-        
-        // Show progress
-        progressContainer.style.opacity = '1';
-        progressBar.style.width = '0%';
-        
-        // Simulate progress (since backend doesn't send real-time updates)
-        const progressSteps = [
-            { percent: 15, text: "🎤 Tạo giọng hát (TTS)...", time: 5 },
-            { percent: 35, text: "🎵 Xử lý giai điệu (Pitch)...", time: 8 },
-            { percent: 55, text: "🎹 Đồng bộ với beat...", time: 10 },
-            { percent: 75, text: "🎚️ Thêm hiệu ứng audio...", time: 12 },
-            { percent: 90, text: "🎼 Mixing & Mastering...", time: 15 },
-        ];
-        
-        let currentStep = 0;
-        const progressInterval = setInterval(() => {
-            if (currentStep < progressSteps.length) {
-                const step = progressSteps[currentStep];
-                progressBar.style.width = `${step.percent}%`;
-                stepText.innerText = step.text;
-                timeText.innerText = `~${Math.max(0, estimatedTime - step.time)}s`;
-                currentStep++;
-            }
-        }, (estimatedTime * 1000) / progressSteps.length);
-
-        const formData = new FormData();
-        formData.append('title', title.trim() || "Untitled Song");
-        formData.append('lyrics', lyrics);
-        formData.append('style', genState.style);
-        formData.append('mood', genState.mood);
-        formData.append('voice', genState.voice);
-        formData.append('tempo', genState.tempo);
-
-        try {
-            const response = await fetch('/generate-music', {
-                method: 'POST',
-                body: formData
+        window.selectChip = (key, value) => {
+            genState[key] = value;
+            // Update UI classes
+            document.querySelectorAll(`[data-group="${key}"]`).forEach(el => {
+                if (el.dataset.value === value) el.classList.add('active');
+                else el.classList.remove('active');
             });
-            const data = await response.json();
+        };
 
-            clearInterval(progressInterval);
+        window.resetChips = () => {
+            genState = { style: 'Pop', mood: 'Joy', voice: 'Female', tempo: 'Medium' };
+            initUI(); // Re-render
+        };
 
-            if (data.status === 'success') {
-                // Complete progress
-                progressBar.style.width = '100%';
-                stepText.innerText = "✅ Hoàn thành!";
-                timeText.innerText = "0s";
-                
-                status.style.opacity = '1';
-                status.innerText = "🎉 Bài hát đã sẵn sàng!";
-                status.classList.add('text-green-500');
-                
-                // Load and play
-                await loadMySongs();
-                
-                // Auto-play after a short delay
-                setTimeout(() => {
-                    playTrack(data.song, 'local');
-                }, 500);
+        window.showView = (viewName) => {
+            const dash = document.getElementById('view-dashboard');
+            const studio = document.getElementById('view-studio');
+            const guide = document.getElementById('view-guide');
+            const navDash = document.getElementById('nav-dashboard');
+            const navStudio = document.getElementById('nav-studio');
+            const navGuide = document.getElementById('nav-guide');
+
+            // Hide all views
+            dash.classList.add('hidden');
+            studio.classList.add('hidden');
+            guide.classList.add('hidden');
+
+            // Reset all nav buttons
+            navDash.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
+            navDash.classList.add('text-slate-400');
+            navStudio.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
+            navStudio.classList.add('text-slate-400');
+            navGuide.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
+            navGuide.classList.add('text-slate-400');
+
+            // Show selected view and activate button
+            if (viewName === 'dashboard') {
+                dash.classList.remove('hidden');
+                navDash.classList.remove('text-slate-400');
+                navDash.classList.add('bg-white/10', 'text-white', 'shadow-sm');
+            } else if (viewName === 'studio') {
+                studio.classList.remove('hidden');
+                navStudio.classList.remove('text-slate-400');
+                navStudio.classList.add('bg-white/10', 'text-white', 'shadow-sm');
+                loadMySongs(); // Refresh library
+            } else if (viewName === 'guide') {
+                guide.classList.remove('hidden');
+                navGuide.classList.remove('text-slate-400');
+                navGuide.classList.add('bg-white/10', 'text-white', 'shadow-sm');
+            }
+
+            try {
+                const url = new URL(window.location.href);
+                if (viewName === 'dashboard') url.searchParams.delete('view');
+                else url.searchParams.set('view', viewName);
+                history.replaceState({}, '', url);
+            } catch (e) { /* file:// or restricted */ }
+        };
+
+        window.switchType = (type) => {
+            currentType = type;
+            const musicBtn = document.getElementById('type-music');
+            const podcastBtn = document.getElementById('type-podcast');
+
+            if (type === 'music') {
+                musicBtn.classList.add('bg-primary', 'text-white', 'shadow-lg');
+                musicBtn.classList.remove('bg-white/5', 'text-slate-400');
+                podcastBtn.classList.remove('bg-primary', 'text-white', 'shadow-lg');
+                podcastBtn.classList.add('bg-white/5', 'text-slate-400');
             } else {
+                podcastBtn.classList.add('bg-primary', 'text-white', 'shadow-lg');
+                podcastBtn.classList.remove('bg-white/5', 'text-slate-400');
+                musicBtn.classList.remove('bg-primary', 'text-white', 'shadow-lg');
+                musicBtn.classList.add('bg-white/5', 'text-slate-400');
+            }
+
+            const query = document.getElementById('search-input').value.trim();
+            if (query) performSearch();
+        };
+
+        // ==========================================
+        // 3. MUSIC GENERATION LOGIC (UPGRADED)
+        // ==========================================
+        async function generateMusic() {
+            const title = document.getElementById('gen-title').value;
+            const lyrics = document.getElementById('gen-lyrics').value;
+            const btn = document.getElementById('generate-btn');
+            const status = document.getElementById('gen-status');
+            const progressContainer = document.getElementById('gen-progress-container');
+            const progressBar = document.getElementById('gen-progress-bar');
+            const stepText = document.getElementById('gen-step-text');
+            const timeText = document.getElementById('gen-time-text');
+
+            if (!lyrics.trim()) {
+                alert("⚠️ Vui lòng nhập lời bài hát (Lyrics)!");
+                document.getElementById('gen-lyrics').focus();
+                return;
+            }
+
+            // Estimate time based on lyrics length
+            const lineCount = lyrics.split('\n').filter(l => l.trim()).length;
+            const estimatedTime = Math.max(20, lineCount * 3); // ~3s per line
+
+            // Loading State
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            btn.innerHTML = `<span class="material-icons-round animate-spin">autorenew</span> GENERATING...`;
+
+            // Show progress
+            progressContainer.style.opacity = '1';
+            progressBar.style.width = '0%';
+
+            // Simulate progress (since backend doesn't send real-time updates)
+            const progressSteps = [
+                { percent: 15, text: "🎤 Tạo giọng hát (TTS)...", time: 5 },
+                { percent: 35, text: "🎵 Xử lý giai điệu (Pitch)...", time: 8 },
+                { percent: 55, text: "🎹 Đồng bộ với beat...", time: 10 },
+                { percent: 75, text: "🎚️ Thêm hiệu ứng audio...", time: 12 },
+                { percent: 90, text: "🎼 Mixing & Mastering...", time: 15 },
+            ];
+
+            let currentStep = 0;
+            const progressInterval = setInterval(() => {
+                if (currentStep < progressSteps.length) {
+                    const step = progressSteps[currentStep];
+                    progressBar.style.width = `${step.percent}%`;
+                    stepText.innerText = step.text;
+                    timeText.innerText = `~${Math.max(0, estimatedTime - step.time)}s`;
+                    currentStep++;
+                }
+            }, (estimatedTime * 1000) / progressSteps.length);
+
+            const formData = new FormData();
+            formData.append('title', title.trim() || "Untitled Song");
+            formData.append('lyrics', lyrics);
+            formData.append('style', genState.style);
+            formData.append('mood', genState.mood);
+            formData.append('voice', genState.voice);
+            formData.append('tempo', genState.tempo);
+
+            try {
+                const response = await fetch('/generate-music', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                clearInterval(progressInterval);
+
+                if (data.status === 'success') {
+                    // Complete progress
+                    progressBar.style.width = '100%';
+                    stepText.innerText = "✅ Hoàn thành!";
+                    timeText.innerText = "0s";
+
+                    status.style.opacity = '1';
+                    status.innerText = "🎉 Bài hát đã sẵn sàng!";
+                    status.classList.add('text-green-500');
+
+                    // Load and play
+                    await loadMySongs();
+
+                    // Auto-play after a short delay
+                    setTimeout(() => {
+                        playTrack(data.song, 'local');
+                    }, 500);
+                } else {
+                    progressBar.style.width = '0%';
+                    status.style.opacity = '1';
+                    status.innerText = "❌ Lỗi: " + (data.message || "Không xác định");
+                    status.classList.add('text-red-500');
+                }
+            } catch (error) {
+                clearInterval(progressInterval);
+                console.error(error);
                 progressBar.style.width = '0%';
                 status.style.opacity = '1';
-                status.innerText = "❌ Lỗi: " + (data.message || "Không xác định");
+                status.innerText = "❌ Lỗi kết nối đến Server.";
                 status.classList.add('text-red-500');
+            } finally {
+                // Reset UI after delay
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                    btn.innerHTML = `<span class="material-icons-round">album</span> GENERATE TRACK`;
+                    progressContainer.style.opacity = '0';
+                    status.style.opacity = '0';
+                    status.classList.remove('text-green-500', 'text-red-500');
+                }, 3000);
             }
-        } catch (error) {
-            clearInterval(progressInterval);
-            console.error(error);
-            progressBar.style.width = '0%';
-            status.style.opacity = '1';
-            status.innerText = "❌ Lỗi kết nối đến Server.";
-            status.classList.add('text-red-500');
-        } finally {
-            // Reset UI after delay
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.classList.remove('opacity-70', 'cursor-not-allowed');
-                btn.innerHTML = `<span class="material-icons-round">album</span> GENERATE TRACK`;
-                progressContainer.style.opacity = '0';
-                status.style.opacity = '0';
-                status.classList.remove('text-green-500', 'text-red-500');
-            }, 3000);
         }
-    }
 
-    // ==========================================
-    // 4. LIBRARY MANAGEMENT
-    // ==========================================
-    async function loadMySongs() {
-        const listContainer = document.getElementById('my-songs-list');
-        const countBadge = document.getElementById('library-count');
-        
-        try {
-            const res = await fetch('/my-songs');
-            const songs = await res.json();
-            
-            countBadge.innerText = `${songs.length} songs`;
+        // ==========================================
+        // 4. LIBRARY MANAGEMENT
+        // ==========================================
+        async function loadMySongs() {
+            const listContainer = document.getElementById('my-songs-list');
+            const countBadge = document.getElementById('library-count');
 
-            if (songs.length === 0) {
-                listContainer.innerHTML = `
+            try {
+                const res = await fetch('/my-songs');
+                const songs = await res.json();
+
+                countBadge.innerText = `${songs.length} songs`;
+
+                if (songs.length === 0) {
+                    listContainer.innerHTML = `
                     <div class="flex flex-col items-center justify-center h-40 opacity-40">
                         <span class="material-icons-round text-4xl mb-2">library_music</span>
                         <p class="text-xs">Chưa có bài hát nào.</p>
                     </div>`;
-                return;
-            }
+                    return;
+                }
 
-            listContainer.innerHTML = songs.map(song => `
+                listContainer.innerHTML = songs.map(song => `
                 <div class="group relative p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 transition-all cursor-pointer flex items-center justify-between"
                      onclick='playTrack(${JSON.stringify(song)}, "local")'>
                     
@@ -906,164 +1067,167 @@
                     </button>
                 </div>
             `).join('');
-            
-        } catch (e) {
-            console.error("Load library failed", e);
-        }
-    }
 
-    async function deleteSong(url) {
-        if (!confirm("Bạn có chắc chắn muốn xóa bài hát này?")) return;
-        try {
-            await fetch(`/my-songs/delete?url=${url}`, { method: 'DELETE' });
-            loadMySongs();
-        } catch (e) { alert("Xóa thất bại"); }
-    }
-
-    // ==========================================
-    // 5. PLAYER LOGIC (Unified Local + Youtube)
-    // ==========================================
-    function playTrack(data, mode) {
-        const playerBar = document.getElementById('player-bar');
-        const pTitle = document.getElementById('player-title');
-        const pDesc = document.getElementById('player-desc');
-        const pThumb = document.getElementById('player-thumb');
-        const playIcon = document.getElementById('play-icon');
-        const dlBtn = document.getElementById('download-btn');
-
-        // Show player
-        playerBar.classList.remove('hidden', 'translate-y-full');
-        
-        currentMode = mode;
-
-        if (mode === 'local') {
-            // STOP Youtube
-            if (isYtReady && ytPlayer.stopVideo) ytPlayer.stopVideo();
-
-            // Setup UI
-            pTitle.innerText = data.title;
-            pDesc.innerText = `AI Generated • ${data.style} • ${data.mood}`;
-            pThumb.src = "https://cdn-icons-png.flaticon.com/512/12204/12204300.png"; // AI Icon
-            dlBtn.href = data.file_url;
-            dlBtn.classList.remove('hidden');
-
-            // Play Audio
-            localAudio.src = data.file_url;
-            localAudio.play();
-            playIcon.innerText = "pause";
-
-        } else if (mode === 'youtube') {
-            // STOP Local
-            localAudio.pause();
-            
-            // Setup UI
-            pTitle.innerText = data.title;
-            pDesc.innerText = "Youtube Music";
-            pThumb.src = data.thumbnail;
-            dlBtn.classList.add('hidden');
-
-            // Play Youtube
-            if (isYtReady) {
-                const videoId = extractVideoId(data.link);
-                ytPlayer.loadVideoById(videoId);
-                ytPlayer.playVideo();
-                playIcon.innerText = "pause";
+            } catch (e) {
+                console.error("Load library failed", e);
             }
         }
-    }
 
-    function toggleMainPlay() {
-        const playIcon = document.getElementById('play-icon');
-        
-        if (currentMode === 'local') {
-            if (localAudio.paused) {
+        async function deleteSong(url) {
+            if (!confirm("Bạn có chắc chắn muốn xóa bài hát này?")) return;
+            try {
+                await fetch(`/my-songs/delete?url=${url}`, { method: 'DELETE' });
+                loadMySongs();
+            } catch (e) { alert("Xóa thất bại"); }
+        }
+
+        // ==========================================
+        // 5. PLAYER LOGIC (Unified Local + Youtube)
+        // ==========================================
+        function playTrack(data, mode) {
+            const playerBar = document.getElementById('player-bar');
+            const pTitle = document.getElementById('player-title');
+            const pDesc = document.getElementById('player-desc');
+            const pThumb = document.getElementById('player-thumb');
+            const playIcon = document.getElementById('play-icon');
+            const dlBtn = document.getElementById('download-btn');
+
+            // Show player
+            playerBar.classList.remove('hidden', 'translate-y-full');
+
+            currentMode = mode;
+
+            if (mode === 'local') {
+                // STOP Youtube
+                if (isYtReady && ytPlayer.stopVideo) ytPlayer.stopVideo();
+
+                // Setup UI
+                pTitle.innerText = data.title;
+                pDesc.innerText = `AI Generated • ${data.style} • ${data.mood}`;
+                pThumb.src = "https://cdn-icons-png.flaticon.com/512/12204/12204300.png"; // AI Icon
+                dlBtn.href = data.file_url;
+                dlBtn.classList.remove('hidden');
+                document.getElementById('yt-video-btn').classList.add('hidden');
+
+                // Play Audio
+                localAudio.src = data.file_url;
                 localAudio.play();
                 playIcon.innerText = "pause";
-            } else {
+
+            } else if (mode === 'youtube') {
+                // STOP Local
                 localAudio.pause();
-                playIcon.innerText = "play_arrow";
-            }
-        } else {
-            if (isYtReady) {
-                const state = ytPlayer.getPlayerState();
-                if (state === 1) { // Playing
-                    ytPlayer.pauseVideo();
-                    playIcon.innerText = "play_arrow";
-                } else {
+
+                // Setup UI
+                pTitle.innerText = data.title;
+                pDesc.innerText = "Youtube Music";
+                pThumb.src = data.thumbnail;
+                dlBtn.classList.add('hidden');
+                document.getElementById('yt-video-btn').classList.remove('hidden');
+
+                // Play Youtube
+                if (isYtReady) {
+                    const videoId = extractVideoId(data.link);
+                    ytPlayer.loadVideoById(videoId);
                     ytPlayer.playVideo();
                     playIcon.innerText = "pause";
                 }
             }
         }
-    }
 
-    function onTrackUpdate() {
-        if (currentMode === 'local' && localAudio.duration) {
-            const pct = (localAudio.currentTime / localAudio.duration) * 100;
-            document.getElementById('progress-fill').style.width = `${pct}%`;
-        }
-    }
+        function toggleMainPlay() {
+            const playIcon = document.getElementById('play-icon');
 
-    function onTrackEnded() {
-        document.getElementById('play-icon').innerText = "play_arrow";
-        document.getElementById('progress-fill').style.width = "0%";
-    }
-
-    function setVolume(val) {
-        localAudio.volume = val / 100;
-        if (isYtReady) ytPlayer.setVolume(val);
-    }
-
-    // Youtube Helpers
-    function extractVideoId(url) {
-        const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-        return (match && match[2].length == 11) ? match[2] : null;
-    }
-
-    // Load Youtube API
-    var tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-    function onYouTubeIframeAPIReady() {
-        ytPlayer = new YT.Player('yt-player-hidden', {
-            height: '0', width: '0',
-            events: {
-                'onReady': () => { isYtReady = true; },
-                'onStateChange': (event) => {
-                    const playIcon = document.getElementById('play-icon');
-                    if (currentMode === 'youtube') {
-                        if (event.data === YT.PlayerState.PLAYING) playIcon.innerText = "pause";
-                        else playIcon.innerText = "play_arrow";
+            if (currentMode === 'local') {
+                if (localAudio.paused) {
+                    localAudio.play();
+                    playIcon.innerText = "pause";
+                } else {
+                    localAudio.pause();
+                    playIcon.innerText = "play_arrow";
+                }
+            } else {
+                if (isYtReady) {
+                    const state = ytPlayer.getPlayerState();
+                    if (state === 1) { // Playing
+                        ytPlayer.pauseVideo();
+                        playIcon.innerText = "play_arrow";
+                    } else {
+                        ytPlayer.playVideo();
+                        playIcon.innerText = "pause";
                     }
                 }
             }
-        });
-    }
+        }
 
-    // ==========================================
-    // 6. DASHBOARD LOGIC (SEARCH & CAMERA)
-    // ==========================================
-    async function performSearch() {
-        const input = document.getElementById('search-input');
-        const container = document.getElementById('recommendations-container');
-        const query = input.value;
-
-        if (!query.trim()) return;
-
-        container.innerHTML = `<div class="text-center py-10 text-primary animate-pulse">Searching Youtube...</div>`;
-
-        try {
-            const res = await fetch(`/search?q=${encodeURIComponent(query)}&type=${encodeURIComponent(currentType)}`);
-            const data = await res.json();
-
-            if (!data.recommendations || data.recommendations.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 text-slate-500">Không tìm thấy kết quả.</div>`;
-                return;
+        function onTrackUpdate() {
+            if (currentMode === 'local' && localAudio.duration) {
+                const pct = (localAudio.currentTime / localAudio.duration) * 100;
+                document.getElementById('progress-fill').style.width = `${pct}%`;
             }
-            
-            container.innerHTML = data.recommendations.map(item => `
+        }
+
+        function onTrackEnded() {
+            document.getElementById('play-icon').innerText = "play_arrow";
+            document.getElementById('progress-fill').style.width = "0%";
+        }
+
+        function setVolume(val) {
+            localAudio.volume = val / 100;
+            if (isYtReady) ytPlayer.setVolume(val);
+        }
+
+        // Youtube Helpers
+        function extractVideoId(url) {
+            const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+            return (match && match[2].length == 11) ? match[2] : null;
+        }
+
+        // Load Youtube API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('yt-player', {
+                height: '100%', width: '100%',
+                playerVars: { 'autoplay': 0, 'controls': 1, 'rel': 0, 'showinfo': 0 },
+                events: {
+                    'onReady': () => { isYtReady = true; },
+                    'onStateChange': (event) => {
+                        const playIcon = document.getElementById('play-icon');
+                        if (currentMode === 'youtube') {
+                            if (event.data === YT.PlayerState.PLAYING) playIcon.innerText = "pause";
+                            else playIcon.innerText = "play_arrow";
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // 6. DASHBOARD LOGIC (SEARCH & CAMERA)
+        // ==========================================
+        async function performSearch() {
+            const input = document.getElementById('search-input');
+            const container = document.getElementById('recommendations-container');
+            const query = input.value;
+
+            if (!query.trim()) return;
+
+            container.innerHTML = `<div class="text-center py-10 text-primary animate-pulse">Searching Youtube...</div>`;
+
+            try {
+                const res = await fetch(`/search?q=${encodeURIComponent(query)}&type=${encodeURIComponent(currentType)}`);
+                const data = await res.json();
+
+                if (!data.recommendations || data.recommendations.length === 0) {
+                    container.innerHTML = `<div class="text-center py-10 text-slate-500">Không tìm thấy kết quả.</div>`;
+                    return;
+                }
+
+                container.innerHTML = data.recommendations.map(item => `
                 <div class="glass-card p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
                      onclick='playTrack(${JSON.stringify(item)}, "youtube")'>
                     <img src="${item.thumbnail}" class="w-16 h-16 rounded-lg object-cover shadow-md">
@@ -1076,58 +1240,58 @@
                     </button>
                 </div>
             `).join('');
-        } catch (e) {
-            container.innerHTML = `<div class="text-center py-10 text-red-400">Search Failed.</div>`;
-        }
-    }
-
-    // Camera Logic
-    async function initCamera() {
-        const video = document.getElementById('video');
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                video.srcObject = stream;
-            } catch (err) {
-                console.error("Camera access denied", err);
+            } catch (e) {
+                container.innerHTML = `<div class="text-center py-10 text-red-400">Search Failed.</div>`;
             }
         }
-    }
 
-    document.getElementById('analyze-btn').onclick = async () => {
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const btn = document.getElementById('analyze-btn');
-        const moodDisplay = document.getElementById('mood-display');
-        const recContainer = document.getElementById('recommendations-container');
-
-        btn.disabled = true;
-        btn.innerHTML = `<span class="material-icons-round animate-spin">sync</span> SCANNING...`;
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-
-        canvas.toBlob(async (blob) => {
-            const fd = new FormData();
-            fd.append('file', blob, 'mood.jpg');
-
-            try {
-                const keyword = document.getElementById('search-input').value.trim();
-                const recommendUrl = `/recommend?type=${encodeURIComponent(currentType)}${keyword ? `&q=${encodeURIComponent(keyword)}` : ''}`;
-                const res = await fetch(recommendUrl, { method: 'POST', body: fd });
-                const data = await res.json();
-
-                moodDisplay.innerText = data.mood;
-                moodDisplay.classList.add('text-primary');
-
-                if (!data.recommendations || data.recommendations.length === 0) {
-                    recContainer.innerHTML = `<div class="text-center py-10 text-slate-500">Không tìm thấy gợi ý phù hợp.</div>`;
-                    return;
+        // Camera Logic
+        async function initCamera() {
+            const video = document.getElementById('video');
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                    video.srcObject = stream;
+                } catch (err) {
+                    console.error("Camera access denied", err);
                 }
+            }
+        }
 
-                // Render Recommendations
-                recContainer.innerHTML = data.recommendations.map(item => `
+        document.getElementById('analyze-btn').onclick = async () => {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const btn = document.getElementById('analyze-btn');
+            const moodDisplay = document.getElementById('mood-display');
+            const recContainer = document.getElementById('recommendations-container');
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="material-icons-round animate-spin">sync</span> SCANNING...`;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            canvas.toBlob(async (blob) => {
+                const fd = new FormData();
+                fd.append('file', blob, 'mood.jpg');
+
+                try {
+                    const keyword = document.getElementById('search-input').value.trim();
+                    const recommendUrl = `/recommend?type=${encodeURIComponent(currentType)}${keyword ? `&q=${encodeURIComponent(keyword)}` : ''}`;
+                    const res = await fetch(recommendUrl, { method: 'POST', body: fd });
+                    const data = await res.json();
+
+                    moodDisplay.innerText = data.mood;
+                    moodDisplay.classList.add('text-primary');
+
+                    if (!data.recommendations || data.recommendations.length === 0) {
+                        recContainer.innerHTML = `<div class="text-center py-10 text-slate-500">Không tìm thấy gợi ý phù hợp.</div>`;
+                        return;
+                    }
+
+                    // Render Recommendations
+                    recContainer.innerHTML = data.recommendations.map(item => `
                     <div class="glass-card p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
                          onclick='playTrack(${JSON.stringify(item)}, "youtube")'>
                         <img src="${item.thumbnail}" class="w-16 h-16 rounded-lg object-cover shadow-md">
@@ -1141,90 +1305,91 @@
                     </div>
                 `).join('');
 
-            } catch (e) {
-                console.error(e);
-                alert("Mood Analysis Failed");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<span class="material-icons-round">face_retouching_natural</span> ANALYZE MOOD`;
+                } catch (e) {
+                    console.error(e);
+                    alert("Mood Analysis Failed");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = `<span class="material-icons-round">face_retouching_natural</span> ANALYZE MOOD`;
+                }
+            }, 'image/jpeg');
+        };
+
+        // ==========================================
+        // 7. INITIALIZATION
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', initUI);
+
+    </script>
+    <script type="module">
+        // --- FIREBASE AUTH (GOOGLE LOGIN/LOGOUT) ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+        import {
+            getAuth,
+            onAuthStateChanged,
+            signInWithPopup,
+            GoogleAuthProvider,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDzBMntuhKIphik-AnRPbxGHZmUNnaEOA4",
+            authDomain: "kietsound-fd3a8.firebaseapp.com",
+            projectId: "kietsound-fd3a8",
+            storageBucket: "kietsound-fd3a8.firebasestorage.app",
+            messagingSenderId: "986477792759",
+            appId: "1:986477792759:web:741aeb2393826b534a72f2",
+            measurementId: "G-79N93EHL36"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        const loginBtn = document.getElementById('login-btn');
+        const userDisplay = document.getElementById('user-display');
+
+        async function handleLoginLogout() {
+            try {
+                if (auth.currentUser) {
+                    await signOut(auth);
+                } else {
+                    await signInWithPopup(auth, provider);
+                }
+            } catch (error) {
+                console.error("Firebase auth error:", error);
+                alert("Không thể đăng nhập. Vui lòng thử lại.");
             }
-        }, 'image/jpeg');
-    };
+        }
 
-    // ==========================================
-    // 7. INITIALIZATION
-    // ==========================================
-    window.addEventListener('DOMContentLoaded', initUI);
+        if (loginBtn) {
+            loginBtn.addEventListener('click', handleLoginLogout);
+        }
 
-</script>
-<script type="module">
-    // --- FIREBASE AUTH (GOOGLE LOGIN/LOGOUT) ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-    import { 
-        getAuth,
-        onAuthStateChanged,
-        signInWithPopup,
-        GoogleAuthProvider,
-        signOut
-    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+        onAuthStateChanged(auth, (user) => {
+            if (!userDisplay || !loginBtn) return;
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyDzBMntuhKIphik-AnRPbxGHZmUNnaEOA4",
-        authDomain: "kietsound-fd3a8.firebaseapp.com",
-        projectId: "kietsound-fd3a8",
-        storageBucket: "kietsound-fd3a8.firebasestorage.app",
-        messagingSenderId: "986477792759",
-        appId: "1:986477792759:web:741aeb2393826b534a72f2",
-        measurementId: "G-79N93EHL36"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-
-    const loginBtn = document.getElementById('login-btn');
-    const userDisplay = document.getElementById('user-display');
-
-    async function handleLoginLogout() {
-        try {
-            if (auth.currentUser) {
-                await signOut(auth);
+            if (user) {
+                const label = user.email || user.displayName || "User";
+                userDisplay.textContent = `Hi, ${label}`;
+                loginBtn.textContent = "LOGOUT";
+                loginBtn.classList.remove("bg-white/10");
+                loginBtn.classList.add("bg-primary", "text-white");
             } else {
-                await signInWithPopup(auth, provider);
+                userDisplay.textContent = "Guest";
+                loginBtn.textContent = "LOGIN";
+                loginBtn.classList.add("bg-white/10");
+                loginBtn.classList.remove("bg-primary");
             }
-        } catch (error) {
-            console.error("Firebase auth error:", error);
-            alert("Không thể đăng nhập. Vui lòng thử lại.");
-        }
-    }
-
-    if (loginBtn) {
-        loginBtn.addEventListener('click', handleLoginLogout);
-    }
-
-    onAuthStateChanged(auth, (user) => {
-        if (!userDisplay || !loginBtn) return;
-
-        if (user) {
-            const label = user.email || user.displayName || "User";
-            userDisplay.textContent = `Hi, ${label}`;
-            loginBtn.textContent = "LOGOUT";
-            loginBtn.classList.remove("bg-white/10");
-            loginBtn.classList.add("bg-primary", "text-white");
-        } else {
-            userDisplay.textContent = "Guest";
-            loginBtn.textContent = "LOGIN";
-            loginBtn.classList.add("bg-white/10");
-            loginBtn.classList.remove("bg-primary");
-        }
-    });
-</script>
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
         });
-    }
-</script>
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () { });
+            });
+        }
+    </script>
 </body>
+
 </html>
