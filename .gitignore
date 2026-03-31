@@ -92,3 +92,9 @@ htmlcov/
 # Word / báo cáo cá nhân (HF từ chối binary lớn nếu commit nhầm)
 *.docx
 *.doc
+
+# Temp
+node_modules/
+backend_results.json
+out.txt
+test_*.py

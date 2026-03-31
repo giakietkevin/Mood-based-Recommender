@@ -21,7 +21,6 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-    <script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -423,6 +422,16 @@
                             </button>
                         </form>
                         
+                        <!-- Phim Đề Cử -->
+                        <div class="flex flex-col gap-2">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">🎬 Phim Việt Đề Cử (Click để stream ngay)</p>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" onclick="document.getElementById('film-magnet-input').value='magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Hai.Phuong.2019.1080p'; startFilmStream()" class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors shadow-sm">Hai Phượng (2019)</button>
+                                <button type="button" onclick="document.getElementById('film-magnet-input').value='magnet:?xt=urn:btih:3189bfcd2f65aab38ba986dd052db5ed46ad2d61&dn=Bo.Gia.2021.1080p'; startFilmStream()" class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors shadow-sm">Bố Già (2021)</button>
+                                <button type="button" onclick="document.getElementById('film-magnet-input').value='magnet:?xt=urn:btih:209c8226b299b308beaf2b9cd3fb49212dbd13ec&dn=Mat.Biec.2019.1080p'; startFilmStream()" class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors shadow-sm">Mắt Biếc (2019)</button>
+                            </div>
+                        </div>
+
                         <div class="flex items-center justify-between gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
                             <div class="flex items-center gap-2 text-sm text-slate-300 min-w-0">
                                 <span class="material-icons-round text-primary flex-shrink-0">subtitles</span>
@@ -948,8 +957,6 @@
         
         // Film Station states
         let filmHistory = [];
-        const torrentClient = new WebTorrent();
-        let currentTorrent = null;
         window.currentSubtitleUrl = null;
 
         window.toggleYtVideo = () => {
@@ -1754,12 +1761,21 @@
         window.startFilmStream = (e) => {
             if(e) e.preventDefault();
             const input = document.getElementById('film-magnet-input');
-            const magnetURI = input.value.trim();
+            let magnetURI = input.value.trim();
             if(!magnetURI) return;
+            
+            // Auto inject WebRTC trackers
+            const webrtcTrackers = "&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.dev";
+            if (!magnetURI.includes('wss%3A%2F%2Ftracker')) {
+                magnetURI += webrtcTrackers;
+                input.value = magnetURI;
+            }
             
             window.streamTorrent(magnetURI);
             saveFilmHistory(magnetURI, "Đang tải tên metadata...");
         };
+
+        let proxyPollingInterval = null;
 
         window.streamTorrent = (magnetURI) => {
             const placeholder = document.getElementById('film-pl-placeholder');
@@ -1773,11 +1789,8 @@
             overlay.classList.remove('hidden', 'opacity-0');
             overlay.classList.add('flex', 'opacity-100');
             
-            if (currentTorrent) {
-                torrentClient.remove(currentTorrent.infoHash);
-                currentTorrent = null;
-            }
             output.innerHTML = '';
+            if (proxyPollingInterval) clearInterval(proxyPollingInterval);
             
             // Add progress indicators before fetching
             document.getElementById('film-speed').innerText = "Connecting...";
@@ -1786,38 +1799,53 @@
             document.getElementById('film-downloaded').innerText = "0 MB";
             document.getElementById('film-total').innerText = "? MB";
             
-            torrentClient.add(magnetURI, function (torrent) {
-                currentTorrent = torrent;
-                
-                saveFilmHistory(magnetURI, torrent.name);
-                
-                const file = torrent.files.find(function (file) {
-                    return file.name.endsWith('.mp4') || file.name.endsWith('.mkv') || file.name.endsWith('.webm') || file.name.endsWith('.avi');
-                });
-                
-                const targetFile = file || torrent.files.reduce((a, b) => a.length > b.length ? a : b);
-
-                targetFile.appendTo('#film-output', {
-                    autoplay: true,
-                    muted: false
-                }, function(err, elem) {
-                    if(err) return;
-                    elem.classList.add('w-full', 'h-full', 'object-contain', 'bg-black');
-                    elem.controls = true;
-                    elem.id = 'film-video-player';
-                    window.applySubtitleTrack();
-                });
-                
-                torrent.on('download', function (bytes) {
-                    updateFilmProgressUI(torrent);
-                });
-                torrent.on('done', function() {
-                    updateFilmProgressUI(torrent);
-                    document.getElementById('film-speed').innerText = "Hoàn tất";
-                    // fade out overlay slightly after done
-                    setTimeout(() => overlay.classList.replace('opacity-100', 'opacity-0'), 3000);
-                });
-            });
+            // Fetch cleanup (optional to preserve RAM)
+            fetch('http://localhost:8001/cleanup').catch(() => {});
+            
+            // Render video
+            const encodedMagnet = encodeURIComponent(magnetURI);
+            const streamUrl = `http://localhost:8001/stream?magnet=${encodedMagnet}`;
+            
+            const videoElem = document.createElement('video');
+            videoElem.src = streamUrl;
+            videoElem.autoplay = true;
+            videoElem.controls = true;
+            videoElem.id = 'film-video-player';
+            videoElem.className = 'w-full h-full object-contain bg-black';
+            output.appendChild(videoElem);
+            
+            window.applySubtitleTrack();
+            
+            // Poll for status
+            proxyPollingInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`http://localhost:8001/status?magnet=${encodedMagnet}`);
+                    const data = await res.json();
+                    
+                    if (data.status === 'active') {
+                        saveFilmHistory(magnetURI, data.name || "Đang tải metadata...");
+                        
+                        const speed = window.formatBytes(data.downloadSpeed) + '/s';
+                        const downloaded = window.formatBytes(data.downloaded);
+                        const total = window.formatBytes(data.length);
+                        const progressPercent = data.progress * 100;
+                        const progress = progressPercent.toFixed(1);
+                        
+                        document.getElementById('film-speed').innerText = progressPercent === 100 ? "Hoàn tất" : speed;
+                        document.getElementById('film-downloaded').innerText = downloaded;
+                        document.getElementById('film-total').innerText = total;
+                        document.getElementById('film-peers').innerText = data.numPeers;
+                        document.getElementById('film-progress-bar').style.width = progress + '%';
+                        
+                        if (progressPercent === 100) {
+                            clearInterval(proxyPollingInterval);
+                            setTimeout(() => overlay.classList.replace('opacity-100', 'opacity-0'), 3000);
+                        }
+                    }
+                } catch (e) {
+                    console.log("Backend Timeout/Wait", e);
+                }
+            }, 1500);
         };
 
         function updateFilmProgressUI(torrent) {

@@ -1,0 +1,25 @@
+{
+  "name": "mood-based-recommender",
+  "version": "1.0.0",
+  "description": "--- title: KietSound Pro - AI Music Studio emoji: 🎵 colorFrom: pink colorTo: blue sdk: docker pinned: false short_description: AI music generation with mood detection & singing voice ---",
+  "main": "sw.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/giakietkevin/Mood-based-Recommender.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/giakietkevin/Mood-based-Recommender/issues"
+  },
+  "homepage": "https://github.com/giakietkevin/Mood-based-Recommender#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "webtorrent": "^2.8.5"
+  }
+}

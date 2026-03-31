@@ -47,8 +47,28 @@ try:
 except AttributeError: pass
 else: ssl._create_default_https_context = _create_unverified_https_context
 
+import subprocess
+import atexit
+
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+# Khởi động Node Torrent Server ngầm
+try:
+    # Chạy `node torrent_server.js` ẩn với DEVNULL
+    node_process = subprocess.Popen(["node", "torrent_server.js"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print("🚀 [INFO] Đã kích hoạt Backend Streaming (Node Torrent Server) ở cổng 8001")
+    
+    def cleanup_node():
+        if node_process:
+            try:
+                node_process.terminate()
+            except:
+                pass
+            
+    atexit.register(cleanup_node)
+except Exception as e:
+    print(f"⚠️ [WARNING] Không thể khởi động Node Torrent Server: {e}")
 
 # --- 2. THIẾT LẬP THƯ MỤC ---
 os.makedirs("generated_music", exist_ok=True)
@@ -880,9 +900,14 @@ async def recommend(file: UploadFile = File(...), type: str="music", q: str = Qu
     t = f"temp_{uuid.uuid4()}.jpg"
     with open(t, "wb") as b: shutil.copyfileobj(file.file, b)
     try:
-        res = DeepFace.analyze(t, actions=['emotion'], enforce_detection=False)
+        # Sử dụng mtcnn thay vì opencv để nhận diện khuôn mặt chính xác hơn (đặc biệt qua webcam)
+        res = DeepFace.analyze(t, actions=['emotion'], enforce_detection=False, detector_backend='mtcnn')
         mood = res[0]['dominant_emotion']
-    except: mood = "neutral"
+    except Exception as e:
+        import traceback
+        print(f"DeepFace analyze error: {e}")
+        traceback.print_exc()
+        mood = "neutral"
     if os.path.exists(t): os.remove(t)
     
     # Tìm kiếm nội dung theo Mood (+ keyword nếu có)
