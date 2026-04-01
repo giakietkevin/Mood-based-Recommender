@@ -1,6 +1,11 @@
 ---
 title: KietSound Pro - AI Music & Film Studio
-short_description: AI music generation, mood detection, and seamless Vietnamese movie streaming
+emoji: 🎵
+colorFrom: blue
+colorTo: purple
+sdk: static
+app_file: index.html
+short_description: AI Music, Mood Detection & VN Movie Streaming
 ---
 
 # 🎵 KietSound Pro - AI Music & Film Studio
@@ -27,13 +32,11 @@ Professional-grade music generation from lyrics with:
 - **Multi-TTS Support**: Edge-TTS (primary) with gTTS fallback.
 - **Intelligent Pitch Contouring**: Custom melodic patterns tailored for Rap, Ballad, EDM, Rock, and more.
 - **Vibrato Effects**: Natural vibrato for Ballad, Soul, Jazz styles.
-- **Crossfade Technology**: Smooth transitions between segments.
 - **12+ Voice Profiles**: Wide range of Male/Female regional variations.
 
 #### 🎵 Studio-Grade Audio Processing
 - **Time Stretching**: Rubberband-powered tempo matching.
 - **Multi-Band Compression**: Adaptive compression per style.
-- **De-Essing**: Sibilance reduction.
 - **Style-Specific EQ**: Optimized frequency curves.
 - **Adaptive Reverb & Delay**: Context-aware spatial effects.
 
@@ -85,30 +88,3 @@ pip install -r requirements.txt
 
 # Run server
 python main.py
-```
-
-Server runs on `http://localhost:7860`
-
-## 📖 Usage
-
-### KietFilm
-1. Navigate to the **FILM STATION** tab.
-2. Search for any movie using the search bar (e.g., "Mắt Biếc").
-3. Click on the thumbnail to dive immediately into high-speed native streaming.
-
-### Text-to-Music Generation
-1. Navigate to the **STUDIO** tab.
-2. Enter song title and lyrics (one line per bar).
-3. Select style, mood, voice, and tempo.
-4. Click **GENERATE TRACK**.
-5. Wait 20-60s for full mastering. Song auto-plays and saves to library.
-
-## 📝 License
-MIT License - Feel free to use and modify
-
-## 👨‍💻 Credits
-Built with ❤️ by KietSound Team
-
----
-
-**Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference**
