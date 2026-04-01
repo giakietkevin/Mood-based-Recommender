@@ -57,6 +57,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 os.makedirs(os.path.join(BASE_DIR, "generated_music"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "beats"), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, "assets"), exist_ok=True)  # Tạo nếu chưa có (tránh crash trên Hugging Face)
 
 app.mount("/generated_music", StaticFiles(directory=os.path.join(BASE_DIR, "generated_music")), name="generated_music")
 app.mount("/assets", StaticFiles(directory=os.path.join(BASE_DIR, "assets")), name="assets")
