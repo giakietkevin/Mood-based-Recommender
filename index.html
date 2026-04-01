@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport" />
-    <title>KietSound Pro - AI Music Studio</title>
+    <title>KietSound </title>
 
     <link rel="manifest" href="/manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
@@ -110,29 +110,70 @@
 
     <nav class="sticky top-0 z-50 px-3 sm:px-4 py-3 safe-nav-pad glass-card border-b border-white/5 mb-4 sm:mb-6">
         <div class="max-w-7xl mx-auto flex flex-col gap-3">
+            <!-- ROW 1: Logo (Left) + User Account (Right) -->
             <div class="flex items-center justify-between gap-2 min-w-0">
+                <!-- Logo -->
                 <div class="flex items-center gap-2 min-w-0 flex-shrink">
                     <div class="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/20 flex-shrink-0"><span
                             class="material-icons-round text-white text-xl">equalizer</span></div>
-                    <span
-                        class="text-lg sm:text-xl font-display font-bold text-white uppercase tracking-tight truncate">Kiet<span
-                            class="text-primary">Sound</span></span>
+                    <a href="/" class="hover:opacity-90 transition-opacity">
+                        <span class="text-lg sm:text-xl font-display font-bold text-white uppercase tracking-tight truncate">
+                            Kiet<span class="text-primary">Sound</span>
+                        </span>
+                    </a>
                 </div>
-                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0 min-w-0">
-                    <div class="flex flex-col text-right min-w-0 max-w-[100px] sm:max-w-[170px]">
-                        <span
-                            class="text-[10px] uppercase text-slate-500 font-bold tracking-wide hidden sm:block">Account</span>
-                        <span id="user-display"
-                            class="text-[10px] sm:text-xs font-bold text-white truncate text-right">Guest</span>
-                    </div>
+
+                <!-- User Account (Far Right) -->
+                <div class="relative flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <!-- Login Button (Visible when Guest) -->
                     <button id="login-btn"
-                        class="px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all whitespace-nowrap">
+                        class="px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all whitespace-nowrap shadow-lg">
                         LOGIN
                     </button>
+
+                    <!-- User Profile (Visible when Logged In) -->
+                    <div id="user-profile" class="hidden flex items-center gap-2 sm:gap-3 cursor-pointer group"
+                        onclick="toggleUserDropdown(event)">
+                        <div class="flex flex-col text-right min-w-0 max-w-[100px] sm:max-w-[170px]">
+                            <span class="text-[10px] uppercase text-primary font-black tracking-widest hidden sm:block">Member</span>
+                            <span id="user-display" class="text-[10px] sm:text-xs font-bold text-white truncate text-right">User Name</span>
+                        </div>
+                        <div class="relative">
+                            <img id="user-avatar" src="https://i.pravatar.cc/150?img=1"
+                                onerror="this.src='https://via.placeholder.com/160'"
+                                class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl border-2 border-white/10 shadow-lg group-hover:border-primary/50 transition-all object-cover bg-black/20">
+                            <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-[#090A0C] rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- User Dropdown Menu -->
+                    <div id="user-dropdown"
+                        class="absolute top-full right-0 mt-4 w-56 glass-card rounded-2xl border border-white/10 shadow-2xl opacity-0 pointer-events-none translate-y-2 transition-all duration-300 z-[150] overflow-hidden">
+                        <div class="p-4 border-b border-white/10 bg-white/5">
+                            <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-1">Signed in as</p>
+                            <p id="user-email-display" class="text-[11px] text-white font-bold truncate">user@gmail.com</p>
+                        </div>
+                        <div class="p-2">
+                            <button onclick="showView('guide')"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition-all text-xs font-bold">
+                                <span class="material-icons-round text-sm">person</span> Trang cá nhân
+                            </button>
+                            <button onclick="showView('guide')"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition-all text-xs font-bold">
+                                <span class="material-icons-round text-sm">settings</span> Cập nhật thông tin
+                            </button>
+                            <div class="h-px bg-white/10 my-1"></div>
+                            <button id="logout-btn"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-red-400 hover:text-red-500 transition-all text-xs font-bold">
+                                <span class="material-icons-round text-sm">logout</span> Đăng xuất
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div
-                class="flex w-full overflow-x-auto no-scrollbar gap-1 p-1 bg-white/10 sm:bg-white/5 rounded-2xl border border-white/5 sm:border-none">
+
+            <!-- ROW 2: Navigation Tabs (Full Width) -->
+            <div class="flex w-full overflow-x-auto no-scrollbar gap-1 p-1 bg-white/10 sm:bg-white/5 rounded-2xl border border-white/5 sm:border-none">
                 <button type="button" onclick="showView('dashboard')" id="nav-dashboard"
                     class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all bg-white/10 text-white shadow-sm whitespace-nowrap">HOME</button>
                 <button type="button" onclick="showView('studio')" id="nav-studio"
@@ -145,7 +186,6 @@
                     class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">GAME</button>
                 <button type="button" onclick="showView('photobooth')" id="nav-photobooth"
                     class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">PHOTOBOOTH</button>
-
             </div>
         </div>
     </nav>
@@ -674,18 +714,6 @@
             </main>
         </div>
 
-        <!-- ABOUT ME (GUIDE) VIEW -->
-        <div id="view-guide" class="hidden space-y-6 sm:space-y-12 animate-fade-in max-w-5xl mx-auto">
-            <!-- Hero Section -->
-            <section class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-6 sm:py-12">
-                <div class="space-y-4 sm:space-y-6 text-center md:text-left">
-                    <h1 class="text-4xl sm:text-6xl font-display font-bold text-white leading-tight">
-                        Kiến tạo <span class="text-primary italic">Âm nhạc</span><br>theo cảm xúc
-                    </h1>
-                </div>
-            </section>
-        </div>
-
         <div id="view-photobooth" class="hidden max-w-7xl mx-auto animate-fade-in pb-20">
             <!-- PHASE 0: LAYOUT SELECTION -->
             <div id="pb-layout-zone" class="max-w-4xl mx-auto text-center space-y-12 py-10">
@@ -995,196 +1023,125 @@
             </div>
         </div>
 
-        <!-- ABOUT ME VIEW (APPROVED REDESIGN) -->
-        <div id="view-guide" class="hidden max-w-6xl mx-auto animate-fade-in py-12 space-y-24">
+        <!-- PRO PERSONAL PROFILE VIEW -->
+        <div id="view-guide" class="hidden max-w-6xl mx-auto animate-fade-in py-8 sm:py-12 px-4 sm:px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-            <!-- SECTION 1: HERO -->
-            <div
-                class="glass-card rounded-[4rem] p-10 md:p-16 border border-white/10 shadow-2xl relative overflow-hidden">
-                <div class="absolute -top-32 -right-32 w-80 h-80 bg-primary/20 blur-[120px] rounded-full"></div>
-                <div class="grid lg:grid-cols-12 gap-12 items-center">
-                    <div class="lg:col-span-7 space-y-8 text-left">
-                        <div class="space-y-4">
-                            <div
-                                class="inline-flex items-center gap-2 bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
-                                <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                                <span class="text-primary font-bold text-[10px] uppercase tracking-[0.2em]">Developer
-                                    Profile</span>
-                            </div>
-                            <h1
-                                class="text-5xl md:text-7xl font-display font-bold text-white tracking-tighter leading-[0.9]">
-                                Võ Phạm Gia<br><span class="text-primary italic">Kiệt</span>
-                            </h1>
-                            <p class="text-slate-400 text-lg md:text-xl font-medium max-w-xl leading-relaxed">
-                                Chào bạn! Mình là Kiệt, sinh viên năm 4 tại Đại học Giao thông Vận tải TP.HCM (UTH).
-                                Trang web này mình tự "mò mẫm"
-                                tạo ra để chia sẻ mấy công cụ "nhỏ mà có võ" giúp các bạn giải trí sau những giờ học
-                                căng thẳng. Hoàn toàn miễn phí,
-                                cứ "xài xả láng" nhé!</p>
-                        </div>
-                        <div class="flex flex-wrap gap-4 pt-4">
+                <!-- LEFT: PROFILE CARD -->
+                <aside class="lg:col-span-4 space-y-6">
+                    <div
+                        class="glass-card rounded-[3rem] p-8 border border-white/10 shadow-2xl text-center relative overflow-hidden group">
+                        <div class="absolute -top-20 -left-20 w-40 h-40 bg-primary/20 blur-[80px] rounded-full"></div>
 
-                        </div>
-                    </div>
-                    <div class="lg:col-span-5 flex justify-center lg:justify-end">
-                        <div class="relative group">
+                        <!-- Avatar Upload Section -->
+                        <div class="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto mb-6">
+                            <img id="profile-view-avatar" src="https://i.pravatar.cc/150?img=1"
+                                onerror="this.src='https://via.placeholder.com/160'"
+                                class="w-full h-full rounded-[2.5rem] border-4 border-white/10 shadow-2xl object-cover transition-all group-hover:scale-105">
+                            <label for="avatar-input"
+                                class="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-[2.5rem] opacity-0 group-hover:opacity-100 cursor-pointer transition-all border-2 border-primary/50">
+                                <span class="material-icons-round text-white text-3xl">photo_camera</span>
+                                <input type="file" id="avatar-input" class="hidden" accept="image/*"
+                                    onchange="handleAvatarUpload(event)">
+                            </label>
                             <div
-                                class="w-64 h-64 md:w-80 md:h-80 rounded-[4rem] overflow-hidden border-8 border-white/5 shadow-2xl transition-all duration-700 group-hover:scale-[1.02] group-hover:border-primary/20 bg-black">
-                                <img src="https://raw.githubusercontent.com/giakietkevin/Mood-based-Recommender/main/assets/img/kevin.jpg"
-                                    class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                                    alt="Võ Phạm Gia Kiệt">
-                            </div>
-                            <div
-                                class="absolute -bottom-6 -left-6 w-20 h-20 bg-primary/10 backdrop-blur-xl border border-primary/20 rounded-3xl flex items-center justify-center animate-bounce-slow">
-                                <span class="material-icons-round text-primary text-3xl">verified</span>
+                                class="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 border-4 border-[#090A0C] rounded-full">
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- SECTION 2: VISION & MISSION -->
-            <div class="space-y-12">
-                <div class="flex items-center justify-between border-b border-white/5 pb-8">
-                    <h2 class="text-3xl md:text-5xl font-display font-bold text-white uppercase tracking-tighter">Tầm
-                        Nhìn <span class="text-primary">&</span> Sứ Mệnh</h2>
-                    <span
-                        class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] hidden md:block">Strategic
-                        Direction</span>
-                </div>
-                <div class="grid md:grid-cols-2 gap-8">
-                    <!-- Tầm Nhìn Card -->
-                    <div
-                        class="glass-card rounded-[3rem] p-10 border border-white/5 hover:border-primary/20 transition-all group relative overflow-hidden">
-                        <div class="absolute top-0 right-0 p-8">
-                            <span
-                                class="material-icons-round text-primary/20 text-6xl group-hover:text-primary/40 transition-colors">visibility</span>
+                        <div class="space-y-1 mb-8">
+                            <h2 id="profile-view-name"
+                                class="text-2xl font-display font-bold text-white uppercase italic tracking-tight">Guest
+                                User</h2>
+                            <p id="profile-view-email"
+                                class="text-slate-500 text-xs font-bold tracking-widest uppercase">guest@kietsound.com
+                            </p>
                         </div>
-                        <div class="space-y-6 relative z-10">
-                            <div
-                                class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary border border-primary/20">
-                                <span class="material-icons-round text-2xl">remove_red_eye</span>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
+                                <p id="profile-stat-songs" class="text-xl font-black text-primary leading-none">0</p>
+                                <p class="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-1">Songs</p>
                             </div>
-                            <h3 class="text-2xl font-bold text-white uppercase italic">Quan điểm</h3>
-                            <p class="text-slate-400 text-sm leading-relaxed">Trở thành một "nơi" tổng hợp đủ thứ tiện
-                                ích và trò chơi miễn phí.
-                                Mình muốn ai ai cũng có thể vào đây tìm thấy một niềm vui nho nhỏ, một công cụ hữu ích
-                                mà không bao giờ phải lo về giá cả
-                                hay quảng cáo phiền phức.</p>
-                        </div>
-                    </div>
-                    <!-- Sứ Mệnh Card -->
-                    <div
-                        class="glass-card rounded-[3rem] p-10 border border-white/5 hover:border-primary/20 transition-all group relative overflow-hidden">
-                        <div class="absolute top-0 right-0 p-8">
-                            <span
-                                class="material-icons-round text-orange-500/20 text-6xl group-hover:text-orange-500/40 transition-colors">rocket</span>
-                        </div>
-                        <div class="space-y-6 relative z-10">
-                            <div
-                                class="w-14 h-14 bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-500 border border-orange-500/20">
-                                <span class="material-icons-round text-2xl">rocket_launch</span>
+                            <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
+                                <p id="profile-stat-joined" class="text-xl font-black text-white leading-none">2026</p>
+                                <p class="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-1">Joined</p>
                             </div>
-                            <h3 class="text-2xl font-bold text-white uppercase italic">Sứ Mệnh</h3>
-                            <p class="text-slate-400 text-sm leading-relaxed">Cam kết mang lại giá trị thực tế thông qua
-                                các giải pháp phần mềm ổn định, dễ mở rộng và có hiệu suất cao.Mình không hứa giải quyết
-                                hết
-                                lo toan cuộc sống, nhưng hứa sẽ nỗ lực tạo ra những trải nghiệm mượt mà, "ngon-bổ-rẻ"
-                                (mà thực ra là rẻ bèo, bằng 0 VND) cho tất cả các bạn</p>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- SECTION 3: SUPPORT -->
-            <div
-                class="glass-card rounded-[4rem] p-12 md:p-20 border border-white/10 bg-black/40 text-center space-y-12 relative group overflow-hidden">
-                <div
-                    class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                </div>
-                <div class="space-y-4 max-w-2xl mx-auto">
-                    <h2 class="text-3xl md:text-4xl font-display font-bold text-white uppercase italic tracking-tight">
-                        Support My Journey</h2>
-                    <p class="text-slate-400 text-sm md:text-base leading-relaxed">Nếu bạn thấy những chia sẻ và sản
-                        phẩm của mình hữu ích, một tách cà phê sẽ là nguồn động lực tuyệt vời để mình tiếp tục sáng tạo.
-                    </p>
-                </div>
-                <div
-                    class="relative w-56 h-56 md:w-64 md:h-64 mx-auto rounded-[3.5rem] overflow-hidden border-4 border-white/10 shadow-2xl transition-all duration-700 group-hover:scale-105 group-hover:border-primary/40 bg-white p-2">
-                    <img src="https://raw.githubusercontent.com/giakietkevin/Mood-based-Recommender/main/assets/img/qr.jpg"
-                        class="w-full h-full object-contain rounded-[2.5rem]" alt="Support QR Code">
-                </div>
-                <div class="flex flex-center justify-center gap-4">
-                    <div
-                        class="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">
-                        MoMo</div>
-                    <div
-                        class="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">
-                        Bank Transfer</div>
-                </div>
-            </div>
+                    <div class="glass-card rounded-[2.5rem] p-6 border border-white/10 bg-primary/5 text-center">
+                        <p class="text-primary font-bold text-[10px] uppercase tracking-[0.4em] mb-2">💡 Pro Tip</p>
+                        <p class="text-slate-400 text-[11px] leading-relaxed">Cập nhật đầy đủ thông tin giúp bạn dễ dàng
+                            quản lý kho nhạc cá nhân và nhận các bản cập nhật mới nhất!</p>
+                    </div>
+                </aside>
 
-            <!-- SECTION 4: CONTACT -->
-            <div class="space-y-12">
-                <div class="text-center">
-                    <p class="text-primary font-bold text-[10px] uppercase tracking-[0.4em] mb-4">Get In Touch</p>
-                    <h2
-                        class="text-4xl md:text-6xl font-display font-bold text-white uppercase italic tracking-tighter leading-none">
-                        Liên Hệ Hợp Tác</h2>
-                </div>
-                <div class="grid sm:grid-cols-3 gap-6">
-                    <!-- Email -->
+                <!-- RIGHT: SETTINGS & POSTS -->
+                <main class="lg:col-span-8 space-y-8">
+                    <!-- Basic Info Form -->
                     <div
-                        class="glass-card rounded-3xl p-8 border border-white/5 hover:border-primary/30 transition-all text-center space-y-4 group">
-                        <div
-                            class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary border border-primary/20 mx-auto group-hover:scale-110 transition-transform">
-                            <span class="material-icons-round">alternate_email</span>
+                        class="glass-card rounded-[3rem] p-8 sm:p-12 border border-white/10 shadow-2xl relative overflow-hidden">
+                        <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/10 blur-[100px] rounded-full">
                         </div>
-                        <div class="space-y-1">
-                            <h4 class="text-slate-500 font-bold text-[8px] uppercase tracking-widest">Email Me</h4>
-                            <p class="text-white font-bold text-sm">giakiethcb@gmail.com</p>
-                        </div>
-                    </div>
-                    <!-- Facebook -->
-                    <div
-                        class="glass-card rounded-3xl p-8 border border-white/5 hover:border-blue-400/30 transition-all text-center space-y-4 group">
-                        <div
-                            class="w-14 h-14 bg-blue-400/10 rounded-2xl flex items-center justify-center text-blue-400 border border-blue-400/20 mx-auto group-hover:scale-110 transition-transform">
-                            <span class="material-icons-round">send</span>
-                        </div>
-                        <div class="space-y-1">
-                            <h4 class="text-slate-500 font-bold text-[8px] uppercase tracking-widest">Facebook</h4>
-                            <p class="text-white font-bold text-sm">Võ Phạm Gia Kiệt</p>
-                        </div>
-                    </div>
-                    <!-- Phone Number -->
-                    <div
-                        class="glass-card rounded-3xl p-8 border border-white/5 hover:border-white/30 transition-all text-center space-y-4 group">
-                        <div
-                            class="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10 mx-auto group-hover:scale-110 transition-transform">
-                            <span class="material-icons-round">phone</span>
-                        </div>
-                        <div class="space-y-1">
-                            <h4 class="text-slate-500 font-bold text-[8px] uppercase tracking-widest">Phone Number</h4>
-                            <p class="text-white font-bold text-sm">0905884303</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Footer: Final Actions -->
-            <div class="pt-12 border-t border-white/5 text-center flex flex-col items-center gap-6">
-                <button onclick="showView('dashboard')"
-                    class="flex items-center gap-3 px-10 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl border border-white/10 transition-all font-bold text-[10px] uppercase tracking-[0.3em]">
-                    <span class="material-icons-round text-sm">arrow_back</span> Quay Lại Trang Chủ
-                </button>
-                <p class="text-slate-600 font-bold text-[9px] uppercase tracking-widest">© 2024 Editorial Excellence
-                    Portfolio. All rights reserved.</p>
-                <div class="flex gap-4 text-slate-600 font-bold text-[8px] uppercase tracking-widest mt-2">
-                    <span class="hover:text-primary transition-colors cursor-pointer">Privacy</span>
-                    <span class="hover:text-primary transition-colors cursor-pointer">Terms</span>
-                    <span class="hover:text-primary transition-colors cursor-pointer">LinkedIn</span>
-                </div>
+                        <div class="flex items-center gap-4 mb-10">
+                            <div
+                                class="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center text-primary border border-primary/20">
+                                <span class="material-icons-round text-2xl">manage_accounts</span>
+                            </div>
+                            <h3 class="text-3xl font-display font-bold text-white uppercase italic">Cài đặt <span
+                                    class="text-primary">tài khoản</span></h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Họ và
+                                    Tên</label>
+                                <input type="text" id="profile-input-name" placeholder="Nhập tên của bạn..."
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none">
+                            </div>
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Ngày
+                                    sinh</label>
+                                <input type="date" id="profile-input-dob"
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none [color-scheme:dark]">
+                            </div>
+                            <div class="md:col-span-2 space-y-3">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Email
+                                    (Đã xác minh)</label>
+                                <div class="relative">
+                                    <input type="email" id="profile-input-email" readonly
+                                        class="w-full bg-black/40 border border-white/5 rounded-2xl px-6 py-4 text-slate-500 font-bold cursor-not-allowed outline-none italic">
+                                    <span
+                                        class="absolute right-6 top-1/2 -translate-y-1/2 material-icons-round text-green-500 text-sm">verified</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-12 flex justify-end">
+                            <button onclick="saveUserProfile()"
+                                class="px-10 py-4 bg-primary text-white font-bold rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest text-xs flex items-center gap-3">
+                                <span class="material-icons-round text-sm">save</span> Lưu thay đổi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- My Recent Songs (Posts) -->
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between px-4">
+                            <h4 class="text-xl font-display font-bold text-white uppercase italic tracking-tighter">Bộ
+                                sưu tập <span class="text-primary">của tôi</span></h4>
+                            <span id="profile-song-count"
+                                class="text-[10px] bg-white/10 px-3 py-1 rounded-full text-slate-400 font-bold uppercase tracking-widest">0
+                                Bài hát</span>
+                        </div>
+
+                        <div id="profile-songs-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </main>
             </div>
         </div>
     </main>
@@ -1596,6 +1553,7 @@
 
             const formData = new FormData();
             formData.append('title', title.trim() || "Untitled Song");
+            formData.append('uid', window.currentUserUid || "guest");
             formData.append('lyrics', lyrics);
             formData.append('style', genState.style);
             formData.append('mood', genState.mood);
@@ -1658,62 +1616,91 @@
         // 4. LIBRARY MANAGEMENT
         // ==========================================
         async function loadMySongs() {
-            const listContainer = document.getElementById('my-songs-list');
-            const countBadge = document.getElementById('library-count');
+            const grid = document.getElementById('my-songs-grid');
+            const profileGrid = document.getElementById('profile-songs-grid');
+            const countDisplay = document.getElementById('library-song-count');
+            const profileCount = document.getElementById('profile-song-count');
+            const profileStatSongs = document.getElementById('profile-stat-songs');
+
+            if (!grid) return;
+            grid.innerHTML = '<div class="col-span-full py-20 text-center animate-pulse"><p class="text-slate-500 font-bold uppercase tracking-widest text-xs">Đang tải giai điệu của bạn...</p></div>';
 
             try {
-                const res = await fetch('/my-songs');
-                const songs = await res.json();
+                // Pass UID to filter library
+                const uid = window.currentUserUid || "guest";
+                const response = await fetch(`/my-songs?uid=${uid}`);
+                const songs = await response.json();
 
-                countBadge.innerText = `${songs.length} songs`;
+                mySongs = songs;
+                const count = songs.length;
+                if (countDisplay) countDisplay.textContent = `${count} Bài hát`;
+                if (profileCount) profileCount.textContent = `${count} Bài hát`;
+                if (profileStatSongs) profileStatSongs.textContent = count;
 
-                if (songs.length === 0) {
-                    listContainer.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-40 opacity-40">
-                        <span class="material-icons-round text-4xl mb-2">library_music</span>
-                        <p class="text-xs">Chưa có bài hát nào.</p>
-                    </div>`;
+                if (count === 0) {
+                    const emptyHtml = `
+                        <div class="col-span-full py-20 px-10 glass-card rounded-[3rem] border border-dashed border-white/10 text-center space-y-6">
+                            <span class="material-icons-round text-6xl text-white/10">music_off</span>
+                            <div class="space-y-1">
+                                <p class="text-white font-bold text-lg">Thư viện trống</p>
+                                <p class="text-slate-500 text-xs">Bắt đầu tạo bài hát đầu tiên của riêng bạn tại Studio!</p>
+                            </div>
+                        </div>`;
+                    grid.innerHTML = emptyHtml;
+                    if (profileGrid) profileGrid.innerHTML = emptyHtml;
                     return;
                 }
 
-                listContainer.innerHTML = songs.map(song => `
-                <div class="group relative p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 transition-all cursor-pointer flex items-center justify-between"
-                     onclick='playTrack(${JSON.stringify(song).replace(/'/g, "&#39;")}, "local")'>
-                    
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                            AI
-                        </div>
-                        <div class="min-w-0">
-                            <h4 class="font-bold text-sm text-white truncate group-hover:text-primary transition-colors">${song.title}</h4>
-                            <div class="flex gap-2 text-[10px] text-slate-400">
-                                <span class="bg-black/20 px-1.5 rounded">${song.style}</span>
-                                <span class="bg-black/20 px-1.5 rounded">${song.mood}</span>
+                const html = songs.map(s => `
+                    <div class="glass-card p-5 rounded-[2.5rem] border border-white/10 active:scale-95 transition-all group relative overflow-hidden">
+                        <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="flex items-center gap-4 relative z-10">
+                            <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 text-primary">
+                                <span class="material-icons-round text-xl">music_note</span>
+                            </div>
+                            <div class="flex-1 min-w-0 pr-10">
+                                <h4 class="text-white font-bold text-sm truncate">${s.title}</h4>
+                                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">${s.style} • ${s.mood}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="playLocalSong('${s.file_url}', '${s.title}', '${s.style}')" 
+                                    class="w-10 h-10 bg-primary/10 rounded-xl text-primary flex items-center justify-center hover:bg-primary transition-all hover:text-white">
+                                    <span class="material-icons-round text-sm">play_arrow</span>
+                                </button>
+                                <button onclick="deleteLocalSong('${s.file_url}')" 
+                                    class="w-10 h-10 bg-red-400/10 rounded-xl text-red-500 flex items-center justify-center hover:bg-red-500 transition-all hover:text-white">
+                                    <span class="material-icons-round text-sm">delete</span>
+                                </button>
                             </div>
                         </div>
                     </div>
+                `).join('');
 
-                    <div class="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
-                        ${window.getActionButtonsHTML(song, 'local')}
-                        <button onclick="event.stopPropagation(); deleteSong('${song.file_url}')" 
-                                class="w-8 h-8 rounded-full hover:bg-red-500/20 text-slate-500 hover:text-red-500 flex items-center justify-center transition-all touch-manipulation shadow-none">
-                            <span class="material-icons-round text-sm">delete</span>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-
-            } catch (e) {
-                console.error("Load library failed", e);
+                grid.innerHTML = html;
+                if (profileGrid) profileGrid.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading library:", error);
+                grid.innerHTML = '<p class="text-red-400 text-center py-10 font-bold uppercase tracking-widest text-[10px]">Lỗi kết nối Thư viện!</p>';
             }
         }
 
-        async function deleteSong(url) {
+        async function deleteLocalSong(url) {
             if (!confirm("Bạn có chắc chắn muốn xóa bài hát này?")) return;
+            const uid = window.currentUserUid || "guest";
             try {
-                await fetch(`/my-songs/delete?url=${url}`, { method: 'DELETE' });
-                loadMySongs();
-            } catch (e) { alert("Xóa thất bại"); }
+                const response = await fetch(`/my-songs/delete?url=${encodeURIComponent(url)}&uid=${uid}`, { method: 'DELETE' });
+                const res = await response.json();
+                if (res.status === 'success') {
+                    loadMySongs();
+                    if (window.currentSongUrl === url) {
+                        const audio = document.getElementById('main-audio');
+                        if (audio) audio.pause();
+                        togglePlay(false);
+                    }
+                }
+            } catch (e) {
+                console.error("Delete failed:", e);
+            }
         }
 
         // ==========================================
@@ -2955,7 +2942,7 @@
             ctx.fillStyle = (pbFrameColor === '#000000' || pbFrameColor === '#8B0000' || pbFrameColor === '#00008B') ? '#FFFFFF' : '#000000';
             ctx.font = 'bold 48px Arial'; ctx.textAlign = 'center';
             ctx.globalAlpha = 0.5;
-            ctx.fillText('KIETSOUND PRO STUDIO', finalWidth / 2, finalHeight - 80);
+            ctx.fillText('KIETSOUND', finalWidth / 2, finalHeight - 80);
 
             const dataUrl = canvas.toDataURL('image/png');
             addToGallery(dataUrl);
@@ -3000,6 +2987,8 @@
             getAuth,
             onAuthStateChanged,
             signInWithPopup,
+            signInWithRedirect,
+            getRedirectResult,
             GoogleAuthProvider,
             signOut
         } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
@@ -3019,38 +3008,89 @@
         const provider = new GoogleAuthProvider();
 
         const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
         const userDisplay = document.getElementById('user-display');
+        const userEmailDisplay = document.getElementById('user-email-display');
+        const userAvatar = document.getElementById('user-avatar');
+        const userProfile = document.getElementById('user-profile');
+        const userDropdown = document.getElementById('user-dropdown');
 
-        async function handleLoginLogout() {
+        window.toggleUserDropdown = (e) => {
+            if (e) e.stopPropagation();
+            const isOpen = !userDropdown.classList.contains('opacity-0');
+            if (isOpen) {
+                userDropdown.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+            } else {
+                userDropdown.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+            }
+        };
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            if (userDropdown) userDropdown.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+        });
+
+        async function handleLogin() {
             try {
-                if (auth.currentUser) {
-                    await signOut(auth);
-                } else {
-                    await signInWithPopup(auth, provider);
-                }
+                // Try popup first
+                await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("Firebase auth error:", error);
-                alert("Không thể đăng nhập. Vui lòng thử lại.");
+
+                // Silently ignore when user just closes the popup themselves
+                if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                    return;
+                }
+
+                if (error.code === 'auth/popup-blocked') {
+                    alert("Trình duyệt đã chặn Popup. Hệ thống sẽ chuyển sang chế độ Redirect...");
+                    await signInWithRedirect(auth, provider);
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    alert(`LỖI: Tên miền này chưa được cấp phép trong Firebase Console (${error.code}). Vui lòng thêm 127.0.0.1 vào Authorized Domains.`);
+                } else {
+                    alert("Lỗi Đăng Nhập: " + error.code + "\n" + error.message);
+                }
             }
         }
 
-        if (loginBtn) {
-            loginBtn.addEventListener('click', handleLoginLogout);
+        // Handle redirect result on page load
+        getRedirectResult(auth).catch((error) => {
+            if (error.code) console.error("Redirect auth error:", error);
+        });
+
+        async function handleLogout() {
+            try {
+                await signOut(auth);
+                toggleUserDropdown();
+            } catch (error) {
+                console.error("Signout error:", error);
+            }
         }
 
+        if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+        if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+
         onAuthStateChanged(auth, (user) => {
-            if (!userDisplay || !loginBtn) return;
+            const userDisplay = document.getElementById('user-display');
+            const loginBtn = document.getElementById('login-btn');
+            const userProfile = document.getElementById('user-profile');
+            const userEmailDisplay = document.getElementById('user-email-display');
+
+            if (!userDisplay || !loginBtn || !userProfile) return;
 
             if (user) {
                 window.currentUserUid = user.uid;
-                const label = user.email || user.displayName || "User";
-                userDisplay.textContent = `Hi, ${label}`;
-                loginBtn.textContent = "LOGOUT";
-                loginBtn.classList.remove("bg-white/10");
-                loginBtn.classList.add("bg-primary", "text-white");
+
+                loginBtn.classList.add('hidden');
+                userProfile.classList.remove('hidden');
+
+                // Sync everything including avatar via centralized function
+                loadUserProfile();
+
                 loadFavorites();
                 loadPlaylists();
                 loadFilmHistory();
+                loadMySongs();
             } else {
                 window.currentUserUid = null;
                 myFavorites = [];
@@ -3058,12 +3098,86 @@
                 filmHistory = [];
                 updateAllFavIcons();
                 renderFilmHistory();
-                userDisplay.textContent = "Guest";
-                loginBtn.textContent = "LOGIN";
-                loginBtn.classList.add("bg-white/10");
-                loginBtn.classList.remove("bg-primary");
+
+                if (userDisplay) userDisplay.textContent = "Guest";
+                loginBtn.classList.remove('hidden');
+                userProfile.classList.add('hidden');
+
+                loadMySongs();
             }
         });
+
+        // --- PROFILE VIEW LOGIC ---
+        window.loadUserProfile = () => {
+            const uid = window.currentUserUid;
+            const user = auth.currentUser;
+            if (!uid || !user) return;
+
+            const nameEl = document.getElementById('profile-view-name');
+            const emailEl = document.getElementById('profile-view-email');
+            const avatarEl = document.getElementById('profile-view-avatar');
+            const inName = document.getElementById('profile-input-name');
+            const inDob = document.getElementById('profile-input-dob');
+            const inEmail = document.getElementById('profile-input-email');
+
+            const savedData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+
+            const displayName = savedData.name || user.displayName || "User Name";
+            const displayEmail = user.email || "guest@kietsound.com";
+
+            // PRIORITY: LocalStorage (Custom) > user.photoURL (Default Provider) > Default UI Icon
+            const defaultIcon = "https://i.pravatar.cc/150?u=" + user.uid;
+            const displayAvatar = savedData.avatar || user.photoURL || defaultIcon;
+
+            if (nameEl) nameEl.textContent = displayName;
+            if (emailEl) emailEl.textContent = displayEmail;
+            if (avatarEl) avatarEl.src = displayAvatar;
+
+            if (inName) inName.value = displayName;
+            if (inEmail) inEmail.value = displayEmail;
+            if (inDob) inDob.value = savedData.dob || "";
+
+            // Sync main nav elements
+            const mainName = document.getElementById('user-display');
+            const mainAvatar = document.getElementById('user-avatar');
+            if (mainName) mainName.textContent = displayName;
+            if (mainAvatar) mainAvatar.src = displayAvatar;
+        };
+
+        window.saveUserProfile = () => {
+            const uid = window.currentUserUid;
+            if (!uid) return;
+
+            const name = document.getElementById('profile-input-name').value.trim();
+            const dob = document.getElementById('profile-input-dob').value;
+
+            const existingData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+            const newData = {
+                ...existingData,
+                name: name || auth.currentUser.displayName,
+                dob: dob
+            };
+
+            localStorage.setItem(`profile_${uid}`, JSON.stringify(newData));
+            loadUserProfile();
+            alert("Đã lưu thông tin cá nhân! ✨");
+        };
+
+        window.handleAvatarUpload = (event) => {
+            const file = event.target.files[0];
+            if (!file || !window.currentUserUid) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64 = e.target.result;
+                const uid = window.currentUserUid;
+                const existingData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+                existingData.avatar = base64;
+                localStorage.setItem(`profile_${uid}`, JSON.stringify(existingData));
+                loadUserProfile();
+            };
+            reader.readAsDataURL(file);
+        };
     </script>
     <script>
         if ('serviceWorker' in navigator) {

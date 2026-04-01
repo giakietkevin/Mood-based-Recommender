@@ -563,17 +563,28 @@ def get_or_download_beat(style):
 
 # --- 4. DATABASE HELPERS ---
 def load_songs_db():
-    if not os.path.exists(SONGS_DB_FILE): return []
-    with open(SONGS_DB_FILE, "r", encoding="utf-8") as f: return json.load(f)
+    if not os.path.exists(SONGS_DB_FILE): return {}
+    try:
+        with open(SONGS_DB_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, dict) else {}
+    except: return {}
 
-def save_song_to_db(song_data):
-    songs = load_songs_db()
-    songs.insert(0, song_data)
-    with open(SONGS_DB_FILE, "w", encoding="utf-8") as f: json.dump(songs, f, ensure_ascii=False, indent=2)
+def save_song_to_db(uid, song_data):
+    if not uid: return
+    db = load_songs_db()
+    if uid not in db: db[uid] = []
+    db[uid].insert(0, song_data)
+    with open(SONGS_DB_FILE, "w", encoding="utf-8") as f:
+        json.dump(db, f, ensure_ascii=False, indent=2)
 
-def delete_song_from_db(file_path):
-    songs = [s for s in load_songs_db() if s['file_url'] != file_path]
-    with open(SONGS_DB_FILE, "w", encoding="utf-8") as f: json.dump(songs, f, ensure_ascii=False, indent=2)
+def delete_song_from_db(uid, file_url):
+    if not uid: return
+    db = load_songs_db()
+    if uid in db:
+        db[uid] = [s for s in db[uid] if s['file_url'] != file_url]
+        with open(SONGS_DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(db, f, ensure_ascii=False, indent=2)
 
 # --- 5. AUDIO ENGINE (XỬ LÝ ÂM THANH CHUYÊN NGHIỆP) ---
 
@@ -721,17 +732,22 @@ async def serve_service_worker():
 
 
 @app.get("/my-songs")
-async def get_my_songs(): return load_songs_db()
+async def get_my_songs(uid: str = Query(None)):
+    if not uid: return [] # Return empty for guest if not specified, or we could return 'guest' key
+    db = load_songs_db()
+    return db.get(uid, [])
 
 @app.delete("/my-songs/delete")
-async def delete_song(url: str = Query(...)):
+async def delete_song(url: str = Query(...), uid: str = Query(...)):
+    if not uid: return {"status": "error", "message": "UID required"}
     try:
         fn = url.split("/")[-1]
         path = os.path.join("generated_music", fn)
         if os.path.exists(path): os.remove(path)
-        delete_song_from_db(url)
+        delete_song_from_db(uid, url)
         return {"status": "success"}
-    except: return {"status": "error"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 # --- FAVORITES API ---
 @app.get("/favorites")
@@ -921,7 +937,8 @@ async def recommend(file: UploadFile = File(...), type: str="music", q: str = Qu
 @app.post("/generate-music")
 async def generate_music(
     lyrics: str = Form(...), style: str = Form(...), mood: str = Form(...),
-    voice: str = Form(...), tempo: str = Form(...), title: str = Form(...)
+    voice: str = Form(...), tempo: str = Form(...), title: str = Form(...),
+    uid: str = Form(None)
 ):
     """
     NÂNG CẤP: Studio-grade music generation với AI-powered mixing
@@ -1219,7 +1236,7 @@ async def generate_music(
     if peak_final > 0:
         y_master = y_master * (0.94 / peak_final)
     
-    # Save mastered audio
+    # Save mastered audio to temp wav
     sf.write(master_wav_path, y_master, sr_master)
     
     # Convert to MP3 with high quality
