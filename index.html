@@ -145,7 +145,8 @@
                 <button type="button" onclick="showView('photobooth')" id="nav-photobooth"
                     class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">PHOTOBOOTH</button>
                 <button type="button" onclick="showView('guide')" id="nav-guide"
-                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">GUIDE</button>
+                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">ABOUT
+                    ME</button>
             </div>
         </div>
     </nav>
@@ -681,7 +682,8 @@
             <div id="pb-layout-zone" class="max-w-4xl mx-auto text-center space-y-12 py-10">
                 <div class="space-y-4">
                     <h2 class="text-5xl font-display font-bold text-white uppercase italic tracking-tighter">Choose Your
-                        <span class="text-primary italic">Layout</span></h2>
+                        <span class="text-primary italic">Layout</span>
+                    </h2>
                     <p class="text-slate-400 text-lg">Pick a frame style to start your studio session.</p>
                 </div>
 
@@ -702,7 +704,8 @@
                             4 Shots Vertical</div>
                         <div
                             class="absolute top-4 right-4 text-primary opacity-0 group-[.active]:opacity-100 transition-opacity">
-                            <span class="material-icons-round">check_circle</span></div>
+                            <span class="material-icons-round">check_circle</span>
+                        </div>
                     </button>
                     <!-- Layout G4 -->
                     <button onclick="setPBLayout('g4')"
@@ -720,7 +723,8 @@
                             2x2 Grid</div>
                         <div
                             class="absolute top-4 right-4 text-primary opacity-0 group-[.active]:opacity-100 transition-opacity">
-                            <span class="material-icons-round">check_circle</span></div>
+                            <span class="material-icons-round">check_circle</span>
+                        </div>
                     </button>
                     <!-- Layout H3 -->
                     <button onclick="setPBLayout('h3')"
@@ -737,7 +741,8 @@
                             3 Shots Film</div>
                         <div
                             class="absolute top-4 right-4 text-primary opacity-0 group-[.active]:opacity-100 transition-opacity">
-                            <span class="material-icons-round">check_circle</span></div>
+                            <span class="material-icons-round">check_circle</span>
+                        </div>
                     </button>
                     <!-- Layout F1 -->
                     <button onclick="setPBLayout('f1')"
@@ -752,7 +757,8 @@
                             Single Portrait</div>
                         <div
                             class="absolute top-4 right-4 text-primary opacity-0 group-[.active]:opacity-100 transition-opacity">
-                            <span class="material-icons-round">check_circle</span></div>
+                            <span class="material-icons-round">check_circle</span>
+                        </div>
                     </button>
                 </div>
 
@@ -775,19 +781,32 @@
                         <canvas id="pb-seg-canvas" class="hidden absolute inset-0 w-full h-full object-cover"></canvas>
                         <canvas id="pb-canvas" class="hidden"></canvas>
 
-                        <div id="pb-flash" class="absolute inset-0 bg-white pointer-events-none opacity-0 z-50"></div>
+                        <div id="pb-flash" class="absolute inset-0 bg-white pointer-events-none opacity-0 z-50 transition-opacity"></div>
                         <div id="pb-countdown"
                             class="absolute inset-0 flex items-center justify-center pointer-events-none z-40 hidden">
                             <span id="pb-countdown-num"
                                 class="text-[15rem] font-display font-bold text-white drop-shadow-[0_0_50px_rgba(255,255,255,0.5)]">3</span>
                         </div>
+                        
+                        <!-- NEW: Progress Indicator -->
+                        <div id="pb-capture-status" class="absolute top-10 left-10 px-6 py-2.5 bg-black/70 backdrop-blur-xl rounded-full border border-white/20 hidden z-30">
+                            <p id="pb-capture-status-text" class="text-[11px] font-bold text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                                <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]"></span>
+                                READY FOR SHOT
+                            </p>
+                        </div>
 
                         <div id="pb-capture-btn-container"
-                            class="absolute bottom-12 inset-x-0 flex justify-center z-30">
-                            <button onclick="startPhotoboothSequence()"
-                                class="p-10 bg-primary text-white rounded-full shadow-[0_0_60px_rgba(59,130,246,0.6)] hover:scale-110 active:scale-95 transition-all group border-4 border-white/20">
+                            class="absolute bottom-12 inset-x-0 flex items-center justify-center gap-6 z-30">
+                            <button id="pb-main-capture-btn" onclick="startPhotoboothSequence()"
+                                class="p-8 bg-primary text-white rounded-full shadow-[0_0_60px_rgba(59,130,246,0.6)] hover:scale-110 active:scale-95 transition-all group border-4 border-white/20">
                                 <span
-                                    class="material-icons-round text-7xl group-hover:rotate-12 transition-transform">photo_camera</span>
+                                    class="material-icons-round text-5xl group-hover:rotate-12 transition-transform">photo_camera</span>
+                            </button>
+                            
+                            <button id="pb-main-next-btn" onclick="goToDesignStudio()"
+                                class="hidden px-10 py-6 bg-green-500 text-white font-bold rounded-[2rem] shadow-[0_20px_50px_rgba(34,197,94,0.4)] hover:scale-110 active:scale-95 transition-all flex items-center gap-3 border-4 border-white/20 uppercase tracking-widest text-lg animate-bounce-slow">
+                                Next to Studio <span class="material-icons-round text-2xl">arrow_forward</span>
                             </button>
                         </div>
                     </div>
@@ -802,22 +821,23 @@
                             <p class="text-slate-400 text-[10px] uppercase tracking-widest font-medium">Chọn một màu nền
                                 trơn (Tùy chọn)</p>
                         </div>
-                        <div class="flex gap-2">
+                        <div id="pb-bg-options" class="flex gap-2.5 overflow-x-auto no-scrollbar py-1">
+                            <!-- NONE Button -->
                             <button onclick="setPBVirtualBG(null)"
-                                class="pb-bg-btn w-10 h-10 rounded-full border-2 border-white/20 active flex items-center justify-center text-white"
-                                data-color="none"><span class="material-icons-round text-sm">block</span></button>
-                            <button onclick="setPBVirtualBG('#8B0000')"
-                                class="pb-bg-btn w-10 h-10 rounded-full border-2 border-white/10 transition-transform"
-                                style="background: #8B0000;" data-color="#8B0000"></button>
-                            <button onclick="setPBVirtualBG('#00008B')"
-                                class="pb-bg-btn w-10 h-10 rounded-full border-2 border-white/10 transition-transform"
-                                style="background: #00008B;" data-color="#00008B"></button>
-                            <button onclick="setPBVirtualBG('#FFFFFF')"
-                                class="pb-bg-btn w-10 h-10 rounded-full border-2 border-white/10 transition-transform"
-                                style="background: #FFFFFF;" data-color="#FFFFFF"></button>
-                            <button onclick="setPBVirtualBG('#F5F5DC')"
-                                class="pb-bg-btn w-10 h-10 rounded-full border-2 border-white/10 transition-transform"
-                                style="background: #F5F5DC;" data-color="#F5F5DC"></button>
+                                class="pb-bg-btn w-12 h-12 rounded-full border-2 border-white/20 active flex flex-shrink-0 items-center justify-center text-white bg-black/40 hover:scale-110 transition-all shadow-lg"
+                                data-background="none" title="No Background">
+                                <span class="material-icons-round text-sm">block</span>
+                            </button>
+                            
+                            <!-- UPLOAD Button -->
+                            <button onclick="document.getElementById('pb-bg-upload').click()"
+                                class="pb-bg-btn w-12 h-12 rounded-full border-2 border-white/20 flex flex-shrink-0 items-center justify-center text-primary bg-primary/10 hover:scale-110 transition-all shadow-lg border-dashed"
+                                title="Upload Custom Background">
+                                <span class="material-icons-round text-sm">cloud_upload</span>
+                            </button>
+                            <input type="file" id="pb-bg-upload" accept="image/*" class="hidden" onchange="handlePBBgUpload(this)">
+
+                            <!-- Presets will be injected by JS -->
                         </div>
                     </div>
                 </div>
@@ -957,341 +977,195 @@
             </div>
         </div>
 
-        <!-- GUIDE VIEW -->
-        <div id="view-guide" class="hidden max-w-5xl mx-auto animate-fade-in">
-            <div class="glass-card rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 md:p-12 border border-white/10">
-                <!-- Header -->
-                <div class="text-center mb-8 sm:mb-10">
-                    <div
-                        class="inline-flex items-center gap-2 sm:gap-3 bg-primary/10 px-4 sm:px-5 py-2 rounded-full border border-primary/20 mb-4 max-w-full">
-                        <span
-                            class="material-icons-round text-primary text-xl sm:text-2xl flex-shrink-0">menu_book</span>
-                        <span class="text-primary font-bold text-xs sm:text-sm uppercase tracking-wide truncate">User
-                            Guide</span>
-                    </div>
-                    <h1
-                        class="text-2xl sm:text-4xl md:text-5xl font-display font-bold text-white mb-3 leading-tight px-1">
-                        Hướng Dẫn Sử Dụng</h1>
-                    <p class="text-slate-400 text-base sm:text-lg">KietSound Pro - AI Music Studio</p>
-                </div>
+        <!-- ABOUT ME VIEW (APPROVED REDESIGN) -->
+        <div id="view-guide" class="hidden max-w-6xl mx-auto animate-fade-in py-12 space-y-24">
 
-                <!-- Feature Cards -->
-                <div class="space-y-8">
-
-                    <!-- Feature 1: Mood Detection -->
-                    <div
-                        class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
-                        <div class="flex items-start gap-4">
+            <!-- SECTION 1: HERO -->
+            <div
+                class="glass-card rounded-[4rem] p-10 md:p-16 border border-white/10 shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-32 -right-32 w-80 h-80 bg-primary/20 blur-[120px] rounded-full"></div>
+                <div class="grid lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-7 space-y-8 text-left">
+                        <div class="space-y-4">
                             <div
-                                class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary to-orange-600 rounded-xl flex items-center justify-center">
-                                <span class="material-icons-round text-white text-2xl">mood</span>
+                                class="inline-flex items-center gap-2 bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                                <span class="text-primary font-bold text-[10px] uppercase tracking-[0.2em]">Developer
+                                    Profile</span>
                             </div>
-                            <div class="flex-1">
-                                <h3 class="text-xl font-bold text-white mb-2">🎭 1. Nhận Diện Cảm Xúc (Mood Detection)
-                                </h3>
-                                <p class="text-slate-400 mb-4">Tự động phát hiện cảm xúc qua khuôn mặt và gợi ý nhạc phù
-                                    hợp.</p>
+                            <h1
+                                class="text-5xl md:text-7xl font-display font-bold text-white tracking-tighter leading-[0.9]">
+                                Võ Phạm Gia<br><span class="text-primary italic">Kiệt</span>
+                            </h1>
+                            <p class="text-slate-400 text-lg md:text-xl font-medium max-w-xl leading-relaxed">
+                                Chào bạn! Mình là Kiệt, sinh viên năm 4 tại Đại học Giao thông Vận tải TP.HCM (UTH).
+                                Trang web này mình tự "mò mẫm"
+                                tạo ra để chia sẻ mấy công cụ "nhỏ mà có võ" giúp các bạn giải trí sau những giờ học
+                                căng thẳng. Hoàn toàn miễn phí,
+                                cứ "xài xả láng" nhé!</p>
+                        </div>
+                        <div class="flex flex-wrap gap-4 pt-4">
 
-                                <div class="space-y-3 text-sm">
-                                    <div class="flex items-start gap-2">
-                                        <span
-                                            class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
-                                        <div>
-                                            <p class="text-white font-semibold">Bước 1: Chụp ảnh khuôn mặt</p>
-                                            <p class="text-slate-400">Click <strong>"Scan My Mood"</strong> hoặc upload
-                                                ảnh từ máy</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-start gap-2">
-                                        <span
-                                            class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
-                                        <div>
-                                            <p class="text-white font-semibold">Bước 2: AI phân tích cảm xúc</p>
-                                            <p class="text-slate-400">Hệ thống nhận diện: Joy, Sadness, Anger, Fear,
-                                                Surprise, Calm, Romantic...</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-start gap-2">
-                                        <span
-                                            class="material-icons-round text-primary text-lg mt-0.5">check_circle</span>
-                                        <div>
-                                            <p class="text-white font-semibold">Bước 3: Nhận gợi ý nhạc/podcast</p>
-                                            <p class="text-slate-400">5 đề xuất YouTube phù hợp với tâm trạng hiện tại
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mt-4 p-3 bg-primary/10 rounded-xl border border-primary/20">
-                                    <p class="text-xs text-primary font-bold mb-1">💡 Pro Tips:</p>
-                                    <ul class="text-xs text-slate-300 space-y-1">
-                                        <li>• Đảm bảo ánh sáng tốt để AI nhận diện chính xác</li>
-                                        <li>• Khuôn mặt nhìn thẳng camera, tránh che khuất</li>
-                                        <li>• Có thể chọn "Music" hoặc "Podcast" trước khi scan</li>
-                                    </ul>
-                                </div>
-                            </div>
                         </div>
                     </div>
-
-                    <!-- Feature 2: AI Music Generator -->
-                    <div
-                        class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
-                        <div class="flex items-start gap-4">
+                    <div class="lg:col-span-5 flex justify-center lg:justify-end">
+                        <div class="relative group">
                             <div
-                                class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                                <span class="material-icons-round text-white text-2xl">auto_fix_high</span>
+                                class="w-64 h-64 md:w-80 md:h-80 rounded-[4rem] overflow-hidden border-8 border-white/5 shadow-2xl transition-all duration-700 group-hover:scale-[1.02] group-hover:border-primary/20 bg-black">
+                                <img src="https://raw.githubusercontent.com/giakietkevin/Mood-based-Recommender/main/assets/img/kevin.jpg"
+                                    class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                                    alt="Võ Phạm Gia Kiệt">
                             </div>
-                            <div class="flex-1">
-                                <h3 class="text-xl font-bold text-white mb-2">🎹 2. Tạo Nhạc AI (Text-to-Music)</h3>
-                                <p class="text-slate-400 mb-4">Biến lời bài hát thành bài hát hoàn chỉnh với giọng hát
-                                    AI chuyên nghiệp!</p>
-
-                                <div class="space-y-3 text-sm">
-                                    <div class="flex items-start gap-2">
-                                        <span class="material-icons-round text-purple-400 text-lg mt-0.5">lyrics</span>
-                                        <div>
-                                            <p class="text-white font-semibold">Nhập Lời Bài Hát</p>
-                                            <p class="text-slate-400"><strong>Mỗi dòng = 1 câu hát.</strong> Xuống dòng
-                                                để AI bắt nhịp tốt hơn.</p>
-                                            <div
-                                                class="mt-2 p-2 bg-black/30 rounded-lg font-mono text-xs text-slate-300">
-                                                Ví dụ:<br>
-                                                Hôm nay trời đẹp quá<br>
-                                                Em có muốn đi chơi không?<br>
-                                                Chúng ta cùng nhau đi dạo<br>
-                                                Dưới ánh hoàng hôn
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-start gap-2">
-                                        <span class="material-icons-round text-purple-400 text-lg mt-0.5">palette</span>
-                                        <div>
-                                            <p class="text-white font-semibold">Chọn Style (30+ thể loại)</p>
-                                            <p class="text-slate-400 mb-2">Pop, Rock, Rap, EDM, Ballad, Jazz, Blues,
-                                                R&B, Metal, Punk...</p>
-                                            <div class="flex flex-wrap gap-1">
-                                                <span
-                                                    class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Pop</span>
-                                                <span
-                                                    class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Ballad</span>
-                                                <span
-                                                    class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Rap</span>
-                                                <span
-                                                    class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">EDM</span>
-                                                <span
-                                                    class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] rounded">Jazz</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-start gap-2">
-                                        <span
-                                            class="material-icons-round text-purple-400 text-lg mt-0.5">sentiment_satisfied</span>
-                                        <div>
-                                            <p class="text-white font-semibold">Chọn Mood (10+ tâm trạng)</p>
-                                            <p class="text-slate-400">Joy, Sadness, Romantic, Calmness, Anger,
-                                                Triumph...</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-start gap-2">
-                                        <span
-                                            class="material-icons-round text-purple-400 text-lg mt-0.5">record_voice_over</span>
-                                        <div>
-                                            <p class="text-white font-semibold">Chọn Giọng Hát (12 giọng)</p>
-                                            <p class="text-slate-400">Male/Female • North/Central/South • Young/Mature
-                                            </p>
-                                            <p class="text-green-400 text-xs mt-1">🎤 Sử dụng RVC AI - Giọng hát chân
-                                                thực như người thật!</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-start gap-2">
-                                        <span class="material-icons-round text-purple-400 text-lg mt-0.5">speed</span>
-                                        <div>
-                                            <p class="text-white font-semibold">Chọn Tempo (Fast/Medium/Slow)</p>
-                                            <p class="text-slate-400">Fast: EDM, Rap • Medium: Pop • Slow: Ballad</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mt-4 p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                                    <p class="text-xs text-purple-400 font-bold mb-2">💡 Pro Tips - Để Có Bài Hát Hay
-                                        Nhất:</p>
-                                    <ul class="text-xs text-slate-300 space-y-1.5">
-                                        <li><strong>✓ Rap/Hip-Hop:</strong> Câu ngắn, nhiều chữ → chọn Fast/Medium tempo
-                                        </li>
-                                        <li><strong>✓ Ballad/Soul:</strong> Câu dài, ít chữ → chọn Slow tempo</li>
-                                        <li><strong>✓ Hook/Chorus:</strong> 2-3 dòng cuối sẽ tự động lặp lại làm điệp
-                                            khúc</li>
-                                        <li><strong>✓ Dấu câu:</strong> Dùng dấu chấm (.) để tạo pauses tự nhiên</li>
-                                        <li><strong>✓ Độ dài:</strong> 4-8 câu là tối ưu (quá dài → bài hát sẽ lâu)</li>
-                                        <li><strong>✓ Giọng hát:</strong> Chọn giọng phù hợp với style (Male cho Rock,
-                                            Female cho Pop)</li>
-                                    </ul>
-                                </div>
+                            <div
+                                class="absolute -bottom-6 -left-6 w-20 h-20 bg-primary/10 backdrop-blur-xl border border-primary/20 rounded-3xl flex items-center justify-center animate-bounce-slow">
+                                <span class="material-icons-round text-primary text-3xl">verified</span>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Feature 3: Music Library -->
-                    <div
-                        class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
-                        <div class="flex items-start gap-4">
-                            <div
-                                class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center">
-                                <span class="material-icons-round text-white text-2xl">library_music</span>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-xl font-bold text-white mb-2">📚 3. Thư Viện Nhạc (My Library)</h3>
-                                <p class="text-slate-400 mb-4">Quản lý tất cả bài hát AI đã tạo.</p>
-
-                                <div class="space-y-3 text-sm">
-                                    <div class="flex items-start gap-2">
-                                        <span
-                                            class="material-icons-round text-blue-400 text-lg mt-0.5">play_circle</span>
-                                        <div>
-                                            <p class="text-white font-semibold">Phát nhạc</p>
-                                            <p class="text-slate-400">Click bài hát để phát ngay • Mini player xuất hiện
-                                                ở bottom</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-start gap-2">
-                                        <span class="material-icons-round text-blue-400 text-lg mt-0.5">download</span>
-                                        <div>
-                                            <p class="text-white font-semibold">Tải về</p>
-                                            <p class="text-slate-400">Format: MP3 320kbps • Chất lượng studio</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-start gap-2">
-                                        <span class="material-icons-round text-blue-400 text-lg mt-0.5">delete</span>
-                                        <div>
-                                            <p class="text-white font-semibold">Xóa bài hát</p>
-                                            <p class="text-slate-400">Click icon thùng rác • Xác nhận để xóa vĩnh viễn
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Feature 4: Audio Quality -->
-                    <div
-                        class="glass-card rounded-2xl p-6 border border-white/5 hover:border-primary/20 transition-all">
-                        <div class="flex items-start gap-4">
-                            <div
-                                class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
-                                <span class="material-icons-round text-white text-2xl">high_quality</span>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-xl font-bold text-white mb-2">🎚️ 4. Chất Lượng Âm Thanh</h3>
-                                <p class="text-slate-400 mb-4">Studio-grade audio processing - Gần như chuyên nghiệp!
-                                </p>
-
-                                <div class="grid md:grid-cols-2 gap-4 text-sm">
-                                    <div class="space-y-2">
-                                        <p class="text-white font-semibold">Vocal Processing:</p>
-                                        <ul class="text-slate-400 space-y-1 text-xs">
-                                            <li>• RVC AI singing voice (giọng hát thật)</li>
-                                            <li>• Pitch contouring (cao trầm tự nhiên)</li>
-                                            <li>• Crossfade transitions (mượt mà)</li>
-                                            <li>• Vibrato effects (Ballad, Soul)</li>
-                                        </ul>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <p class="text-white font-semibold">Mixing & Mastering:</p>
-                                        <ul class="text-slate-400 space-y-1 text-xs">
-                                            <li>• Auto-ducking (beat tự động nhường vocal)</li>
-                                            <li>• Multi-band compression</li>
-                                            <li>• Style-specific EQ</li>
-                                            <li>• Professional limiter (-0.5dB)</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- FAQ Section -->
-                <div class="mt-12 pt-10 border-t border-white/10">
-                    <h2 class="text-2xl font-bold text-white mb-6 text-center">❓ Câu Hỏi Thường Gặp</h2>
-
-                    <div class="space-y-4">
-                        <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
-                            <summary class="font-semibold text-white flex items-center justify-between">
-                                <span>Tốn bao lâu để tạo 1 bài hát?</span>
-                                <span
-                                    class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
-                            </summary>
-                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
-                                Thời gian: <strong>20-60 giây</strong> tùy độ dài lyrics. Bài 4-6 câu ~30s. Bài 8-10 câu
-                                ~60s.
-                            </p>
-                        </details>
-
-                        <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
-                            <summary class="font-semibold text-white flex items-center justify-between">
-                                <span>Giọng hát có thật không?</span>
-                                <span
-                                    class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
-                            </summary>
-                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
-                                Giọng hát được tạo bằng <strong>RVC AI</strong> (Retrieval-based Voice Conversion) -
-                                công nghệ deep learning tiên tiến nhất hiện nay.
-                                Chất lượng gần như người thật (~95% studio recording).
-                            </p>
-                        </details>
-
-                        <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
-                            <summary class="font-semibold text-white flex items-center justify-between">
-                                <span>Có thể tạo bài hát dài không?</span>
-                                <span
-                                    class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
-                            </summary>
-                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
-                                Có! Nhưng nên giới hạn <strong>8-12 câu</strong> cho tối ưu. Quá dài → mất nhiều thời
-                                gian xử lý và có thể ảnh hưởng chất lượng.
-                            </p>
-                        </details>
-
-                        <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
-                            <summary class="font-semibold text-white flex items-center justify-between">
-                                <span>Tại sao bài hát bị ngắt quãng?</span>
-                                <span
-                                    class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
-                            </summary>
-                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
-                                Đã được fix! Hiện tại có <strong>crossfade 300ms</strong> giữa các câu + spacing phù hợp
-                                với từng style.
-                                Nếu vẫn gặp vấn đề, thử chọn style Ballad/Soul (spacing dài hơn).
-                            </p>
-                        </details>
-
-                        <details class="glass-card rounded-xl p-4 border border-white/5 cursor-pointer group">
-                            <summary class="font-semibold text-white flex items-center justify-between">
-                                <span>Có tính phí không?</span>
-                                <span
-                                    class="material-icons-round text-primary group-open:rotate-180 transition-transform">expand_more</span>
-                            </summary>
-                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
-                                <strong>100% MIỄN PHÍ!</strong> Không giới hạn số lượng bài hát. Không watermark. Tải về
-                                MP3 320kbps full quality.
-                            </p>
-                        </details>
                     </div>
                 </div>
+            </div>
 
-                <!-- Back Button -->
-                <div class="mt-10 text-center">
-                    <button onclick="showView('dashboard')"
-                        class="px-8 py-3 bg-primary hover:bg-primary/80 text-white font-bold rounded-xl transition-all inline-flex items-center gap-2">
-                        <span class="material-icons-round">arrow_back</span> Quay Về Trang Chủ
-                    </button>
+            <!-- SECTION 2: VISION & MISSION -->
+            <div class="space-y-12">
+                <div class="flex items-center justify-between border-b border-white/5 pb-8">
+                    <h2 class="text-3xl md:text-5xl font-display font-bold text-white uppercase tracking-tighter">Tầm
+                        Nhìn <span class="text-primary">&</span> Sứ Mệnh</h2>
+                    <span
+                        class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] hidden md:block">Strategic
+                        Direction</span>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Tầm Nhìn Card -->
+                    <div
+                        class="glass-card rounded-[3rem] p-10 border border-white/5 hover:border-primary/20 transition-all group relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-8">
+                            <span
+                                class="material-icons-round text-primary/20 text-6xl group-hover:text-primary/40 transition-colors">visibility</span>
+                        </div>
+                        <div class="space-y-6 relative z-10">
+                            <div
+                                class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary border border-primary/20">
+                                <span class="material-icons-round text-2xl">remove_red_eye</span>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white uppercase italic">Quan điểm</h3>
+                            <p class="text-slate-400 text-sm leading-relaxed">Trở thành một "nơi" tổng hợp đủ thứ tiện
+                                ích và trò chơi miễn phí.
+                                Mình muốn ai ai cũng có thể vào đây tìm thấy một niềm vui nho nhỏ, một công cụ hữu ích
+                                mà không bao giờ phải lo về giá cả
+                                hay quảng cáo phiền phức.</p>
+                        </div>
+                    </div>
+                    <!-- Sứ Mệnh Card -->
+                    <div
+                        class="glass-card rounded-[3rem] p-10 border border-white/5 hover:border-primary/20 transition-all group relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-8">
+                            <span
+                                class="material-icons-round text-orange-500/20 text-6xl group-hover:text-orange-500/40 transition-colors">rocket</span>
+                        </div>
+                        <div class="space-y-6 relative z-10">
+                            <div
+                                class="w-14 h-14 bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-500 border border-orange-500/20">
+                                <span class="material-icons-round text-2xl">rocket_launch</span>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white uppercase italic">Sứ Mệnh</h3>
+                            <p class="text-slate-400 text-sm leading-relaxed">Cam kết mang lại giá trị thực tế thông qua
+                                các giải pháp phần mềm ổn định, dễ mở rộng và có hiệu suất cao.Mình không hứa giải quyết
+                                hết
+                                lo toan cuộc sống, nhưng hứa sẽ nỗ lực tạo ra những trải nghiệm mượt mà, "ngon-bổ-rẻ"
+                                (mà thực ra là rẻ bèo, bằng 0 VND) cho tất cả các bạn</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: SUPPORT -->
+            <div
+                class="glass-card rounded-[4rem] p-12 md:p-20 border border-white/10 bg-black/40 text-center space-y-12 relative group overflow-hidden">
+                <div
+                    class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                </div>
+                <div class="space-y-4 max-w-2xl mx-auto">
+                    <h2 class="text-3xl md:text-4xl font-display font-bold text-white uppercase italic tracking-tight">
+                        Support My Journey</h2>
+                    <p class="text-slate-400 text-sm md:text-base leading-relaxed">Nếu bạn thấy những chia sẻ và sản
+                        phẩm của mình hữu ích, một tách cà phê sẽ là nguồn động lực tuyệt vời để mình tiếp tục sáng tạo.
+                    </p>
+                </div>
+                <div
+                    class="relative w-56 h-56 md:w-64 md:h-64 mx-auto rounded-[3.5rem] overflow-hidden border-4 border-white/10 shadow-2xl transition-all duration-700 group-hover:scale-105 group-hover:border-primary/40 bg-white p-2">
+                    <img src="https://raw.githubusercontent.com/giakietkevin/Mood-based-Recommender/main/assets/img/qr.jpg" class="w-full h-full object-contain rounded-[2.5rem]"
+                        alt="Support QR Code">
+                </div>
+                <div class="flex flex-center justify-center gap-4">
+                    <div
+                        class="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">
+                        MoMo</div>
+                    <div
+                        class="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">
+                        Bank Transfer</div>
+                </div>
+            </div>
+
+            <!-- SECTION 4: CONTACT -->
+            <div class="space-y-12">
+                <div class="text-center">
+                    <p class="text-primary font-bold text-[10px] uppercase tracking-[0.4em] mb-4">Get In Touch</p>
+                    <h2
+                        class="text-4xl md:text-6xl font-display font-bold text-white uppercase italic tracking-tighter leading-none">
+                        Liên Hệ Hợp Tác</h2>
+                </div>
+                <div class="grid sm:grid-cols-3 gap-6">
+                    <!-- Email -->
+                    <div
+                        class="glass-card rounded-3xl p-8 border border-white/5 hover:border-primary/30 transition-all text-center space-y-4 group">
+                        <div
+                            class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary border border-primary/20 mx-auto group-hover:scale-110 transition-transform">
+                            <span class="material-icons-round">alternate_email</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h4 class="text-slate-500 font-bold text-[8px] uppercase tracking-widest">Email Me</h4>
+                            <p class="text-white font-bold text-sm">giakiethcb@gmail.com</p>
+                        </div>
+                    </div>
+                    <!-- Facebook -->
+                    <div
+                        class="glass-card rounded-3xl p-8 border border-white/5 hover:border-blue-400/30 transition-all text-center space-y-4 group">
+                        <div
+                            class="w-14 h-14 bg-blue-400/10 rounded-2xl flex items-center justify-center text-blue-400 border border-blue-400/20 mx-auto group-hover:scale-110 transition-transform">
+                            <span class="material-icons-round">send</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h4 class="text-slate-500 font-bold text-[8px] uppercase tracking-widest">Facebook</h4>
+                            <p class="text-white font-bold text-sm">Võ Phạm Gia Kiệt</p>
+                        </div>
+                    </div>
+                    <!-- Phone Number -->
+                    <div
+                        class="glass-card rounded-3xl p-8 border border-white/5 hover:border-white/30 transition-all text-center space-y-4 group">
+                        <div
+                            class="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10 mx-auto group-hover:scale-110 transition-transform">
+                            <span class="material-icons-round">phone</span>
+                        </div>
+                        <div class="space-y-1">
+                            <h4 class="text-slate-500 font-bold text-[8px] uppercase tracking-widest">Phone Number</h4>
+                            <p class="text-white font-bold text-sm">0905884303</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer: Final Actions -->
+            <div class="pt-12 border-t border-white/5 text-center flex flex-col items-center gap-6">
+                <button onclick="showView('dashboard')"
+                    class="flex items-center gap-3 px-10 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl border border-white/10 transition-all font-bold text-[10px] uppercase tracking-[0.3em]">
+                    <span class="material-icons-round text-sm">arrow_back</span> Quay Lại Trang Chủ
+                </button>
+                <p class="text-slate-600 font-bold text-[9px] uppercase tracking-widest">© 2024 Editorial Excellence
+                    Portfolio. All rights reserved.</p>
+                <div class="flex gap-4 text-slate-600 font-bold text-[8px] uppercase tracking-widest mt-2">
+                    <span class="hover:text-primary transition-colors cursor-pointer">Privacy</span>
+                    <span class="hover:text-primary transition-colors cursor-pointer">Terms</span>
+                    <span class="hover:text-primary transition-colors cursor-pointer">LinkedIn</span>
                 </div>
             </div>
         </div>
@@ -1491,6 +1365,7 @@
             renderChips('tempo-options', OPTS.tempos, 'tempo');
 
             loadMySongs(); // Library data
+            initPBBackdrops(); // Initialize Photobooth backgrounds
             // (initCamera will be called by showView('dashboard'))
 
             const searchInput = document.getElementById('search-input');
@@ -2334,13 +2209,14 @@
             const placeholder = document.getElementById('film-pl-placeholder');
             const output = document.getElementById('film-output');
 
-            placeholder.innerHTML = `<span class="material-icons-round text-5xl mb-2 opacity-50 animate-spin">sync</span><p class="text-sm font-bold">Đang tải data server...</p>`;
+            placeholder.innerHTML = `<span class="material-icons-round text-5xl mb-2 opacity-50 animate-spin text-primary">sync</span><p class="text-sm font-bold">Đang kết nối server phim...</p><p class="text-[10px] text-slate-400 mt-2">Server OPhim có thể phản hồi chậm, vui lòng đợi...</p>`;
             placeholder.classList.remove('hidden');
             output.classList.add('hidden');
             output.innerHTML = '';
 
-            // Scroll view
-            document.getElementById('view-film-station').scrollIntoView({ behavior: 'smooth' });
+            // Fix: Use correct ID for scrolling
+            const filmView = document.getElementById('view-film');
+            if (filmView) filmView.scrollIntoView({ behavior: 'smooth' });
 
             try {
                 const res = await fetch(`https://ophim1.com/phim/${slug}`);
@@ -2661,7 +2537,17 @@
         let pbActiveStickers = [];
         let pbFrameColor = '#FFFFFF';
         let pbSelectedFilter = 'none';
-        let pbVirtualBGColor = null;
+        let pbVirtualBG = null; // Can be an Image object or null
+        let pbVirtualBGSrc = null; // Store the src for UI active state
+        let pbBgImagesCache = new Map(); // Cache for preloaded images
+        const pbPresets = [
+            { id: 'studio', url: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?q=80&w=640&auto=format&fit=crop' },
+            { id: 'neon', url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=640&auto=format&fit=crop' },
+            { id: 'forest', url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=640&auto=format&fit=crop' },
+            { id: 'minimal', url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=640&auto=format&fit=crop' },
+            { id: 'galaxy', url: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=640&auto=format&fit=crop' },
+            { id: 'sunset', url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=640&auto=format&fit=crop' }
+        ];
         let selfieSegmentation = null;
         let pbStream = null;
         let pbHeldSticker = null;
@@ -2698,12 +2584,33 @@
 
             const video = document.getElementById('pb-video');
             const step = async () => {
-                if (pbStream && pbVirtualBGColor) {
+                if (pbStream && pbVirtualBG) {
                     await selfieSegmentation.send({ image: video });
                 }
                 requestAnimationFrame(step);
             };
             requestAnimationFrame(step);
+        }
+
+        function drawCoverImage(ctx, img, canvasW, canvasH, targetX = 0, targetY = 0) {
+            const imgRatio = img.width / img.height;
+            const canvasRatio = canvasW / canvasH;
+            let drawW, drawH, drawX, drawY;
+
+            if (imgRatio > canvasRatio) {
+                // Image is wider than canvas -> fill height, crop sides
+                drawH = canvasH;
+                drawW = canvasH * imgRatio;
+                drawX = targetX + (canvasW - drawW) / 2;
+                drawY = targetY;
+            } else {
+                // Image is taller than canvas -> fill width, crop top/bottom
+                drawW = canvasW;
+                drawH = canvasW / imgRatio;
+                drawX = targetX;
+                drawY = targetY + (canvasH - drawH) / 2;
+            }
+            ctx.drawImage(img, drawX, drawY, drawW, drawH);
         }
 
         function onSegmentationResults(results) {
@@ -2718,23 +2625,71 @@
             ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
 
             ctx.globalCompositeOperation = 'source-out';
-            ctx.fillStyle = pbVirtualBGColor;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (pbVirtualBG && pbVirtualBG.complete) {
+                drawCoverImage(ctx, pbVirtualBG, canvas.width, canvas.height);
+            }
 
             ctx.globalCompositeOperation = 'destination-atop';
             ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
             ctx.restore();
         }
 
-        window.setPBVirtualBG = (color) => {
-            pbVirtualBGColor = color;
+        window.initPBBackdrops = () => {
+            const container = document.getElementById('pb-bg-options');
+            if (!container) return;
+
+            pbPresets.forEach(preset => {
+                // Preload
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.src = preset.url;
+                pbBgImagesCache.set(preset.url, img);
+
+                // Add to UI
+                const btn = document.createElement('button');
+                btn.className = "pb-bg-btn w-12 h-12 rounded-full border-2 border-white/10 flex-shrink-0 overflow-hidden hover:scale-110 transition-all shadow-lg";
+                btn.dataset.background = preset.url;
+                btn.onclick = () => setPBVirtualBG(preset.url);
+                btn.innerHTML = `<img src="${preset.url}" class="w-full h-full object-cover">`;
+                container.appendChild(btn);
+            });
+        };
+
+        window.handlePBBgUpload = (input) => {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const src = e.target.result;
+                const img = new Image();
+                img.onload = () => {
+                    pbBgImagesCache.set('custom', img);
+                    setPBVirtualBG('custom');
+                };
+                img.src = src;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.setPBVirtualBG = (src) => {
+            pbVirtualBGSrc = src;
+            if (!src) {
+                pbVirtualBG = null;
+            } else if (src === 'custom') {
+                pbVirtualBG = pbBgImagesCache.get('custom');
+            } else {
+                pbVirtualBG = pbBgImagesCache.get(src);
+            }
+
             const segCanvas = document.getElementById('pb-seg-canvas');
             if (segCanvas) {
-                if (color) segCanvas.classList.remove('hidden');
+                if (pbVirtualBG) segCanvas.classList.remove('hidden');
                 else segCanvas.classList.add('hidden');
             }
+
             document.querySelectorAll('.pb-bg-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.color === (color || 'none'));
+                btn.classList.toggle('active', btn.dataset.background === (src || 'none'));
             });
         };
 
@@ -2783,24 +2738,34 @@
             if (!video || !canvas) return;
             const ctx = canvas.getContext('2d');
 
+            const statusContainer = document.getElementById('pb-capture-status');
+            const statusText = document.getElementById('pb-capture-status-text');
+
+            if (statusContainer && statusText) {
+                statusContainer.classList.remove('hidden');
+                statusText.innerText = `READY FOR SHOT ${index + 1}/${pbCapturedPhotos.length}`;
+            }
+
             if (countdownEl && countdownNum) {
                 countdownEl.classList.remove('hidden');
                 for (let s = 3; s > 0; s--) {
                     countdownNum.innerText = s;
-                    await new Promise(r => setTimeout(r, 1000));
+                    await new Promise(r => setTimeout(r, 700)); // Slightly faster countdown
                 }
                 countdownEl.classList.add('hidden');
             }
+
+            if (statusContainer) statusContainer.classList.add('hidden');
 
             if (flash) flash.classList.add('animate-flash');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
 
             // We capture original image, filter is applied in preview/export
-            if (pbVirtualBGColor && segCanvas) {
-                ctx.drawImage(segCanvas, 0, 0);
+            if (pbVirtualBG && segCanvas) {
+                ctx.drawImage(segCanvas, 0, 0, canvas.width, canvas.height);
             } else {
-                ctx.drawImage(video, 0, 0);
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             }
 
             pbCapturedPhotos[index] = canvas.toDataURL('image/png');
@@ -2836,9 +2801,15 @@
 
             const isComplete = pbCapturedPhotos.every(p => p !== null);
             const nextBtn = document.getElementById('pb-next-btn');
+            const mainNextBtn = document.getElementById('pb-main-next-btn');
+
             if (nextBtn) {
                 if (isComplete) nextBtn.classList.remove('hidden');
                 else nextBtn.classList.add('hidden');
+            }
+            if (mainNextBtn) {
+                if (isComplete) mainNextBtn.classList.remove('hidden');
+                else mainNextBtn.classList.add('hidden');
             }
         }
 
@@ -2943,9 +2914,11 @@
                 if (pbSelectedLayout === 'g4') {
                     const gx = padding + (i % 2) * (photoWidth / 2 + gap / 2);
                     const gy = padding + Math.floor(i / 2) * (photoWidth / 2 + gap / 2);
-                    ctx.drawImage(img, gx, gy, photoWidth / 2, photoWidth / 2);
+                    const targetSize = photoWidth / 2;
+                    drawCoverImage(ctx, img, targetSize, targetSize, gx, gy);
                 } else {
-                    ctx.drawImage(img, padding, padding + (i * (photoHeight + gap)), photoWidth, photoHeight);
+                    const targetY = padding + (i * (photoHeight + gap));
+                    drawCoverImage(ctx, img, photoWidth, photoHeight, padding, targetY);
                 }
             }
             ctx.filter = 'none';

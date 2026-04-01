@@ -54,9 +54,17 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 # --- 2. THIẾT LẬP THƯ MỤC ---
-os.makedirs("generated_music", exist_ok=True)
-os.makedirs("beats", exist_ok=True)
-app.mount("/generated_music", StaticFiles(directory="generated_music"), name="generated_music")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.makedirs(os.path.join(BASE_DIR, "generated_music"), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, "beats"), exist_ok=True)
+
+app.mount("/generated_music", StaticFiles(directory=os.path.join(BASE_DIR, "generated_music")), name="generated_music")
+app.mount("/assets", StaticFiles(directory=os.path.join(BASE_DIR, "assets")), name="assets")
+
+@app.get("/")
+async def get_index():
+    return FileResponse(os.path.join(BASE_DIR, "index.html"))
+
 
 SONGS_DB_FILE = "user_songs.json"
 FAVORITES_DB_FILE = "user_favorites.json"
@@ -524,7 +532,7 @@ def get_or_download_beat(style):
     # Tìm file có tên match với normalized style
     # Check both exact match and contains
     beat_files = []
-    for f in os.listdir("beats"):
+    for f in os.listdir(os.path.join("beats")):
         if not f.endswith(".mp3"):
             continue
         # Normalize filename too
