@@ -22,6 +22,18 @@ from fastapi import FastAPI, UploadFile, File, Query, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from typing import List, Dict, Any
+
+try:
+    import g4f
+    import g4f.client
+    G4F_AVAILABLE = True
+    print("[OK] G4F AI Chat available")
+except ImportError:
+    G4F_AVAILABLE = False
+    print("[WARNING] g4f not available, chat feature will be disabled")
+
 from deepface import DeepFace
 from duckduckgo_search import DDGS
 import edge_tts 
@@ -1266,6 +1278,64 @@ async def generate_music(
     
     print(f"✅ Generated: {title} ({len(full_vocal)/1000:.1f}s vocal, {target_bpm} BPM)")
     return {"status": "success", "song": song_data}
+
+# --- 7. CHATBOT API ---
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+
+@app.post("/api/chat/film")
+async def chat_film_consultant(request: ChatRequest):
+    try:
+        messages = [{"role": m.role, "content": m.content} for m in request.messages]
+        # Thêm system prompt
+        messages.insert(0, {
+            "role": "system", 
+            "content": "Bạn là KietFilm Consultant - chuyên gia tư vấn phim siêu đỉnh. Hãy thân thiện, trẻ trung (dùng emoji). Hỏi han sở thích & gợi ý phim. QUAN TRỌNG: TẤT CẢ TÊN PHIM BẠN GỢI Ý ĐỀU BẮT BUỘC PHẢI BỌC TRONG CÚ PHÁP CHÍNH XÁC: `[phim: Tên Phim]`. Ví dụ: `[phim: Mắt Biếc]`, `[phim: Avengers]`. Không được tự ý in đậm hay ngoặc kép cho tên phim, CHỈ DÙNG CÚ PHÁP ĐÓ. Trả lời CỰC KỲ NGẮN GỌN và VÀO THẲNG VẤN ĐỀ."
+        })
+        
+        # Sử dụng API Pollinations cực kì ổn định làm ưu tiên số 1
+        import asyncio
+        import requests
+        loop = asyncio.get_event_loop()
+        api_url = "https://text.pollinations.ai/openai"
+        
+        def fetch_api():
+            try:
+                # Tăng timeout lên 45s tránh ngắt kết nối khi tạo list dài
+                response = requests.post(api_url, json={
+                    "model": "openai",
+                    "messages": messages,
+                    "temperature": 0.5
+                }, timeout=45)
+                
+                if response.status_code == 200:
+                    return response.json()["choices"][0]["message"]["content"]
+            except Exception as e:
+                print(f"Pollinations AI Error: {e}")
+            return None
+            
+        ai_reply = await loop.run_in_executor(None, fetch_api)
+        
+        if ai_reply:
+            return {"status": "success", "reply": ai_reply}
+        else:
+            # Fallback sang g4f nếu bị lỗi kết nối
+            if G4F_AVAILABLE:
+                client = g4f.client.Client()
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo", # dùng GPT 3.5 để ưu tiên tốc độ trong fallback
+                    messages=messages
+                )
+                return {"status": "success", "reply": response.choices[0].message.content}
+            else:
+                raise Exception("Tất cả server AI đều đang bận, mất kết nối mạng.")
+    except Exception as e:
+        print(f"Chat error: {e}")
+        return {"status": "error", "message": f"KietFilm AI đang tìm phim xíu nhé, chờ 1 chút! (Lỗi nội bộ: {str(e)})"}
 
 if __name__ == "__main__":
     import uvicorn
