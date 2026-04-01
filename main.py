@@ -53,23 +53,6 @@ import atexit
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-# Khởi động Node Torrent Server ngầm
-try:
-    # Chạy `node torrent_server.js` ẩn với DEVNULL
-    node_process = subprocess.Popen(["node", "torrent_server.js"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    print("🚀 [INFO] Đã kích hoạt Backend Streaming (Node Torrent Server) ở cổng 8001")
-    
-    def cleanup_node():
-        if node_process:
-            try:
-                node_process.terminate()
-            except:
-                pass
-            
-    atexit.register(cleanup_node)
-except Exception as e:
-    print(f"⚠️ [WARNING] Không thể khởi động Node Torrent Server: {e}")
-
 # --- 2. THIẾT LẬP THƯ MỤC ---
 os.makedirs("generated_music", exist_ok=True)
 os.makedirs("beats", exist_ok=True)

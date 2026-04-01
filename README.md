@@ -1,11 +1,11 @@
 ---
 title: KietSound Pro - AI Music & Film Studio
-emoji: 🎵
-colorFrom: blue
-colorTo: purple
-sdk: static
-app_file: index.html
-short_description: AI Music, Mood Detection & VN Movie Streaming
+emoji: 🎵🎬
+colorFrom: pink
+colorTo: blue
+sdk: docker
+pinned: false
+short_description: AI Music Studio with Mood Detection & Film Streaming
 ---
 
 # 🎵 KietSound Pro - AI Music & Film Studio
