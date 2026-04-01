@@ -1,10 +1,5 @@
 ---
 title: KietSound Pro - AI Music & Film Studio
-emoji: 🎵🎬
-colorFrom: pink
-colorTo: blue
-sdk: docker
-pinned: false
 short_description: AI music generation, mood detection, and seamless Vietnamese movie streaming
 ---
 
