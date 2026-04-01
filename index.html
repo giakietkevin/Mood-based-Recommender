@@ -106,6 +106,24 @@
         /* Gacha Animation */
         .gacha-item-reveal { opacity: 0; transform: translateY(20px); animation: reveal 0.5s forwards; }
         @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
+
+        /* Game Hub Styles */
+        .game-card { cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .game-card:hover { transform: translateY(-4px); background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 20px rgba(198, 168, 124, 0.1); }
+        .game-card.active { background: linear-gradient(135deg, rgba(198, 168, 124, 0.15), rgba(198, 168, 124, 0.05)); border-color: #C6A87C; box-shadow: 0 0 20px rgba(198, 168, 124, 0.2); }
+        .game-card.active::after { content: ''; position: absolute; width: 4px; height: 30%; background: #C6A87C; left: 0; top: 35%; border-radius: 0 4px 4px 0; }
+        
+        .game-icon-container { width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .game-card:hover .game-icon-container { background: #C6A87C; transform: rotate(-8deg); }
+        .game-card:hover .game-icon-container span { color: #0a0a0a; }
+
+        .game-badge { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+        .game-card:hover .game-badge { background: rgba(198, 168, 124, 0.2); color: #C6A87C; }
+
+        /* Generic Game HUD */
+        .game-hud { font-family: 'Outfit', sans-serif; font-weight: 900; letter-spacing: 2px; }
+        .btn-game-control { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; color: white; transition: all 0.2s; }
+        .btn-game-control:active { transform: scale(0.9); background: #C6A87C; color: #0a0a0a; }
     </style>
 </head>
 
@@ -206,20 +224,29 @@
 
         <div id="view-dashboard" class="grid lg:grid-cols-12 gap-6 animate-fade-in">
             <!-- Feature Introduction Banner -->
-            <div class="lg:col-span-12 glass-card rounded-[2.5rem] p-8 border border-white/10 overflow-hidden relative group">
+            <div
+                class="lg:col-span-12 glass-card rounded-[2.5rem] p-8 border border-white/10 overflow-hidden relative group">
                 <!-- Glowing background accents -->
-                <div class="absolute -top-24 -left-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/20 transition-all duration-700"></div>
-                <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-500/5 blur-[100px] rounded-full group-hover:bg-blue-500/10 transition-all duration-700"></div>
-                
+                <div
+                    class="absolute -top-24 -left-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/20 transition-all duration-700">
+                </div>
+                <div
+                    class="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-500/5 blur-[100px] rounded-full group-hover:bg-blue-500/10 transition-all duration-700">
+                </div>
+
                 <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div class="flex-1 space-y-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/10 border border-primary/20">
+                            <div
+                                class="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/10 border border-primary/20">
                                 <span class="material-icons-round text-primary text-2xl">psychology</span>
                             </div>
                             <div>
-                                <h1 class="text-2xl sm:text-3xl font-display font-black text-white uppercase tracking-tighter">KIETSTATION <span class="text-primary italic">AI</span></h1>
-                                <div class="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-primary/80 uppercase tracking-[0.2em] mt-1">
+                                <h1
+                                    class="text-2xl sm:text-3xl font-display font-black text-white uppercase tracking-tighter">
+                                    KIETSTATION <span class="text-primary italic">AI</span></h1>
+                                <div
+                                    class="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-primary/80 uppercase tracking-[0.2em] mt-1">
                                     <span>Face Analysis</span>
                                     <span class="w-1 h-1 rounded-full bg-primary/30"></span>
                                     <span>Music Discovery</span>
@@ -229,28 +256,37 @@
                             </div>
                         </div>
                         <p class="text-slate-400 text-sm sm:text-base leading-relaxed max-w-2xl font-medium">
-                            Chào mừng bạn đến với <span class="text-white font-bold">KietStation Alpha</span>. Hệ thống trí tuệ nhân tạo của chúng tôi sử dụng công nghệ nhận diện khuôn mặt tiên tiến để "thấu hiểu" cảm xúc của bạn qua camera, từ đó tự động đề xuất những bản nhạc (Youtube & Podcast) hoàn hảo nhất phù hợp với tâm trạng của bạn ngay lúc này.
+                            Chào mừng bạn đến với <span class="text-white font-bold">KietStation Alpha</span>. Hệ thống
+                            trí tuệ nhân tạo của chúng tôi sử dụng công nghệ nhận diện khuôn mặt tiên tiến để "thấu
+                            hiểu" cảm xúc của bạn qua camera, từ đó tự động đề xuất những bản nhạc (Youtube & Podcast)
+                            hoàn hảo nhất phù hợp với tâm trạng của bạn ngay lúc này.
                         </p>
                     </div>
-                    
+
                     <div class="hidden lg:flex items-center gap-8">
                         <div class="text-center group">
-                            <div class="w-10 h-10 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors border border-white/5 group-hover:border-primary/20">
-                                <span class="material-icons-round text-slate-500 group-hover:text-primary transition-colors">videocam</span>
+                            <div
+                                class="w-10 h-10 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors border border-white/5 group-hover:border-primary/20">
+                                <span
+                                    class="material-icons-round text-slate-500 group-hover:text-primary transition-colors">videocam</span>
                             </div>
                             <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Connect</p>
                         </div>
                         <div class="w-8 h-px bg-white/10"></div>
                         <div class="text-center group">
-                            <div class="w-10 h-10 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors border border-white/5 group-hover:border-primary/20">
-                                <span class="material-icons-round text-slate-500 group-hover:text-primary transition-colors">face</span>
+                            <div
+                                class="w-10 h-10 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors border border-white/5 group-hover:border-primary/20">
+                                <span
+                                    class="material-icons-round text-slate-500 group-hover:text-primary transition-colors">face</span>
                             </div>
                             <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Analyze</p>
                         </div>
                         <div class="w-8 h-px bg-white/10"></div>
                         <div class="text-center group">
-                            <div class="w-10 h-10 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors border border-white/5 group-hover:border-primary/20">
-                                <span class="material-icons-round text-slate-500 group-hover:text-primary transition-colors">music_note</span>
+                            <div
+                                class="w-10 h-10 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors border border-white/5 group-hover:border-primary/20">
+                                <span
+                                    class="material-icons-round text-slate-500 group-hover:text-primary transition-colors">music_note</span>
                             </div>
                             <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Play</p>
                         </div>
@@ -888,33 +924,135 @@
                                 class="text-primary">Game</span></h2>
                     </div>
 
-                    <div class="space-y-2">
-                        <button onclick="switchGame('snake')" id="btn-game-snake"
-                            class="w-full flex items-center justify-between p-4 rounded-2xl bg-primary text-white font-bold transition-all shadow-lg shadow-primary/20">
-                            <div class="flex items-center gap-3">
-                                <span class="material-icons-round">horizontal_rule</span>
-                                <span>Rắn Săn Mồi</span>
+                    <div class="space-y-3 overflow-y-auto max-h-[calc(100vh-320px)] pr-1 no-scrollbar pb-4"
+                        id="game-selection-list">
+                        <!-- Snake -->
+                        <div onclick="switchGame('snake')" id="btn-game-snake"
+                            class="game-card active p-3 rounded-2xl flex items-center gap-3">
+                            <div class="game-icon-container shrink-0">
+                                <span class="material-icons-round text-primary font-bold">sports_esports</span>
                             </div>
-                            <span class="material-icons-round text-sm opacity-50">arrow_forward_ios</span>
-                        </button>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <h4 class="text-xs font-black text-white uppercase tracking-tight truncate">Rắn Săn
+                                        Mồi</h4>
+                                    <span class="game-badge">Classic</span>
+                                </div>
+                                <p class="text-[9px] text-slate-500 truncate font-medium">Huyền thoại săn mồi</p>
+                            </div>
+                        </div>
 
-                        <button onclick="switchGame('caro')" id="btn-game-caro"
-                            class="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all">
-                            <div class="flex items-center gap-3">
-                                <span class="material-icons-round">grid_on</span>
-                                <span>Cờ Caro (15x15)</span>
+                        <!-- Caro -->
+                        <div onclick="switchGame('caro')" id="btn-game-caro"
+                            class="game-card p-3 rounded-2xl flex items-center gap-3">
+                            <div class="game-icon-container shrink-0">
+                                <span class="material-icons-round text-primary font-bold">grid_on</span>
                             </div>
-                            <span class="material-icons-round text-sm opacity-50">arrow_forward_ios</span>
-                        </button>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <h4 class="text-xs font-black text-white uppercase tracking-tight truncate">Cờ Caro
+                                    </h4>
+                                    <span class="game-badge">Local 1vs1</span>
+                                </div>
+                                <p class="text-[9px] text-slate-500 truncate font-medium">Đấu trí 15x15</p>
+                            </div>
+                        </div>
 
-                        <button onclick="switchGame('chess')" id="btn-game-chess"
-                            class="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all">
-                            <div class="flex items-center gap-3">
-                                <span class="material-icons-round">extension</span>
-                                <span>Cờ Vua (Online)</span>
+                        <!-- 2048 -->
+                        <div onclick="switchGame('g2048')" id="btn-game-g2048"
+                            class="game-card p-3 rounded-2xl flex items-center gap-3">
+                            <div class="game-icon-container shrink-0">
+                                <span class="material-icons-round text-primary font-bold">numbers</span>
                             </div>
-                            <span class="material-icons-round text-sm opacity-50">arrow_forward_ios</span>
-                        </button>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <h4 class="text-xs font-black text-white uppercase tracking-tight truncate">2048
+                                        Logic</h4>
+                                    <span class="game-badge">Puzzle</span>
+                                </div>
+                                <p class="text-[9px] text-slate-500 truncate font-medium">Ghép ô tìm số 2048</p>
+                            </div>
+                        </div>
+
+                        <!-- Tetris -->
+                        <div onclick="switchGame('tetris')" id="btn-game-tetris"
+                            class="game-card p-3 rounded-2xl flex items-center gap-3">
+                            <div class="game-icon-container shrink-0">
+                                <span class="material-icons-round text-primary font-bold">view_module</span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <h4 class="text-xs font-black text-white uppercase tracking-tight truncate">
+                                        KIET-TRIS</h4>
+                                    <span class="game-badge">Hardcore</span>
+                                </div>
+                                <p class="text-[9px] text-slate-500 truncate font-medium">Xếp gạch phá kỷ lục</p>
+                            </div>
+                        </div>
+
+                        <!-- Flappy -->
+                        <div onclick="switchGame('flappy')" id="btn-game-flappy"
+                            class="game-card p-3 rounded-2xl flex items-center gap-3">
+                            <div class="game-icon-container shrink-0">
+                                <span class="material-icons-round text-primary font-bold">flight</span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <h4 class="text-xs font-black text-white uppercase tracking-tight truncate">Flappy
+                                        Kiet</h4>
+                                    <span class="game-badge">Action</span>
+                                </div>
+                                <p class="text-[9px] text-slate-500 truncate font-medium">Vượt chướng ngại vật</p>
+                            </div>
+                        </div>
+
+                        <!-- Minesweeper -->
+                        <div onclick="switchGame('mines')" id="btn-game-mines"
+                            class="game-card p-3 rounded-2xl flex items-center gap-3">
+                            <div class="game-icon-container shrink-0">
+                                <span class="material-icons-round text-primary font-bold">brightness_high</span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <h4 class="text-xs font-black text-white uppercase tracking-tight truncate">Dò Mìn
+                                    </h4>
+                                    <span class="game-badge">Retro</span>
+                                </div>
+                                <p class="text-[9px] text-slate-500 truncate font-medium">Tìm mìn giải đoán</p>
+                            </div>
+                        </div>
+
+                        <!-- Bida (Pool) -->
+                        <div onclick="switchGame('pool')" id="btn-game-pool"
+                            class="game-card p-3 rounded-2xl flex items-center gap-3">
+                            <div class="game-icon-container shrink-0">
+                                <span class="material-icons-round text-primary font-bold">sports_baseball</span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <h4 class="text-xs font-black text-white uppercase tracking-tight truncate">
+                                        KIET-POOL</h4>
+                                    <span class="game-badge">Physics</span>
+                                </div>
+                                <p class="text-[9px] text-slate-500 truncate font-medium">Bida 2D chân thực</p>
+                            </div>
+                        </div>
+
+                        <!-- Chess -->
+                        <div onclick="switchGame('chess')" id="btn-game-chess"
+                            class="game-card p-3 rounded-2xl flex items-center gap-3">
+                            <div class="game-icon-container shrink-0">
+                                <span class="material-icons-round text-primary font-bold">extension</span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <h4 class="text-xs font-black text-white uppercase tracking-tight truncate">Cờ Vua
+                                    </h4>
+                                    <span class="game-badge">Online</span>
+                                </div>
+                                <p class="text-[9px] text-slate-500 truncate font-medium">Đấu trường Lichess</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-8 p-4 bg-primary/10 rounded-2xl border border-primary/20">
@@ -937,9 +1075,9 @@
                             <span class="text-xs font-bold text-slate-400">HIGH: <span id="snake-high"
                                     class="text-white">0</span></span>
                         </div>
-                        <div class="relative group">
-                            <canvas id="snake-canvas" width="400" height="400"
-                                class="bg-black/80 rounded-xl border-4 border-white/5 shadow-2xl max-w-full"></canvas>
+                        <div class="relative group max-w-[500px] w-full">
+                            <canvas id="snake-canvas" width="500" height="500"
+                                class="bg-black/80 rounded-xl border-4 border-white/5 shadow-2xl w-full aspect-square"></canvas>
                             <div id="snake-overlay"
                                 class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl p-6 text-center">
                                 <div class="p-4 bg-primary/20 rounded-full mb-4">
@@ -964,6 +1102,198 @@
                                 onmousedown="handleSnakeInput('ArrowDown')">▼</button>
                             <button class="p-4 bg-white/10 rounded-xl"
                                 onmousedown="handleSnakeInput('ArrowRight')">▶</button>
+                        </div>
+                    </div>
+
+                    <!-- 2048 Game -->
+                    <div id="game-g2048-container"
+                        class="hidden flex flex-col items-center justify-center flex-1 space-y-6">
+                        <div class="flex items-center justify-between w-full max-w-[500px]">
+                            <div class="flex flex-col">
+                                <span
+                                    class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Score</span>
+                                <span id="g2048-score"
+                                    class="text-2xl font-black text-primary tracking-tighter">0</span>
+                            </div>
+                            <button onclick="init2048()"
+                                class="px-5 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">New
+                                Game</button>
+                        </div>
+                        <div id="g2048-board"
+                            class="grid grid-cols-4 gap-3 p-3 bg-white/5 rounded-2xl border border-white/10 relative shadow-2xl">
+                            <!-- Cells generated by JS -->
+                        </div>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Sử dụng phím mũi tên
+                            hoặc vuốt để ghép số</p>
+                    </div>
+
+                    <!-- Tetris Game -->
+                    <div id="game-tetris-container"
+                        class="hidden flex flex-col items-center justify-center flex-1 space-y-4">
+                        <div class="flex gap-8 items-start">
+                            <div class="relative">
+                                <canvas id="tetris-canvas" width="300" height="600"
+                                    class="bg-black/90 rounded-xl border-4 border-white/5 shadow-2xl"></canvas>
+                                <div id="tetris-overlay"
+                                    class="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl text-center p-4">
+                                    <h3 class="text-xl font-black text-white mb-4 uppercase tracking-tighter">KIET-TRIS
+                                    </h3>
+                                    <button onclick="startTetris()"
+                                        class="px-8 py-3 bg-primary text-[#0a0a0a] font-black rounded-xl">BẮT
+                                        ĐẦU</button>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-4">
+                                <div class="glass-card p-4 rounded-2xl border border-white/10 w-32">
+                                    <p class="text-[9px] font-black text-slate-500 uppercase mb-1">Score</p>
+                                    <p id="tetris-score" class="text-xl font-black text-primary tracking-tighter">0</p>
+                                </div>
+                                <div class="glass-card p-4 rounded-2xl border border-white/10 w-32">
+                                    <p class="text-[9px] font-black text-slate-500 uppercase mb-1">Lines</p>
+                                    <p id="tetris-lines" class="text-xl font-black text-white tracking-tighter">0</p>
+                                </div>
+                                <div
+                                    class="glass-card p-2 rounded-2xl border border-white/10 w-32 aspect-square flex flex-col items-center justify-center">
+                                    <p class="text-[8px] font-black text-slate-500 uppercase mb-2">Next</p>
+                                    <canvas id="tetris-next" width="60" height="60"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flappy Kiet Game -->
+                    <div id="game-flappy-container" class="hidden flex flex-col items-center justify-center flex-1">
+                        <div class="relative group">
+                            <canvas id="flappy-canvas" width="400" height="600"
+                                class="bg-[#70c5ce] rounded-xl border-4 border-white/5 shadow-2xl"></canvas>
+                            <div id="flappy-overlay"
+                                class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl text-center p-6 transition-all">
+                                <div
+                                    class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4 animate-bounce">
+                                    <span class="material-icons-round text-white text-3xl">flight</span>
+                                </div>
+                                <h3 class="text-2xl font-black text-white mb-2 uppercase italic tracking-tighter">FLAPPY
+                                    KIET</h3>
+                                <p class="text-slate-300 text-xs mb-6">Click hoặc nhấn Space để bay!</p>
+                                <button onclick="startFlappy()"
+                                    class="px-8 py-3 bg-white text-[#0a0a0a] font-black rounded-xl hover:bg-primary transition-colors">CHƠI
+                                    NGAY</button>
+                            </div>
+                            <div class="absolute top-4 left-4 pointer-events-none">
+                                <span id="flappy-score" class="text-4xl font-black text-white drop-shadow-lg">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Minesweeper Game -->
+                    <div id="game-mines-container"
+                        class="hidden flex flex-col items-center justify-center flex-1 space-y-4">
+                        <div class="flex items-center justify-between w-full max-w-[500px]">
+                            <div class="flex gap-4">
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-black text-slate-500 uppercase mb-0.5">Mines</span>
+                                    <span id="mines-count"
+                                        class="text-lg font-black text-red-500 tracking-tighter">10</span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-black text-slate-500 uppercase mb-0.5">Time</span>
+                                    <span id="mines-time"
+                                        class="text-lg font-black text-white tracking-tighter">000</span>
+                                </div>
+                            </div>
+                            <button onclick="initMines()"
+                                class="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-xl transition-all"
+                                id="mines-reset-btn">😊</button>
+                        </div>
+                        <div id="mines-board"
+                            class="grid grid-cols-9 gap-1 p-2 bg-white/5 rounded-xl border border-white/10 shadow-2xl">
+                            <!-- Cells via JS -->
+                        </div>
+                    </div>
+
+                    <!-- KIET-POOL (Bida) Game -->
+                    <div id="game-pool-container"
+                        class="hidden flex flex-col items-center justify-center flex-1 space-y-4">
+                        <div class="flex items-center justify-between w-full max-w-[800px]">
+                            <div class="flex flex-col">
+                                <span class="text-[9px] font-black text-slate-500 uppercase mb-0.5">KIET-POOL</span>
+                                <span id="pool-status" class="text-xs font-bold text-primary italic">Chọn chế độ để bắt
+                                    đầu</span>
+                            </div>
+                            <button onclick="showPoolMenu()"
+                                class="px-4 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Menu
+                                Game</button>
+                        </div>
+                        <div class="relative cursor-crosshair group overflow-hidden rounded-2xl">
+                            <canvas id="pool-canvas" width="800" height="400"
+                                class="bg-[#1a4d2e] rounded-2xl border-[12px] border-[#3d2b1f] shadow-2xl"></canvas>
+
+                            <!-- New Game Menu Overlay -->
+                            <div id="pool-menu-overlay"
+                                class="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-8 z-10">
+                                <h3 class="text-2xl font-black text-white mb-8 italic uppercase tracking-tighter">
+                                    KIET-POOL <span>v2.0</span></h3>
+
+                                <div class="grid grid-cols-2 gap-8 w-full max-w-md">
+                                    <div class="space-y-3">
+                                        <p class="text-[10px] font-black text-primary uppercase tracking-widest pl-1">1.
+                                            Hình Thức</p>
+                                        <button onclick="setPoolType('practice')" id="pool-type-practice"
+                                            class="pool-menu-btn w-full p-3 rounded-xl border border-white/10 bg-white/5 text-xs font-bold text-slate-400 hover:bg-white/10 transition-all text-left flex items-center gap-2 active">
+                                            <span class="material-icons-round text-sm">person</span> Đấu Tập
+                                        </button>
+                                        <button onclick="setPoolType('ai')" id="pool-type-ai"
+                                            class="pool-menu-btn w-full p-3 rounded-xl border border-white/10 bg-white/5 text-xs font-bold text-slate-400 hover:bg-white/10 transition-all text-left flex items-center gap-2">
+                                            <span class="material-icons-round text-sm">smart_toy</span> Đấu Với Máy
+                                        </button>
+                                        <button onclick="setPoolType('pvp')" id="pool-type-pvp"
+                                            class="pool-menu-btn w-full p-3 rounded-xl border border-white/10 bg-white/5 text-xs font-bold text-slate-400 hover:bg-white/10 transition-all text-left flex items-center gap-2">
+                                            <span class="material-icons-round text-sm">groups</span> 2 Người Chơi
+                                        </button>
+                                    </div>
+
+                                    <div class="space-y-3">
+                                        <p class="text-[10px] font-black text-primary uppercase tracking-widest pl-1">2.
+                                            Chế Độ</p>
+                                        <button onclick="setPoolMode('full')" id="pool-mode-full"
+                                            class="pool-mode-btn w-full p-3 rounded-xl border border-white/10 bg-white/5 text-xs font-bold text-slate-400 hover:bg-white/10 transition-all text-left flex items-center gap-2 active">
+                                            <span class="material-icons-round text-sm">grid_view</span> Full (16 Bi)
+                                        </button>
+                                        <button onclick="setPoolMode('9ball')" id="pool-mode-9ball"
+                                            class="pool-mode-btn w-full p-3 rounded-xl border border-white/10 bg-white/5 text-xs font-bold text-slate-400 hover:bg-white/10 transition-all text-left flex items-center gap-2">
+                                            <span class="material-icons-round text-sm">diamond</span> 9 Bi
+                                        </button>
+                                        <button onclick="setPoolMode('3c')" id="pool-mode-3c"
+                                            class="pool-mode-btn w-full p-3 rounded-xl border border-white/10 bg-white/5 text-xs font-bold text-slate-400 hover:bg-white/10 transition-all text-left flex items-center gap-2">
+                                            <span class="material-icons-round text-sm">radio_button_checked</span> 3
+                                            Băng (3C)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button onclick="startPoolGame()"
+                                    class="mt-10 px-12 py-3 bg-primary text-[#0a0a0a] font-black rounded-2xl hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 transition-all uppercase italic tracking-tighter">BẮT
+                                    ĐẦU NGAY</button>
+                            </div>
+
+                            <div id="pool-overlay"
+                                class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-2xl hidden">
+                                <h3 class="text-2xl font-black text-white mb-4 uppercase italic">BÀN ĐÃ DỌN XONG!</h3>
+                                <button onclick="showPoolMenu()"
+                                    class="px-8 py-3 bg-primary text-[#0a0a0a] font-black rounded-xl">CHƠI TIẾP</button>
+                            </div>
+                            <!-- Control HUD -->
+                            <div
+                                class="absolute bottom-4 right-4 bg-black/40 backdrop-blur-md p-3 rounded-xl border border-white/10 flex items-center gap-4">
+                                <div class="flex flex-col">
+                                    <div class="h-1.5 w-24 bg-white/10 rounded-full overflow-hidden">
+                                        <div id="pool-power-bar" class="h-full bg-primary transition-all duration-75"
+                                            style="width: 0%"></div>
+                                    </div>
+                                    <span class="text-[8px] font-black text-slate-400 uppercase mt-1">Lực đánh (Giữ
+                                        Chuột)</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -3133,40 +3463,56 @@
         let snakeInterval = null;
         let caroBoard = Array(225).fill(null);
         let caroTurn = 'X';
+        let tetrisInterval = null;
+        let flappyInterval = null;
+        let poolInterval = null;
 
         window.switchGame = (gameId) => {
-            const snakeCont = document.getElementById('game-snake-container');
-            const caroCont = document.getElementById('game-caro-container');
-            const chessCont = document.getElementById('game-chess-container');
-            const btns = {
-                snake: document.getElementById('btn-game-snake'),
-                caro: document.getElementById('btn-game-caro'),
-                chess: document.getElementById('btn-game-chess')
+            const containers = {
+                snake: document.getElementById('game-snake-container'),
+                caro: document.getElementById('game-caro-container'),
+                g2048: document.getElementById('game-g2048-container'),
+                tetris: document.getElementById('game-tetris-container'),
+                flappy: document.getElementById('game-flappy-container'),
+                mines: document.getElementById('game-mines-container'),
+                pool: document.getElementById('game-pool-container'),
+                chess: document.getElementById('game-chess-container')
             };
 
-            // Hide all
-            [snakeCont, caroCont, chessCont].forEach(c => c.classList.add('hidden'));
+            // Stop all active games
             stopSnake();
+            stopTetris();
+            stopFlappy();
+            stopPool();
 
-            // Reset buttons
-            Object.values(btns).forEach(b => {
-                b.classList.remove('bg-primary', 'text-white', 'shadow-lg', 'shadow-primary/20');
-                b.classList.add('bg-white/5', 'text-slate-400');
+            // Hide all containers and reset card styles
+            Object.keys(containers).forEach(key => {
+                const c = containers[key];
+                if (c) c.classList.add('hidden');
+
+                const btn = document.getElementById(`btn-game-${key}`);
+                if (btn) {
+                    btn.classList.remove('active');
+                }
             });
 
-            // Show selected
-            const activeBtn = btns[gameId];
-            if (activeBtn) {
-                activeBtn.classList.add('bg-primary', 'text-white', 'shadow-lg', 'shadow-primary/20');
-                activeBtn.classList.remove('bg-white/5', 'text-slate-400');
-            }
+            // Show selected container and highlight card
+            const activeCont = containers[gameId];
+            if (activeCont) activeCont.classList.remove('hidden');
 
-            if (gameId === 'snake') snakeCont.classList.remove('hidden');
-            else if (gameId === 'caro') {
-                caroCont.classList.remove('hidden');
-                initCaro();
-            } else if (gameId === 'chess') chessCont.classList.remove('hidden');
+            const activeBtn = document.getElementById(`btn-game-${gameId}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            // Initialize game if needed
+            if (gameId === 'caro') initCaro();
+            if (gameId === 'g2048') init2048();
+            if (gameId === 'mines') initMines();
+            if (gameId === 'pool') initPool();
         };
+
+        const stopTetris = () => { if (tetrisInterval) { clearInterval(tetrisInterval); tetrisInterval = null; } };
+        const stopFlappy = () => { if (flappyInterval) { cancelAnimationFrame(flappyInterval); flappyInterval = null; } };
+        const stopPool = () => { if (poolInterval) { cancelAnimationFrame(poolInterval); poolInterval = null; } };
 
         // --- SNAKE GAME ---
         window.startSnake = () => {
@@ -3181,6 +3527,9 @@
 
             const directionHandler = (event) => {
                 const key = event.key;
+                if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d"].includes(key)) {
+                    event.preventDefault();
+                }
                 if ((key === "ArrowLeft" || key === "a") && d != "RIGHT") d = "LEFT";
                 else if ((key === "ArrowUp" || key === "w") && d != "DOWN") d = "UP";
                 else if ((key === "ArrowRight" || key === "d") && d != "LEFT") d = "RIGHT";
@@ -3199,11 +3548,11 @@
             if (snakeInterval) clearInterval(snakeInterval);
             snakeInterval = setInterval(() => {
                 ctx.fillStyle = "#000";
-                ctx.fillRect(0, 0, 400, 400);
+                ctx.fillRect(0, 0, 500, 500);
 
                 // Grid
                 ctx.strokeStyle = "rgba(255,255,255,0.05)";
-                for (let i = 0; i < 400; i += box) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 400); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(400, i); ctx.stroke(); }
+                for (let i = 0; i < 500; i += box) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 500); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(500, i); ctx.stroke(); }
 
                 for (let i = 0; i < snake.length; i++) {
                     ctx.fillStyle = (i == 0) ? "#3b82f6" : "rgba(255,255,255,0.8)";
@@ -3229,7 +3578,7 @@
                 } else snake.pop();
 
                 let newHead = { x: snakeX, y: snakeY };
-                if (snakeX < 0 || snakeX >= 400 || snakeY < 0 || snakeY >= 400 || collision(newHead, snake)) {
+                if (snakeX < 0 || snakeX >= 500 || snakeY < 0 || snakeY >= 500 || collision(newHead, snake)) {
                     clearInterval(snakeInterval);
                     document.removeEventListener("keydown", directionHandler);
                     const high = parseInt(document.getElementById('snake-high').innerText);
@@ -3262,7 +3611,7 @@
             updateCaroTurnUI();
             for (let i = 0; i < 225; i++) {
                 const cell = document.createElement('div');
-                cell.className = 'w-6 h-6 sm:w-10 sm:h-10 border border-white/10 flex items-center justify-center text-lg font-bold transition-all hover:bg-white/10 select-none';
+                cell.className = 'w-8 h-8 sm:w-12 sm:h-12 border border-white/10 flex items-center justify-center text-xl font-bold transition-all hover:bg-white/10 select-none';
                 cell.dataset.index = i;
                 cell.onclick = () => handleCaroClick(i);
                 board.appendChild(cell);
@@ -3318,19 +3667,675 @@
 
         window.resetCaro = () => initCaro();
 
-        // --- CHESS GAME ---
-        window.launchChess = (mode) => {
-            let url = "https://lichess.org/?any#ai";
-            if (mode === 'friend') {
-                url = "https://lichess.org/setup/friend";
+        // --- 2048 GAME ---
+        let g2048Board = [];
+        let g2048Score = 0;
+        window.init2048 = () => {
+            g2048Board = Array(16).fill(0);
+            g2048Score = 0;
+            document.getElementById('g2048-score').innerText = '0';
+            addRandom2048();
+            addRandom2048();
+            render2048();
+            document.addEventListener('keydown', handle2048Input);
+        };
+        const addRandom2048 = () => {
+            const empty = g2048Board.map((v, i) => v === 0 ? i : null).filter(v => v !== null);
+            if (empty.length > 0) {
+                const idx = empty[Math.floor(Math.random() * empty.length)];
+                g2048Board[idx] = Math.random() < 0.9 ? 2 : 4;
             }
-            window.open(url, '_blank');
+        };
+        const render2048 = () => {
+            const boardEl = document.getElementById('g2048-board');
+            boardEl.innerHTML = g2048Board.map(v => {
+                let colorClass = 'bg-white/5 text-slate-500';
+                if (v === 2) colorClass = 'bg-slate-200 text-slate-800 scale-100';
+                if (v === 4) colorClass = 'bg-slate-300 text-slate-800 scale-100';
+                if (v === 8) colorClass = 'bg-orange-200 text-orange-900 shadow-[0_0_15px_rgba(254,215,170,0.5)]';
+                if (v === 16) colorClass = 'bg-orange-300 text-orange-900 shadow-[0_0_15px_rgba(253,186,116,0.5)]';
+                if (v === 32) colorClass = 'bg-orange-400 text-white shadow-[0_0_15px_rgba(251,146,60,0.5)]';
+                if (v === 64) colorClass = 'bg-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)] font-black';
+                if (v >= 128) colorClass = 'bg-primary text-[#0a0a0a] shadow-[0_0_20px_rgba(198,168,124,0.6)] font-black animate-pulse';
+
+                return `<div class="w-20 h-20 sm:w-28 sm:h-28 rounded-xl flex items-center justify-center text-2xl sm:text-4xl font-black transition-all duration-200 ${colorClass}">${v || ''}</div>`;
+            }).join('');
+        };
+        const handle2048Input = (e) => {
+            if (document.getElementById('game-g2048-container').classList.contains('hidden')) return;
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+                e.preventDefault();
+            }
+            let moved = false;
+            if (e.key === 'ArrowUp') moved = move2048('up');
+            if (e.key === 'ArrowDown') moved = move2048('down');
+            if (e.key === 'ArrowLeft') moved = move2048('left');
+            if (e.key === 'ArrowRight') moved = move2048('right');
+            if (moved) {
+                addRandom2048();
+                render2048();
+                if (check2048GameOver()) alert('Game Over!');
+            }
+        };
+        const move2048 = (dir) => {
+            let moved = false;
+            const size = 4;
+            for (let i = 0; i < size; i++) {
+                let row = [];
+                for (let j = 0; j < size; j++) {
+                    const idx = (dir === 'up' || dir === 'down') ? j * size + i : i * size + j;
+                    row.push(g2048Board[idx]);
+                }
+                if (dir === 'down' || dir === 'right') row.reverse();
+
+                const filtered = row.filter(v => v !== 0);
+                for (let j = 0; j < filtered.length - 1; j++) {
+                    if (filtered[j] === filtered[j + 1]) {
+                        filtered[j] *= 2;
+                        g2048Score += filtered[j];
+                        filtered.splice(j + 1, 1);
+                        moved = true;
+                    }
+                }
+                while (filtered.length < size) filtered.push(0);
+                if (dir === 'down' || dir === 'right') filtered.reverse();
+
+                for (let j = 0; j < size; j++) {
+                    const idx = (dir === 'up' || dir === 'down') ? j * size + i : i * size + j;
+                    if (g2048Board[idx] !== filtered[j]) moved = true;
+                    g2048Board[idx] = filtered[j];
+                }
+            }
+            document.getElementById('g2048-score').innerText = g2048Score;
+            return moved;
+        };
+        const check2048GameOver = () => !g2048Board.includes(0);
+
+        // --- TETRIS GAME ---
+        const tetrisCanvas = document.getElementById('tetris-canvas');
+        const tetrisCtx = tetrisCanvas ? tetrisCanvas.getContext('2d') : null;
+        let tetrisBoard = [];
+        let tetrisScore = 0;
+        let tetrisPiece = null;
+        window.startTetris = () => {
+            document.getElementById('tetris-overlay').classList.add('hidden');
+            tetrisBoard = Array.from({ length: 20 }, () => Array(10).fill(0));
+            tetrisScore = 0;
+            document.getElementById('tetris-score').innerText = '0';
+            tetrisPiece = createTetrisPiece();
+            if (tetrisInterval) clearInterval(tetrisInterval);
+            tetrisInterval = setInterval(updateTetris, 500);
+            renderTetris();
+            document.addEventListener('keydown', handleTetrisInput);
+        };
+        const tetrisPieces = 'ILJOTSZ';
+        const tetrisColors = [null, '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#C6A87C'];
+        const createTetrisPiece = () => {
+            const type = tetrisPieces[Math.floor(Math.random() * tetrisPieces.length)];
+            let matrix;
+            if (type === 'I') matrix = [[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0]];
+            else if (type === 'L') matrix = [[0, 2, 0], [0, 2, 0], [0, 2, 2]];
+            else if (type === 'J') matrix = [[0, 3, 0], [0, 3, 0], [3, 3, 0]];
+            else if (type === 'O') matrix = [[4, 4], [4, 4]];
+            else if (type === 'T') matrix = [[0, 0, 0], [5, 5, 5], [0, 5, 0]];
+            else if (type === 'S') matrix = [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
+            else if (type === 'Z') matrix = [[7, 7, 0], [0, 7, 7], [0, 0, 0]];
+            return { pos: { x: 3, y: 0 }, matrix, color: tetrisPieces.indexOf(type) + 1 };
+        };
+        const drawTetrisMatrix = (matrix, offset) => {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        tetrisCtx.fillStyle = tetrisColors[value];
+                        tetrisCtx.fillRect((x + offset.x) * 30, (y + offset.y) * 30, 29, 29);
+                    }
+                });
+            });
+        };
+        const renderTetris = () => {
+            tetrisCtx.fillStyle = '#000';
+            tetrisCtx.fillRect(0, 0, tetrisCanvas.width, tetrisCanvas.height);
+            drawTetrisMatrix(tetrisBoard, { x: 0, y: 0 });
+            if (tetrisPiece) drawTetrisMatrix(tetrisPiece.matrix, tetrisPiece.pos);
+        };
+        const updateTetris = () => {
+            tetrisPiece.pos.y++;
+            if (collideTetris()) {
+                tetrisPiece.pos.y--;
+                mergeTetris();
+                tetrisPiece = createTetrisPiece();
+                if (collideTetris()) {
+                    clearInterval(tetrisInterval);
+                    document.getElementById('tetris-overlay').classList.remove('hidden');
+                    document.getElementById('tetris-overlay').querySelector('h3').innerText = "GAME OVER";
+                }
+                clearTetrisLines();
+            }
+            renderTetris();
+        };
+        const collideTetris = () => {
+            const [m, o] = [tetrisPiece.matrix, tetrisPiece.pos];
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0 && (tetrisBoard[y + o.y] && tetrisBoard[y + o.y][x + o.x]) !== 0) return true;
+                }
+            }
+            return false;
+        };
+        const mergeTetris = () => {
+            tetrisPiece.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) tetrisBoard[y + tetrisPiece.pos.y][x + tetrisPiece.pos.x] = value;
+                });
+            });
+        };
+        const clearTetrisLines = () => {
+            let rowCount = 1;
+            outer: for (let y = tetrisBoard.length - 1; y > 0; --y) {
+                for (let x = 0; x < tetrisBoard[y].length; ++x) { if (tetrisBoard[y][x] === 0) continue outer; }
+                const row = tetrisBoard.splice(y, 1)[0].fill(0);
+                tetrisBoard.unshift(row);
+                ++y;
+                tetrisScore += rowCount * 10;
+                rowCount *= 2;
+            }
+            document.getElementById('tetris-score').innerText = tetrisScore;
+        };
+        const handleTetrisInput = (e) => {
+            if (document.getElementById('game-tetris-container').classList.contains('hidden')) return;
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+                e.preventDefault();
+            }
+            if (e.key === 'ArrowLeft') { tetrisPiece.pos.x--; if (collideTetris()) tetrisPiece.pos.x++; }
+            if (e.key === 'ArrowRight') { tetrisPiece.pos.x++; if (collideTetris()) tetrisPiece.pos.x--; }
+            if (e.key === 'ArrowDown') { updateTetris(); }
+            if (e.key === 'ArrowUp') {
+                const rotated = tetrisPiece.matrix[0].map((_, i) => tetrisPiece.matrix.map(row => row[i]).reverse());
+                const oldMatrix = tetrisPiece.matrix;
+                tetrisPiece.matrix = rotated;
+                if (collideTetris()) tetrisPiece.matrix = oldMatrix;
+            }
+            renderTetris();
         };
 
-        // ==========================================
-        // 13. INITIALIZATION
-        // ==========================================
-        // (Initialization moved to the end of the script block)
+        // --- FLAPPY KIET GAME ---
+        const flappyCanvas = document.getElementById('flappy-canvas');
+        const flappyCtx = flappyCanvas ? flappyCanvas.getContext('2d') : null;
+        let bird = { x: 50, y: 150, w: 25, h: 25, gravity: 0.4, lift: -7, velocity: 0 };
+        let pipes = [];
+        let flappyScore = 0;
+        let isFlappyOver = false;
+
+        window.startFlappy = () => {
+            document.getElementById('flappy-overlay').classList.add('hidden');
+            bird = { x: 50, y: 150, w: 25, h: 25, gravity: 0.4, lift: -7, velocity: 0 };
+            pipes = [];
+            flappyScore = 0;
+            isFlappyOver = false;
+            document.getElementById('flappy-score').innerText = '0';
+            if (flappyInterval) cancelAnimationFrame(flappyInterval);
+            loopFlappy();
+        };
+
+        const loopFlappy = () => {
+            if (isFlappyOver) return;
+            updateFlappy();
+            renderFlappy();
+            flappyInterval = requestAnimationFrame(loopFlappy);
+        };
+
+        const updateFlappy = () => {
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+
+            if (bird.y + bird.h > flappyCanvas.height) { bird.y = flappyCanvas.height - bird.h; bird.velocity = 0; gameOverFlappy(); }
+            if (bird.y < 0) { bird.y = 0; bird.velocity = 0; }
+
+            if (frameCount % 100 === 0) {
+                let gap = 150;
+                let topH = Math.random() * (flappyCanvas.height - gap - 100) + 50;
+                pipes.push({ x: flappyCanvas.width, top: topH, bottom: flappyCanvas.height - topH - gap, w: 50 });
+            }
+
+            pipes.forEach((p, i) => {
+                p.x -= 3;
+                if (p.x + p.w < 0) { pipes.splice(i, 1); flappyScore++; document.getElementById('flappy-score').innerText = flappyScore; }
+
+                if (bird.x + bird.w > p.x && bird.x < p.x + p.w) {
+                    if (bird.y < p.top || bird.y + bird.h > flappyCanvas.height - p.bottom) gameOverFlappy();
+                }
+            });
+        };
+
+        const renderFlappy = () => {
+            flappyCtx.fillStyle = '#70c5ce';
+            flappyCtx.fillRect(0, 0, flappyCanvas.width, flappyCanvas.height);
+
+            // Bird
+            flappyCtx.fillStyle = '#C6A87C';
+            flappyCtx.beginPath();
+            flappyCtx.roundRect(bird.x, bird.y, bird.w, bird.h, 8);
+            flappyCtx.fill();
+            flappyCtx.fillStyle = '#fff';
+            flappyCtx.fillRect(bird.x + 20, bird.y + 5, 5, 5);
+
+            // Pipes
+            flappyCtx.fillStyle = '#2d5a27';
+            pipes.forEach(p => {
+                flappyCtx.fillRect(p.x, 0, p.w, p.top);
+                flappyCtx.fillRect(p.x, flappyCanvas.height - p.bottom, p.w, p.bottom);
+            });
+        };
+
+        const gameOverFlappy = () => {
+            isFlappyOver = true;
+            document.getElementById('flappy-overlay').classList.remove('hidden');
+            document.getElementById('flappy-overlay').querySelector('h3').innerText = "GAME OVER";
+            document.getElementById('flappy-overlay').querySelector('p').innerText = `Điểm: ${flappyScore}`;
+        };
+
+        window.addEventListener('keydown', (e) => {
+            const isFlappyVisible = !document.getElementById('game-flappy-container').classList.contains('hidden');
+            if (e.code === 'Space' && isFlappyVisible) {
+                e.preventDefault();
+                bird.velocity = bird.lift;
+            }
+        });
+        flappyCanvas?.addEventListener('mousedown', () => { bird.velocity = bird.lift; });
+
+        let frameCount = 0;
+        setInterval(() => frameCount++, 10);
+
+        // --- MINESWEEPER GAME ---
+        let minesBoard = [];
+        let minesCols = 9, minesRows = 9, totalMines = 10;
+        let minesRevealed = 0;
+        let isMinesOver = false;
+
+        window.initMines = () => {
+            const container = document.getElementById('mines-board');
+            container.innerHTML = '';
+            minesBoard = [];
+            minesRevealed = 0;
+            isMinesOver = false;
+            document.getElementById('mines-count').innerText = totalMines;
+            document.getElementById('mines-reset-btn').innerText = '😊';
+
+            for (let r = 0; r < minesRows; r++) {
+                minesBoard[r] = [];
+                for (let c = 0; c < minesCols; c++) {
+                    minesBoard[r][c] = { r, c, mine: false, revealed: false, flagged: false, count: 0 };
+                    const cell = document.createElement('div');
+                    cell.className = 'w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded border border-white/5 flex items-center justify-center font-bold text-sm cursor-pointer hover:bg-white/20 select-none';
+                    cell.id = `mine-${r}-${c}`;
+                    cell.onclick = () => revealMine(r, c);
+                    cell.oncontextmenu = (e) => { e.preventDefault(); flagMine(r, c); };
+                    container.appendChild(cell);
+                }
+            }
+
+            // Place mines
+            let mCount = 0;
+            while (mCount < totalMines) {
+                let r = Math.floor(Math.random() * minesRows);
+                let c = Math.floor(Math.random() * minesCols);
+                if (!minesBoard[r][c].mine) {
+                    minesBoard[r][c].mine = true;
+                    mCount++;
+                }
+            }
+
+            // Calculate numbers
+            for (let r = 0; r < minesRows; r++) {
+                for (let c = 0; c < minesCols; c++) {
+                    if (minesBoard[r][c].mine) continue;
+                    let count = 0;
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            let nr = r + dr, nc = c + dc;
+                            if (nr >= 0 && nr < minesRows && nc >= 0 && nc < minesCols && minesBoard[nr][nc].mine) count++;
+                        }
+                    }
+                    minesBoard[r][c].count = count;
+                }
+            }
+        };
+
+        const revealMine = (r, c) => {
+            if (isMinesOver || minesBoard[r][c].revealed || minesBoard[r][c].flagged) return;
+            const b = minesBoard[r][c];
+            b.revealed = true;
+            const el = document.getElementById(`mine-${r}-${c}`);
+            el.classList.remove('bg-white/10', 'hover:bg-white/20');
+            el.classList.add('bg-white/5');
+
+            if (b.mine) {
+                el.innerText = '💣';
+                el.classList.add('bg-red-500/20');
+                gameOverMines(false);
+                return;
+            }
+
+            if (b.count > 0) {
+                el.innerText = b.count;
+                const colors = ['', 'text-blue-400', 'text-green-400', 'text-red-400', 'text-purple-400', 'text-yellow-400', 'text-cyan-400', 'text-white', 'text-slate-300'];
+                el.classList.add(colors[b.count]);
+            } else {
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        let nr = r + dr, nc = c + dc;
+                        if (nr >= 0 && nr < minesRows && nc >= 0 && nc < minesCols) revealMine(nr, nc);
+                    }
+                }
+            }
+
+            minesRevealed++;
+            if (minesRevealed === (minesRows * minesCols) - totalMines) gameOverMines(true);
+        };
+
+        const flagMine = (r, c) => {
+            if (isMinesOver || minesBoard[r][c].revealed) return;
+            const b = minesBoard[r][c];
+            b.flagged = !b.flagged;
+            const el = document.getElementById(`mine-${r}-${c}`);
+            el.innerText = b.flagged ? '🚩' : '';
+            const countEl = document.getElementById('mines-count');
+            countEl.innerText = parseInt(countEl.innerText) + (b.flagged ? -1 : 1);
+        };
+
+        const gameOverMines = (win) => {
+            isMinesOver = true;
+            document.getElementById('mines-reset-btn').innerText = win ? '😎' : '😵';
+            if (!win) {
+                minesBoard.forEach(row => row.forEach(b => {
+                    if (b.mine && !b.revealed) document.getElementById(`mine-${b.r}-${b.c}`).innerText = '💣';
+                }));
+            }
+        };
+
+        // --- KIET-POOL (BIDA) GAME ---
+        const poolCanvas = document.getElementById('pool-canvas');
+        const poolCtx = poolCanvas ? poolCanvas.getContext('2d') : null;
+        let poolBalls = [];
+        let poolCueBall = null;
+        let poolPower = 0;
+        let isPowering = false;
+        let poolMouse = { x: 0, y: 0 };
+        const poolFriction = 0.985;
+        const poolPockets = [
+            { x: 0, y: 0 }, { x: 400, y: 0 }, { x: 800, y: 0 },
+            { x: 0, y: 400 }, { x: 400, y: 400 }, { x: 800, y: 400 }
+        ];
+
+        let currentPoolType = 'practice';
+        let currentPoolMode = 'full';
+        let poolCurrentTurn = 1; // 1 or 2
+        let isWaitingForStop = false;
+        let aiThinkingTimer = 0;
+
+        window.setPoolType = (type) => {
+            currentPoolType = type;
+            document.querySelectorAll('.pool-menu-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.id === `pool-type-${type}`);
+            });
+        };
+
+        window.setPoolMode = (mode) => {
+            currentPoolMode = mode;
+            document.querySelectorAll('.pool-mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.id === `pool-mode-${mode}`);
+            });
+        };
+
+        window.showPoolMenu = () => {
+            document.getElementById('pool-menu-overlay').classList.remove('hidden');
+            document.getElementById('pool-overlay').classList.add('hidden');
+            if (poolInterval) cancelAnimationFrame(poolInterval);
+        };
+
+        window.startPoolGame = () => {
+            document.getElementById('pool-menu-overlay').classList.add('hidden');
+            initPool();
+        };
+
+        window.initPool = () => {
+            poolBalls = [];
+            poolCurrentTurn = 1;
+            isWaitingForStop = false;
+            document.getElementById('pool-overlay').classList.add('hidden');
+
+            // Status Text
+            updatePoolStatus();
+
+            // Cue Ball (White)
+            poolCueBall = { x: 200, y: 200, vx: 0, vy: 0, r: 8, color: '#fff', pocketed: false, id: 'cue' };
+            poolBalls.push(poolCueBall);
+
+            const r = 8;
+            const colors = ['#fde047', '#3b82f6', '#ef4444', '#8b5cf6', '#f97316', '#22c55e', '#a855f7', '#111', '#fb7185', '#2dd4bf'];
+
+            if (currentPoolMode === 'full') {
+                const startX = 550, startY = 200;
+                let count = 0;
+                for (let i = 0; i < 5; i++) {
+                    for (let j = 0; j <= i; j++) {
+                        poolBalls.push({
+                            x: startX + i * (r * 1.7),
+                            y: startY - (i * r * 1.05) + (j * r * 2.1),
+                            vx: 0, vy: 0, r: r, color: colors[count % colors.length], pocketed: false
+                        });
+                        count++;
+                    }
+                }
+            } else if (currentPoolMode === '9ball') {
+                const startX = 550, startY = 200;
+                const diamond = [
+                    [0, 0],
+                    [1, -1], [1, 1],
+                    [2, -2], [2, 0], [2, 2],
+                    [3, -1], [3, 1],
+                    [4, 0]
+                ];
+                diamond.forEach((pos, idx) => {
+                    poolBalls.push({
+                        x: startX + pos[0] * (r * 1.7),
+                        y: startY + pos[1] * r * 1.05,
+                        vx: 0, vy: 0, r: r, color: idx === 4 ? '#111' : colors[idx % colors.length], pocketed: false
+                    });
+                });
+            } else if (currentPoolMode === '3c') {
+                // 3-Cushion: White, Yellow, Red
+                poolBalls.push({ x: 600, y: 200, vx: 0, vy: 0, r: r, color: '#fde047', pocketed: false, id: 'target1' }); // Yellow
+                poolBalls.push({ x: 650, y: 200, vx: 0, vy: 0, r: r, color: '#ef4444', pocketed: false, id: 'target2' }); // Red
+            }
+
+            if (poolInterval) cancelAnimationFrame(poolInterval);
+            loopPool();
+        };
+
+        const updatePoolStatus = () => {
+            const status = document.getElementById('pool-status');
+            if (currentPoolType === 'practice') {
+                status.innerText = "Chế Độ Đấu Tập - Tự Do Ngắm Bắn";
+            } else if (currentPoolType === 'pvp') {
+                status.innerText = `Lượt Cơ Thủ ${poolCurrentTurn} - Sẵn Sàng!`;
+            } else if (currentPoolType === 'ai') {
+                status.innerText = poolCurrentTurn === 1 ? "Đến Lượt Bạn - Hãy Cẩn Thận!" : "Máy Đang Tính Toán...";
+            }
+        };
+
+        const loopPool = () => {
+            updatePool();
+            renderPool();
+            poolInterval = requestAnimationFrame(loopPool);
+        };
+
+        const updatePool = () => {
+            let moving = false;
+            poolBalls.forEach(b => {
+                if (b.pocketed) return;
+                b.x += b.vx;
+                b.y += b.vy;
+                b.vx *= poolFriction;
+                b.vy *= poolFriction;
+                if (Math.abs(b.vx) < 0.1) b.vx = 0;
+                if (Math.abs(b.vy) < 0.1) b.vy = 0;
+                if (b.vx !== 0 || b.vy !== 0) moving = true;
+
+                // Wall collisions
+                if (b.x - b.r < 0 || b.x + b.r > poolCanvas.width) { b.vx *= -0.8; b.x = b.x < b.r ? b.r : poolCanvas.width - b.r; }
+                if (b.y - b.r < 0 || b.y + b.r > poolCanvas.height) { b.vy *= -0.8; b.y = b.y < b.r ? b.r : poolCanvas.height - b.r; }
+
+                // Pockets (Disable for 3C)
+                if (currentPoolMode !== '3c') {
+                    poolPockets.forEach(p => {
+                        const dist = Math.hypot(b.x - p.x, b.y - p.y);
+                        if (dist < 22) {
+                            b.pocketed = true;
+                            b.vx = 0; b.vy = 0;
+                            if (b.id === 'cue') { // Cue ball in pocket
+                                setTimeout(() => { b.pocketed = false; b.x = 200; b.y = 200; }, 500);
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Ball collisions
+            for (let i = 0; i < poolBalls.length; i++) {
+                for (let j = i + 1; j < poolBalls.length; j++) {
+                    const b1 = poolBalls[i], b2 = poolBalls[j];
+                    if (b1.pocketed || b2.pocketed) continue;
+                    const dx = b2.x - b1.x, dy = b2.y - b1.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < b1.r + b2.r) {
+                        const angle = Math.atan2(dy, dx);
+                        const sin = Math.sin(angle), cos = Math.cos(angle);
+                        const x2 = dx * cos + dy * sin;
+                        const vx1 = b1.vx * cos + b1.vy * sin, vy1 = b1.vy * cos - b1.vx * sin;
+                        const vx2 = b2.vx * cos + b2.vy * sin, vy2 = b2.vy * cos - b2.vx * sin;
+                        const vx1Final = vx2, vx2Final = vx1;
+                        const overlap = (b1.r + b2.r) - dist;
+                        b1.x -= (overlap / 2) * cos; b1.y -= (overlap / 2) * sin;
+                        b2.x += (overlap / 2) * cos; b2.y += (overlap / 2) * sin;
+                        b1.vx = vx1Final * cos - vy1 * sin; b1.vy = vy1 * cos + vx1Final * sin;
+                        b2.vx = vx2Final * cos - vy2 * sin; b2.vy = vy2 * cos + vx2Final * sin;
+                    }
+                }
+            }
+
+            // Turn Management
+            if (!moving && isWaitingForStop) {
+                isWaitingForStop = false;
+                if (currentPoolType !== 'practice') {
+                    poolCurrentTurn = poolCurrentTurn === 1 ? 2 : 1;
+                    updatePoolStatus();
+                    if (currentPoolType === 'ai' && poolCurrentTurn === 2) {
+                        aiThinkingTimer = 60; // Wait a bit before AI shoots
+                    }
+                }
+            }
+
+            // AI Logic
+            if (!moving && currentPoolType === 'ai' && poolCurrentTurn === 2 && aiThinkingTimer > 0) {
+                aiThinkingTimer--;
+                if (aiThinkingTimer === 0) {
+                    const target = poolBalls.find(b => !b.pocketed && b.id !== 'cue');
+                    if (target) {
+                        const angle = Math.atan2(target.y - poolCueBall.y, target.x - poolCueBall.x);
+                        // Add some randomness for "human" feel
+                        const randomAngle = angle + (Math.random() * 0.05 - 0.025);
+                        const force = 8 + Math.random() * 8;
+                        poolCueBall.vx = Math.cos(randomAngle) * force;
+                        poolCueBall.vy = Math.sin(randomAngle) * force;
+                        isWaitingForStop = true;
+                    }
+                }
+            }
+
+            if (!moving && isPowering) {
+                poolPower = Math.min(poolPower + 2, 100);
+                document.getElementById('pool-power-bar').style.width = poolPower + '%';
+            }
+
+            // Win detection (all target balls pocketed)
+            if (!moving && currentPoolMode !== '3c') {
+                const targets = poolBalls.filter(b => b.id !== 'cue');
+                if (targets.length > 0 && targets.every(b => b.pocketed)) {
+                    document.getElementById('pool-overlay').classList.remove('hidden');
+                }
+            }
+        };
+
+        const renderPool = () => {
+            poolCtx.fillStyle = '#1a4d2e';
+            poolCtx.fillRect(0, 0, poolCanvas.width, poolCanvas.height);
+
+            // Pockets
+            if (currentPoolMode !== '3c') {
+                poolCtx.fillStyle = '#000';
+                poolPockets.forEach(p => { poolCtx.beginPath(); poolCtx.arc(p.x, p.y, 22, 0, Math.PI * 2); poolCtx.fill(); });
+            }
+
+            // Balls
+            poolBalls.forEach(b => {
+                if (b.pocketed) return;
+                poolCtx.fillStyle = b.color;
+                poolCtx.beginPath(); poolCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2); poolCtx.fill();
+                // Shine
+                poolCtx.fillStyle = 'rgba(255,255,255,0.3)';
+                poolCtx.beginPath(); poolCtx.arc(b.x - 2, b.y - 2, 2.5, 0, Math.PI * 2); poolCtx.fill();
+            });
+
+            // Cue
+            const isMoving = poolBalls.some(b => Math.abs(b.vx) > 0 || Math.abs(b.vy) > 0);
+            const isMyTurn = currentPoolType === 'practice' || (currentPoolType === 'pvp') || (currentPoolType === 'ai' && poolCurrentTurn === 1);
+
+            if (!isMoving && !poolCueBall.pocketed && isMyTurn) {
+                const angle = Math.atan2(poolMouse.y - poolCueBall.y, poolMouse.x - poolCueBall.x);
+                // Aim Line
+                poolCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+                poolCtx.setLineDash([5, 5]);
+                poolCtx.beginPath();
+                poolCtx.moveTo(poolCueBall.x, poolCueBall.y);
+                poolCtx.lineTo(poolCueBall.x - Math.cos(angle) * 300, poolCueBall.y - Math.sin(angle) * 300);
+                poolCtx.stroke();
+                poolCtx.setLineDash([]);
+
+                // Stick
+                poolCtx.strokeStyle = '#3d2b1f';
+                poolCtx.lineWidth = 5;
+                poolCtx.beginPath();
+                const stickDist = 20 + poolPower / 2;
+                poolCtx.moveTo(poolCueBall.x + Math.cos(angle) * stickDist, poolCueBall.y + Math.sin(angle) * stickDist);
+                poolCtx.lineTo(poolCueBall.x + Math.cos(angle) * (stickDist + 180), poolCueBall.y + Math.sin(angle) * (stickDist + 180));
+                poolCtx.stroke();
+            }
+        };
+
+        poolCanvas?.addEventListener('mousemove', (e) => {
+            const rect = poolCanvas.getBoundingClientRect();
+            poolMouse.x = e.clientX - rect.left;
+            poolMouse.y = e.clientY - rect.top;
+        });
+        poolCanvas?.addEventListener('mousedown', () => {
+            const isMoving = poolBalls.some(b => Math.abs(b.vx) > 0 || Math.abs(b.vy) > 0);
+            const isMyTurn = currentPoolType === 'practice' || (currentPoolType === 'pvp') || (currentPoolType === 'ai' && poolCurrentTurn === 1);
+            if (!isMoving && isMyTurn) {
+                isPowering = true; poolPower = 0;
+            }
+        });
+        poolCanvas?.addEventListener('mouseup', () => {
+            if (isPowering) {
+                const angle = Math.atan2(poolMouse.y - poolCueBall.y, poolMouse.x - poolCueBall.x);
+                const force = poolPower / 5;
+                poolCueBall.vx = -Math.cos(angle) * force;
+                poolCueBall.vy = -Math.sin(angle) * force;
+                isWaitingForStop = true;
+            }
+            isPowering = false; poolPower = 0;
+            document.getElementById('pool-power-bar').style.width = '0%';
+        });
 
         // --- PHOTOBOOTH STATE ---
         let pbSelectedLayout = 'v4';
