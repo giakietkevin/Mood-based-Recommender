@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport" />
-    <title>KietSound </title>
+    <title>KietStation </title>
 
     <link rel="manifest" href="/manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
@@ -123,7 +123,7 @@
                     <a href="/" class="hover:opacity-90 transition-opacity">
                         <span
                             class="text-lg sm:text-xl font-display font-bold text-white uppercase tracking-tight truncate">
-                            Kiet<span class="text-primary">Sound</span>
+                            Kiet<span class="text-primary">Station</span>
                         </span>
                     </a>
                 </div>
@@ -187,7 +187,7 @@
             <div
                 class="flex w-full overflow-x-auto no-scrollbar gap-1 p-1 bg-white/10 sm:bg-white/5 rounded-2xl border border-white/5 sm:border-none">
                 <button type="button" onclick="showView('dashboard')" id="nav-dashboard"
-                    class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all bg-white/10 text-white shadow-sm whitespace-nowrap">HOME</button>
+                    class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all bg-white/10 text-white shadow-sm whitespace-nowrap">MUSIC-RECOMMENDER</button>
                 <button type="button" onclick="showView('studio')" id="nav-studio"
                     class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">STUDIO</button>
                 <button type="button" onclick="showView('library')" id="nav-library"
@@ -205,6 +205,59 @@
     <main class="max-w-7xl mx-auto px-4">
 
         <div id="view-dashboard" class="grid lg:grid-cols-12 gap-6 animate-fade-in">
+            <!-- Feature Introduction Banner -->
+            <div class="lg:col-span-12 glass-card rounded-[2.5rem] p-8 border border-white/10 overflow-hidden relative group">
+                <!-- Glowing background accents -->
+                <div class="absolute -top-24 -left-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/20 transition-all duration-700"></div>
+                <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-blue-500/5 blur-[100px] rounded-full group-hover:bg-blue-500/10 transition-all duration-700"></div>
+                
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div class="flex-1 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/10 border border-primary/20">
+                                <span class="material-icons-round text-primary text-2xl">psychology</span>
+                            </div>
+                            <div>
+                                <h1 class="text-2xl sm:text-3xl font-display font-black text-white uppercase tracking-tighter">KIETSTATION <span class="text-primary italic">AI</span></h1>
+                                <div class="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-primary/80 uppercase tracking-[0.2em] mt-1">
+                                    <span>Face Analysis</span>
+                                    <span class="w-1 h-1 rounded-full bg-primary/30"></span>
+                                    <span>Music Discovery</span>
+                                    <span class="w-1 h-1 rounded-full bg-primary/30"></span>
+                                    <span>Future Experience</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-slate-400 text-sm sm:text-base leading-relaxed max-w-2xl font-medium">
+                            Chào mừng bạn đến với <span class="text-white font-bold">KietStation Alpha</span>. Hệ thống trí tuệ nhân tạo của chúng tôi sử dụng công nghệ nhận diện khuôn mặt tiên tiến để "thấu hiểu" cảm xúc của bạn qua camera, từ đó tự động đề xuất những bản nhạc (Youtube & Podcast) hoàn hảo nhất phù hợp với tâm trạng của bạn ngay lúc này.
+                        </p>
+                    </div>
+                    
+                    <div class="hidden lg:flex items-center gap-8">
+                        <div class="text-center group">
+                            <div class="w-10 h-10 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors border border-white/5 group-hover:border-primary/20">
+                                <span class="material-icons-round text-slate-500 group-hover:text-primary transition-colors">videocam</span>
+                            </div>
+                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Connect</p>
+                        </div>
+                        <div class="w-8 h-px bg-white/10"></div>
+                        <div class="text-center group">
+                            <div class="w-10 h-10 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors border border-white/5 group-hover:border-primary/20">
+                                <span class="material-icons-round text-slate-500 group-hover:text-primary transition-colors">face</span>
+                            </div>
+                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Analyze</p>
+                        </div>
+                        <div class="w-8 h-px bg-white/10"></div>
+                        <div class="text-center group">
+                            <div class="w-10 h-10 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors border border-white/5 group-hover:border-primary/20">
+                                <span class="material-icons-round text-slate-500 group-hover:text-primary transition-colors">music_note</span>
+                            </div>
+                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Play</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <section class="lg:col-span-5 space-y-4">
                 <div
                     class="aspect-video sm:aspect-[4/3] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden glass-card relative bg-black shadow-2xl border border-white/10 group mb-4">
@@ -505,7 +558,7 @@
                         </form>
                         <button onclick="toggleGachaModal()"
                             class="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-xs px-4 py-3 rounded-xl transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-lg shadow-orange-500/20 whitespace-nowrap">
-                            <span class="material-icons-round text-sm"></span> GACHA
+                            <span class="material-icons-round text-sm">casino</span> GACHA
                         </button>
                     </div>
                 </div>
@@ -1337,7 +1390,7 @@
                                 class="text-2xl font-display font-bold text-white uppercase italic tracking-tight">Guest
                                 User</h2>
                             <p id="profile-view-email"
-                                class="text-slate-500 text-xs font-bold tracking-widest uppercase">guest@kietsound.com
+                                class="text-slate-500 text-xs font-bold tracking-widest uppercase">guest@station.com
                             </p>
                         </div>
 
@@ -3625,7 +3678,7 @@
                 photoHtml = pbCapturedPhotos.map((photo) => `<div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-sm"><img src="${photo}" style="filter: ${getCanvasFilter(pbSelectedFilter)}" class="w-full h-full object-cover"></div>`).join('');
             }
 
-            let brandingHtml = `<div class="absolute bottom-6 left-0 right-0 text-center font-bold tracking-[0.4em] opacity-40 text-xs" style="color: ${(pbFrameColor === '#000000' || pbFrameColor === '#8B0000') ? '#FFFFFF' : '#000000'}">KIETSOUND</div>`;
+            let brandingHtml = `<div class="absolute bottom-6 left-0 right-0 text-center font-bold tracking-[0.4em] opacity-40 text-xs" style="color: ${(pbFrameColor === '#000000' || pbFrameColor === '#8B0000') ? '#FFFFFF' : '#000000'}">KIETSTATION</div>`;
 
             let stickerHtml = pbActiveStickers.map((s, idx) => `
                 <div class="absolute text-5xl pointer-events-auto select-none z-10 cursor-pointer hover:scale-125 transition-transform" 
@@ -3685,7 +3738,7 @@
             ctx.fillStyle = (pbFrameColor === '#000000' || pbFrameColor === '#8B0000' || pbFrameColor === '#00008B') ? '#FFFFFF' : '#000000';
             ctx.font = 'bold 48px Arial'; ctx.textAlign = 'center';
             ctx.globalAlpha = 0.5;
-            ctx.fillText('KIETSOUND', finalWidth / 2, finalHeight - 80);
+            ctx.fillText('KIETSTATION', finalWidth / 2, finalHeight - 80);
 
             const dataUrl = canvas.toDataURL('image/png');
             addToGallery(dataUrl);
