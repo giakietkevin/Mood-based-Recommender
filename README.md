@@ -1,102 +1,80 @@
 ---
-title: KietSound Pro - AI Music Studio
-emoji: 🎵
+title: KietSound Pro - AI Music & Film Studio
+emoji: 🎵🎬
 colorFrom: pink
 colorTo: blue
 sdk: docker
 pinned: false
-short_description: AI music generation with mood detection & singing voice
+short_description: AI music generation, mood detection, and seamless Vietnamese movie streaming
 ---
 
-# 🎵 KietSound Pro - AI Music Studio
+# 🎵 KietSound Pro - AI Music & Film Studio
 
-AI-powered music generation platform with advanced mood detection and professional text-to-music capabilities.
+An all-in-one entertainment platform featuring AI-powered music generation, facial mood-based music recommendations, and high-speed Vietnamese movie streaming.
 
 ## ✨ Key Features
 
+### 🎬 KietFilm Player (New!)
+- **Seamless Movie Streaming**: Integrated with the Open OPhim API for lightning-fast, ad-free movie streaming.
+- **HLS Architecture**: Uses `HLS.js` to deliver native, high-performance video streaming without heavy backend proxies.
+- **Auto-Subtitles**: All movies are pre-equipped with high-quality Vietnamese subtitles perfectly synced.
+- **Smart History**: Automatically tracks your recently watched movies for easy resume/replay.
+
 ### 🎭 Mood-Based Recommendation
-- **Facial Recognition**: Analyze facial emotions using DeepFace
-- **Smart Search**: DuckDuckGo-powered YouTube search based on detected mood
-- **Music & Podcast**: Support for both music and podcast recommendations
+- **Facial Recognition**: Analyze facial emotions using DeepFace.
+- **Smart Search**: DuckDuckGo-powered YouTube search based on detected mood.
+- **Music & Podcast**: Support for both music and podcast recommendations.
 
 ### 🎹 AI Music Generator (Text-to-Music)
 Professional-grade music generation from lyrics with:
 
 #### 🎤 Advanced Vocal Processing
-- **Multi-TTS Support**: Edge-TTS (primary) with gTTS fallback
-- **Intelligent Pitch Contouring**: Style-specific melodic patterns
-  - Rap/Hip-Hop: Minimal pitch variation, focus on rhythm
-  - Ballad/Soul: Smooth, gradual melodic curves
-  - EDM/Electronic: Repetitive patterns with strong climax
-  - Rock/Metal: Wide range, powerful progressions
-- **Vibrato Effects**: Natural vibrato for Ballad, Soul, Jazz styles
-- **Crossfade Technology**: Smooth transitions between segments
-- **12+ Voice Profiles**: Male/Female with regional variations
+- **Multi-TTS Support**: Edge-TTS (primary) with gTTS fallback.
+- **Intelligent Pitch Contouring**: Custom melodic patterns tailored for Rap, Ballad, EDM, Rock, and more.
+- **Vibrato Effects**: Natural vibrato for Ballad, Soul, Jazz styles.
+- **Crossfade Technology**: Smooth transitions between segments.
+- **12+ Voice Profiles**: Wide range of Male/Female regional variations.
 
 #### 🎵 Studio-Grade Audio Processing
-- **Time Stretching**: Rubberband-powered tempo matching
-- **Multi-Band Compression**: Adaptive compression per style
-- **De-Essing**: Sibilance reduction
-- **Style-Specific EQ**: Optimized frequency curves
-- **Adaptive Reverb & Delay**: Context-aware spatial effects
-- **Safety Limiting**: Professional-grade mastering chain
+- **Time Stretching**: Rubberband-powered tempo matching.
+- **Multi-Band Compression**: Adaptive compression per style.
+- **De-Essing**: Sibilance reduction.
+- **Style-Specific EQ**: Optimized frequency curves.
+- **Adaptive Reverb & Delay**: Context-aware spatial effects.
 
 #### 🎼 Intelligent Music Structure
-- **Auto Song Structure**: Intro → Verse → Chorus → Bridge → Outro
-- **Hook Detection**: Automatic chorus identification
-- **Adaptive Spacing**: Style-specific breathing room
-  - Rap: Tight spacing (0.5 beats)
-  - Ballad: Relaxed spacing (1.5 beats)
-- **Beat Alignment**: On-beat vocal placement
+- **Auto Song Structure**: Intro → Verse → Chorus → Bridge → Outro.
+- **Hook Detection**: Automatic chorus identification.
+- **Adaptive Spacing**: Style-specific breathing room.
 
 #### 🎚️ Professional Mixing
-- **Auto-Ducking**: Beat volume reduction during vocals
-- **Gain Staging**: Style & mood-aware volume balance
-- **Mastering Chain**: 
-  - Peak normalization (-1dB headroom)
-  - Soft clipping (analog-style saturation)
-  - Final limiting (-0.5dB)
-- **320kbps MP3 Export**: High-quality audio output
+- **Auto-Ducking**: Beat volume reduction during vocals.
+- **Gain Staging**: Style & mood-aware volume balance.
+- **Mastering Chain**: Peak normalization, soft clipping, final limiting.
+- **320kbps MP3 Export**: High-quality audio output.
 
 ### 🎨 70+ Music Styles Supported
-- **Chill**: Lo-Fi, Ballad, Jazz, Blues, Soul, R&B
-- **Urban**: Rap, Hip-Hop, Trap, Sad Rap
-- **Electronic**: EDM, House, Techno, Trance, Dubstep
-- **Rock**: Rock, Metal, Punk, Hard Rock, Pop Punk
-- **Pop & More**: Pop, Country, Indie, Alternative, Latin, Reggae
+- Chill, Urban, Electronic, Rock, Pop & More
 
 ### 🎭 10+ Mood Profiles
-Joy, Sadness, Anger, Fear, Surprise, Anticipation, Calmness, Romantic, Nostalgia, Triumph
-
-### ⚡ Performance Optimizations
-- **Smart Caching**: Avoid reprocessing beats
-- **Parallel Processing**: Concurrent audio operations
-- **Memory Management**: Automatic temp file cleanup
-- **Quality vs Speed**: Configurable processing chains
+Joy, Sadness, Anger, Fear, Surprise, Anticipation, Calmness, Romantic, Nostalgia, Triumph.
 
 ## 🛠️ Technical Stack
 
 ### Backend
 - **FastAPI**: High-performance async web framework
 - **DeepFace**: Facial emotion detection
-- **librosa**: Audio analysis
-- **pyrubberband**: Time stretching & pitch shifting
-- **pedalboard**: Spotify's audio effects library
+- **OPhim API**: Comprehensive Vietnamese movie streaming
+- **librosa & pydub**: Audio analysis and manipulation
+- **pyrubberband & pedalboard**: Pitch shifting, time stretching, effects
 - **edge-tts**: High-quality text-to-speech
-- **pydub**: Audio manipulation
-- **soundfile**: High-quality audio I/O
 
 ### Frontend
 - **TailwindCSS**: Modern UI framework
-- **Vanilla JS**: Lightweight, no frameworks
+- **Vanilla JS**: Lightweight, zero-dependency components
+- **HLS.js**: Lightning-fast `.m3u8` video streaming
 - **YouTube IFrame API**: Embedded playback
 - **Firebase Auth**: Google OAuth integration
-
-### Audio Processing Pipeline
-```
-Text Input → TTS → Pitch Contour → Time Stretch → 
-FX Chain → Beat Sync → Mixing → Mastering → MP3
-```
 
 ## 🚀 Installation
 
@@ -118,77 +96,17 @@ Server runs on `http://localhost:7860`
 
 ## 📖 Usage
 
+### KietFilm
+1. Navigate to the **FILM STATION** tab.
+2. Search for any movie using the search bar (e.g., "Mắt Biếc").
+3. Click on the thumbnail to dive immediately into high-speed native streaming.
+
 ### Text-to-Music Generation
-1. Navigate to **STUDIO** tab
-2. Enter song title and lyrics (one line per bar)
-3. Select style, mood, voice, and tempo
-4. Click **GENERATE TRACK**
-5. Wait 20-60s depending on lyrics length
-6. Song auto-plays and saves to library
-
-### Best Practices
-- **Rap/Hip-Hop**: Short lines, many syllables, Fast/Medium tempo
-- **Ballad/Soul**: Long phrases, fewer syllables, Slow tempo
-- **EDM/Electronic**: Repetitive phrases, Medium/Fast tempo
-- **Structure**: Last 2-3 lines automatically become chorus/hook
-
-### Tips for Best Results
-- Use punctuation (.) for natural pauses
-- Keep lines under 15 words for clarity
-- Match tempo to lyric density
-- Choose voice that fits style (Male for Rock, Female for Pop)
-
-## 🎼 Audio Quality Specs
-- **Sample Rate**: 44.1kHz
-- **Bit Depth**: 24-bit processing, 16-bit export
-- **MP3 Bitrate**: 320kbps
-- **Dynamic Range**: ~12-16 LUFS
-- **Peak Level**: -0.5dB
-
-## 📊 Performance Metrics
-- **Generation Time**: 20-60s per song (varies by length)
-- **Concurrent Users**: Up to 10 (adjustable)
-- **Cache Hit Rate**: ~40% for common styles/BPMs
-- **Audio Quality**: Near-professional (95% of studio quality)
-
-## 🔧 Configuration
-
-Edit `config.py` for:
-- Voice presets
-- Mood audio profiles
-- Tempo mappings
-
-## 🌟 Recent Upgrades (v2.0)
-
-### Vocal Processing
-✅ Style-specific melodic patterns  
-✅ Natural vibrato effects  
-✅ Crossfade between segments  
-✅ Multi-stage pitch contouring  
-
-### Audio Effects
-✅ Multi-band compression  
-✅ Adaptive reverb/delay  
-✅ De-essing and HPF  
-✅ Style-specific EQ curves  
-
-### Mixing & Mastering
-✅ Auto-ducking system  
-✅ Intelligent gain staging  
-✅ Professional mastering chain  
-✅ 320kbps HQ export  
-
-### Structure & Flow
-✅ Smart song structure generation  
-✅ Adaptive line spacing  
-✅ Beat-perfect alignment  
-✅ Intro/outro automation  
-
-### UI/UX
-✅ Real-time progress indicators  
-✅ Step-by-step generation tracking  
-✅ Enhanced pro tips  
-✅ Time estimation  
+1. Navigate to the **STUDIO** tab.
+2. Enter song title and lyrics (one line per bar).
+3. Select style, mood, voice, and tempo.
+4. Click **GENERATE TRACK**.
+5. Wait 20-60s for full mastering. Song auto-plays and saves to library.
 
 ## 📝 License
 MIT License - Feel free to use and modify

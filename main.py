@@ -852,10 +852,10 @@ async def save_film(uid: str = Form(...), film: str = Form(...)):
     user_films = db.get(uid, [])
     
     film_dict = json.loads(film)
-    magnet = film_dict.get("magnet")
+    slug = film_dict.get("slug")
     
     # Remove old entry if exists (to bump to top)
-    user_films = [f for f in user_films if f.get("magnet") != magnet]
+    user_films = [f for f in user_films if f.get("slug") != slug]
     
     # Add to beginning
     user_films.insert(0, film_dict)
@@ -868,11 +868,11 @@ async def save_film(uid: str = Form(...), film: str = Form(...)):
     return {"status": "success", "action": "added", "films": user_films}
 
 @app.delete("/films")
-async def delete_film(uid: str = Query(...), magnet: str = Query(...)):
+async def delete_film(uid: str = Query(...), slug: str = Query(...)):
     if not uid: return {"status": "error"}
     db = load_json_db(FILMS_DB_FILE, dict)
     user_films = db.get(uid, [])
-    user_films = [f for f in user_films if f.get("magnet") != magnet]
+    user_films = [f for f in user_films if f.get("slug", f.get("magnet")) != slug]
     db[uid] = user_films
     save_json_db(FILMS_DB_FILE, db)
     return {"status": "success", "action": "deleted", "films": user_films}

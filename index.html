@@ -21,6 +21,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -401,72 +402,31 @@
                         <div id="film-pl-placeholder" class="text-center p-6 text-slate-500">
                             <span class="material-icons-round text-5xl mb-2 opacity-50">smart_display</span>
                             <p class="text-sm font-bold">Chưa có video nào đang phát</p>
-                            <p class="text-xs mt-1">Dán Magnet link vào ô bên dưới để bắt đầu Stream.</p>
+                            <p class="text-xs mt-1">Tìm kiếm hoặc chọn phim đề cử bên dưới để xem.</p>
                         </div>
                         <div id="film-output" class="absolute inset-0 w-full h-full hidden">
-                            <!-- WebTorrent will inject video element here -->
-                        </div>
-                        <!-- Progress overlay details -->
-                        <div id="film-progress-overlay"
-                            class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 hidden flex-col justify-end transition-opacity">
-                            <div class="flex items-center justify-between text-[10px] text-white font-bold mb-1">
-                                <span><span id="film-downloaded">0 MB</span> / <span id="film-total">0 MB</span></span>
-                                <span><span class="text-green-400" id="film-speed">0 KB/s</span> ↓</span>
-                                <span><span class="text-blue-400" id="film-peers">0</span> Peers</span>
-                            </div>
-                            <div class="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
-                                <div id="film-progress-bar" class="h-full bg-primary w-0 transition-all duration-300">
-                                </div>
-                            </div>
+                            <!-- HLS.js will inject video element here -->
                         </div>
                     </div>
 
                     <!-- Controls -->
                     <div class="w-full space-y-4">
-                        <form onsubmit="startFilmStream(event)" class="relative">
-                            <input type="text" id="film-magnet-input"
-                                placeholder="Dán Magnet Link vào đây (magnet:?xt=urn:btih:...)"
+                        <form onsubmit="searchFilmOphim(event)" class="relative">
+                            <input type="text" id="film-search-input"
+                                placeholder="Nhập tên phim cần tìm (VD: Mắt Biếc)..."
                                 class="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-24 py-3 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-500 shadow-inner">
                             <span
-                                class="material-icons-round absolute left-3 top-3.5 text-slate-400 text-sm">link</span>
+                                class="material-icons-round absolute left-3 top-3.5 text-slate-400 text-sm">search</span>
                             <button type="submit" id="btn-stream-film"
                                 class="absolute right-1 top-1 bottom-1 bg-primary text-[#0a0a0a] hover:bg-white font-bold text-xs px-4 rounded-lg transition-colors flex items-center gap-1 shadow-lg shadow-primary/20">
-                                <span class="material-icons-round text-sm">play_arrow</span> STREAM
+                                TÌM THEO TÊN
                             </button>
                         </form>
 
-                        <!-- Phim Đề Cử -->
-                        <div class="flex flex-col gap-2">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">🎬 Phim Việt Đề Cử
-                                (Click để stream ngay)</p>
-                            <div class="flex flex-wrap gap-2">
-                                <button type="button"
-                                    onclick="document.getElementById('film-magnet-input').value='magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Hai.Phuong.2019.1080p'; startFilmStream()"
-                                    class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors shadow-sm">Hai
-                                    Phượng (2019)</button>
-                                <button type="button"
-                                    onclick="document.getElementById('film-magnet-input').value='magnet:?xt=urn:btih:3189bfcd2f65aab38ba986dd052db5ed46ad2d61&dn=Bo.Gia.2021.1080p'; startFilmStream()"
-                                    class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors shadow-sm">Bố
-                                    Già (2021)</button>
-                                <button type="button"
-                                    onclick="document.getElementById('film-magnet-input').value='magnet:?xt=urn:btih:209c8226b299b308beaf2b9cd3fb49212dbd13ec&dn=Mat.Biec.2019.1080p'; startFilmStream()"
-                                    class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors shadow-sm">Mắt
-                                    Biếc (2019)</button>
-                            </div>
-                        </div>
 
-                        <div
-                            class="flex items-center justify-between gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                            <div class="flex items-center gap-2 text-sm text-slate-300 min-w-0">
-                                <span class="material-icons-round text-primary flex-shrink-0">subtitles</span>
-                                <span class="truncate" id="sub-file-name">Subtitle: Trống</span>
-                            </div>
-                            <label
-                                class="bg-white/10 hover:bg-white/20 cursor-pointer text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
-                                Tải Sub
-                                <input type="file" accept=".srt,.vtt" id="film-sub-input"
-                                    onchange="handleSubUpload(event)" class="hidden">
-                            </label>
+                        <!-- Search Results Container -->
+                        <div id="film-search-results"
+                            class="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-3 bg-black/20 p-3 rounded-xl border border-white/5 min-h-[10px] empty:hidden">
                         </div>
                     </div>
                 </div>
@@ -488,17 +448,17 @@
                 <!-- Guide -->
                 <div class="glass-card rounded-[2rem] p-5 border-l-4 border-blue-500">
                     <h3 class="font-bold text-white flex items-center gap-2 mb-3">
-                        <span class="material-icons-round text-blue-400">info</span> Hướng dẫn WebTorrent
+                        <span class="material-icons-round text-blue-400">info</span> Hướng dẫn KietFilm
                     </h3>
                     <div class="text-[11px] text-slate-400 space-y-3 leading-relaxed">
-                        <p><strong>1. Magnet Link là gì?</strong> KietFilm dùng công nghệ P2P WebTorrent. Bạn cần lấy
-                            link báo dạng <code>magnet:?xt=...</code> trên các trang chia sẻ phim mã nguồn mở.</p>
-                        <p><strong>2. Vấn đề Seeders:</strong> Công nghệ trình duyệt YÊU CẦU định dạng WebRTC. Một số
-                            link Magnet cũ, ít người stream trên web sẽ KHÔNG TẢI ĐƯỢC (Đứng ở 0 B/s).</p>
-                        <p><strong>3. Subtitles:</strong> Tải file phụ đề <code>.srt</code> trên mạng về, bấm nút "Tải
-                            Sub" để đính kèm tự động vào Video.</p>
-                        <p class="text-yellow-400/80">⚠️ Do chạy thẳng trên trình duyệt, RAM có thể đầy sau vài tiếng.
-                            Hãy F5 web nếu thấy lag nhé!</p>
+                        <p><strong>1. Nguồn Phim:</strong> KietFilm sử dụng dữ liệu mã nguồn mở tự động từ API OPhim
+                            cung cấp phim mới tự động.</p>
+                        <p><strong>2. Cách xem:</strong> Nhập tên phim bạn muốn xem (VD: "Mắt Biếc", "Mai") vào ô Tìm
+                            Mới. Sau đó bấm vào kết quả để xem ngay lập tức mà không cần tải file.</p>
+                        <p><strong>3. Phụ đề:</strong> Đa phần các phim trên hệ thống đều đã được tự động ép cứng chuẩn
+                            phụ đề Tiếng Việt chất lượng cao.</p>
+                        <p class="text-green-400/80">✅ Tốc độ load nhanh như Youtube, hỗ trợ xem mượt mà trên cả thiết
+                            bị di động!</p>
                     </div>
                 </div>
             </div>
@@ -1792,145 +1752,105 @@
         };
 
         // ==========================================
-        // 8. FILM STATION LOGIC (WEBTORRENT)
+        // 8. FILM STATION LOGIC (OPHIM API)
         // ==========================================
-        window.startFilmStream = (e) => {
+        window.searchFilmOphim = async (e) => {
             if (e) e.preventDefault();
-            const input = document.getElementById('film-magnet-input');
-            let magnetURI = input.value.trim();
-            if (!magnetURI) return;
+            const input = document.getElementById('film-search-input');
+            const keyword = input.value.trim();
+            if (!keyword) return;
 
-            // Auto inject WebRTC trackers
-            const webrtcTrackers = "&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.dev";
-            if (!magnetURI.includes('wss%3A%2F%2Ftracker')) {
-                magnetURI += webrtcTrackers;
-                input.value = magnetURI;
+            const resultsContainer = document.getElementById('film-search-results');
+            resultsContainer.innerHTML = '<div class="col-span-full text-center text-primary py-4 text-xs">Đang tìm kiếm...</div>';
+
+            try {
+                const res = await fetch(`https://ophim1.com/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&limit=10`);
+                const data = await res.json();
+
+                if (data.status === 'success' && data.data && data.data.items.length > 0) {
+                    const imgDomain = data.data.APP_DOMAIN_CDN_IMAGE || 'https://img.ophim.live';
+                    resultsContainer.innerHTML = data.data.items.map(m => `
+                        <div class="glass-card rounded-lg overflow-hidden cursor-pointer hover:border-primary/50 border border-transparent transition-colors shadow-sm group" onclick="streamFilmOphim('${m.slug}', '${m.name.replace(/'/g, "&#39;")}')">
+                            <div class="aspect-[2/3] relative bg-black/50">
+                                <img src="${imgDomain}/uploads/movies/${m.thumb_url}" onerror="this.src='https://via.placeholder.com/300x450/111/fff?text=No+Image'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span class="material-icons-round text-white text-3xl">play_circle</span>
+                                </div>
+                            </div>
+                            <div class="p-2">
+                                <p class="text-[10px] text-white font-bold truncate">${m.name}</p>
+                                <p class="text-[9px] text-slate-400 truncate">${m.origin_name}</p>
+                                <p class="text-[9px] text-primary mt-1">${m.year}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    resultsContainer.innerHTML = '<div class="col-span-full text-center text-slate-500 py-4 text-xs">Không tìm thấy phim. Hãy thử tên khác!</div>';
+                }
+            } catch (err) {
+                resultsContainer.innerHTML = '<div class="col-span-full text-center text-red-500 py-4 text-xs">Lỗi kết nối API OPhim.</div>';
             }
-
-            window.streamTorrent(magnetURI);
-            saveFilmHistory(magnetURI, "Đang tải tên metadata...");
         };
 
-        let proxyPollingInterval = null;
-
-        window.streamTorrent = (magnetURI) => {
+        window.streamFilmOphim = async (slug, titleHint = "") => {
             const placeholder = document.getElementById('film-pl-placeholder');
             const output = document.getElementById('film-output');
-            const overlay = document.getElementById('film-progress-overlay');
-            const inputTarget = document.getElementById('film-magnet-input');
 
-            inputTarget.value = magnetURI;
-            placeholder.classList.add('hidden');
-            output.classList.remove('hidden');
-            overlay.classList.remove('hidden', 'opacity-0');
-            overlay.classList.add('flex', 'opacity-100');
-
+            placeholder.innerHTML = `<span class="material-icons-round text-5xl mb-2 opacity-50 animate-spin">sync</span><p class="text-sm font-bold">Đang tải data server...</p>`;
+            placeholder.classList.remove('hidden');
+            output.classList.add('hidden');
             output.innerHTML = '';
-            if (proxyPollingInterval) clearInterval(proxyPollingInterval);
 
-            // Add progress indicators before fetching
-            document.getElementById('film-speed').innerText = "Connecting...";
-            document.getElementById('film-peers').innerText = "0";
-            document.getElementById('film-progress-bar').style.width = "0%";
-            document.getElementById('film-downloaded').innerText = "0 MB";
-            document.getElementById('film-total').innerText = "? MB";
+            // Scroll view
+            document.getElementById('view-film-station').scrollIntoView({ behavior: 'smooth' });
 
-            // Fetch cleanup (optional to preserve RAM)
-            fetch('http://localhost:8001/cleanup').catch(() => { });
+            try {
+                const res = await fetch(`https://ophim1.com/phim/${slug}`);
+                const data = await res.json();
 
-            // Render video
-            const encodedMagnet = encodeURIComponent(magnetURI);
-            const streamUrl = `http://localhost:8001/stream?magnet=${encodedMagnet}`;
+                if (data.status === true && data.episodes && data.episodes.length > 0) {
+                    const eps = data.episodes[0].server_data;
+                    if (eps && eps.length > 0) {
+                        const m3u8Link = eps[0].link_m3u8;
+                        const filmName = data.movie.name;
 
-            const videoElem = document.createElement('video');
-            videoElem.src = streamUrl;
-            videoElem.autoplay = true;
-            videoElem.controls = true;
-            videoElem.id = 'film-video-player';
-            videoElem.className = 'w-full h-full object-contain bg-black';
-            output.appendChild(videoElem);
+                        placeholder.classList.add('hidden');
+                        output.classList.remove('hidden');
 
-            window.applySubtitleTrack();
+                        const videoElem = document.createElement('video');
+                        videoElem.id = 'film-video-player';
+                        videoElem.className = 'w-full h-full object-contain bg-black rounded-xl';
+                        videoElem.controls = true;
+                        videoElem.autoplay = true;
+                        output.appendChild(videoElem);
 
-            // Poll for status
-            proxyPollingInterval = setInterval(async () => {
-                try {
-                    const res = await fetch(`http://localhost:8001/status?magnet=${encodedMagnet}`);
-                    const data = await res.json();
-
-                    if (data.status === 'active') {
-                        saveFilmHistory(magnetURI, data.name || "Đang tải metadata...");
-
-                        const speed = window.formatBytes(data.downloadSpeed) + '/s';
-                        const downloaded = window.formatBytes(data.downloaded);
-                        const total = window.formatBytes(data.length);
-                        const progressPercent = data.progress * 100;
-                        const progress = progressPercent.toFixed(1);
-
-                        document.getElementById('film-speed').innerText = progressPercent === 100 ? "Hoàn tất" : speed;
-                        document.getElementById('film-downloaded').innerText = downloaded;
-                        document.getElementById('film-total').innerText = total;
-                        document.getElementById('film-peers').innerText = data.numPeers;
-                        document.getElementById('film-progress-bar').style.width = progress + '%';
-
-                        if (progressPercent === 100) {
-                            clearInterval(proxyPollingInterval);
-                            setTimeout(() => overlay.classList.replace('opacity-100', 'opacity-0'), 3000);
+                        if (Hls.isSupported()) {
+                            const hls = new Hls();
+                            hls.loadSource(m3u8Link);
+                            hls.attachMedia(videoElem);
+                            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                                videoElem.play();
+                            });
+                        } else if (videoElem.canPlayType('application/vnd.apple.mpegurl')) {
+                            videoElem.src = m3u8Link;
+                            videoElem.addEventListener('loadedmetadata', function () {
+                                videoElem.play();
+                            });
                         }
+
+                        saveFilmHistory(slug, filmName);
+                        // reset placeholder default state for later
+                        placeholder.innerHTML = `<span class="material-icons-round text-5xl mb-2 opacity-50">smart_display</span><p class="text-sm font-bold">Chưa có video nào đang phát</p><p class="text-xs mt-1">Tìm kiếm hoặc chọn phim đề cử bên dưới để xem.</p>`;
+                    } else {
+                        throw new Error("No server data");
                     }
-                } catch (e) {
-                    console.log("Backend Timeout/Wait", e);
+                } else {
+                    throw new Error("Phim lỗi hoặc không tồn tại.");
                 }
-            }, 1500);
-        };
-
-        function updateFilmProgressUI(torrent) {
-            const speed = window.formatBytes(torrent.downloadSpeed) + '/s';
-            const downloaded = window.formatBytes(torrent.downloaded);
-            const total = window.formatBytes(torrent.length);
-            const progress = (torrent.progress * 100).toFixed(1);
-
-            document.getElementById('film-speed').innerText = speed;
-            document.getElementById('film-downloaded').innerText = downloaded;
-            document.getElementById('film-total').innerText = total;
-            document.getElementById('film-peers').innerText = torrent.numPeers;
-            document.getElementById('film-progress-bar').style.width = progress + '%';
-        }
-
-        window.formatBytes = (bytes, decimals = 1) => {
-            if (!+bytes) return '0 B';
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-        };
-
-        window.handleSubUpload = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            document.getElementById('sub-file-name').innerText = `Subtitle: ${file.name}`;
-
-            if (window.currentSubtitleUrl) URL.revokeObjectURL(window.currentSubtitleUrl);
-            window.currentSubtitleUrl = URL.createObjectURL(file);
-            window.applySubtitleTrack();
-        };
-
-        window.applySubtitleTrack = () => {
-            const video = document.getElementById('film-video-player');
-            if (!video || !window.currentSubtitleUrl) return;
-
-            const existing = video.querySelectorAll('track');
-            existing.forEach(t => t.remove());
-
-            const track = document.createElement('track');
-            track.src = window.currentSubtitleUrl;
-            track.kind = 'subtitles';
-            track.srclang = 'vi';
-            track.label = 'Custom Subtitle';
-            track.default = true;
-
-            video.appendChild(track);
+            } catch (err) {
+                console.error(err);
+                placeholder.innerHTML = `<span class="material-icons-round text-5xl mb-2 opacity-50 text-red-400">error</span><p class="text-sm font-bold text-red-400">Không thể tải phim.</p><p class="text-xs mt-1 text-slate-400">Vui lòng chọn phim khác.</p>`;
+            }
         };
 
         // --- Film History Logic ---
@@ -1943,45 +1863,49 @@
             } catch (e) { }
         };
 
-        window.saveFilmHistory = async (magnet, name) => {
+        window.saveFilmHistory = async (slug, name) => {
             if (!window.currentUserUid) return;
-            const existIndex = filmHistory.findIndex(f => f.magnet === magnet);
+            filmHistory = filmHistory.filter(f => !f.magnet);
+
+            const existIndex = filmHistory.findIndex(f => f.slug === slug);
             if (existIndex >= 0) {
-                if (name && name !== "Đang tải tên metadata...") filmHistory[existIndex].name = name;
+                if (name) filmHistory[existIndex].name = name;
                 const item = filmHistory.splice(existIndex, 1)[0];
                 filmHistory.unshift(item);
             } else {
-                filmHistory.unshift({ magnet, name: name || "Unknown Film" });
+                filmHistory.unshift({ slug, name: name || "Unknown Film" });
             }
             renderFilmHistory();
 
             const formData = new FormData();
             formData.append('uid', window.currentUserUid);
-            formData.append('film', JSON.stringify({ magnet, name }));
+            formData.append('film', JSON.stringify({ slug, name }));
             fetch('/films', { method: 'POST', body: formData }).catch(console.error);
         };
 
-        window.removeFilmHistory = (e, magnet) => {
+        window.removeFilmHistory = (e, slug) => {
             e.stopPropagation();
             if (!window.currentUserUid) return;
-            filmHistory = filmHistory.filter(f => f.magnet !== magnet);
+            filmHistory = filmHistory.filter(f => f.slug !== slug);
             renderFilmHistory();
-            fetch(`/films?uid=${window.currentUserUid}&magnet=${encodeURIComponent(magnet)}`, { method: 'DELETE' }).catch(console.error);
+            fetch(`/films?uid=${window.currentUserUid}&slug=${encodeURIComponent(slug)}`, { method: 'DELETE' }).catch(console.error);
         };
 
         window.renderFilmHistory = () => {
             const container = document.getElementById('film-history-list');
-            if (!filmHistory || filmHistory.length === 0) {
+            const validHistory = filmHistory.filter(f => f.slug);
+
+            if (!validHistory || validHistory.length === 0) {
                 container.innerHTML = `<div class="text-center p-4 text-slate-500 text-xs italic">Chưa có lịch sử.</div>`;
                 return;
             }
-            container.innerHTML = filmHistory.map(f => `
-                <div class="glass-card p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/10 transition-colors border border-transparent hover:border-white/10" onclick="streamTorrent('${f.magnet}')">
+            container.innerHTML = validHistory.map(f => `
+                <div class="glass-card p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/10 transition-colors border border-transparent hover:border-white/10" onclick="streamFilmOphim('${f.slug}')">
                     <div class="flex items-center gap-2 min-w-0 flex-1 pr-2">
                         <span class="material-icons-round text-primary flex-shrink-0 text-lg">movie</span>
                         <span class="text-xs text-white truncate font-bold">${f.name}</span>
                     </div>
-                    <button onclick="removeFilmHistory(event, '${f.magnet}')" class="text-slate-500 hover:text-red-500 flex-shrink-0 ml-1 p-1">
+                    <button onclick="removeFilmHistory(event, '${f.slug}')" class="text-slate-500 hover:text-red-500 flex-shrink-0 ml-1 p-1">
                         <span class="material-icons-round text-sm">delete</span>
                     </button>
                 </div>
