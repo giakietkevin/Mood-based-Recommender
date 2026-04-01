@@ -22,6 +22,9 @@
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- MediaPipe for Background Removal -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -63,6 +66,30 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        @keyframes flash {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .animate-flash { animation: flash 0.3s ease-out; }
+
+        @keyframes countdown-pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+        .animate-countdown { animation: countdown-pop 1s ease-in-out forwards; }
+
+        .pb-layout-btn.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.2); }
+        .pb-filter-btn.active { background: var(--primary); border-color: var(--primary); }
+
+        .filter-bw { filter: grayscale(1); }
+        .filter-vintage { filter: sepia(0.5) contrast(1.2) brightness(0.9); }
+        .filter-bright { filter: brightness(1.2) contrast(1.1) saturate(1.1); }
+        .filter-cold { filter: hue-rotate(180deg) saturate(0.8) brightness(1.1); }
+
+        .shadow-2xl-primary { box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.4); }
 
         /* Sliders */
         input[type=range] { -webkit-appearance: none; background: transparent; cursor: pointer; }
@@ -115,6 +142,8 @@
                     class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">FILM</button>
                 <button type="button" onclick="showView('game')" id="nav-game"
                     class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">GAME</button>
+                <button type="button" onclick="showView('photobooth')" id="nav-photobooth"
+                    class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">PHOTOBOOTH</button>
                 <button type="button" onclick="showView('guide')" id="nav-guide"
                     class="flex-1 min-w-0 px-2 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">GUIDE</button>
             </div>
@@ -138,8 +167,13 @@
                     <div
                         class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent flex flex-col justify-end p-6">
                         <button id="analyze-btn"
-                            class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-xl shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-xl shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2 mb-2">
                             <span class="material-icons-round">face_retouching_natural</span> ANALYZE MOOD
+                        </button>
+                        <button id="camera-toggle-btn" onclick="toggleCamera()"
+                            class="w-full bg-white/10 text-white/70 py-3 rounded-2xl font-bold text-xs hover:bg-white/20 transition-all flex items-center justify-center gap-2 backdrop-blur-md border border-white/10">
+                            <span id="camera-toggle-icon" class="material-icons-round text-sm">videocam_off</span> <span
+                                id="camera-toggle-text">HIDE CAMERA</span>
                         </button>
                     </div>
                 </div>
@@ -388,10 +422,8 @@
             </div>
         </div>
 
-        </div>
-
         <!-- FILM STATION VIEW -->
-        <div id="view-film-station" class="hidden grid lg:grid-cols-12 gap-6 animate-fade-in">
+        <div id="view-film" class="hidden grid lg:grid-cols-12 gap-6 animate-fade-in">
             <div class="lg:col-span-8 space-y-4">
                 <div class="glass-card rounded-[2rem] p-4 sm:p-6 flex flex-col items-center">
                     <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2">
@@ -459,7 +491,8 @@
                             Mới. Sau đó bấm vào kết quả để xem ngay lập tức mà không cần tải file.</p>
                         <p><strong>3. Phụ đề:</strong> Đa phần các phim trên hệ thống đều đã được tự động ép cứng chuẩn
                             phụ đề Tiếng Việt chất lượng cao.</p>
-                        <p class="text-green-400/80">✅ Tốc độ load nhanh như Youtube, hỗ trợ xem mượt mà trên cả thiết bị di động!</p>
+                        <p class="text-green-400/80">✅ Tốc độ load nhanh như Youtube, hỗ trợ xem mượt mà trên cả thiết
+                            bị di động!</p>
                     </div>
                 </div>
             </div>
@@ -475,11 +508,13 @@
                             <div class="p-2 bg-primary/20 rounded-lg">
                                 <span class="material-icons-round text-primary">sports_esports</span>
                             </div>
-                            <h2 class="text-xl font-display font-bold text-white uppercase tracking-tight">Kiet<span class="text-primary">Game</span></h2>
+                            <h2 class="text-xl font-display font-bold text-white uppercase tracking-tight">Kiet<span
+                                    class="text-primary">Game</span></h2>
                         </div>
 
                         <div class="space-y-2">
-                            <button onclick="switchGame('snake')" id="btn-game-snake" class="w-full flex items-center justify-between p-4 rounded-2xl bg-primary text-white font-bold transition-all shadow-lg shadow-primary/20">
+                            <button onclick="switchGame('snake')" id="btn-game-snake"
+                                class="w-full flex items-center justify-between p-4 rounded-2xl bg-primary text-white font-bold transition-all shadow-lg shadow-primary/20">
                                 <div class="flex items-center gap-3">
                                     <span class="material-icons-round">horizontal_rule</span>
                                     <span>Rắn Săn Mồi</span>
@@ -487,7 +522,8 @@
                                 <span class="material-icons-round text-sm opacity-50">arrow_forward_ios</span>
                             </button>
 
-                            <button onclick="switchGame('caro')" id="btn-game-caro" class="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all">
+                            <button onclick="switchGame('caro')" id="btn-game-caro"
+                                class="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all">
                                 <div class="flex items-center gap-3">
                                     <span class="material-icons-round">grid_on</span>
                                     <span>Cờ Caro (15x15)</span>
@@ -495,7 +531,8 @@
                                 <span class="material-icons-round text-sm opacity-50">arrow_forward_ios</span>
                             </button>
 
-                            <button onclick="switchGame('chess')" id="btn-game-chess" class="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all">
+                            <button onclick="switchGame('chess')" id="btn-game-chess"
+                                class="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all">
                                 <div class="flex items-center gap-3">
                                     <span class="material-icons-round">extension</span>
                                     <span>Cờ Vua (Online)</span>
@@ -506,69 +543,417 @@
 
                         <div class="mt-8 p-4 bg-primary/10 rounded-2xl border border-primary/20">
                             <p class="text-[10px] text-primary font-bold uppercase tracking-wider mb-2">💡 Game Info</p>
-                            <p class="text-[11px] text-slate-400 leading-relaxed">Giải trí nhanh trong lúc chờ AI tạo nhạc hoặc xem phim. Chúc bạn chơi game vui vẻ!</p>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">Giải trí nhanh trong lúc chờ AI tạo
+                                nhạc hoặc xem phim. Chúc bạn chơi game vui vẻ!</p>
                         </div>
                     </div>
                 </aside>
 
                 <!-- Main Game Screen -->
                 <main class="lg:col-span-9">
-                    <div class="glass-card rounded-3xl p-4 sm:p-6 border border-white/10 shadow-2xl relative min-h-[500px] flex flex-col">
+                    <div
+                        class="glass-card rounded-3xl p-4 sm:p-6 border border-white/10 shadow-2xl relative min-h-[500px] flex flex-col">
                         <!-- Snake Game -->
-                        <div id="game-snake-container" class="flex flex-col items-center justify-center flex-1 space-y-4">
+                        <div id="game-snake-container"
+                            class="flex flex-col items-center justify-center flex-1 space-y-4">
                             <div class="flex items-center justify-between w-full max-w-[400px]">
-                                <span class="text-xs font-bold text-slate-400">SCORE: <span id="snake-score" class="text-primary">0</span></span>
-                                <span class="text-xs font-bold text-slate-400">HIGH: <span id="snake-high" class="text-white">0</span></span>
+                                <span class="text-xs font-bold text-slate-400">SCORE: <span id="snake-score"
+                                        class="text-primary">0</span></span>
+                                <span class="text-xs font-bold text-slate-400">HIGH: <span id="snake-high"
+                                        class="text-white">0</span></span>
                             </div>
                             <div class="relative group">
-                                <canvas id="snake-canvas" width="400" height="400" class="bg-black/80 rounded-xl border-4 border-white/5 shadow-2xl max-w-full"></canvas>
-                                <div id="snake-overlay" class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl p-6 text-center">
+                                <canvas id="snake-canvas" width="400" height="400"
+                                    class="bg-black/80 rounded-xl border-4 border-white/5 shadow-2xl max-w-full"></canvas>
+                                <div id="snake-overlay"
+                                    class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl p-6 text-center">
                                     <div class="p-4 bg-primary/20 rounded-full mb-4">
                                         <span class="material-icons-round text-primary text-5xl">play_circle</span>
                                     </div>
                                     <h3 class="text-2xl font-bold text-white mb-2">Rắn Săn Mồi</h3>
-                                    <p class="text-slate-400 text-xs mb-6">Sử dụng các phím mũi tên hoặc WASD để di chuyển.</p>
-                                    <button onclick="startSnake()" class="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-all">CHƠI NGAY</button>
+                                    <p class="text-slate-400 text-xs mb-6">Sử dụng các phím mũi tên hoặc WASD để di
+                                        chuyển.</p>
+                                    <button onclick="startSnake()"
+                                        class="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-all">CHƠI
+                                        NGAY</button>
                                 </div>
                             </div>
                             <div class="grid grid-cols-3 gap-2 mt-4 lg:hidden">
                                 <div></div>
-                                <button class="p-4 bg-white/10 rounded-xl" onmousedown="handleSnakeInput('ArrowUp')">▲</button>
+                                <button class="p-4 bg-white/10 rounded-xl"
+                                    onmousedown="handleSnakeInput('ArrowUp')">▲</button>
                                 <div></div>
-                                <button class="p-4 bg-white/10 rounded-xl" onmousedown="handleSnakeInput('ArrowLeft')">◀</button>
-                                <button class="p-4 bg-white/10 rounded-xl" onmousedown="handleSnakeInput('ArrowDown')">▼</button>
-                                <button class="p-4 bg-white/10 rounded-xl" onmousedown="handleSnakeInput('ArrowRight')">▶</button>
+                                <button class="p-4 bg-white/10 rounded-xl"
+                                    onmousedown="handleSnakeInput('ArrowLeft')">◀</button>
+                                <button class="p-4 bg-white/10 rounded-xl"
+                                    onmousedown="handleSnakeInput('ArrowDown')">▼</button>
+                                <button class="p-4 bg-white/10 rounded-xl"
+                                    onmousedown="handleSnakeInput('ArrowRight')">▶</button>
                             </div>
                         </div>
 
                         <!-- Caro Game -->
-                        <div id="game-caro-container" class="hidden flex flex-col items-center justify-center flex-1 space-y-4">
+                        <div id="game-caro-container"
+                            class="hidden flex flex-col items-center justify-center flex-1 space-y-4">
                             <div class="flex items-center justify-between w-full max-w-[500px]">
                                 <div class="flex items-center gap-3">
-                                    <div id="caro-turn-x" class="px-3 py-1 rounded-lg bg-primary text-white text-[10px] font-bold transition-all">LƯỢT X</div>
-                                    <div id="caro-turn-o" class="px-3 py-1 rounded-lg bg-white/5 text-slate-500 text-[10px] font-bold transition-all">LƯỢT O</div>
+                                    <div id="caro-turn-x"
+                                        class="px-3 py-1 rounded-lg bg-primary text-white text-[10px] font-bold transition-all">
+                                        LƯỢT X</div>
+                                    <div id="caro-turn-o"
+                                        class="px-3 py-1 rounded-lg bg-white/5 text-slate-500 text-[10px] font-bold transition-all">
+                                        LƯỢT O</div>
                                 </div>
-                                <button onclick="resetCaro()" class="text-[10px] font-bold text-slate-400 hover:text-white flex items-center gap-1">
+                                <button onclick="resetCaro()"
+                                    class="text-[10px] font-bold text-slate-400 hover:text-white flex items-center gap-1">
                                     <span class="material-icons-round text-xs">refresh</span> RESET
                                 </button>
                             </div>
-                            <div id="caro-board" class="grid grid-cols-15 gap-0 bg-white/5 border border-white/10 rounded-lg overflow-hidden shadow-2xl cursor-pointer">
+                            <div id="caro-board"
+                                class="grid grid-cols-[repeat(15,1fr)] w-fit mx-auto bg-white/5 border border-white/10 rounded-lg overflow-hidden shadow-2xl cursor-pointer">
                                 <!-- Board generated via JS -->
                             </div>
-                            <p class="text-[10px] text-slate-500 italic">Luật: Bên nào đạt 5 quân liên tiếp (ngang, dọc, chéo) trước là thắng.</p>
+                            <p class="text-[10px] text-slate-500 italic">Luật: Bên nào đạt 5 quân liên tiếp (ngang, dọc,
+                                chéo) trước là thắng.</p>
                         </div>
 
-                        <!-- Chess Game (Iframe) -->
-                        <div id="game-chess-container" class="hidden flex-1 flex flex-col h-full min-h-[600px]">
-                            <iframe src="https://lichess.org/tv/frame?theme=brown&bg=dark" style="width: 100%; height: 600px;" allowtransparency="true" frameborder="0"></iframe>
-                            <div class="mt-4 text-center">
-                                <a href="https://lichess.org/?any#ai" target="_blank" class="text-xs font-bold text-primary hover:underline flex items-center justify-center gap-1">
-                                    <span class="material-icons-round text-sm">open_in_new</span> Mở Cờ Vua chế độ AI (Full Screen)
-                                </a>
+                        <!-- Chess Game -->
+                        <div id="game-chess-container"
+                            class="hidden flex-1 flex flex-col items-center justify-center p-6 text-center">
+                            <div
+                                class="glass-card p-10 rounded-[3rem] border border-white/10 shadow-2xl max-w-lg w-full bg-gradient-to-br from-white/5 to-transparent backdrop-blur-xl">
+                                <div
+                                    class="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <span class="material-icons-round text-primary text-4xl">extension</span>
+                                </div>
+                                <h3 class="text-3xl font-display font-bold text-white mb-2 tracking-tight">Kiet<span
+                                        class="text-primary">Chess</span></h3>
+                                <p class="text-slate-400 text-xs mb-10 leading-relaxed">Hệ thống cờ vua quốc tế. Chọn
+                                    chế độ bên dưới để bắt đầu ván đấu của bạn trên nền tảng Lichess.</p>
+
+                                <div class="grid gap-4">
+                                    <button onclick="launchChess('ai')"
+                                        class="group flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-primary hover:border-primary transition-all duration-300">
+                                        <div class="flex items-center gap-4">
+                                            <div class="p-3 bg-white/10 rounded-xl group-hover:bg-white/20">
+                                                <span class="material-icons-round text-white">computer</span>
+                                            </div>
+                                            <div class="text-left">
+                                                <div class="text-sm font-bold text-white uppercase tracking-wider">Đấu
+                                                    với Máy (AI)</div>
+                                                <div class="text-[10px] text-slate-500 group-hover:text-white/70">8 cấp
+                                                    độ từ Dễ đến Khó</div>
+                                            </div>
+                                        </div>
+                                        <span
+                                            class="material-icons-round text-slate-600 group-hover:text-white">open_in_new</span>
+                                    </button>
+
+                                    <button onclick="launchChess('friend')"
+                                        class="group flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-purple-600 hover:border-purple-600 transition-all duration-300">
+                                        <div class="flex items-center gap-4">
+                                            <div class="p-3 bg-white/10 rounded-xl group-hover:bg-white/20">
+                                                <span class="material-icons-round text-white">group_add</span>
+                                            </div>
+                                            <div class="text-left">
+                                                <div class="text-sm font-bold text-white uppercase tracking-wider">Đấu
+                                                    với Bạn Bè</div>
+                                                <div class="text-[10px] text-slate-500 group-hover:text-white/70">Tạo
+                                                    phòng và gửi link mời</div>
+                                            </div>
+                                        </div>
+                                        <span
+                                            class="material-icons-round text-slate-600 group-hover:text-white">open_in_new</span>
+                                    </button>
+                                </div>
+
+                                <p class="mt-10 text-[9px] text-slate-500 uppercase tracking-[0.2em] font-bold">Powered
+                                    by Lichess.org</p>
                             </div>
                         </div>
                     </div>
                 </main>
+            </div>
+        </div>
+
+        <div id="view-photobooth" class="hidden max-w-7xl mx-auto animate-fade-in pb-20">
+            <!-- PHASE 0: LAYOUT SELECTION -->
+            <div id="pb-layout-zone" class="max-w-4xl mx-auto text-center space-y-12 py-10">
+                <div class="space-y-4">
+                    <h2 class="text-5xl font-display font-bold text-white uppercase italic tracking-tighter">Choose Your
+                        <span class="text-primary italic">Layout</span></h2>
+                    <p class="text-slate-400 text-lg">Pick a frame style to start your studio session.</p>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    <!-- Layout V4 -->
+                    <button onclick="setPBLayout('v4')"
+                        class="pb-layout-btn group relative p-6 bg-white/5 rounded-[3rem] border-2 border-white/10 hover:border-primary/50 transition-all active overflow-hidden"
+                        data-layout="v4">
+                        <div
+                            class="aspect-[1/2] border-2 border-slate-500/30 rounded-2xl flex flex-col gap-2 p-2 group-hover:border-primary/30 transition-colors">
+                            <div class="flex-1 bg-slate-500/10 rounded-lg"></div>
+                            <div class="flex-1 bg-slate-500/10 rounded-lg"></div>
+                            <div class="flex-1 bg-slate-500/10 rounded-lg"></div>
+                            <div class="flex-1 bg-slate-500/10 rounded-lg"></div>
+                        </div>
+                        <div
+                            class="mt-4 font-bold text-slate-500 group-hover:text-primary tracking-widest text-[10px] uppercase">
+                            4 Shots Vertical</div>
+                        <div
+                            class="absolute top-4 right-4 text-primary opacity-0 group-[.active]:opacity-100 transition-opacity">
+                            <span class="material-icons-round">check_circle</span></div>
+                    </button>
+                    <!-- Layout G4 -->
+                    <button onclick="setPBLayout('g4')"
+                        class="pb-layout-btn group relative p-6 bg-white/5 rounded-[3rem] border-2 border-white/10 hover:border-primary/50 transition-all"
+                        data-layout="g4">
+                        <div
+                            class="aspect-[1/2] border-2 border-slate-500/30 rounded-2xl grid grid-cols-2 gap-2 p-2 group-hover:border-primary/30 transition-colors">
+                            <div class="bg-slate-500/10 rounded-lg"></div>
+                            <div class="bg-slate-500/10 rounded-lg"></div>
+                            <div class="bg-slate-500/10 rounded-lg"></div>
+                            <div class="bg-slate-500/10 rounded-lg"></div>
+                        </div>
+                        <div
+                            class="mt-4 font-bold text-slate-500 group-hover:text-primary tracking-widest text-[10px] uppercase">
+                            2x2 Grid</div>
+                        <div
+                            class="absolute top-4 right-4 text-primary opacity-0 group-[.active]:opacity-100 transition-opacity">
+                            <span class="material-icons-round">check_circle</span></div>
+                    </button>
+                    <!-- Layout H3 -->
+                    <button onclick="setPBLayout('h3')"
+                        class="pb-layout-btn group relative p-6 bg-white/5 rounded-[3rem] border-2 border-white/10 hover:border-primary/50 transition-all"
+                        data-layout="h3">
+                        <div
+                            class="aspect-[1/2] border-2 border-slate-500/30 rounded-2xl flex flex-col gap-2 p-2 group-hover:border-primary/30 transition-colors">
+                            <div class="flex-[1.5] bg-slate-500/10 rounded-lg"></div>
+                            <div class="flex-[1.5] bg-slate-500/10 rounded-lg"></div>
+                            <div class="flex-[1.5] bg-slate-500/10 rounded-lg"></div>
+                        </div>
+                        <div
+                            class="mt-4 font-bold text-slate-500 group-hover:text-primary tracking-widest text-[10px] uppercase">
+                            3 Shots Film</div>
+                        <div
+                            class="absolute top-4 right-4 text-primary opacity-0 group-[.active]:opacity-100 transition-opacity">
+                            <span class="material-icons-round">check_circle</span></div>
+                    </button>
+                    <!-- Layout F1 -->
+                    <button onclick="setPBLayout('f1')"
+                        class="pb-layout-btn group relative p-6 bg-white/5 rounded-[3rem] border-2 border-white/10 hover:border-primary/50 transition-all"
+                        data-layout="f1">
+                        <div
+                            class="aspect-[1/2] border-2 border-slate-500/30 rounded-2xl flex items-center justify-center p-2 group-hover:border-primary/30 transition-colors">
+                            <div class="w-full h-[60%] bg-slate-500/10 rounded-lg"></div>
+                        </div>
+                        <div
+                            class="mt-4 font-bold text-slate-500 group-hover:text-primary tracking-widest text-[10px] uppercase">
+                            Single Portrait</div>
+                        <div
+                            class="absolute top-4 right-4 text-primary opacity-0 group-[.active]:opacity-100 transition-opacity">
+                            <span class="material-icons-round">check_circle</span></div>
+                    </button>
+                </div>
+
+                <div class="pt-10">
+                    <button onclick="goToCapture()"
+                        class="px-16 py-6 bg-primary text-white font-bold rounded-full shadow-[0_20px_50px_rgba(59,130,246,0.4)] hover:scale-105 active:scale-95 transition-all text-xl uppercase tracking-widest flex items-center gap-4 mx-auto group">
+                        Let's Shoot <span
+                            class="material-icons-round group-hover:translate-x-2 transition-transform">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PHASE 1: CAPTURE AREA -->
+            <div id="pb-capture-zone" class="hidden grid lg:grid-cols-12 gap-12 animate-fade-in">
+                <!-- Left: Video Preview -->
+                <div class="lg:col-span-8 flex flex-col gap-8">
+                    <div
+                        class="relative rounded-[4rem] overflow-hidden bg-black shadow-2xl-primary aspect-[4/3] border-8 border-white/5 group ring-1 ring-white/10">
+                        <video id="pb-video" autoplay playsinline class="w-full h-full object-cover"></video>
+                        <canvas id="pb-seg-canvas" class="hidden absolute inset-0 w-full h-full object-cover"></canvas>
+                        <canvas id="pb-canvas" class="hidden"></canvas>
+
+                        <div id="pb-flash" class="absolute inset-0 bg-white pointer-events-none opacity-0 z-50"></div>
+                        <div id="pb-countdown"
+                            class="absolute inset-0 flex items-center justify-center pointer-events-none z-40 hidden">
+                            <span id="pb-countdown-num"
+                                class="text-[15rem] font-display font-bold text-white drop-shadow-[0_0_50px_rgba(255,255,255,0.5)]">3</span>
+                        </div>
+
+                        <div id="pb-capture-btn-container"
+                            class="absolute bottom-12 inset-x-0 flex justify-center z-30">
+                            <button onclick="startPhotoboothSequence()"
+                                class="p-10 bg-primary text-white rounded-full shadow-[0_0_60px_rgba(59,130,246,0.6)] hover:scale-110 active:scale-95 transition-all group border-4 border-white/20">
+                                <span
+                                    class="material-icons-round text-7xl group-hover:rotate-12 transition-transform">photo_camera</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-[3rem] p-4 flex items-center gap-6 border border-white/10 px-8">
+                        <div
+                            class="flex-shrink-0 w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary border border-primary/20">
+                            <span class="material-icons-round">auto_fix_high</span>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-white font-bold text-sm tracking-wide">AI Background Removal</h4>
+                            <p class="text-slate-400 text-[10px] uppercase tracking-widest font-medium">Chọn một màu nền
+                                trơn (Tùy chọn)</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="setPBVirtualBG(null)"
+                                class="pb-bg-btn w-10 h-10 rounded-full border-2 border-white/20 active flex items-center justify-center text-white"
+                                data-color="none"><span class="material-icons-round text-sm">block</span></button>
+                            <button onclick="setPBVirtualBG('#8B0000')"
+                                class="pb-bg-btn w-10 h-10 rounded-full border-2 border-white/10 transition-transform"
+                                style="background: #8B0000;" data-color="#8B0000"></button>
+                            <button onclick="setPBVirtualBG('#00008B')"
+                                class="pb-bg-btn w-10 h-10 rounded-full border-2 border-white/10 transition-transform"
+                                style="background: #00008B;" data-color="#00008B"></button>
+                            <button onclick="setPBVirtualBG('#FFFFFF')"
+                                class="pb-bg-btn w-10 h-10 rounded-full border-2 border-white/10 transition-transform"
+                                style="background: #FFFFFF;" data-color="#FFFFFF"></button>
+                            <button onclick="setPBVirtualBG('#F5F5DC')"
+                                class="pb-bg-btn w-10 h-10 rounded-full border-2 border-white/10 transition-transform"
+                                style="background: #F5F5DC;" data-color="#F5F5DC"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Captured Slots -->
+                <div class="lg:col-span-4 flex flex-col gap-6">
+                    <div class="glass-card rounded-[3.5rem] p-8 border border-white/10 flex-1 flex flex-col">
+                        <div class="flex items-center justify-between mb-8">
+                            <div>
+                                <h3
+                                    class="text-2xl font-display font-bold text-white uppercase italic tracking-tighter">
+                                    Frames</h3>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Shots Captured
+                                </p>
+                            </div>
+                            <button id="pb-next-btn" onclick="goToDesignStudio()"
+                                class="hidden px-6 py-2 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all text-[10px] uppercase tracking-widest">
+                                Next <span class="material-icons-round text-sm">chevron_right</span>
+                            </button>
+                        </div>
+                        <div id="pb-slots-container" class="grid grid-cols-2 gap-4 flex-1"></div>
+                    </div>
+                    <button onclick="showView('photobooth')"
+                        class="glass-card rounded-[2rem] p-4 text-slate-400 font-bold uppercase tracking-widest text-[10px] border border-white/5 hover:text-white transition-all flex items-center justify-center gap-2">
+                        <span class="material-icons-round text-sm">arrow_back</span> Change Layout
+                    </button>
+                </div>
+            </div>
+
+            <!-- PHASE 2: DESIGN ZONE -->
+            <div id="pb-design-zone" class="hidden grid lg:grid-cols-12 gap-12 animate-fade-in items-start">
+                <!-- Preview Strip -->
+                <div class="lg:col-span-5 flex flex-col items-center">
+                    <div class="relative group">
+                        <div id="pb-strip-preview" onclick="placeSticker(event)"
+                            class="w-[300px] min-h-[600px] flex flex-col gap-5 p-6 rounded-[3rem] relative transition-shadow pb-12 cursor-pointer ring-1 ring-white/10 shadow-2xl"
+                            style="background: #FFFFFF;">
+                            <!-- Placeholder: Content generated by JS -->
+                        </div>
+                        <div
+                            class="absolute -bottom-6 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-black/80 backdrop-blur-md rounded-full border border-white/20 text-[8px] font-bold text-white/50 uppercase tracking-[0.4em] pointer-events-none">
+                            Studio Preview
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="lg:col-span-7 space-y-8">
+                    <div
+                        class="glass-card rounded-[4rem] p-12 border border-white/10 shadow-2xl relative overflow-hidden">
+                        <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 blur-[80px] rounded-full"></div>
+
+                        <div class="flex items-center justify-between mb-12">
+                            <div class="space-y-1">
+                                <h2
+                                    class="text-5xl font-display font-bold text-white tracking-tight uppercase italic leading-none">
+                                    Studio <span class="text-primary">Editor</span></h2>
+                                <p class="text-slate-400 font-medium text-sm">Customize your film strip before download.
+                                </p>
+                            </div>
+                            <div class="flex gap-4">
+                                <button onclick="backToCapture()"
+                                    class="w-14 h-14 bg-white/5 rounded-3xl border border-white/10 text-white flex items-center justify-center hover:bg-white/10 transition-all"><span
+                                        class="material-icons-round">edit</span></button>
+                                <button onclick="generateStripFinal()"
+                                    class="px-10 py-4 bg-primary rounded-3xl text-white font-bold shadow-[0_15px_40px_rgba(59,130,246,0.3)] hover:scale-105 active:scale-95 transition-all uppercase tracking-widest text-sm">Download
+                                    PNG</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-12">
+                            <!-- Filter Selector -->
+                            <div class="space-y-5">
+                                <label
+                                    class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
+                                    <span class="material-icons-round text-primary text-sm">auto_awesome</span> Select
+                                    Filter
+                                </label>
+                                <div class="flex flex-wrap gap-3">
+                                    <button onclick="setPBFilter('none')"
+                                        class="pb-filter-btn px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-[10px] font-bold tracking-widest transition-all active"
+                                        data-filter="none">ORIGINAL</button>
+                                    <button onclick="setPBFilter('bw')"
+                                        class="pb-filter-btn px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-[10px] font-bold tracking-widest transition-all"
+                                        data-filter="bw">B & W</button>
+                                    <button onclick="setPBFilter('vintage')"
+                                        class="pb-filter-btn px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-[10px] font-bold tracking-widest transition-all"
+                                        data-filter="vintage">VINTAGE</button>
+                                    <button onclick="setPBFilter('bright')"
+                                        class="pb-filter-btn px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-[10px] font-bold tracking-widest transition-all"
+                                        data-filter="bright">FRESH</button>
+                                    <button onclick="setPBFilter('cold')"
+                                        class="pb-filter-btn px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-[10px] font-bold tracking-widest transition-all"
+                                        data-filter="cold">COLD</button>
+                                </div>
+                            </div>
+
+                            <!-- Frame Background -->
+                            <div class="space-y-5">
+                                <label
+                                    class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
+                                    <span class="material-icons-round text-primary text-sm">palette</span> Frame
+                                    Background
+                                </label>
+                                <div id="pb-design-color-grid" class="flex flex-wrap gap-4"></div>
+                            </div>
+
+                            <!-- Stickers -->
+                            <div class="space-y-5">
+                                <label
+                                    class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
+                                    <span class="material-icons-round text-primary text-sm">add_reaction</span> Stickers
+                                    (Click to Select)
+                                </label>
+                                <div id="pb-sticker-grid"
+                                    class="grid grid-cols-8 gap-3 p-6 bg-black/20 rounded-[2.5rem] border border-white/5 max-h-[300px] overflow-y-auto no-scrollbar ring-1 ring-white/10">
+                                </div>
+                                <div id="pb-held-sticker-indicator"
+                                    class="hidden flex items-center gap-3 py-2 px-4 bg-primary/10 rounded-full border border-primary/20 w-fit">
+                                    <span
+                                        class="text-[10px] font-bold text-primary uppercase tracking-widest">Selected:</span>
+                                    <span id="pb-held-sticker-emoji" class="text-2xl animate-bounce"></span>
+                                    <button
+                                        onclick="pbHeldSticker = null; document.getElementById('pb-held-sticker-indicator').classList.add('hidden')"
+                                        class="text-primary"><span
+                                            class="material-icons-round text-sm">close</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-12 max-w-4xl mx-auto p-8 rounded-[2rem] bg-white/5 border border-white/10 text-center">
+                <p class="text-primary font-bold uppercase tracking-widest text-[10px] mb-2">💡 Tips</p>
+                <p class="text-slate-400 text-sm italic">Chọn layout trước, sau đó chụp ảnh và cuối cùng là trang trí
+                    bằng Sticker hoặc Filter tùy thích!</p>
             </div>
         </div>
 
@@ -912,6 +1297,24 @@
         </div>
     </main>
 
+    <!-- PHOTO PREVIEW MODAL (NEW) -->
+    <div id="pb-preview-modal"
+        class="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <button onclick="closePBPreview()"
+            class="absolute top-6 right-6 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all">
+            <span class="material-icons-round">close</span>
+        </button>
+        <div class="max-w-4xl w-full">
+            <img id="pb-preview-img" src="" class="w-full h-auto rounded-2xl shadow-2xl border-4 border-white/10">
+            <div class="mt-6 flex justify-center gap-4">
+                <button id="pb-retake-btn-modal"
+                    class="px-8 py-4 bg-red-500/20 text-red-400 font-bold rounded-2xl border border-red-500/20 hover:bg-red-500 hover:text-white transition-all flex items-center gap-2">
+                    <span class="material-icons-round">refresh</span> RETAKE THIS SHOT
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="player-bar"
         class="fixed bottom-0 left-0 right-0 w-full max-w-[100vw] z-[100] glass-card border-t border-white/10 hidden pb-safe-bottom bg-[#090A0C]/95 transition-transform duration-300 transform translate-y-full">
         <div class="relative w-full h-1 bg-white/10 cursor-pointer group">
@@ -1063,6 +1466,10 @@
         let filmHistory = [];
         window.currentSubtitleUrl = null;
 
+        // Camera States
+        let cameraEnabled = true;
+        let mainStream = null;
+
         window.toggleYtVideo = () => {
             const modal = document.getElementById('yt-video-modal');
             if (modal.classList.contains('opacity-0')) {
@@ -1083,8 +1490,8 @@
             renderChips('voice-options', OPTS.voices, 'voice');
             renderChips('tempo-options', OPTS.tempos, 'tempo');
 
-            loadMySongs();
-            initCamera();
+            loadMySongs(); // Library data
+            // (initCamera will be called by showView('dashboard'))
 
             const searchInput = document.getElementById('search-input');
             if (searchInput && !searchEnterBound) {
@@ -1129,81 +1536,97 @@
         };
 
         window.showView = (viewName) => {
-            const dash = document.getElementById('view-dashboard');
-            const studio = document.getElementById('view-studio');
-            const library = document.getElementById('view-library');
-            const film = document.getElementById('view-film-station');
-            const guide = document.getElementById('view-guide');
-            const navDash = document.getElementById('nav-dashboard');
-            const navStudio = document.getElementById('nav-studio');
-            const navLibrary = document.getElementById('nav-library');
-            const navFilm = document.getElementById('nav-film');
-            const navGame = document.getElementById('nav-game');
-            const navGuide = document.getElementById('nav-guide');
-
-            // Hide all views
-            dash.classList.add('hidden');
-            studio.classList.add('hidden');
-            library.classList.add('hidden');
-            film.classList.add('hidden');
-            document.getElementById('view-game').classList.add('hidden');
-            guide.classList.add('hidden');
-
-            // Reset all nav buttons
-            [navDash, navStudio, navLibrary, navFilm, navGame, navGuide].forEach(nav => {
-                if(nav) {
-                    nav.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
+            const views = ['dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'guide'];
+            views.forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                const nav = document.getElementById(`nav-${v}`);
+                if (el) el.classList.add('hidden');
+                if (nav) {
+                    nav.classList.remove('bg-white/10', 'text-white', 'shadow-sm', 'shadow-primary/20');
                     nav.classList.add('text-slate-400');
                 }
             });
 
-            // Show selected view and activate button
-            if (viewName === 'dashboard') {
-                dash.classList.remove('hidden');
-                navDash.classList.remove('text-slate-400');
-                navDash.classList.add('bg-white/10', 'text-white', 'shadow-sm');
-            } else if (viewName === 'studio') {
-                studio.classList.remove('hidden');
-                navStudio.classList.remove('text-slate-400');
-                navStudio.classList.add('bg-white/10', 'text-white', 'shadow-sm');
-                loadMySongs(); // Refresh library
-            } else if (viewName === 'library') {
-                library.classList.remove('hidden');
-                navLibrary.classList.remove('text-slate-400');
-                navLibrary.classList.add('bg-white/10', 'text-white', 'shadow-sm');
-                if (!window.currentUserUid) {
-                    alert("Vui lòng Login để xem Library cá nhân nhé!");
-                } else {
-                    loadFavorites();
-                    loadPlaylists();
-                }
-            } else if (viewName === 'film') {
-                film.classList.remove('hidden');
-                navFilm.classList.remove('text-slate-400');
-                navFilm.classList.add('bg-white/10', 'text-white', 'shadow-sm');
-                if (window.currentUserUid) {
-                    loadFilmHistory();
-                }
-            } else if (viewName === 'game') {
-                document.getElementById('view-game').classList.remove('hidden');
-                document.getElementById('nav-game').classList.remove('text-slate-400');
-                document.getElementById('nav-game').classList.add('bg-white/10', 'text-white', 'shadow-sm');
-                // Auto-stop game loop when leaving
-                stopSnake();
-            } else if (viewName === 'guide') {
-                guide.classList.remove('hidden');
-                navGuide.classList.remove('text-slate-400');
-                navGuide.classList.add('bg-white/10', 'text-white', 'shadow-sm');
-                stopSnake();
+            const activeView = document.getElementById(`view-${viewName}`);
+            const activeNav = document.getElementById(`nav-${viewName}`);
+
+            if (activeView) activeView.classList.remove('hidden');
+            if (activeNav) {
+                activeNav.classList.add('bg-white/10', 'text-white', 'shadow-sm');
+                activeNav.classList.remove('text-slate-400');
             }
 
+            // Camera Management
+            if (viewName === 'dashboard') {
+                if (cameraEnabled) initCamera();
+                stopPhotoboothCamera();
+            } else if (viewName === 'photobooth') {
+                // Layout selection first, don't start camera yet
+                stopMainCamera();
+                document.getElementById('pb-layout-zone').classList.remove('hidden');
+                document.getElementById('pb-capture-zone').classList.add('hidden');
+                document.getElementById('pb-design-zone').classList.add('hidden');
+            } else {
+                stopMainCamera();
+                stopPhotoboothCamera();
+            }
+
+            // Game Cleanup
+            if (viewName !== 'game' && typeof stopSnake === 'function') stopSnake();
+
+            // Refresh Data
+            if (viewName === 'studio') loadMySongs();
+            if (viewName === 'library') {
+                if (!window.currentUserUid) {
+                    alert("Vui lòng LOGIN để xem Thư viện cá nhân nhé! ❤️");
+                }
+                loadFavorites();
+                loadPlaylists();
+            }
+            if (viewName === 'film') loadFilmHistory();
+            if (viewName === 'photobooth') {
+                // Photobooth extra init if needed
+            }
+
+            // History Management
             try {
                 const url = new URL(window.location.href);
                 if (viewName === 'dashboard') url.searchParams.delete('view');
                 else url.searchParams.set('view', viewName);
                 history.replaceState({}, '', url);
-            } catch (e) { /* file:// or restricted */ }
+            } catch (e) { }
         };
+
+        // Camera Logic Dashboard
+        window.toggleCamera = () => {
+            cameraEnabled = !cameraEnabled;
+            const btn = document.getElementById('camera-toggle-btn');
+            const icon = document.getElementById('camera-toggle-icon');
+            const text = document.getElementById('camera-toggle-text');
+            const video = document.getElementById('video');
+
+            if (cameraEnabled) {
+                icon.innerText = 'videocam_off';
+                text.innerText = 'HIDE CAMERA';
+                btn.classList.add('bg-white/10');
+                btn.classList.remove('bg-red-500/20', 'text-red-400');
+                initCamera();
+            } else {
+                icon.innerText = 'videocam';
+                text.innerText = 'SHOW CAMERA';
+                btn.classList.remove('bg-white/10');
+                btn.classList.add('bg-red-500/20', 'text-red-400');
+                stopMainCamera();
+                if (video) video.srcObject = null;
+            }
+        };
+
+        function stopMainCamera() {
+            if (mainStream) {
+                mainStream.getTracks().forEach(track => track.stop());
+                mainStream = null;
+            }
+        }
 
         window.switchType = (type) => {
             currentType = type;
@@ -1562,15 +1985,17 @@
             }
         }
 
-        // Camera Logic
+        // Dashboard Camera Logic
         async function initCamera() {
             const video = document.getElementById('video');
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                    video.srcObject = stream;
+                    // Stop any existing tracks first
+                    stopMainCamera();
+                    mainStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                    if (video) video.srcObject = mainStream;
                 } catch (err) {
-                    console.error("Camera access denied", err);
+                    console.error("Dashboard Camera Error", err);
                 }
             }
         }
@@ -2101,7 +2526,7 @@
 
                 // Grid
                 ctx.strokeStyle = "rgba(255,255,255,0.05)";
-                for(let i=0; i<400; i+=box) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,400); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(400,i); ctx.stroke(); }
+                for (let i = 0; i < 400; i += box) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 400); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(400, i); ctx.stroke(); }
 
                 for (let i = 0; i < snake.length; i++) {
                     ctx.fillStyle = (i == 0) ? "#3b82f6" : "rgba(255,255,255,0.8)";
@@ -2110,7 +2535,7 @@
 
                 ctx.fillStyle = "#ef4444";
                 ctx.beginPath();
-                ctx.arc(food.x+box/2, food.y+box/2, box/2.5, 0, Math.PI*2);
+                ctx.arc(food.x + box / 2, food.y + box / 2, box / 2.5, 0, Math.PI * 2);
                 ctx.fill();
 
                 let snakeX = snake[0].x;
@@ -2160,7 +2585,7 @@
             updateCaroTurnUI();
             for (let i = 0; i < 225; i++) {
                 const cell = document.createElement('div');
-                cell.className = 'w-6 h-6 sm:w-8 sm:h-8 border border-white/5 flex items-center justify-center text-sm font-bold transition-all hover:bg-white/10';
+                cell.className = 'w-6 h-6 sm:w-10 sm:h-10 border border-white/10 flex items-center justify-center text-lg font-bold transition-all hover:bg-white/10 select-none';
                 cell.dataset.index = i;
                 cell.onclick = () => handleCaroClick(i);
                 board.appendChild(cell);
@@ -2216,10 +2641,365 @@
 
         window.resetCaro = () => initCaro();
 
+        // --- CHESS GAME ---
+        window.launchChess = (mode) => {
+            let url = "https://lichess.org/?any#ai";
+            if (mode === 'friend') {
+                url = "https://lichess.org/setup/friend";
+            }
+            window.open(url, '_blank');
+        };
+
         // ==========================================
         // 13. INITIALIZATION
         // ==========================================
-        window.addEventListener('DOMContentLoaded', initUI);
+        // (Initialization moved to the end of the script block)
+
+        // --- PHOTOBOOTH STATE ---
+        let pbSelectedLayout = 'v4';
+        let pbCapturedPhotos = new Array(4).fill(null);
+        let pbActiveStickers = [];
+        let pbFrameColor = '#FFFFFF';
+        let pbSelectedFilter = 'none';
+        let pbVirtualBGColor = null;
+        let selfieSegmentation = null;
+        let pbStream = null;
+        let pbHeldSticker = null;
+
+        const pbColors = ['#FFFFFF', '#000000', '#FFDBE9', '#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#D4A5A5', '#97C1A9', '#55CBCD', '#ECC19C', '#F6EAC2', '#A0E7E5', '#B28DFF', '#6EB5FF', '#FFABAB', '#FFC3A0'];
+        const pbStickers = ['✨', '⭐', '❤️', '💖', '🔥', '🌸', '🌈', '🎀', '🍭', '🍓', '🍑', '🦋', '🐱', '🐶', '🧸', '☁️', '🌙', '🍒', '🎈', '🎨', '🧩', '🧁', '🍩', '🥑'];
+
+        async function initPhotoboothCamera() {
+            const video = document.getElementById('pb-video');
+            if (!video) return;
+            try {
+                pbStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
+                video.srcObject = pbStream;
+                initSelfieSegmentation();
+            } catch (e) {
+                console.error("PB Camera Error", e);
+            }
+        }
+
+        function stopPhotoboothCamera() {
+            if (pbStream) {
+                pbStream.getTracks().forEach(t => t.stop());
+                pbStream = null;
+            }
+        }
+
+        function initSelfieSegmentation() {
+            if (selfieSegmentation) return;
+            selfieSegmentation = new SelfieSegmentation({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+            });
+            selfieSegmentation.setOptions({ modelSelection: 1 });
+            selfieSegmentation.onResults(onSegmentationResults);
+
+            const video = document.getElementById('pb-video');
+            const step = async () => {
+                if (pbStream && pbVirtualBGColor) {
+                    await selfieSegmentation.send({ image: video });
+                }
+                requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        }
+
+        function onSegmentationResults(results) {
+            const canvas = document.getElementById('pb-seg-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = results.image.width;
+            canvas.height = results.image.height;
+
+            ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
+
+            ctx.globalCompositeOperation = 'source-out';
+            ctx.fillStyle = pbVirtualBGColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.globalCompositeOperation = 'destination-atop';
+            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }
+
+        window.setPBVirtualBG = (color) => {
+            pbVirtualBGColor = color;
+            const segCanvas = document.getElementById('pb-seg-canvas');
+            if (segCanvas) {
+                if (color) segCanvas.classList.remove('hidden');
+                else segCanvas.classList.add('hidden');
+            }
+            document.querySelectorAll('.pb-bg-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.color === (color || 'none'));
+            });
+        };
+
+        window.setPBFilter = (filter) => {
+            pbSelectedFilter = filter;
+            document.querySelectorAll('.pb-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            if (document.getElementById('pb-design-zone').classList.contains('hidden') === false) {
+                updateStripPreview();
+            }
+        };
+
+        window.setPBLayout = (layout) => {
+            pbSelectedLayout = layout;
+            let count = 4;
+            if (layout === 'h3') count = 3;
+            if (layout === 'f1') count = 1;
+            pbCapturedPhotos = new Array(count).fill(null);
+
+            document.querySelectorAll('.pb-layout-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.layout === layout);
+            });
+            updatePBSlots();
+        };
+
+        window.goToCapture = () => {
+            document.getElementById('pb-layout-zone').classList.add('hidden');
+            document.getElementById('pb-capture-zone').classList.remove('hidden');
+            initPhotoboothCamera();
+        };
+
+        window.startPhotoboothSequence = async () => {
+            for (let i = 0; i < pbCapturedPhotos.length; i++) {
+                await captureSlot(i);
+            }
+        };
+
+        async function captureSlot(index) {
+            const countdownEl = document.getElementById('pb-countdown');
+            const countdownNum = document.getElementById('pb-countdown-num');
+            const flash = document.getElementById('pb-flash');
+            const video = document.getElementById('pb-video');
+            const canvas = document.getElementById('pb-canvas');
+            const segCanvas = document.getElementById('pb-seg-canvas');
+            if (!video || !canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            if (countdownEl && countdownNum) {
+                countdownEl.classList.remove('hidden');
+                for (let s = 3; s > 0; s--) {
+                    countdownNum.innerText = s;
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+                countdownEl.classList.add('hidden');
+            }
+
+            if (flash) flash.classList.add('animate-flash');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // We capture original image, filter is applied in preview/export
+            if (pbVirtualBGColor && segCanvas) {
+                ctx.drawImage(segCanvas, 0, 0);
+            } else {
+                ctx.drawImage(video, 0, 0);
+            }
+
+            pbCapturedPhotos[index] = canvas.toDataURL('image/png');
+            await new Promise(r => setTimeout(r, 500));
+            if (flash) flash.classList.remove('animate-flash');
+            updatePBSlots();
+        }
+
+        function updatePBSlots() {
+            const container = document.getElementById('pb-slots-container');
+            if (!container) return;
+
+            let gridCols = 'grid-cols-2';
+            if (pbSelectedLayout === 'v4') gridCols = 'grid-cols-2';
+            if (pbSelectedLayout === 'h3') gridCols = 'grid-cols-1';
+            if (pbSelectedLayout === 'f1') gridCols = 'grid-cols-1';
+
+            container.className = `grid ${gridCols} gap-4 flex-1`;
+            container.innerHTML = pbCapturedPhotos.map((photo, i) => `
+                <div class="relative aspect-[3/4] bg-white/5 rounded-[2rem] overflow-hidden border-2 ${photo ? 'border-primary/50 shadow-lg shadow-primary/10' : 'border-dashed border-white/10'} transition-all">
+                    ${photo ? `
+                        <img src="${photo}" class="w-full h-full object-cover">
+                        <button onclick="captureSlot(${i})" class="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-all">
+                            <span class="material-icons-round text-sm">refresh</span>
+                        </button>
+                    ` : `
+                        <div class="w-full h-full flex flex-col items-center justify-center text-slate-700 opacity-20">
+                             <span class="material-icons-round text-4xl">photo_camera</span>
+                        </div>
+                    `}
+                </div>
+            `).join('');
+
+            const isComplete = pbCapturedPhotos.every(p => p !== null);
+            const nextBtn = document.getElementById('pb-next-btn');
+            if (nextBtn) {
+                if (isComplete) nextBtn.classList.remove('hidden');
+                else nextBtn.classList.add('hidden');
+            }
+        }
+
+        window.goToDesignStudio = () => {
+            document.getElementById('pb-capture-zone').classList.add('hidden');
+            document.getElementById('pb-design-zone').classList.remove('hidden');
+            initPBStudioUI();
+            updateStripPreview();
+        };
+
+        window.backToCapture = () => {
+            document.getElementById('pb-design-zone').classList.add('hidden');
+            document.getElementById('pb-capture-zone').classList.remove('hidden');
+        };
+
+        function initPBStudioUI() {
+            const colorGrid = document.getElementById('pb-design-color-grid');
+            if (colorGrid) colorGrid.innerHTML = pbColors.map(c => `<button onclick="setPBFrameColor('${c}')" class="w-10 h-10 rounded-full border-2 border-white/20 hover:scale-110 transition-all shadow-md" style="background: ${c};"></button>`).join('');
+            const stickerGrid = document.getElementById('pb-sticker-grid');
+            if (stickerGrid) stickerGrid.innerHTML = pbStickers.map(s => `<button onclick="addPBSticker('${s}')" class="w-full aspect-square bg-white/5 rounded-2xl flex items-center justify-center text-3xl hover:bg-white/10 hover:scale-110 transition-all border border-white/5">${s}</button>`).join('');
+        }
+
+        window.addPBSticker = (emoji) => {
+            pbHeldSticker = emoji;
+            const indicator = document.getElementById('pb-held-sticker-indicator');
+            const emojiEl = document.getElementById('pb-held-sticker-emoji');
+            if (indicator && emojiEl) {
+                indicator.classList.remove('hidden');
+                emojiEl.innerText = emoji;
+            }
+        };
+
+        window.placeSticker = (e) => {
+            if (!pbHeldSticker) return;
+            const preview = document.getElementById('pb-strip-preview');
+            const rect = preview.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+            pbActiveStickers.push({
+                emoji: pbHeldSticker,
+                x: x,
+                y: y,
+                rotate: Math.random() * 40 - 20
+            });
+            updateStripPreview();
+        };
+
+        window.setPBFrameColor = (color) => { pbFrameColor = color; updateStripPreview(); };
+
+        function updateStripPreview() {
+            const preview = document.getElementById('pb-strip-preview');
+            if (!preview) return;
+            preview.style.backgroundColor = pbFrameColor;
+
+            // Layout specific styles
+            let gap = 'gap-5';
+            if (pbSelectedLayout === 'g4') gap = 'gap-2';
+            preview.className = `w-[300px] min-h-[600px] flex flex-col ${gap} p-6 rounded-[3rem] relative transition-shadow pb-16 cursor-crosshair ring-1 ring-white/10 shadow-2xl`;
+
+            let photoHtml = '';
+            if (pbSelectedLayout === 'g4') {
+                photoHtml = `<div class="grid grid-cols-2 gap-2 w-full">` + pbCapturedPhotos.map(p => `<div class="aspect-square rounded-lg overflow-hidden"><img src="${p}" style="filter: ${getCanvasFilter(pbSelectedFilter)}" class="w-full h-full object-cover"></div>`).join('') + `</div>`;
+            } else {
+                photoHtml = pbCapturedPhotos.map((photo) => `<div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-sm"><img src="${photo}" style="filter: ${getCanvasFilter(pbSelectedFilter)}" class="w-full h-full object-cover"></div>`).join('');
+            }
+
+            let brandingHtml = `<div class="absolute bottom-6 left-0 right-0 text-center font-bold tracking-[0.4em] opacity-40 text-xs" style="color: ${(pbFrameColor === '#000000' || pbFrameColor === '#8B0000') ? '#FFFFFF' : '#000000'}">KIETSOUND</div>`;
+
+            let stickerHtml = pbActiveStickers.map((s, idx) => `
+                <div class="absolute text-5xl pointer-events-auto select-none z-10 cursor-pointer hover:scale-125 transition-transform" 
+                     style="left: ${s.x}%; top: ${s.y}%; transform: translate(-50%, -50%) rotate(${s.rotate}deg);"
+                     onclick="event.stopPropagation(); pbActiveStickers.splice(${idx},1); updateStripPreview();">
+                     ${s.emoji}
+                </div>
+            `).join('');
+
+            preview.innerHTML = photoHtml + brandingHtml + stickerHtml;
+        }
+
+        window.generateStripFinal = async () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const photoWidth = 800; const photoHeight = 600; const padding = 80; const gap = 40; const footerHeight = 160;
+            let finalWidth = photoWidth + (padding * 2);
+            let finalHeight = (photoHeight * pbCapturedPhotos.length) + (gap * (pbCapturedPhotos.length - 1)) + (padding * 2) + footerHeight;
+
+            if (pbSelectedLayout === 'g4') {
+                finalHeight = (photoWidth * 2) + gap + (padding * 2) + footerHeight;
+            }
+
+            canvas.width = finalWidth; canvas.height = finalHeight;
+            ctx.fillStyle = pbFrameColor; ctx.fillRect(0, 0, finalWidth, finalHeight);
+
+            // Photos
+            ctx.filter = getCanvasFilter(pbSelectedFilter);
+            for (let i = 0; i < pbCapturedPhotos.length; i++) {
+                if (!pbCapturedPhotos[i]) continue;
+                const img = new Image(); img.src = pbCapturedPhotos[i]; await new Promise(r => img.onload = r);
+
+                if (pbSelectedLayout === 'g4') {
+                    const gx = padding + (i % 2) * (photoWidth / 2 + gap / 2);
+                    const gy = padding + Math.floor(i / 2) * (photoWidth / 2 + gap / 2);
+                    ctx.drawImage(img, gx, gy, photoWidth / 2, photoWidth / 2);
+                } else {
+                    ctx.drawImage(img, padding, padding + (i * (photoHeight + gap)), photoWidth, photoHeight);
+                }
+            }
+            ctx.filter = 'none';
+
+            // Stickers
+            ctx.font = "120px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            pbActiveStickers.forEach(s => {
+                ctx.save();
+                ctx.translate((s.x / 100) * finalWidth, (s.y / 100) * finalHeight);
+                ctx.rotate(s.rotate * Math.PI / 180);
+                ctx.fillText(s.emoji, 0, 0);
+                ctx.restore();
+            });
+
+            // Branding
+            ctx.fillStyle = (pbFrameColor === '#000000' || pbFrameColor === '#8B0000' || pbFrameColor === '#00008B') ? '#FFFFFF' : '#000000';
+            ctx.font = 'bold 48px Arial'; ctx.textAlign = 'center';
+            ctx.globalAlpha = 0.5;
+            ctx.fillText('KIETSOUND PRO STUDIO', finalWidth / 2, finalHeight - 80);
+
+            const dataUrl = canvas.toDataURL('image/png');
+            addToGallery(dataUrl);
+            const a = document.createElement('a'); a.href = dataUrl; a.download = `kietsound_pb_${Date.now()}.png`; a.click();
+
+            // Reset to layout screen
+            document.getElementById('pb-design-zone').classList.add('hidden');
+            document.getElementById('pb-layout-zone').classList.remove('hidden');
+            pbCapturedPhotos = new Array(4).fill(null);
+            pbActiveStickers = [];
+            pbHeldSticker = null;
+            if (document.getElementById('pb-held-sticker-indicator')) document.getElementById('pb-held-sticker-indicator').classList.add('hidden');
+        };
+
+        function addToGallery(url) {
+            const gallery = document.getElementById('pb-gallery');
+            if (!gallery) return;
+            const item = document.createElement('div');
+            item.className = 'flex-shrink-0 relative group';
+            item.innerHTML = `<img src="${url}" class="h-32 rounded-lg border-2 border-white/20 shadow-lg hover:scale-105 transition-all cursor-pointer" onclick="window.open('${url}')">`;
+            gallery.prepend(item);
+        }
+
+        function getCanvasFilter(f) {
+            if (f === 'bw') return 'grayscale(1)';
+            if (f === 'vintage') return 'sepia(0.5) contrast(1.2) brightness(0.9)';
+            if (f === 'bright') return 'saturate(1.4) contrast(1.1) brightness(1.1)';
+            if (f === 'cold') return 'hue-rotate(180deg) saturate(0.8) brightness(1.1)';
+            return 'none';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initUI();
+            showView('dashboard');
+        });
 
     </script>
     <script type="module">
