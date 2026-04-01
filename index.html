@@ -2026,7 +2026,198 @@
         };
 
         // ==========================================
-        // 9. INITIALIZATION
+        // 12. GAME STATION LOGIC
+        // ==========================================
+        let snakeInterval = null;
+        let caroBoard = Array(225).fill(null);
+        let caroTurn = 'X';
+
+        window.switchGame = (gameId) => {
+            const snakeCont = document.getElementById('game-snake-container');
+            const caroCont = document.getElementById('game-caro-container');
+            const chessCont = document.getElementById('game-chess-container');
+            const btns = {
+                snake: document.getElementById('btn-game-snake'),
+                caro: document.getElementById('btn-game-caro'),
+                chess: document.getElementById('btn-game-chess')
+            };
+
+            // Hide all
+            [snakeCont, caroCont, chessCont].forEach(c => c.classList.add('hidden'));
+            stopSnake();
+
+            // Reset buttons
+            Object.values(btns).forEach(b => {
+                b.classList.remove('bg-primary', 'text-white', 'shadow-lg', 'shadow-primary/20');
+                b.classList.add('bg-white/5', 'text-slate-400');
+            });
+
+            // Show selected
+            const activeBtn = btns[gameId];
+            if (activeBtn) {
+                activeBtn.classList.add('bg-primary', 'text-white', 'shadow-lg', 'shadow-primary/20');
+                activeBtn.classList.remove('bg-white/5', 'text-slate-400');
+            }
+
+            if (gameId === 'snake') snakeCont.classList.remove('hidden');
+            else if (gameId === 'caro') {
+                caroCont.classList.remove('hidden');
+                initCaro();
+            } else if (gameId === 'chess') chessCont.classList.remove('hidden');
+        };
+
+        // --- SNAKE GAME ---
+        window.startSnake = () => {
+            document.getElementById('snake-overlay').classList.add('hidden');
+            const canvas = document.getElementById('snake-canvas');
+            const ctx = canvas.getContext('2d');
+            const box = 20;
+            let score = 0;
+            let snake = [{ x: 9 * box, y: 10 * box }];
+            let food = { x: Math.floor(Math.random() * 19 + 1) * box, y: Math.floor(Math.random() * 19 + 1) * box };
+            let d = "RIGHT";
+
+            const directionHandler = (event) => {
+                const key = event.key;
+                if ((key === "ArrowLeft" || key === "a") && d != "RIGHT") d = "LEFT";
+                else if ((key === "ArrowUp" || key === "w") && d != "DOWN") d = "UP";
+                else if ((key === "ArrowRight" || key === "d") && d != "LEFT") d = "RIGHT";
+                else if ((key === "ArrowDown" || key === "s") && d != "UP") d = "DOWN";
+            };
+            document.addEventListener("keydown", directionHandler);
+            window.handleSnakeInput = (key) => directionHandler({ key });
+
+            function collision(head, array) {
+                for (let i = 0; i < array.length; i++) {
+                    if (head.x == array[i].x && head.y == array[i].y) return true;
+                }
+                return false;
+            }
+
+            if (snakeInterval) clearInterval(snakeInterval);
+            snakeInterval = setInterval(() => {
+                ctx.fillStyle = "#000";
+                ctx.fillRect(0, 0, 400, 400);
+
+                // Grid
+                ctx.strokeStyle = "rgba(255,255,255,0.05)";
+                for(let i=0; i<400; i+=box) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,400); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(400,i); ctx.stroke(); }
+
+                for (let i = 0; i < snake.length; i++) {
+                    ctx.fillStyle = (i == 0) ? "#3b82f6" : "rgba(255,255,255,0.8)";
+                    ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                }
+
+                ctx.fillStyle = "#ef4444";
+                ctx.beginPath();
+                ctx.arc(food.x+box/2, food.y+box/2, box/2.5, 0, Math.PI*2);
+                ctx.fill();
+
+                let snakeX = snake[0].x;
+                let snakeY = snake[0].y;
+                if (d == "LEFT") snakeX -= box;
+                if (d == "UP") snakeY -= box;
+                if (d == "RIGHT") snakeX += box;
+                if (d == "DOWN") snakeY += box;
+
+                if (snakeX == food.x && snakeY == food.y) {
+                    score++;
+                    document.getElementById('snake-score').innerText = score;
+                    food = { x: Math.floor(Math.random() * 19 + 1) * box, y: Math.floor(Math.random() * 19 + 1) * box };
+                } else snake.pop();
+
+                let newHead = { x: snakeX, y: snakeY };
+                if (snakeX < 0 || snakeX >= 400 || snakeY < 0 || snakeY >= 400 || collision(newHead, snake)) {
+                    clearInterval(snakeInterval);
+                    document.removeEventListener("keydown", directionHandler);
+                    const high = parseInt(document.getElementById('snake-high').innerText);
+                    if (score > high) document.getElementById('snake-high').innerText = score;
+                    document.getElementById('snake-overlay').classList.remove('hidden');
+                    document.getElementById('snake-overlay').querySelector('h3').innerText = "GAME OVER";
+                    document.getElementById('snake-overlay').querySelector('p').innerText = `Điểm của bạn: ${score}`;
+                    return;
+                }
+                snake.unshift(newHead);
+            }, 100);
+        };
+
+        window.stopSnake = () => {
+            if (snakeInterval) { clearInterval(snakeInterval); snakeInterval = null; }
+            const overlay = document.getElementById('snake-overlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.querySelector('h3').innerText = "Rắn Săn Mồi";
+                overlay.querySelector('p').innerText = "Sử dụng các phím mũi tên hoặc WASD để di chuyển.";
+            }
+        };
+
+        // --- CARO GAME ---
+        window.initCaro = () => {
+            const board = document.getElementById('caro-board');
+            board.innerHTML = '';
+            caroBoard = Array(225).fill(null);
+            caroTurn = 'X';
+            updateCaroTurnUI();
+            for (let i = 0; i < 225; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'w-6 h-6 sm:w-8 sm:h-8 border border-white/5 flex items-center justify-center text-sm font-bold transition-all hover:bg-white/10';
+                cell.dataset.index = i;
+                cell.onclick = () => handleCaroClick(i);
+                board.appendChild(cell);
+            }
+        };
+
+        function handleCaroClick(index) {
+            if (caroBoard[index]) return;
+            caroBoard[index] = caroTurn;
+            const cell = document.querySelector(`[data-index="${index}"]`);
+            cell.innerText = caroTurn;
+            cell.classList.add(caroTurn === 'X' ? 'text-primary' : 'text-purple-400');
+            if (checkCaroWin(index)) {
+                alert(`🎉 CHÚC MỪNG! Người chơi ${caroTurn} đã thắng!`);
+                initCaro();
+                return;
+            }
+            caroTurn = (caroTurn === 'X') ? 'O' : 'X';
+            updateCaroTurnUI();
+        }
+
+        function updateCaroTurnUI() {
+            const tx = document.getElementById('caro-turn-x');
+            const to = document.getElementById('caro-turn-o');
+            if (caroTurn === 'X') {
+                tx.classList.add('bg-primary', 'text-white'); tx.classList.remove('bg-white/5', 'text-slate-500');
+                to.classList.remove('bg-purple-600', 'text-white'); to.classList.add('bg-white/5', 'text-slate-500');
+            } else {
+                to.classList.add('bg-purple-600', 'text-white'); to.classList.remove('bg-white/5', 'text-slate-500');
+                tx.classList.remove('bg-primary', 'text-white'); tx.classList.add('bg-white/5', 'text-slate-500');
+            }
+        }
+
+        function checkCaroWin(idx) {
+            const r = Math.floor(idx / 15), c = idx % 15;
+            const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
+            for (let [dr, dc] of dirs) {
+                let count = 1;
+                for (let i = 1; i < 5; i++) {
+                    const nr = r + dr * i, nc = c + dc * i;
+                    if (nr >= 0 && nr < 15 && nc >= 0 && nc < 15 && caroBoard[nr * 15 + nc] === caroTurn) count++;
+                    else break;
+                }
+                for (let i = 1; i < 5; i++) {
+                    const nr = r - dr * i, nc = c - dc * i;
+                    if (nr >= 0 && nr < 15 && nc >= 0 && nc < 15 && caroBoard[nr * 15 + nc] === caroTurn) count++;
+                    else break;
+                }
+                if (count >= 5) return true;
+            }
+            return false;
+        }
+
+        window.resetCaro = () => initCaro();
+
+        // ==========================================
+        // 13. INITIALIZATION
         // ==========================================
         window.addEventListener('DOMContentLoaded', initUI);
 
