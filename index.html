@@ -5516,11 +5516,126 @@
             if (typeof loadFavorites !== 'undefined') loadFavorites();
             if (typeof loadPlaylists !== 'undefined') loadPlaylists();
             
+            // Hydrate Profile View
+            if (typeof loadUserProfile !== 'undefined') loadUserProfile();
+            
             const toast = document.createElement('div');
             toast.className = 'fixed top-10 right-4 z-[99999] bg-green-500/20 shadow-lg border border-green-500/40 text-green-400 font-bold px-6 py-3 rounded-xl animate-fade-in flex items-center gap-2';
             toast.innerHTML = `<span class="material-icons-round">check_circle</span> Xin chào ${dispName}! Đăng nhập thành công.`;
             document.body.appendChild(toast);
             setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(()=>toast.remove(),300) }, 3000);
+        };
+
+        // --- PROFILE VIEW LOGIC ---
+        window.loadUserProfile = async () => {
+             const uid = window.currentUserUid;
+             if (!uid || !window.supabaseClient) return;
+
+             const { data: { user } } = await window.supabaseClient.auth.getUser();
+             if (!user) return;
+             
+             let name = user.user_metadata?.full_name || user.email.split('@')[0];
+             let email = user.email;
+             let avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`;
+             let dob = "";
+             
+             try {
+                const { data: profile } = await window.supabaseClient.from('profiles').select('*').eq('id', uid).single();
+                if (profile) {
+                    name = profile.full_name || name;
+                    if (profile.avatar_url && profile.avatar_url !== "") avatar = profile.avatar_url;
+                }
+             } catch(e) {}
+             
+             // Check localStorage for offline data/overrides
+             const savedData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+             if (savedData.dob) dob = savedData.dob;
+             if (savedData.avatar) avatar = savedData.avatar;
+
+             // Profile Card elements
+             const nameEl = document.getElementById('profile-view-name');
+             const emailEl = document.getElementById('profile-view-email');
+             const avatarEl = document.getElementById('profile-view-avatar');
+             
+             // Setting Inputs
+             const inName = document.getElementById('profile-input-name');
+             const inEmail = document.getElementById('profile-input-email');
+             const inDob = document.getElementById('profile-input-dob');
+
+             if (nameEl) nameEl.textContent = name;
+             if (emailEl) emailEl.textContent = email;
+             if (avatarEl) avatarEl.src = avatar;
+
+             if (inName) inName.value = name;
+             if (inEmail) inEmail.value = email;
+             if (inDob) inDob.value = dob;
+
+             // Global UI Sync
+             const userEmailDisp = document.getElementById('user-email-display');
+             if(userEmailDisp) userEmailDisp.textContent = email;
+             
+             const userTopName = document.getElementById('user-display');
+             if (userTopName) userTopName.textContent = name;
+             
+             const userTopAvatar = document.querySelectorAll('#user-avatar, #home-create-avatar');
+             userTopAvatar.forEach(img => img.src = avatar);
+        };
+
+        window.saveUserProfile = async (event) => {
+             const uid = window.currentUserUid;
+             if (!uid || !window.supabaseClient) return;
+
+             const btn = event ? event.currentTarget : null;
+             const inName = document.getElementById('profile-input-name');
+             const inDob = document.getElementById('profile-input-dob');
+             const name = inName ? inName.value.trim() : '';
+             const dob = inDob ? inDob.value : '';
+
+             if (!name) return alert("Vui lòng nhập họ tên!");
+
+             const origHtml = btn ? btn.innerHTML : "";
+             if(btn) btn.innerHTML = '<span class="material-icons-round animate-spin">autorenew</span> Đang lưu...';
+
+             try {
+                 const { error } = await window.supabaseClient.from('profiles')
+                     .update({ full_name: name })
+                     .eq('id', uid);
+                 
+                 const existingData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+                 existingData.dob = dob;
+                 localStorage.setItem(`profile_${uid}`, JSON.stringify(existingData));
+                 
+                 if (error) throw error;
+                 
+                 alert("Đã lưu thông tin cá nhân! ✨");
+                 loadUserProfile();
+             } catch(e) {
+                 alert("Lỗi khi lưu: " + e.message);
+             } finally {
+                 if(btn) btn.innerHTML = origHtml;
+             }
+        };
+
+        window.handleAvatarUpload = (event) => {
+             const file = event.target.files[0];
+             if (!file || !window.currentUserUid) return;
+
+             const reader = new FileReader();
+             reader.onload = async (e) => {
+                 const base64 = e.target.result;
+                 const uid = window.currentUserUid;
+
+                 const existingData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+                 existingData.avatar = base64;
+                 localStorage.setItem(`profile_${uid}`, JSON.stringify(existingData));
+                 
+                 loadUserProfile();
+
+                 if(window.supabaseClient) {
+                     await window.supabaseClient.from('profiles').update({ avatar_url: base64 }).eq('id', uid);
+                 }
+             };
+             reader.readAsDataURL(file);
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
