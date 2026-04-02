@@ -2073,6 +2073,21 @@
                             <!-- Populated by JS -->
                         </div>
                     </div>
+
+                    <!-- My Posts (like Facebook) -->
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between px-4">
+                            <h4 class="text-xl font-display font-bold text-white uppercase italic tracking-tighter">Bài viết <span class="text-primary">của tôi</span></h4>
+                            <span id="profile-post-count" class="text-[10px] bg-white/10 px-3 py-1 rounded-full text-slate-400 font-bold uppercase tracking-widest">0 Bài</span>
+                        </div>
+                        <div id="profile-my-posts" class="space-y-4">
+                            <div class="text-center py-8 text-slate-500 opacity-60">
+                                <span class="material-icons-round text-3xl mb-2">article</span>
+                                <p class="text-[10px] font-bold uppercase tracking-wider">Chưa có bài viết nào.<br>Hãy chia sẻ suy nghĩ của bạn tại tab HOME!</p>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
                 </main>
             </div>
         </div>
@@ -5787,10 +5802,13 @@
             if (userProfile) userProfile.classList.remove('hidden');
             
             // Re-render Views
-            if (typeof renderHomeNewsfeed !== 'undefined') renderHomeNewsfeed();
+            if (typeof fetchHomePosts !== 'undefined') fetchHomePosts();
             if (typeof renderBuddySystem !== 'undefined') renderBuddySystem();
             if (typeof loadFavorites !== 'undefined') loadFavorites();
             if (typeof loadPlaylists !== 'undefined') loadPlaylists();
+            
+            // Setup Realtime after login
+            if (typeof setupRealtimeNewsfeed !== 'undefined') setupRealtimeNewsfeed();
             
             // Hydrate Profile View
             if (typeof loadUserProfile !== 'undefined') loadUserProfile();
@@ -5982,47 +6000,75 @@
                 let mediaHtml = '';
                 if (post.media) {
                     if (post.media.endsWith('.mp4') || post.media.endsWith('.webm')) {
-                        mediaHtml = `<video src="${post.media}" controls class="w-full rounded-xl mt-3 border border-white/5 bg-black/50"></video>`;
+                        mediaHtml = `<video src="${post.media}" controls class="w-full mt-3 border-t border-b border-white/5 bg-black/50 max-h-[500px]"></video>`;
                     } else {
-                        mediaHtml = `<img src="${post.media}" class="w-full rounded-xl mt-3 border border-white/5 object-cover max-h-[400px]">`;
+                        mediaHtml = `<img src="${post.media}" class="w-full mt-3 border-t border-b border-white/5 object-cover max-h-[500px]">`;
                     }
                 }
 
-                // Privacy Icon
                 let privIcon = 'public';
-                if (post.privacy === 'friends') privIcon = 'people';
-                if (post.privacy === 'private') privIcon = 'lock';
+                let privText = 'Công khai';
+                if (post.privacy === 'friends') { privIcon = 'people'; privText = 'Bạn bè'; }
+                if (post.privacy === 'private') { privIcon = 'lock'; privText = 'Chỉ mình tôi'; }
 
                 return `
-                <div class="glass-card rounded-[2rem] p-5 sm:p-6 border border-white/10 shadow-lg hover:border-white/20 transition-all">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <img src="${post.author.avatar}" class="w-10 h-10 rounded-full border border-white/10 object-cover">
-                            <div>
-                                <h4 class="text-sm font-bold text-white">${post.author.name}</h4>
-                                <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold tracking-wide">
-                                    <span>${post.time}</span>
-                                    <span class="w-0.5 h-0.5 rounded-full bg-slate-500"></span>
-                                    <span class="material-icons-round text-[12px]">${privIcon}</span>
-                                </div>
+                <div class="glass-card rounded-2xl border border-white/10 shadow-lg hover:border-white/20 transition-all overflow-hidden" id="post-${post.id}">
+                    <!-- Header: Avatar + Name + Time -->
+                    <div class="flex items-center gap-3 p-4 pb-2">
+                        <img src="${post.author.avatar}" class="w-10 h-10 rounded-full border-2 border-white/10 object-cover flex-shrink-0 cursor-pointer hover:border-primary/50 transition-colors">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-[13px] font-bold text-white hover:underline cursor-pointer">${post.author.name}</h4>
+                            <div class="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                                <span>${post.time}</span>
+                                <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+                                <span class="material-icons-round text-[11px]">${privIcon}</span>
                             </div>
                         </div>
-                        <button class="text-slate-500 hover:text-white"><span class="material-icons-round">more_horiz</span></button>
+                        <button class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all">
+                            <span class="material-icons-round text-lg">more_horiz</span>
+                        </button>
                     </div>
-                    <div class="text-sm text-slate-200 leading-relaxed font-medium">
+
+                    <!-- Content -->
+                    <div class="px-4 pb-3 text-[14px] text-slate-100 leading-relaxed">
                         ${post.content.replace(/\\n/g, '<br>')}
                     </div>
+
+                    <!-- Media (Full Width like FB) -->
                     ${mediaHtml}
-                    <div class="flex items-center gap-4 mt-5 pt-4 border-t border-white/5">
-                        <button onclick="likePost(${post.id})" class="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-red-400 transition-colors cursor-pointer group">
-                            <span class="material-icons-round text-sm group-active:scale-125 transition-transform ${post.hasLiked ? 'text-red-500' : ''}">favorite_border</span> ${post.likes} Yêu thích
+
+                    <!-- Like Count Bar -->
+                    <div class="flex items-center justify-between px-4 py-2 text-[11px] text-slate-500">
+                        <div class="flex items-center gap-1">
+                            <span class="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center text-[10px]">❤</span>
+                            <span id="like-count-${post.id}">${post.likes}</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons (FB-style) -->
+                    <div class="flex items-center border-t border-white/5 mx-4 mb-1">
+                        <button onclick="likePost('${post.id}')" id="like-btn-${post.id}" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold ${post.hasLiked ? 'text-red-400' : 'text-slate-400'} hover:bg-white/5 rounded-lg transition-all cursor-pointer group">
+                            <span class="material-icons-round text-lg group-active:scale-125 transition-transform">${post.hasLiked ? 'favorite' : 'favorite_border'}</span> Yêu thích
                         </button>
-                        <button class="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-blue-400 transition-colors">
-                            <span class="material-icons-round text-sm">chat_bubble_outline</span> Bình luận
+                        <button onclick="toggleComment('${post.id}')" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-slate-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer">
+                            <span class="material-icons-round text-lg">chat_bubble_outline</span> Bình luận
                         </button>
-                        <button class="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-green-400 transition-colors ml-auto">
-                            <span class="material-icons-round text-sm">share</span> Chia sẻ
+                        <button onclick="sharePost('${post.id}')" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-slate-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer">
+                            <span class="material-icons-round text-lg">share</span> Chia sẻ
                         </button>
+                    </div>
+
+                    <!-- Comment Section -->
+                    <div id="comment-section-${post.id}" class="hidden border-t border-white/5 p-4 space-y-3 bg-black/20">
+                        <div id="comments-list-${post.id}" class="space-y-3 max-h-60 overflow-y-auto custom-scrollbar"></div>
+                        <div class="flex gap-2 items-center">
+                            <input type="text" id="comment-input-${post.id}" placeholder="Viết bình luận..." 
+                                class="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:border-primary/50 outline-none"
+                                onkeydown="if(event.key==='Enter')submitComment('${post.id}')">
+                            <button onclick="submitComment('${post.id}')" class="w-8 h-8 rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-black flex items-center justify-center transition-all hover:scale-105 active:scale-95 flex-shrink-0">
+                                <span class="material-icons-round text-sm">send</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 `;
@@ -6072,8 +6118,8 @@
                                     </div>
                                 </div>
                                 <div class="flex gap-1 flex-shrink-0">
-                                    <button onclick="acceptFriend(${req.id})" class="w-7 h-7 flex items-center justify-center bg-primary text-[#0a0a0a] rounded hover:bg-white hover:scale-105 active:scale-95 transition-all tooltip" title="Chấp nhận"><span class="material-icons-round text-sm">check</span></button>
-                                    <button onclick="rejectFriend(${req.id})" class="w-7 h-7 flex items-center justify-center bg-white/5 text-slate-400 rounded hover:bg-red-500/20 hover:text-red-400 active:scale-95 transition-all tooltip" title="Từ chối"><span class="material-icons-round text-sm">close</span></button>
+                                    <button onclick="acceptFriend('${req.id}')" class="w-7 h-7 flex items-center justify-center bg-primary text-[#0a0a0a] rounded hover:bg-white hover:scale-105 active:scale-95 transition-all tooltip" title="Chấp nhận"><span class="material-icons-round text-sm">check</span></button>
+                                    <button onclick="rejectFriend('${req.id}')" class="w-7 h-7 flex items-center justify-center bg-white/5 text-slate-400 rounded hover:bg-red-500/20 hover:text-red-400 active:scale-95 transition-all tooltip" title="Từ chối"><span class="material-icons-round text-sm">close</span></button>
                                 </div>
                             </div>
                         `;
@@ -6145,6 +6191,9 @@
                     fetchHomePosts(); // Initial fetch
                     renderBuddySystem();
                 }
+                if (viewName === 'guide') {
+                    if (typeof loadMyPosts !== 'undefined') loadMyPosts();
+                }
             };
             
             // Setup Real-time listener if client exists
@@ -6158,43 +6207,77 @@
             try {
                 const { data, error } = await window.supabaseClient
                     .from('posts')
-                    .select('*, profiles(full_name, avatar_url)')
+                    .select('*')
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
+                if (!data || data.length === 0) { homePosts = []; renderHomeNewsfeed(); return; }
                 
-                homePosts = data.map(p => ({
-                    id: p.id,
-                    author: {
-                        name: p.profiles?.full_name || 'User',
-                        avatar: p.profiles?.avatar_url || 'https://i.pravatar.cc/150?img=1'
-                    },
-                    content: p.content,
-                    media: p.media_url,
-                    privacy: p.visibility,
-                    likes: p.likes || 0,
-                    time: new Date(p.created_at).toLocaleTimeString()
-                }));
+                // Fetch author profiles separately
+                const authorIds = [...new Set(data.map(p => p.author_id))];
+                const { data: authors } = await window.supabaseClient
+                    .from('profiles')
+                    .select('id, full_name, avatar_url')
+                    .in('id', authorIds);
+                
+                const authorMap = {};
+                (authors || []).forEach(a => authorMap[a.id] = a);
+
+                const localLikes = JSON.parse(localStorage.getItem(`local_likes_${window.currentUserUid}`) || '{}');
+                homePosts = data.map(p => {
+                    const likedBy = p.liked_by || [];
+                    const hasLikedDB = p.hasOwnProperty('liked_by') ? likedBy.includes(window.currentUserUid) : !!localLikes[p.id];
+                    
+                    return {
+                        id: p.id,
+                        author: {
+                            name: authorMap[p.author_id]?.full_name || 'User',
+                            avatar: authorMap[p.author_id]?.avatar_url || 'https://i.pravatar.cc/150?img=1'
+                        },
+                        content: p.content,
+                        media: p.media_url,
+                        privacy: p.visibility,
+                        likes: p.likes || 0,
+                        liked_by: likedBy,
+                        hasLiked: hasLikedDB,
+                        time: new Date(p.created_at).toLocaleTimeString()
+                    };
+                });
                 renderHomeNewsfeed();
             } catch (e) {
                 console.error("Error fetching posts:", e);
             }
         }
 
+        let realtimeSetup = false;
         function setupRealtimeNewsfeed() {
+            if (!window.supabaseClient || realtimeSetup) return;
+            realtimeSetup = true;
+            console.log('[RT] Setting up realtime listeners...');
+            
             const channelPosts = window.supabaseClient
-                .channel('public:posts')
+                .channel('home-posts-changes')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, payload => {
+                    console.log('[RT] Post change detected:', payload.eventType);
                     fetchHomePosts();
                 })
-                .subscribe();
+                .subscribe((status) => console.log('[RT] Posts channel:', status));
 
             const channelFriends = window.supabaseClient
-                .channel('public:friendships')
+                .channel('home-friends-changes')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, payload => {
+                    console.log('[RT] Friend change detected:', payload.eventType);
                     renderBuddySystem();
                 })
-                .subscribe();
+                .subscribe((status) => console.log('[RT] Friends channel:', status));
+            
+            // Auto-refresh backup every 15 seconds
+            setInterval(() => {
+                if (document.getElementById('view-home') && !document.getElementById('view-home').classList.contains('hidden')) {
+                    fetchHomePosts();
+                    renderBuddySystem();
+                }
+            }, 15000);
         }
 
         // ACTION HANDLERS
@@ -6244,27 +6327,133 @@
             if (!window.currentUserUid) return alert("Vui lòng đăng nhập để tương tác!");
             
             try {
-                // For simplicity, we just increment 'likes' count. 
-                // A better way is a separate 'likes' table, but let's stick to the current schema.
-                const { data, error } = await window.supabaseClient.rpc('increment_likes', { post_id: id });
+                const post = homePosts.find(p => p.id === id);
+                if (!post) return;
+
+                post.hasLiked = !post.hasLiked;
+                post.likes = post.hasLiked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1);
+
+                // Track liked users array
+                post.liked_by = post.liked_by || [];
+                if (post.hasLiked) {
+                    if (!post.liked_by.includes(window.currentUserUid)) post.liked_by.push(window.currentUserUid);
+                } else {
+                    post.liked_by = post.liked_by.filter(uid => uid !== window.currentUserUid);
+                }
+
+                // Update UI instantly
+                const likeBtn = document.getElementById(`like-btn-${id}`);
+                const likeCount = document.getElementById(`like-count-${id}`);
+                if (likeBtn) {
+                    likeBtn.className = `flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold ${post.hasLiked ? 'text-red-400' : 'text-slate-400'} hover:bg-white/5 rounded-lg transition-all cursor-pointer group`;
+                    likeBtn.querySelector('.material-icons-round').textContent = post.hasLiked ? 'favorite' : 'favorite_border';
+                }
+                if (likeCount) likeCount.textContent = post.likes;
+
+                // Save to DB (try with liked_by column first, fallback if it doesn't exist in Supabase)
+                const { error } = await window.supabaseClient
+                    .from('posts')
+                    .update({ likes: post.likes, liked_by: post.liked_by })
+                    .eq('id', id);
                 
                 if (error) {
-                    // Fallback if RPC not setup yet: manual update
-                    const post = homePosts.find(p => p.id === id);
-                    if (post) {
-                        await window.supabaseClient
-                            .from('posts')
-                            .update({ likes: (post.likes || 0) + 1 })
-                            .eq('id', id);
-                    }
+                    console.warn(`Could not save 'liked_by' array to DB: ${error.message}. Fallback to standard tracking.`);
+                    await window.supabaseClient
+                        .from('posts')
+                        .update({ likes: post.likes })
+                        .eq('id', id);
+                    
+                    // Fallback: LocalStorage memory
+                    const localLikes = JSON.parse(localStorage.getItem(`local_likes_${window.currentUserUid}`) || '{}');
+                    localLikes[id] = post.hasLiked;
+                    localStorage.setItem(`local_likes_${window.currentUserUid}`, JSON.stringify(localLikes));
                 }
                 
-                // Track Stat
                 trackActivity('likes_given');
             } catch (e) {
                 console.error("Like error:", e);
             }
-        }
+        };
+
+        window.toggleComment = (id) => {
+            const section = document.getElementById(`comment-section-${id}`);
+            if (section) section.classList.toggle('hidden');
+        };
+
+        window.submitComment = async (id) => {
+            if (!window.currentUserUid) return alert("Vui lòng đăng nhập!");
+            const input = document.getElementById(`comment-input-${id}`);
+            const text = input?.value.trim();
+            if (!text) return;
+
+            const commentsList = document.getElementById(`comments-list-${id}`);
+            const userName = document.querySelector('#user-display')?.textContent || 'Bạn';
+            const userAvatar = document.querySelector('#user-avatar')?.src || 'https://i.pravatar.cc/150?img=1';
+
+            commentsList.innerHTML += `
+                <div class="flex gap-2 items-start animate-fade-in">
+                    <img src="${userAvatar}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0">
+                    <div class="bg-white/5 rounded-xl px-3 py-2 flex-1">
+                        <p class="text-[10px] font-bold text-primary">${userName}</p>
+                        <p class="text-[11px] text-slate-300">${text}</p>
+                    </div>
+                </div>`;
+            input.value = '';
+        };
+
+        window.sharePost = (id) => {
+            const post = homePosts.find(p => p.id === id);
+            if (!post) return;
+            const shareText = `${post.author.name}: ${post.content}`;
+            
+            if (navigator.share) {
+                navigator.share({ title: 'KietStation', text: shareText }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert('Đã sao chép nội dung bài viết vào clipboard! ✨');
+                }).catch(() => alert('Không thể chia sẻ!'));
+            }
+        };
+
+        // Load user's own posts on profile page
+        window.loadMyPosts = async () => {
+            if (!window.currentUserUid || !window.supabaseClient) return;
+            try {
+                const { data: myPosts, error } = await window.supabaseClient
+                    .from('posts')
+                    .select('*')
+                    .eq('author_id', window.currentUserUid)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const container = document.getElementById('profile-my-posts');
+                const countEl = document.getElementById('profile-post-count');
+                if (!container) return;
+                if (countEl) countEl.textContent = `${(myPosts || []).length} Bài`;
+
+                if (myPosts && myPosts.length > 0) {
+                    container.innerHTML = myPosts.map(p => `
+                        <div class="glass-card rounded-2xl p-5 border border-white/10">
+                            <div class="text-sm text-slate-200 leading-relaxed font-medium">${p.content}</div>
+                            ${p.media_url ? `<img src="${p.media_url}" class="w-full rounded-xl mt-3 border border-white/5 object-cover max-h-[300px]">` : ''}
+                            <div class="flex items-center gap-3 mt-4 pt-3 border-t border-white/5">
+                                <span class="text-[10px] text-slate-500 font-bold">${new Date(p.created_at).toLocaleString()}</span>
+                                <span class="text-[10px] text-red-400 font-bold ml-auto">❤ ${p.likes || 0}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-slate-500 opacity-60">
+                            <span class="material-icons-round text-3xl mb-2">article</span>
+                            <p class="text-[10px] font-bold uppercase tracking-wider">Chưa có bài viết nào.<br>Hãy chia sẻ suy nghĩ của bạn tại tab HOME!</p>
+                        </div>`;
+                }
+            } catch (e) {
+                console.error('Load my posts error:', e);
+            }
+        };
 
         window.sendFriendRequest = async () => {
             if (!window.currentUserUid) return alert("Vui lòng đăng nhập để kết bạn!");
