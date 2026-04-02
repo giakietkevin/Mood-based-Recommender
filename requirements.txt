@@ -1,24 +1,24 @@
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-python-multipart==0.0.6
-deepface>=0.0.93
-tensorflow>=2.16.1
-tf-keras>=2.16.0
-opencv-python-headless==4.9.0.80
-requests==2.31.0
-python-dotenv==1.0.0
-numpy
+fastapi
+uvicorn[standard]
+python-multipart
+deepface
+tensorflow
+tf-keras
+opencv-python-headless
+requests
+python-dotenv
+numpy<2.0.0
 duckduckgo-search
 
 # Audio Processing Libraries (Text-to-Music v2.0 + RVC Singing Voice)
-edge-tts==6.1.9
-gTTS==2.5.0
-pydub==0.25.1
-aiofiles==23.2.1
-librosa==0.10.1
-soundfile==0.12.1
+edge-tts
+gTTS
+pydub
+aiofiles
+librosa
+soundfile
 # pyrubberband==0.3.0  # Has issues with Python 3.12, fallback in code
-pedalboard==0.9.9
-scipy>=1.10.0
-tqdm>=4.65.0
-supabase==2.4.0
+pedalboard
+scipy
+tqdm
+supabase
