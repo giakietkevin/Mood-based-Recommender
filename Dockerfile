@@ -26,6 +26,7 @@ COPY . /code
 # Tạo thư mục cache cho DeepFace để tránh lỗi permission
 RUN mkdir -p /.deepface && chmod -R 777 /.deepface
 ENV DEEPFACE_HOME="/.deepface"
+ENV PYTHONUNBUFFERED=1
 
 # Chạy server
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
