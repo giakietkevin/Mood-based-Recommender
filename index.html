@@ -324,9 +324,11 @@
                                 <input type="text" id="home-post-media-url" placeholder="Nhập URL Hình ảnh / Video..."
                                     class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-primary/50 focus:ring-1">
                                 <button
-                                    onclick="document.getElementById('home-post-media-container').classList.add('hidden'); document.getElementById('home-post-media-url').value='';"
+                                    onclick="document.getElementById('home-post-media-container').classList.add('hidden'); document.getElementById('home-post-media-url').value=''; homePostSelectedMedia=''; document.getElementById('home-post-media-file').value='';"
                                     class="absolute right-2 top-2 text-slate-400 hover:text-white material-icons-round text-sm">close</button>
                             </div>
+                            <input type="file" id="home-post-media-file" accept="image/*" class="hidden"
+                                onchange="handleHomePostImageUpload(event)">
 
                             <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
                                 <div class="flex items-center gap-2">
@@ -335,6 +337,10 @@
                                         class="w-9 h-9 flex justify-center items-center rounded-xl bg-white/5 text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors tooltip"
                                         title="Thêm Đính kèm (URL)"><span
                                             class="material-icons-round text-[18px]">add_photo_alternate</span></button>
+                                    <button onclick="document.getElementById('home-post-media-file').click()"
+                                        class="w-9 h-9 flex justify-center items-center rounded-xl bg-white/5 text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors tooltip"
+                                        title="Tải ảnh từ máy"><span
+                                            class="material-icons-round text-[18px]">upload</span></button>
                                     <select id="home-post-privacy"
                                         class="bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-300 outline-none hover:bg-white/5 transition-colors focus:border-primary">
                                         <option value="public">🚀 CÔNG KHAI</option>
@@ -5434,12 +5440,12 @@
     <script>
         let aiChatHistory = [];
 
-        function toggleAiChat() {
+        function toggleAiChat(forceOpen = false) {
             const windowEl = document.getElementById('ai-chat-window');
             const fab = document.getElementById('ai-fab-btn');
             const notif = fab.querySelector('.bg-red-500');
 
-            if (windowEl.classList.contains('hidden')) {
+            if (windowEl.classList.contains('hidden') || forceOpen) {
                 // Open main menu
                 windowEl.classList.remove('hidden');
                 setTimeout(() => windowEl.classList.remove('scale-95', 'opacity-0'), 10);
@@ -5451,6 +5457,15 @@
                 setTimeout(() => windowEl.classList.add('hidden'), 300);
             }
         }
+
+        window.openChatWithFriend = (friendName) => {
+            toggleAiChat(true);
+            const input = document.getElementById('ai-chat-input');
+            if (input && friendName) {
+                input.value = `Gợi ý phim để xem cùng ${friendName}`;
+                input.focus();
+            }
+        };
 
         async function sendAiMessage(e) {
             e.preventDefault();
@@ -6025,6 +6040,91 @@
             { id: 201, name: 'Minh Anh', email: 'manh@station.com', avatar: 'https://i.pravatar.cc/150?img=9' }
         ];
 
+        let homePostSelectedMedia = '';
+        let postCommentsMap = {};
+        let commentsRealtimeSetup = false;
+
+        window.handleHomePostImageUpload = (event) => {
+            const file = event?.target?.files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                homePostSelectedMedia = reader.result;
+                const mediaInput = document.getElementById('home-post-media-url');
+                const mediaContainer = document.getElementById('home-post-media-container');
+                if (mediaInput) mediaInput.value = '[Ảnh đã chọn từ máy]';
+                if (mediaContainer) mediaContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        };
+
+        function getLocalPostComments(postId) {
+            return JSON.parse(localStorage.getItem(`post_comments_${postId}`) || '[]');
+        }
+
+        function saveLocalPostComments(postId, comments) {
+            localStorage.setItem(`post_comments_${postId}`, JSON.stringify(comments || []));
+        }
+
+        function renderPostComments(postId) {
+            const commentsList = document.getElementById(`comments-list-${postId}`);
+            if (!commentsList) return;
+            const comments = postCommentsMap[postId] || [];
+            commentsList.innerHTML = comments.map(c => `
+                <div class="flex gap-2 items-start animate-fade-in">
+                    <img src="${c.author_avatar || 'https://i.pravatar.cc/150?img=1'}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0">
+                    <div class="bg-white/5 rounded-xl px-3 py-2 flex-1">
+                        <p class="text-[10px] font-bold text-primary">${c.author_name || 'User'}</p>
+                        <p class="text-[11px] text-slate-300">${c.content || ''}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadCommentsForPosts(postIds) {
+            const ids = (postIds || []).filter(Boolean);
+            if (ids.length === 0) return;
+            postCommentsMap = {};
+
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('post_comments')
+                    .select('*')
+                    .in('post_id', ids)
+                    .order('created_at', { ascending: true });
+
+                if (error) throw error;
+
+                (data || []).forEach(c => {
+                    if (!postCommentsMap[c.post_id]) postCommentsMap[c.post_id] = [];
+                    postCommentsMap[c.post_id].push(c);
+                });
+            } catch (e) {
+                ids.forEach(id => {
+                    postCommentsMap[id] = getLocalPostComments(id);
+                });
+            }
+
+            homePosts = homePosts.map(p => ({
+                ...p,
+                commentsCount: (postCommentsMap[p.id] || []).length
+            }));
+        }
+
+        function syncLocalInteractionStates() {
+            homePosts = homePosts.map(p => {
+                const localShares = Number(localStorage.getItem(`post_shares_${p.id}`) || 0);
+                const localLikes = Number(localStorage.getItem(`post_likes_${p.id}`) || 0);
+                return {
+                    ...p,
+                    likes: Math.max(Number(p.likes || 0), localLikes),
+                    shares: Math.max(Number(p.shares || 0), localShares),
+                    commentsCount: (postCommentsMap[p.id] || []).length
+                };
+            });
+        }
+
         // RENDER LOGIC
         function renderHomeNewsfeed() {
             const feedContainer = document.getElementById('home-newsfeed');
@@ -6042,7 +6142,8 @@
             feedContainer.innerHTML = homePosts.map(post => {
                 let mediaHtml = '';
                 if (post.media) {
-                    if (post.media.endsWith('.mp4') || post.media.endsWith('.webm')) {
+                    const mediaValue = String(post.media).toLowerCase();
+                    if (mediaValue.endsWith('.mp4') || mediaValue.endsWith('.webm')) {
                         mediaHtml = `<video src="${post.media}" controls class="w-full mt-3 border-t border-b border-white/5 bg-black/50 max-h-[500px]"></video>`;
                     } else {
                         mediaHtml = `<img src="${post.media}" class="w-full mt-3 border-t border-b border-white/5 object-cover max-h-[500px]">`;
@@ -6086,6 +6187,10 @@
                             <span class="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center text-[10px]">❤</span>
                             <span id="like-count-${post.id}">${post.likes}</span>
                         </div>
+                        <div class="flex items-center gap-3">
+                            <span id="comment-count-${post.id}">${post.commentsCount || 0} bình luận</span>
+                            <span id="share-count-${post.id}">${post.shares || 0} chia sẻ</span>
+                        </div>
                     </div>
 
                     <!-- Action Buttons (FB-style) -->
@@ -6094,10 +6199,10 @@
                             <span class="material-icons-round text-lg group-active:scale-125 transition-transform">${post.hasLiked ? 'favorite' : 'favorite_border'}</span> Yêu thích
                         </button>
                         <button onclick="toggleComment('${post.id}')" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-slate-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer">
-                            <span class="material-icons-round text-lg">chat_bubble_outline</span> Bình luận
+                            <span class="material-icons-round text-lg">chat_bubble_outline</span> Bình luận (${post.commentsCount || 0})
                         </button>
                         <button onclick="sharePost('${post.id}')" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-slate-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer">
-                            <span class="material-icons-round text-lg">share</span> Chia sẻ
+                            <span class="material-icons-round text-lg">share</span> Chia sẻ (${post.shares || 0})
                         </button>
                     </div>
 
@@ -6208,7 +6313,7 @@
                                 <p class="text-[13px] text-white font-bold group-hover:text-primary transition-colors truncate">${f.full_name}</p>
                                 <p class="text-[10px] text-slate-500 truncate font-medium">${f.email}</p>
                             </div>
-                            <button class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
+                            <button onclick="openChatWithFriend('${(f.full_name || 'Bạn').replace(/'/g, "\\'")}')" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
                                 <span class="material-icons-round text-[15px]">chat</span>
                             </button>
                         </div>
@@ -6256,8 +6361,34 @@
                 if (error) throw error;
                 if (!data || data.length === 0) { homePosts = []; renderHomeNewsfeed(); return; }
 
+                const currentUid = window.currentUserUid;
+                let acceptedFriendIds = new Set();
+                if (currentUid) {
+                    const { data: friendshipRows, error: friendshipError } = await window.supabaseClient
+                        .from('friendships')
+                        .select('sender_id, receiver_id')
+                        .eq('status', 'accepted')
+                        .or(`sender_id.eq.${currentUid},receiver_id.eq.${currentUid}`);
+                    if (!friendshipError && friendshipRows) {
+                        acceptedFriendIds = new Set(friendshipRows.map(f =>
+                            f.sender_id === currentUid ? f.receiver_id : f.sender_id
+                        ));
+                    }
+                }
+
+                const filteredPosts = data.filter(p => {
+                    const visibility = p.visibility || 'public';
+                    if (visibility === 'public') return true;
+                    if (!currentUid) return false;
+                    if (p.author_id === currentUid) return true;
+                    if (visibility === 'private') return false;
+                    if (visibility === 'friends') return acceptedFriendIds.has(p.author_id);
+                    return false;
+                });
+                if (filteredPosts.length === 0) { homePosts = []; renderHomeNewsfeed(); return; }
+
                 // Fetch author profiles separately
-                const authorIds = [...new Set(data.map(p => p.author_id))];
+                const authorIds = [...new Set(filteredPosts.map(p => p.author_id))];
                 const { data: authors } = await window.supabaseClient
                     .from('profiles')
                     .select('id, full_name, avatar_url')
@@ -6267,7 +6398,7 @@
                 (authors || []).forEach(a => authorMap[a.id] = a);
 
                 const localLikes = JSON.parse(localStorage.getItem(`local_likes_${window.currentUserUid}`) || '{}');
-                homePosts = data.map(p => {
+                homePosts = filteredPosts.map(p => {
                     const likedBy = p.liked_by || [];
                     const hasLikedDB = p.hasOwnProperty('liked_by') ? likedBy.includes(window.currentUserUid) : !!localLikes[p.id];
 
@@ -6281,11 +6412,14 @@
                         media: p.media_url,
                         privacy: p.visibility,
                         likes: p.likes || 0,
+                        shares: p.shares || 0,
                         liked_by: likedBy,
                         hasLiked: hasLikedDB,
                         time: new Date(p.created_at).toLocaleTimeString()
                     };
                 });
+                await loadCommentsForPosts(homePosts.map(p => p.id));
+                syncLocalInteractionStates();
                 renderHomeNewsfeed();
             } catch (e) {
                 console.error("Error fetching posts:", e);
@@ -6314,6 +6448,16 @@
                 })
                 .subscribe((status) => console.log('[RT] Friends channel:', status));
 
+            if (!commentsRealtimeSetup) {
+                commentsRealtimeSetup = true;
+                window.supabaseClient
+                    .channel('home-comments-changes')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, () => {
+                        fetchHomePosts();
+                    })
+                    .subscribe();
+            }
+
             // Auto-refresh backup every 15 seconds
             setInterval(() => {
                 if (document.getElementById('view-home') && !document.getElementById('view-home').classList.contains('hidden')) {
@@ -6333,9 +6477,10 @@
 
             const content = contentInput.value.trim();
             const media = mediaInput.value.trim();
+            const finalMedia = homePostSelectedMedia || media;
             const privacy = privacySelect.value;
 
-            if (!content && !media) {
+            if (!content && !finalMedia) {
                 alert('Vui lòng nhập nội dung bài viết hoặc đính kèm Link hình ảnh/video!');
                 return;
             }
@@ -6346,7 +6491,7 @@
                     .insert([{
                         author_id: window.currentUserUid,
                         content: content,
-                        media_url: media || null,
+                        media_url: finalMedia || null,
                         visibility: privacy
                     }]);
 
@@ -6355,6 +6500,9 @@
                 // Clean UI
                 contentInput.value = '';
                 mediaInput.value = '';
+                homePostSelectedMedia = '';
+                const fileInput = document.getElementById('home-post-media-file');
+                if (fileInput) fileInput.value = '';
                 document.getElementById('home-post-media-container').classList.add('hidden');
 
                 // Track Stat
@@ -6392,6 +6540,7 @@
                     likeBtn.querySelector('.material-icons-round').textContent = post.hasLiked ? 'favorite' : 'favorite_border';
                 }
                 if (likeCount) likeCount.textContent = post.likes;
+                localStorage.setItem(`post_likes_${id}`, String(post.likes));
 
                 // Save to DB (try with liked_by column first, fallback if it doesn't exist in Supabase)
                 const { error } = await window.supabaseClient
@@ -6420,7 +6569,10 @@
 
         window.toggleComment = (id) => {
             const section = document.getElementById(`comment-section-${id}`);
-            if (section) section.classList.toggle('hidden');
+            if (section) {
+                section.classList.toggle('hidden');
+                if (!section.classList.contains('hidden')) renderPostComments(id);
+            }
         };
 
         window.submitComment = async (id) => {
@@ -6429,25 +6581,44 @@
             const text = input?.value.trim();
             if (!text) return;
 
-            const commentsList = document.getElementById(`comments-list-${id}`);
             const userName = document.querySelector('#user-display')?.textContent || 'Bạn';
             const userAvatar = document.querySelector('#user-avatar')?.src || 'https://i.pravatar.cc/150?img=1';
+            const newComment = {
+                post_id: id,
+                user_id: window.currentUserUid,
+                content: text,
+                author_name: userName,
+                author_avatar: userAvatar,
+                created_at: new Date().toISOString()
+            };
+            if (!postCommentsMap[id]) postCommentsMap[id] = [];
+            postCommentsMap[id].push(newComment);
+            saveLocalPostComments(id, postCommentsMap[id]);
+            renderPostComments(id);
 
-            commentsList.innerHTML += `
-                <div class="flex gap-2 items-start animate-fade-in">
-                    <img src="${userAvatar}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0">
-                    <div class="bg-white/5 rounded-xl px-3 py-2 flex-1">
-                        <p class="text-[10px] font-bold text-primary">${userName}</p>
-                        <p class="text-[11px] text-slate-300">${text}</p>
-                    </div>
-                </div>`;
+            const post = homePosts.find(p => p.id === id);
+            if (post) post.commentsCount = (postCommentsMap[id] || []).length;
+            const commentCountEl = document.getElementById(`comment-count-${id}`);
+            if (commentCountEl) commentCountEl.textContent = `${post?.commentsCount || 0} bình luận`;
             input.value = '';
+
+            try {
+                await window.supabaseClient
+                    .from('post_comments')
+                    .insert([newComment]);
+            } catch (e) {
+                console.warn('Save comment fallback local only:', e?.message || e);
+            }
         };
 
-        window.sharePost = (id) => {
+        window.sharePost = async (id) => {
             const post = homePosts.find(p => p.id === id);
             if (!post) return;
             const shareText = `${post.author.name}: ${post.content}`;
+            post.shares = (post.shares || 0) + 1;
+            localStorage.setItem(`post_shares_${id}`, String(post.shares));
+            const shareCountEl = document.getElementById(`share-count-${id}`);
+            if (shareCountEl) shareCountEl.textContent = `${post.shares} chia sẻ`;
 
             if (navigator.share) {
                 navigator.share({ title: 'KietStation', text: shareText }).catch(() => { });
@@ -6455,6 +6626,15 @@
                 navigator.clipboard.writeText(shareText).then(() => {
                     alert('Đã sao chép nội dung bài viết vào clipboard! ✨');
                 }).catch(() => alert('Không thể chia sẻ!'));
+            }
+
+            try {
+                await window.supabaseClient
+                    .from('posts')
+                    .update({ shares: post.shares })
+                    .eq('id', id);
+            } catch (e) {
+                console.warn('Save share fallback local only:', e?.message || e);
             }
         };
 
