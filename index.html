@@ -2240,6 +2240,18 @@
                 activeNav.classList.add('bg-white/10', 'text-white', 'shadow-sm');
                 activeNav.classList.remove('text-slate-400');
             }
+            
+            // Auto-pause film if switching away from Film tab
+            if (viewName !== 'film') {
+                const filmPlayer = document.getElementById('film-video-player');
+                if (filmPlayer && typeof filmPlayer.pause === 'function') {
+                    filmPlayer.pause();
+                }
+                const legacyVideo = document.getElementById('video-player');
+                if (legacyVideo && typeof legacyVideo.pause === 'function') {
+                    legacyVideo.pause();
+                }
+            }
 
             // Camera Management
             if (viewName === 'dashboard') {
