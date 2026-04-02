@@ -5,7 +5,10 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport" />
     <title>KietStation </title>
-
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
     <link rel="manifest" href="/manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -203,11 +206,14 @@
                 <!-- User Account (Far Right) -->
                 <div class="relative flex items-center gap-2 sm:gap-3 flex-shrink-0">
                     <!-- Watch Party Quick Access -->
-                    <div id="nav-party-status" class="hidden sm:flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-1.5 animate-pulse">
+                    <div id="nav-party-status"
+                        class="hidden sm:flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-1.5 animate-pulse">
                         <span class="material-icons-round text-primary text-sm">groups</span>
-                        <span id="nav-party-id" class="text-[10px] font-black text-white uppercase tracking-tighter">PARTY ACTIVE</span>
+                        <span id="nav-party-id"
+                            class="text-[10px] font-black text-white uppercase tracking-tighter">PARTY ACTIVE</span>
                     </div>
-                    <button onclick="startWatchParty()" class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all text-[10px] font-extrabold uppercase tracking-widest shadow-lg">
+                    <button onclick="startWatchParty()"
+                        class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all text-[10px] font-extrabold uppercase tracking-widest shadow-lg">
                         <span class="material-icons-round text-sm">group_add</span> Watch Party
                     </button>
 
@@ -374,11 +380,15 @@
                                 class="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-24 py-3 text-[13px] font-medium text-white focus:border-primary/50 focus:ring-1 focus:ring-primary placeholder-slate-500"
                                 placeholder="Email người dùng...">
                             <button onclick="sendFriendRequest()"
-                                class="absolute right-1.5 top-1.5 bottom-1.5 px-3 flex justify-center items-center bg-primary text-black font-bold text-[10px] rounded-lg transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20 uppercase tracking-tighter">TÌM BẠN</button>
+                                class="absolute right-1.5 top-1.5 bottom-1.5 px-3 flex justify-center items-center bg-primary text-black font-bold text-[10px] rounded-lg transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20 uppercase tracking-tighter">TÌM
+                                BẠN</button>
                         </div>
                         <p class="text-[8px] text-slate-500 mt-2 px-1 leading-relaxed">
-                            <span class="text-primary font-black">LƯU Ý:</span> Bạn bè cần 
-                            <button onclick="loadUserProfile().then(() => alert('Hồ sơ của bạn đã được cập nhật để bạn bè có thể tìm thấy! ✨'))" class="text-primary decoration-primary/30 underline decoration-dotted font-bold hover:text-white transition-colors">tự cập nhật hồ sơ</button> 
+                            <span class="text-primary font-black">LƯU Ý:</span> Bạn bè cần
+                            <button
+                                onclick="loadUserProfile().then(() => alert('Hồ sơ của bạn đã được cập nhật để bạn bè có thể tìm thấy! ✨'))"
+                                class="text-primary decoration-primary/30 underline decoration-dotted font-bold hover:text-white transition-colors">tự
+                                cập nhật hồ sơ</button>
                             một lần để có thể tìm thấy nhau bằng Email.
                         </p>
                     </div>
@@ -396,7 +406,8 @@
                     <div>
                         <h4
                             class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Danh sách Bạn bè</h4>
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Danh sách Bạn bè
+                        </h4>
                         <div id="home-friends-list"
                             class="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
                             <div class="py-8 text-center text-slate-500 opacity-60">
@@ -892,7 +903,8 @@
                             </div>
                             <div>
                                 <h3 class="text-2xl font-display font-bold text-white uppercase tracking-tight">Khám Phá
-                                    <span class="text-primary">Thể Loại</span></h3>
+                                    <span class="text-primary">Thể Loại</span>
+                                </h3>
                                 <p class="text-slate-500 text-xs font-medium tracking-widest uppercase mt-1">Hàng ngàn
                                     bộ phim đang chờ bạn</p>
                             </div>
@@ -976,19 +988,26 @@
                     </div>
 
                     <!-- Watch Party Status and Controls -->
-                    <div class="glass-card rounded-2xl p-4 border border-primary/20 mt-4 flex items-center justify-between gap-4">
+                    <div
+                        class="glass-card rounded-2xl p-4 border border-primary/20 mt-4 flex items-center justify-between gap-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                                 <span class="material-icons-round">groups</span>
                             </div>
                             <div>
                                 <h4 class="text-white font-bold text-xs uppercase tracking-tight">Watch Party Sync</h4>
-                                <p id="party-sync-status" class="text-[10px] text-slate-500 font-bold">Dễ dàng xem phim cùng bạn bè mọi lúc</p>
+                                <p id="party-sync-status" class="text-[10px] text-slate-500 font-bold">Dễ dàng xem phim
+                                    cùng bạn bè mọi lúc</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="promptJoinParty()" class="px-3 py-1.5 rounded-lg bg-white/5 text-slate-300 hover:text-white text-[10px] font-black uppercase border border-white/10 transition-all">Join Party</button>
-                            <button onclick="startWatchParty()" class="px-3 py-1.5 rounded-lg bg-primary text-[#0a0a0a] text-[10px] font-black uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">Start Party</button>
+                            <button onclick="promptJoinParty()"
+                                class="px-3 py-1.5 rounded-lg bg-white/5 text-slate-300 hover:text-white text-[10px] font-black uppercase border border-white/10 transition-all">Join
+                                Party</button>
+                            <button onclick="startWatchParty()"
+                                class="px-3 py-1.5 rounded-lg bg-primary text-[#0a0a0a] text-[10px] font-black uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">Start
+                                Party</button>
                         </div>
                     </div>
 
@@ -1978,24 +1997,30 @@
                             </div>
                             <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
                                 <p id="profile-stat-xp" class="text-xl font-black text-white leading-none">0</p>
-                                <p class="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-1">Total XP</p>
+                                <p class="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-1">Total XP
+                                </p>
                             </div>
                         </div>
 
                         <!-- Level & XP Bar -->
                         <div class="space-y-2 mb-8">
                             <div class="flex justify-between items-end px-1">
-                                <span class="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Level <span id="profile-level">1</span></span>
-                                <span class="text-[9px] font-bold text-slate-500"><span id="profile-xp-current">0</span> / <span id="profile-xp-next">100</span> XP</span>
+                                <span class="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Level <span
+                                        id="profile-level">1</span></span>
+                                <span class="text-[9px] font-bold text-slate-500"><span id="profile-xp-current">0</span>
+                                    / <span id="profile-xp-next">100</span> XP</span>
                             </div>
                             <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                                <div id="profile-xp-bar" class="xp-bar-inner h-full bg-primary shadow-[0_0_15px_rgba(198,168,124,0.5)]" style="width: 0%"></div>
+                                <div id="profile-xp-bar"
+                                    class="xp-bar-inner h-full bg-primary shadow-[0_0_15px_rgba(198,168,124,0.5)]"
+                                    style="width: 0%"></div>
                             </div>
                         </div>
 
                         <!-- Badge Section -->
                         <div class="space-y-4">
-                            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] text-left px-1">Huy chương đạt được</h4>
+                            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] text-left px-1">
+                                Huy chương đạt được</h4>
                             <div id="profile-badges-grid" class="grid grid-cols-3 gap-3">
                                 <!-- Badges will be injected here -->
                             </div>
@@ -2077,20 +2102,24 @@
                     <!-- My Posts (like Facebook) -->
                     <div class="space-y-6">
                         <div class="flex items-center justify-between px-4">
-                            <h4 class="text-xl font-display font-bold text-white uppercase italic tracking-tighter">Bài viết <span class="text-primary">của tôi</span></h4>
-                            <span id="profile-post-count" class="text-[10px] bg-white/10 px-3 py-1 rounded-full text-slate-400 font-bold uppercase tracking-widest">0 Bài</span>
+                            <h4 class="text-xl font-display font-bold text-white uppercase italic tracking-tighter">Bài
+                                viết <span class="text-primary">của tôi</span></h4>
+                            <span id="profile-post-count"
+                                class="text-[10px] bg-white/10 px-3 py-1 rounded-full text-slate-400 font-bold uppercase tracking-widest">0
+                                Bài</span>
                         </div>
                         <div id="profile-my-posts" class="space-y-4">
                             <div class="text-center py-8 text-slate-500 opacity-60">
                                 <span class="material-icons-round text-3xl mb-2">article</span>
-                                <p class="text-[10px] font-bold uppercase tracking-wider">Chưa có bài viết nào.<br>Hãy chia sẻ suy nghĩ của bạn tại tab HOME!</p>
+                                <p class="text-[10px] font-bold uppercase tracking-wider">Chưa có bài viết nào.<br>Hãy
+                                    chia sẻ suy nghĩ của bạn tại tab HOME!</p>
                             </div>
                         </div>
                     </div>
-                    </div>
-                </main>
             </div>
-        </div>
+    </main>
+    </div>
+    </div>
     </main>
 
     <!-- PHOTO PREVIEW MODAL (NEW) -->
@@ -2354,9 +2383,9 @@
         };
 
         window.exitSmartPiP = async () => {
-             if (document.pictureInPictureElement) {
-                try { await document.exitPictureInPicture(); } catch (e) {}
-             }
+            if (document.pictureInPictureElement) {
+                try { await document.exitPictureInPicture(); } catch (e) { }
+            }
         };
 
         // Listen for Browser Tab Switching (External)
@@ -2398,7 +2427,7 @@
                 activeNav.classList.add('bg-white/10', 'text-white', 'shadow-sm');
                 activeNav.classList.remove('text-slate-400');
             }
-            
+
             // Smart PiP Management for Internal Navigation
             if (viewName !== 'film') {
                 const filmVideo = document.getElementById('film-video-player');
@@ -2596,7 +2625,7 @@
 
                     // Load and play
                     await loadMySongs();
-                    
+
                     // Track Stat
                     trackActivity('songs_generated');
 
@@ -2773,10 +2802,10 @@
                     playIcon.innerText = "pause";
                 }
             }
-            
+
             // Adaptive Vibe Update
             updateUITheme(pThumb.src);
-            
+
             // Achievement Track: Watch/Listen
             trackActivity('consume_media');
         }
@@ -2784,16 +2813,16 @@
         const colorThief = new ColorThief();
         window.updateUITheme = async (imgUrl) => {
             if (!imgUrl || imgUrl.includes('placeholder')) return;
-            
+
             const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(imgUrl)}&w=100`;
             const img = new Image();
             img.crossOrigin = "Anonymous";
             img.src = proxyUrl;
-            
+
             img.onload = () => {
                 try {
                     const color = colorThief.getColor(img);
-                    
+
                     // --- COLOR BOOST MAGIC ---
                     // Convert RGB to HSL, boost Saturation, then back to RGB
                     const rgbToHsl = (r, g, b) => {
@@ -2819,47 +2848,47 @@
                         else {
                             const hue2rgb = (p, q, t) => {
                                 if (t < 0) t += 1; if (t > 1) t -= 1;
-                                if (t < 1/6) return p + (q - p) * 6 * t;
-                                if (t < 1/2) return q;
-                                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                                if (t < 1 / 6) return p + (q - p) * 6 * t;
+                                if (t < 1 / 2) return q;
+                                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
                                 return p;
                             };
                             const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
                             const p = 2 * l - q;
-                            r = hue2rgb(p, q, h + 1/3);
+                            r = hue2rgb(p, q, h + 1 / 3);
                             g = hue2rgb(p, q, h);
-                            b = hue2rgb(p, q, h - 1/3);
+                            b = hue2rgb(p, q, h - 1 / 3);
                         }
                         return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
                     };
 
                     const [h, s, l] = rgbToHsl(color[0], color[1], color[2]);
                     // Boost saturation and fix brightness for a deep cinematic look
-                    const boostedS = Math.min(1, s * 2.2); 
+                    const boostedS = Math.min(1, s * 2.2);
                     const cinematicL = 0.04; // Very dark for body bg
                     const glowL = 0.15; // Slightly brighter for the top glow
-                    
+
                     const [br, bg, bb] = hslToRgb(h, boostedS, 0.5); // Rich accent color
                     const [bgr, bgg, bgb] = hslToRgb(h, boostedS * 0.5, cinematicL); // Dark themed background
                     const [glr, glg, glb] = hslToRgb(h, boostedS, glowL); // Themed glow
-                    
+
                     const accentRgb = `rgb(${br}, ${bg}, ${bb})`;
                     const bgRgb = `rgb(${bgr}, ${bgg}, ${bgb})`;
                     const glowRgba = `rgba(${glr}, ${glg}, glb, 0.6)`;
-                    
+
                     document.documentElement.style.setProperty('--primary', accentRgb);
-                    
+
                     // Transformation: Change the WHOLE body background to match the theme
                     document.body.style.backgroundColor = bgRgb;
                     document.body.style.backgroundImage = `radial-gradient(circle at 50% -20%, ${glowRgba} 0%, transparent 75%)`;
-                    
+
                     // Update Glass Cards for extra immersion
                     const glassRgba = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.05)`;
                     document.querySelectorAll('.glass-card').forEach(card => {
                         card.style.backgroundColor = glassRgba;
                         card.style.borderColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.15)`;
                     });
-                    
+
                     const nav = document.querySelector('nav');
                     if (nav) {
                         nav.style.backgroundColor = `rgba(${bgr}, ${bgg}, ${bgb}, 0.8)`;
@@ -5311,23 +5340,23 @@
         document.addEventListener('click', () => {
             if (userDropdown) userDropdown.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
         });
-        
+
         window.handleLogout = async () => {
             try {
                 window.currentUserUid = null;
-                if(window.supabaseClient) await window.supabaseClient.auth.signOut();
-                
+                if (window.supabaseClient) await window.supabaseClient.auth.signOut();
+
                 document.getElementById('user-display').textContent = "Guest";
                 document.getElementById('login-btn').classList.remove('hidden');
                 document.getElementById('user-profile').classList.add('hidden');
-                
+
                 toggleUserDropdown();
                 window.location.reload();
-            } catch(e) { console.error(e); }
+            } catch (e) { console.error(e); }
         };
 
         window.handleLogin = () => {
-             if (window.showAuthModal) window.showAuthModal();
+            if (window.showAuthModal) window.showAuthModal();
         };
 
         const topLoginBtn = document.getElementById('login-btn');
@@ -5607,38 +5636,52 @@
         }
     </script>
     <!-- AUTH MODAL -->
-    <div id="auth-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl transition-all duration-300 hidden opacity-0 pointer-events-none">
-        <div class="glass-card w-full max-w-md rounded-[2.5rem] border border-white/10 p-8 shadow-2xl relative overflow-hidden transform scale-95 transition-transform duration-300" id="auth-modal-content">
+    <div id="auth-modal"
+        class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl transition-all duration-300 hidden opacity-0 pointer-events-none">
+        <div class="glass-card w-full max-w-md rounded-[2.5rem] border border-white/10 p-8 shadow-2xl relative overflow-hidden transform scale-95 transition-transform duration-300"
+            id="auth-modal-content">
             <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 blur-[80px] rounded-full"></div>
-            
+
             <div class="text-center mb-8 relative z-10">
-                <span class="material-icons-round text-primary text-5xl mb-2 drop-shadow-[0_0_15px_rgba(var(--color-primary),0.5)]">fingerprint</span>
-                <h3 class="text-3xl font-display font-black text-white uppercase tracking-tight">Kiet<span class="text-primary">Station</span></h3>
-                <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mt-1">Xác Thực Danh Tính Người Dùng</p>
+                <span
+                    class="material-icons-round text-primary text-5xl mb-2 drop-shadow-[0_0_15px_rgba(var(--color-primary),0.5)]">fingerprint</span>
+                <h3 class="text-3xl font-display font-black text-white uppercase tracking-tight">Kiet<span
+                        class="text-primary">Station</span></h3>
+                <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mt-1">Xác Thực Danh Tính Người
+                    Dùng</p>
             </div>
 
             <div class="space-y-4 relative z-10">
-                <div id="auth-error" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl p-3 text-center font-bold"></div>
-                
-                <input type="email" id="auth-email" placeholder="Địa chỉ Email" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none placeholder-slate-500 font-medium transition-all">
-                
+                <div id="auth-error"
+                    class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl p-3 text-center font-bold">
+                </div>
+
+                <input type="email" id="auth-email" placeholder="Địa chỉ Email"
+                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none placeholder-slate-500 font-medium transition-all">
+
                 <!-- Full Name (Only for Register) -->
-                <input type="text" id="auth-fullname" placeholder="Họ và Tên của bạn" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none placeholder-slate-500 font-medium hidden transition-all">
+                <input type="text" id="auth-fullname" placeholder="Họ và Tên của bạn"
+                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none placeholder-slate-500 font-medium hidden transition-all">
 
-                <input type="password" id="auth-password" placeholder="Mật khẩu" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none placeholder-slate-500 font-medium transition-all">
+                <input type="password" id="auth-password" placeholder="Mật khẩu"
+                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none placeholder-slate-500 font-medium transition-all">
 
-                <button onclick="handleAuthAction()" id="auth-btn" class="w-full bg-primary text-[#0a0a0a] font-bold text-sm py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 mt-4 uppercase tracking-wider flex items-center justify-center gap-2">
+                <button onclick="handleAuthAction()" id="auth-btn"
+                    class="w-full bg-primary text-[#0a0a0a] font-bold text-sm py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 mt-4 uppercase tracking-wider flex items-center justify-center gap-2">
                     <span class="material-icons-round text-[18px]">login</span> ĐĂNG NHẬP
                 </button>
             </div>
 
             <div class="mt-6 text-center relative z-10 p-4 border border-white/5 rounded-xl bg-white/5">
-                <button onclick="toggleAuthMode()" id="auth-toggle-btn" class="text-xs text-slate-300 hover:text-white font-bold hover:underline transition-all">
+                <button onclick="toggleAuthMode()" id="auth-toggle-btn"
+                    class="text-xs text-slate-300 hover:text-white font-bold hover:underline transition-all">
                     Chưa có tài khoản? Nhấn để Đăng ký ngay
                 </button>
             </div>
-            
-            <button id="auth-skip-btn" onclick="skipAuthForNow()" class="absolute top-4 right-4 text-slate-500 hover:text-white material-icons-round cursor-pointer transition-colors z-20 tooltip" title="Bỏ qua (Guest)">close</button>
+
+            <button id="auth-skip-btn" onclick="skipAuthForNow()"
+                class="absolute top-4 right-4 text-slate-500 hover:text-white material-icons-round cursor-pointer transition-colors z-20 tooltip"
+                title="Bỏ qua (Guest)">close</button>
         </div>
     </div>
 
@@ -5659,7 +5702,7 @@
 
         // --- SUPABASE AUTHENTICATION LOGIC ---
         let isLoginMode = true;
-        
+
         window.toggleAuthMode = () => {
             isLoginMode = !isLoginMode;
             const nameInput = document.getElementById('auth-fullname');
@@ -5681,7 +5724,7 @@
         window.showAuthModal = () => {
             const modal = document.getElementById('auth-modal');
             const content = document.getElementById('auth-modal-content');
-            if(modal) {
+            if (modal) {
                 modal.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
                 setTimeout(() => content.classList.remove('scale-95'), 10);
             }
@@ -5690,13 +5733,13 @@
         window.hideAuthModal = () => {
             const modal = document.getElementById('auth-modal');
             const content = document.getElementById('auth-modal-content');
-            if(modal && content) {
+            if (modal && content) {
                 content.classList.add('scale-95');
                 setTimeout(() => modal.classList.add('opacity-0', 'pointer-events-none'), 10);
                 setTimeout(() => modal.classList.add('hidden'), 300);
             }
         };
-        
+
         window.skipAuthForNow = () => {
             hideAuthModal();
         };
@@ -5709,7 +5752,7 @@
             const emailEl = document.getElementById('auth-email');
             const passEl = document.getElementById('auth-password');
             const nameEl = document.getElementById('auth-fullname');
-            
+
             const email = emailEl ? emailEl.value.trim() : '';
             const password = passEl ? passEl.value.trim() : '';
             const fullName = nameEl ? nameEl.value.trim() : '';
@@ -5717,7 +5760,7 @@
 
             if (!email || !password) return showAuthError("Thiếu Email hoặc Mật khẩu!");
             if (!email.includes('@')) return showAuthError("Định dạng Email không hợp lệ!");
-            
+
             const prevHtml = authBtn.innerHTML;
             authBtn.innerHTML = `<span class="material-icons-round animate-spin text-[18px]">autorenew</span> ĐANG XỬ LÝ...`;
             authBtn.disabled = true;
@@ -5764,7 +5807,7 @@
 
         function showAuthError(msg) {
             const el = document.getElementById('auth-error');
-            if(el) {
+            if (el) {
                 el.innerText = msg;
                 el.classList.remove('hidden');
             }
@@ -5773,10 +5816,10 @@
         window.handleLoginSuccess = (user) => {
             window.currentUserUid = user.id;
             hideAuthModal();
-            
+
             const dispName = user.user_metadata?.full_name || user.email.split('@')[0];
             const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`;
-            
+
             // Sync UI Display globals
             document.querySelectorAll('#user-display').forEach(el => el.innerText = dispName);
             document.querySelectorAll('#user-avatar, #home-create-avatar').forEach(img => img.src = avatar);
@@ -5794,46 +5837,46 @@
                     else console.log('Profile synced OK for:', user.email);
                 });
             }
-            
+
             // Update Auth Button State
             const loginBtn = document.getElementById('login-btn');
             const userProfile = document.getElementById('user-profile');
             if (loginBtn) loginBtn.classList.add('hidden');
             if (userProfile) userProfile.classList.remove('hidden');
-            
+
             // Re-render Views
             if (typeof fetchHomePosts !== 'undefined') fetchHomePosts();
             if (typeof renderBuddySystem !== 'undefined') renderBuddySystem();
             if (typeof loadFavorites !== 'undefined') loadFavorites();
             if (typeof loadPlaylists !== 'undefined') loadPlaylists();
-            
+
             // Setup Realtime after login
             if (typeof setupRealtimeNewsfeed !== 'undefined') setupRealtimeNewsfeed();
-            
+
             // Hydrate Profile View
             if (typeof loadUserProfile !== 'undefined') loadUserProfile();
-            
+
             const toast = document.createElement('div');
             toast.className = 'fixed top-10 right-4 z-[99999] bg-green-500/20 shadow-lg border border-green-500/40 text-green-400 font-bold px-6 py-3 rounded-xl animate-fade-in flex items-center gap-2';
             toast.innerHTML = `<span class="material-icons-round">check_circle</span> Xin chào ${dispName}! Đăng nhập thành công.`;
             document.body.appendChild(toast);
-            setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(()=>toast.remove(),300) }, 3000);
+            setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300) }, 3000);
         };
 
         // --- PROFILE VIEW LOGIC ---
         window.loadUserProfile = async () => {
-             const uid = window.currentUserUid;
-             if (!uid || !window.supabaseClient) return;
+            const uid = window.currentUserUid;
+            if (!uid || !window.supabaseClient) return;
 
-             const { data: { user } } = await window.supabaseClient.auth.getUser();
-             if (!user) return;
-             
-             let name = user.user_metadata?.full_name || user.email.split('@')[0];
-             let email = user.email;
-             let avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`;
-             let dob = "";
-             
-             try {
+            const { data: { user } } = await window.supabaseClient.auth.getUser();
+            if (!user) return;
+
+            let name = user.user_metadata?.full_name || user.email.split('@')[0];
+            let email = user.email;
+            let avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`;
+            let dob = "";
+
+            try {
                 const { data: profile } = await window.supabaseClient.from('profiles').select('*').eq('id', uid).single();
                 if (profile) {
                     name = profile.full_name || name;
@@ -5843,99 +5886,99 @@
                 if (email) {
                     await window.supabaseClient.from('profiles').update({ email: email }).eq('id', uid);
                 }
-             } catch(e) {
-                 console.warn("Profile sync error:", e);
-             }
-             
-             // Check localStorage for offline data/overrides
-             const savedData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
-             if (savedData.dob) dob = savedData.dob;
-             if (savedData.avatar) avatar = savedData.avatar;
+            } catch (e) {
+                console.warn("Profile sync error:", e);
+            }
 
-             // Profile Card elements
-             const nameEl = document.getElementById('profile-view-name');
-             const emailEl = document.getElementById('profile-view-email');
-             const avatarEl = document.getElementById('profile-view-avatar');
-             
-             // Setting Inputs
-             const inName = document.getElementById('profile-input-name');
-             const inEmail = document.getElementById('profile-input-email');
-             const inDob = document.getElementById('profile-input-dob');
+            // Check localStorage for offline data/overrides
+            const savedData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+            if (savedData.dob) dob = savedData.dob;
+            if (savedData.avatar) avatar = savedData.avatar;
 
-             if (nameEl) nameEl.textContent = name;
-             if (emailEl) emailEl.textContent = email;
-             if (avatarEl) avatarEl.src = avatar;
+            // Profile Card elements
+            const nameEl = document.getElementById('profile-view-name');
+            const emailEl = document.getElementById('profile-view-email');
+            const avatarEl = document.getElementById('profile-view-avatar');
 
-             if (inName) inName.value = name;
-             if (inEmail) inEmail.value = email;
-             if (inDob) inDob.value = dob;
+            // Setting Inputs
+            const inName = document.getElementById('profile-input-name');
+            const inEmail = document.getElementById('profile-input-email');
+            const inDob = document.getElementById('profile-input-dob');
 
-             // Global UI Sync
-             const userEmailDisp = document.getElementById('user-email-display');
-             if(userEmailDisp) userEmailDisp.textContent = email;
-             
-             const userTopName = document.getElementById('user-display');
-             if (userTopName) userTopName.textContent = name;
-             
-             const userTopAvatar = document.querySelectorAll('#user-avatar, #home-create-avatar');
-             userTopAvatar.forEach(img => img.src = avatar);
+            if (nameEl) nameEl.textContent = name;
+            if (emailEl) emailEl.textContent = email;
+            if (avatarEl) avatarEl.src = avatar;
+
+            if (inName) inName.value = name;
+            if (inEmail) inEmail.value = email;
+            if (inDob) inDob.value = dob;
+
+            // Global UI Sync
+            const userEmailDisp = document.getElementById('user-email-display');
+            if (userEmailDisp) userEmailDisp.textContent = email;
+
+            const userTopName = document.getElementById('user-display');
+            if (userTopName) userTopName.textContent = name;
+
+            const userTopAvatar = document.querySelectorAll('#user-avatar, #home-create-avatar');
+            userTopAvatar.forEach(img => img.src = avatar);
         };
 
         window.saveUserProfile = async (event) => {
-             const uid = window.currentUserUid;
-             if (!uid || !window.supabaseClient) return;
+            const uid = window.currentUserUid;
+            if (!uid || !window.supabaseClient) return;
 
-             const btn = event ? event.currentTarget : null;
-             const inName = document.getElementById('profile-input-name');
-             const inDob = document.getElementById('profile-input-dob');
-             const name = inName ? inName.value.trim() : '';
-             const dob = inDob ? inDob.value : '';
+            const btn = event ? event.currentTarget : null;
+            const inName = document.getElementById('profile-input-name');
+            const inDob = document.getElementById('profile-input-dob');
+            const name = inName ? inName.value.trim() : '';
+            const dob = inDob ? inDob.value : '';
 
-             if (!name) return alert("Vui lòng nhập họ tên!");
+            if (!name) return alert("Vui lòng nhập họ tên!");
 
-             const origHtml = btn ? btn.innerHTML : "";
-             if(btn) btn.innerHTML = '<span class="material-icons-round animate-spin">autorenew</span> Đang lưu...';
+            const origHtml = btn ? btn.innerHTML : "";
+            if (btn) btn.innerHTML = '<span class="material-icons-round animate-spin">autorenew</span> Đang lưu...';
 
-             try {
-                 const { error } = await window.supabaseClient.from('profiles')
-                     .update({ full_name: name })
-                     .eq('id', uid);
-                 
-                 const existingData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
-                 existingData.dob = dob;
-                 localStorage.setItem(`profile_${uid}`, JSON.stringify(existingData));
-                 
-                 if (error) throw error;
-                 
-                 alert("Đã lưu thông tin cá nhân! ✨");
-                 loadUserProfile();
-             } catch(e) {
-                 alert("Lỗi khi lưu: " + e.message);
-             } finally {
-                 if(btn) btn.innerHTML = origHtml;
-             }
+            try {
+                const { error } = await window.supabaseClient.from('profiles')
+                    .update({ full_name: name })
+                    .eq('id', uid);
+
+                const existingData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+                existingData.dob = dob;
+                localStorage.setItem(`profile_${uid}`, JSON.stringify(existingData));
+
+                if (error) throw error;
+
+                alert("Đã lưu thông tin cá nhân! ✨");
+                loadUserProfile();
+            } catch (e) {
+                alert("Lỗi khi lưu: " + e.message);
+            } finally {
+                if (btn) btn.innerHTML = origHtml;
+            }
         };
 
         window.handleAvatarUpload = (event) => {
-             const file = event.target.files[0];
-             if (!file || !window.currentUserUid) return;
+            const file = event.target.files[0];
+            if (!file || !window.currentUserUid) return;
 
-             const reader = new FileReader();
-             reader.onload = async (e) => {
-                 const base64 = e.target.result;
-                 const uid = window.currentUserUid;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64 = e.target.result;
+                const uid = window.currentUserUid;
 
-                 const existingData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
-                 existingData.avatar = base64;
-                 localStorage.setItem(`profile_${uid}`, JSON.stringify(existingData));
-                 
-                 loadUserProfile();
+                const existingData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+                existingData.avatar = base64;
+                localStorage.setItem(`profile_${uid}`, JSON.stringify(existingData));
 
-                 if(window.supabaseClient) {
-                     await window.supabaseClient.from('profiles').update({ avatar_url: base64 }).eq('id', uid);
-                 }
-             };
-             reader.readAsDataURL(file);
+                loadUserProfile();
+
+                if (window.supabaseClient) {
+                    await window.supabaseClient.from('profiles').update({ avatar_url: base64 }).eq('id', uid);
+                }
+            };
+            reader.readAsDataURL(file);
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -6138,7 +6181,7 @@
                 if (fError) console.warn('Fetch friends error:', fError);
 
                 // Get friend user IDs
-                const friendUserIds = (friendsData || []).map(f => 
+                const friendUserIds = (friendsData || []).map(f =>
                     f.sender_id === window.currentUserUid ? f.receiver_id : f.sender_id
                 );
 
@@ -6150,7 +6193,7 @@
                         .in('id', friendUserIds);
                     friends = friendProfiles || [];
                 }
-                
+
                 const friendList = document.getElementById('home-friends-list');
                 document.getElementById('home-friend-count').innerText = friends.length;
 
@@ -6195,7 +6238,7 @@
                     if (typeof loadMyPosts !== 'undefined') loadMyPosts();
                 }
             };
-            
+
             // Setup Real-time listener if client exists
             if (window.supabaseClient) {
                 setupRealtimeNewsfeed();
@@ -6212,14 +6255,14 @@
 
                 if (error) throw error;
                 if (!data || data.length === 0) { homePosts = []; renderHomeNewsfeed(); return; }
-                
+
                 // Fetch author profiles separately
                 const authorIds = [...new Set(data.map(p => p.author_id))];
                 const { data: authors } = await window.supabaseClient
                     .from('profiles')
                     .select('id, full_name, avatar_url')
                     .in('id', authorIds);
-                
+
                 const authorMap = {};
                 (authors || []).forEach(a => authorMap[a.id] = a);
 
@@ -6227,7 +6270,7 @@
                 homePosts = data.map(p => {
                     const likedBy = p.liked_by || [];
                     const hasLikedDB = p.hasOwnProperty('liked_by') ? likedBy.includes(window.currentUserUid) : !!localLikes[p.id];
-                    
+
                     return {
                         id: p.id,
                         author: {
@@ -6254,7 +6297,7 @@
             if (!window.supabaseClient || realtimeSetup) return;
             realtimeSetup = true;
             console.log('[RT] Setting up realtime listeners...');
-            
+
             const channelPosts = window.supabaseClient
                 .channel('home-posts-changes')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, payload => {
@@ -6270,7 +6313,7 @@
                     renderBuddySystem();
                 })
                 .subscribe((status) => console.log('[RT] Friends channel:', status));
-            
+
             // Auto-refresh backup every 15 seconds
             setInterval(() => {
                 if (document.getElementById('view-home') && !document.getElementById('view-home').classList.contains('hidden')) {
@@ -6313,10 +6356,10 @@
                 contentInput.value = '';
                 mediaInput.value = '';
                 document.getElementById('home-post-media-container').classList.add('hidden');
-                
+
                 // Track Stat
                 trackActivity('posts_created');
-                
+
                 // Real-time listener will handle the update
             } catch (e) {
                 alert("Lỗi khi đăng bài: " + e.message);
@@ -6325,7 +6368,7 @@
 
         window.likePost = async (id) => {
             if (!window.currentUserUid) return alert("Vui lòng đăng nhập để tương tác!");
-            
+
             try {
                 const post = homePosts.find(p => p.id === id);
                 if (!post) return;
@@ -6355,20 +6398,20 @@
                     .from('posts')
                     .update({ likes: post.likes, liked_by: post.liked_by })
                     .eq('id', id);
-                
+
                 if (error) {
                     console.warn(`Could not save 'liked_by' array to DB: ${error.message}. Fallback to standard tracking.`);
                     await window.supabaseClient
                         .from('posts')
                         .update({ likes: post.likes })
                         .eq('id', id);
-                    
+
                     // Fallback: LocalStorage memory
                     const localLikes = JSON.parse(localStorage.getItem(`local_likes_${window.currentUserUid}`) || '{}');
                     localLikes[id] = post.hasLiked;
                     localStorage.setItem(`local_likes_${window.currentUserUid}`, JSON.stringify(localLikes));
                 }
-                
+
                 trackActivity('likes_given');
             } catch (e) {
                 console.error("Like error:", e);
@@ -6405,9 +6448,9 @@
             const post = homePosts.find(p => p.id === id);
             if (!post) return;
             const shareText = `${post.author.name}: ${post.content}`;
-            
+
             if (navigator.share) {
-                navigator.share({ title: 'KietStation', text: shareText }).catch(() => {});
+                navigator.share({ title: 'KietStation', text: shareText }).catch(() => { });
             } else {
                 navigator.clipboard.writeText(shareText).then(() => {
                     alert('Đã sao chép nội dung bài viết vào clipboard! ✨');
@@ -6473,7 +6516,7 @@
                     .maybeSingle();
 
                 if (error) throw error;
-                
+
                 if (!targetUser) {
                     return alert('Không tìm thấy người dùng với email này! Hãy chắc chắn bạn bè đã nhấn "Cập nhật hồ sơ"!');
                 }
@@ -6512,7 +6555,7 @@
                     .update({ status: 'accepted' })
                     .eq('id', id);
                 renderBuddySystem();
-            } catch (e) {}
+            } catch (e) { }
         };
 
         window.rejectFriend = async (id) => {
@@ -6522,7 +6565,7 @@
                     .delete()
                     .eq('id', id);
                 renderBuddySystem();
-            } catch (e) {}
+            } catch (e) { }
         };
 
 
@@ -6590,7 +6633,7 @@
         window.renderUserLeveling = () => {
             const level = Math.floor(userStats.xp / 100) + 1;
             const currentLevelXP = userStats.xp % 100;
-            
+
             const xpBar = document.getElementById('profile-xp-bar');
             const levelText = document.getElementById('profile-level');
             const currentXPText = document.getElementById('profile-xp-current');
@@ -6633,7 +6676,7 @@
         window.renderBadges = () => {
             const grid = document.getElementById('profile-badges-grid');
             if (!grid) return;
-            
+
             grid.innerHTML = BADGE_DEFS.map(b => {
                 const isLocked = !userStats.badges.includes(b.id);
                 return `
@@ -6656,7 +6699,7 @@
             partyId = Math.random().toString(36).substring(2, 8).toUpperCase();
             isPartyHost = true;
             initPartyChannel(partyId);
-            
+
             // Show Party UI
             showPartyOverlay(`Party Started! ID: ${partyId}`, true);
         };
@@ -6703,7 +6746,7 @@
 
         function initPartyChannel(id) {
             if (activePartyChannel) activePartyChannel.unsubscribe();
-            
+
             activePartyChannel = window.supabaseClient.channel(`party:${id}`, {
                 config: { broadcast: { self: false } }
             });
@@ -6789,7 +6832,7 @@
         function syncPlayer(action, data) {
             const video = document.getElementById('film-video-player');
             if (!video) return;
-            
+
             const oldOnPlay = video.onplay;
             const oldOnPause = video.onpause;
             const oldOnSeek = video.onseeked;
