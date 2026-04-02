@@ -5436,9 +5436,48 @@
         </button>
     </div>
 
+    <!-- Friend Chat Modal -->
+    <div id="friend-chat-modal" class="fixed bottom-24 right-4 sm:right-6 z-[10000] hidden">
+        <div id="friend-chat-panel" class="glass-card w-[360px] max-w-[calc(100vw-24px)] h-[560px] max-h-[calc(100vh-120px)] rounded-3xl border border-white/10 flex flex-col overflow-hidden shadow-2xl transition-all duration-200 opacity-0 scale-95 translate-y-2">
+            <div id="friend-chat-header" class="bg-primary/20 p-4 border-b border-white/10 flex items-center justify-between cursor-move select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                    <img id="friend-chat-avatar" src="https://i.pravatar.cc/150?img=1" class="w-9 h-9 rounded-full border border-white/10 object-cover">
+                    <div class="min-w-0">
+                        <p id="friend-chat-name" class="text-white font-bold text-sm truncate">Bạn bè</p>
+                        <p class="text-[10px] text-primary flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Realtime Supabase
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button id="friend-chat-min-btn" onclick="toggleFriendChatMinimize()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-primary/40 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+                        <span class="material-icons-round text-sm">remove</span>
+                    </button>
+                    <button onclick="closeFriendChat()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-primary/40 text-slate-300 hover:text-white flex items-center justify-center transition-all">
+                        <span class="material-icons-round text-sm">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="friend-chat-messages" class="flex-1 p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 bg-black/40"></div>
+
+            <form id="friend-chat-form" onsubmit="sendFriendMessage(event)" class="p-3 bg-black/60 border-t border-white/10 flex items-center gap-2">
+                <input id="friend-chat-input" type="text" placeholder="Nhắn gì đó..."
+                    class="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-[13px] text-white focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-500">
+                <button type="submit" class="w-10 h-10 rounded-full bg-primary text-[#0a0a0a] hover:scale-105 active:scale-95 transition-all flex items-center justify-center">
+                    <span class="material-icons-round text-base">send</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- AI Chat Logic -->
     <script>
         let aiChatHistory = [];
+        let activeFriendChat = null;
+        let friendChatRealtimeChannel = null;
+        let friendChatDragState = { active: false, offsetX: 0, offsetY: 0 };
+        let friendChatMinimized = false;
 
         function toggleAiChat(forceOpen = false) {
             const windowEl = document.getElementById('ai-chat-window');
@@ -5458,14 +5497,224 @@
             }
         }
 
-        window.openChatWithFriend = (friendName) => {
-            toggleAiChat(true);
-            const input = document.getElementById('ai-chat-input');
-            if (input && friendName) {
-                input.value = `Gợi ý phim để xem cùng ${friendName}`;
-                input.focus();
-            }
+        function renderFriendChatMessages(messages) {
+            const box = document.getElementById('friend-chat-messages');
+            if (!box) return;
+            const rows = messages || [];
+            box.innerHTML = rows.map((m, idx) => {
+                const mine = m.sender_id === window.currentUserUid;
+                const senderAvatar = mine
+                    ? (document.getElementById('user-avatar')?.src || 'https://i.pravatar.cc/150?img=1')
+                    : (activeFriendChat?.avatar || 'https://i.pravatar.cc/150?img=1');
+                const next = rows[idx + 1];
+                const thisTs = m.created_at ? new Date(m.created_at) : null;
+                const nextTs = next?.created_at ? new Date(next.created_at) : null;
+                const minutesGap = (thisTs && nextTs) ? Math.abs((nextTs - thisTs) / 60000) : 0;
+                const endOfGroup = !next || next.sender_id !== m.sender_id || minutesGap > 5;
+                const timestamp = thisTs
+                    ? thisTs.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : '';
+                return `
+                    <div class="space-y-1">
+                        <div class="flex items-end gap-2 ${mine ? 'justify-end' : 'justify-start'}">
+                            <img src="${senderAvatar}" class="w-6 h-6 rounded-full border border-white/10 object-cover ${mine ? 'order-2' : ''}">
+                            <div class="${mine ? 'bg-primary text-[#0a0a0a] order-1' : 'bg-white/10 text-white'} max-w-[78%] rounded-2xl px-3 py-2 text-[12px] leading-relaxed border border-white/5">
+                                ${m.content || ''}
+                            </div>
+                        </div>
+                        ${endOfGroup ? `<p class="text-[10px] text-slate-500 ${mine ? 'text-right pr-8' : 'pl-8'}">${timestamp}</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function startFriendChatDrag(clientX, clientY) {
+            const modal = document.getElementById('friend-chat-modal');
+            if (!modal || modal.classList.contains('hidden')) return;
+            const rect = modal.getBoundingClientRect();
+            friendChatDragState.active = true;
+            friendChatDragState.offsetX = clientX - rect.left;
+            friendChatDragState.offsetY = clientY - rect.top;
+        }
+
+        function moveFriendChatDrag(clientX, clientY) {
+            if (!friendChatDragState.active) return;
+            const modal = document.getElementById('friend-chat-modal');
+            if (!modal) return;
+            const panelW = modal.offsetWidth || 360;
+            const panelH = modal.offsetHeight || 560;
+            const left = Math.max(8, Math.min(window.innerWidth - panelW - 8, clientX - friendChatDragState.offsetX));
+            const top = Math.max(8, Math.min(window.innerHeight - panelH - 8, clientY - friendChatDragState.offsetY));
+            modal.style.left = `${left}px`;
+            modal.style.top = `${top}px`;
+            modal.style.right = 'auto';
+            modal.style.bottom = 'auto';
+        }
+
+        function stopFriendChatDrag() {
+            friendChatDragState.active = false;
+        }
+
+        function snapFriendChatToDefault() {
+            const modal = document.getElementById('friend-chat-modal');
+            if (!modal) return;
+            modal.style.left = 'auto';
+            modal.style.top = 'auto';
+            modal.style.right = '1rem';
+            modal.style.bottom = '6rem';
+        }
+
+        window.toggleFriendChatMinimize = () => {
+            const panel = document.getElementById('friend-chat-panel');
+            const msgs = document.getElementById('friend-chat-messages');
+            const form = document.getElementById('friend-chat-form');
+            const btnIcon = document.querySelector('#friend-chat-min-btn .material-icons-round');
+            if (!panel || !msgs || !form) return;
+
+            friendChatMinimized = !friendChatMinimized;
+            msgs.classList.toggle('hidden', friendChatMinimized);
+            form.classList.toggle('hidden', friendChatMinimized);
+            panel.classList.toggle('h-[560px]', !friendChatMinimized);
+            panel.classList.toggle('h-[76px]', friendChatMinimized);
+            panel.classList.toggle('max-h-[calc(100vh-120px)]', !friendChatMinimized);
+            panel.classList.toggle('max-h-[76px]', friendChatMinimized);
+            if (btnIcon) btnIcon.textContent = friendChatMinimized ? 'expand_more' : 'remove';
         };
+
+        async function loadFriendMessages() {
+            if (!window.supabaseClient || !window.currentUserUid || !activeFriendChat?.id) return;
+            const me = window.currentUserUid;
+            const fid = activeFriendChat.id;
+            const box = document.getElementById('friend-chat-messages');
+            if (box) box.innerHTML = `<p class="text-xs text-slate-400">Đang tải tin nhắn...</p>`;
+
+            const { data, error } = await window.supabaseClient
+                .from('friend_messages')
+                .select('*')
+                .or(`and(sender_id.eq.${me},receiver_id.eq.${fid}),and(sender_id.eq.${fid},receiver_id.eq.${me})`)
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                if (box) {
+                    box.innerHTML = `<p class="text-xs text-red-400">Chưa có bảng chat realtime. Tạo bảng \`friend_messages\` trên Supabase để dùng chat 2 chiều realtime.</p>`;
+                }
+                console.warn('Friend chat load error:', error.message);
+                return;
+            }
+
+            renderFriendChatMessages(data || []);
+        }
+
+        function setupFriendChatRealtime() {
+            if (!window.supabaseClient || !window.currentUserUid) return;
+            if (friendChatRealtimeChannel) {
+                window.supabaseClient.removeChannel(friendChatRealtimeChannel);
+                friendChatRealtimeChannel = null;
+            }
+
+            friendChatRealtimeChannel = window.supabaseClient
+                .channel(`friend-chat-${window.currentUserUid}-${Date.now()}`)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_messages' }, payload => {
+                    if (!activeFriendChat || !window.currentUserUid) return;
+                    const row = payload.new || payload.old;
+                    if (!row) return;
+                    const me = window.currentUserUid;
+                    const fid = activeFriendChat.id;
+                    const isThisConversation =
+                        (row.sender_id === me && row.receiver_id === fid) ||
+                        (row.sender_id === fid && row.receiver_id === me);
+                    if (isThisConversation) loadFriendMessages();
+                })
+                .subscribe();
+        }
+
+        window.openFriendChat = async (friendId, friendName, friendAvatar) => {
+            if (!window.currentUserUid) return alert('Vui lòng đăng nhập để chat!');
+            activeFriendChat = { id: friendId, name: friendName || 'Bạn bè', avatar: friendAvatar || 'https://i.pravatar.cc/150?img=1' };
+
+            const modal = document.getElementById('friend-chat-modal');
+            const panel = document.getElementById('friend-chat-panel');
+            const nameEl = document.getElementById('friend-chat-name');
+            const avatarEl = document.getElementById('friend-chat-avatar');
+            if (nameEl) nameEl.textContent = activeFriendChat.name;
+            if (avatarEl) avatarEl.src = activeFriendChat.avatar;
+            if (modal && modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                if (!modal.style.left && !modal.style.top) snapFriendChatToDefault();
+                setTimeout(() => {
+                    if (panel) panel.classList.remove('opacity-0', 'scale-95', 'translate-y-2');
+                }, 10);
+            }
+            if (friendChatMinimized) toggleFriendChatMinimize();
+
+            setupFriendChatRealtime();
+            await loadFriendMessages();
+            const input = document.getElementById('friend-chat-input');
+            if (input) input.focus();
+        };
+
+        window.closeFriendChat = () => {
+            const modal = document.getElementById('friend-chat-modal');
+            const panel = document.getElementById('friend-chat-panel');
+            if (modal) {
+                if (panel) panel.classList.add('opacity-0', 'scale-95', 'translate-y-2');
+                setTimeout(() => modal.classList.add('hidden'), 200);
+            }
+            activeFriendChat = null;
+        };
+
+        window.sendFriendMessage = async (event) => {
+            if (event) event.preventDefault();
+            if (!window.supabaseClient || !window.currentUserUid || !activeFriendChat?.id) return;
+            const input = document.getElementById('friend-chat-input');
+            const content = input?.value.trim();
+            if (!content) return;
+
+            const payload = {
+                sender_id: window.currentUserUid,
+                receiver_id: activeFriendChat.id,
+                content
+            };
+            const { error } = await window.supabaseClient.from('friend_messages').insert([payload]);
+            if (error) {
+                alert('Gửi tin nhắn thất bại. Kiểm tra bảng friend_messages trên Supabase.');
+                console.warn('Friend chat send error:', error.message);
+                return;
+            }
+            if (input) input.value = '';
+            await loadFriendMessages();
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dragHandle = document.getElementById('friend-chat-header');
+            if (!dragHandle) return;
+
+            dragHandle.addEventListener('mousedown', (e) => {
+                if (e.target.closest('button')) return;
+                startFriendChatDrag(e.clientX, e.clientY);
+            });
+            document.addEventListener('mousemove', (e) => moveFriendChatDrag(e.clientX, e.clientY));
+            document.addEventListener('mouseup', stopFriendChatDrag);
+
+            dragHandle.addEventListener('touchstart', (e) => {
+                if (e.target.closest('button')) return;
+                const t = e.touches[0];
+                if (!t) return;
+                startFriendChatDrag(t.clientX, t.clientY);
+            }, { passive: true });
+            document.addEventListener('touchmove', (e) => {
+                const t = e.touches[0];
+                if (!t) return;
+                moveFriendChatDrag(t.clientX, t.clientY);
+            }, { passive: true });
+            document.addEventListener('touchend', stopFriendChatDrag);
+
+            dragHandle.addEventListener('dblclick', (e) => {
+                if (e.target.closest('button')) return;
+                snapFriendChatToDefault();
+            });
+        });
 
         async function sendAiMessage(e) {
             e.preventDefault();
@@ -6304,7 +6553,7 @@
 
                 if (friends.length > 0) {
                     friendList.innerHTML = friends.map(f => `
-                        <div class="flex items-center gap-3 p-2.5 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5 transition-all cursor-pointer group">
+                        <div onclick="openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || 'https://i.pravatar.cc/150?img=1').replace(/'/g, "\\'")}')" class="flex items-center gap-3 p-2.5 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5 transition-all cursor-pointer group">
                             <div class="relative flex-shrink-0">
                                 <img src="${f.avatar_url || 'https://i.pravatar.cc/150?img=1'}" class="w-10 h-10 rounded-full border border-white/5 object-cover">
                                 <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-bg-dark rounded-full shadow-sm"></span>
@@ -6313,7 +6562,7 @@
                                 <p class="text-[13px] text-white font-bold group-hover:text-primary transition-colors truncate">${f.full_name}</p>
                                 <p class="text-[10px] text-slate-500 truncate font-medium">${f.email}</p>
                             </div>
-                            <button onclick="openChatWithFriend('${(f.full_name || 'Bạn').replace(/'/g, "\\'")}')" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
+                            <button onclick="event.stopPropagation(); openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || 'https://i.pravatar.cc/150?img=1').replace(/'/g, "\\'")}')" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
                                 <span class="material-icons-round text-[15px]">chat</span>
                             </button>
                         </div>
