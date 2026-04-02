@@ -7,6 +7,10 @@
   ],
   "c188dde4-2915-4399-aa9a-a1eb85867762": [
     {
+      "slug": "nguyet-lan-y-ky",
+      "name": "Nguyệt Lân Ỷ Kỷ - 1"
+    },
+    {
       "slug": "the-comeback-phan-3",
       "name": "The Comeback (Phần 3) - 1"
     },
@@ -25,6 +29,12 @@
     {
       "slug": "di-thu-ma-do-phan-2",
       "name": "Dị thú ma đô (Phần 2) - 1"
+    }
+  ],
+  "b49074cc-1035-4b87-8bac-10c9207a2ac5": [
+    {
+      "slug": "dao-hon-tieu-than-y",
+      "name": "Đào Hôn Tiểu Thần Y - 1"
     }
   ]
 }
