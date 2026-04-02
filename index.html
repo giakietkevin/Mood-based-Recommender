@@ -371,12 +371,16 @@
                             <span
                                 class="material-icons-round absolute left-3 text-slate-400 text-[18px]">person_search</span>
                             <input type="email" id="home-add-friend-email"
-                                class="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-12 py-3 text-[13px] font-medium text-white focus:border-primary/50 focus:ring-1 focus:ring-primary placeholder-slate-500"
+                                class="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-24 py-3 text-[13px] font-medium text-white focus:border-primary/50 focus:ring-1 focus:ring-primary placeholder-slate-500"
                                 placeholder="Email người dùng...">
                             <button onclick="sendFriendRequest()"
-                                class="absolute right-1.5 top-1.5 bottom-1.5 w-9 flex justify-center items-center bg-white/10 hover:bg-primary hover:text-black rounded-lg transition-colors tooltip"
-                                title="Kết bạn"><span class="material-icons-round text-sm">person_add</span></button>
+                                class="absolute right-1.5 top-1.5 bottom-1.5 px-3 flex justify-center items-center bg-primary text-black font-bold text-[10px] rounded-lg transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20 uppercase tracking-tighter">TÌM BẠN</button>
                         </div>
+                        <p class="text-[8px] text-slate-500 mt-2 px-1 leading-relaxed">
+                            <span class="text-primary font-black">LƯU Ý:</span> Bạn bè cần 
+                            <button onclick="loadUserProfile().then(() => alert('Hồ sơ của bạn đã được cập nhật để bạn bè có thể tìm thấy! ✨'))" class="text-primary decoration-primary/30 underline decoration-dotted font-bold hover:text-white transition-colors">tự cập nhật hồ sơ</button> 
+                            một lần để có thể tìm thấy nhau bằng Email.
+                        </p>
                     </div>
 
                     <div id="home-friend-requests-container" class="mb-5 hidden">
@@ -5723,6 +5727,7 @@
                             id: data.user.id,
                             username: email.split('@')[0] + Math.floor(Math.random() * 1000), // unique username
                             full_name: fullName,
+                            email: email,
                             avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.id}`
                         }]);
                         if (profileErr) console.warn("Profile creation warn:", profileErr);
@@ -5760,6 +5765,20 @@
             // Sync UI Display globals
             document.querySelectorAll('#user-display').forEach(el => el.innerText = dispName);
             document.querySelectorAll('#user-avatar, #home-create-avatar').forEach(img => img.src = avatar);
+
+            // Sync email to profiles table for searchability (UPSERT - create if missing)
+            if (window.supabaseClient) {
+                window.supabaseClient.from('profiles').upsert({
+                    id: user.id,
+                    email: user.email,
+                    full_name: dispName,
+                    avatar_url: avatar,
+                    username: user.email.split('@')[0] + Math.floor(Math.random() * 100)
+                }, { onConflict: 'id' }).then(res => {
+                    if (res.error) console.warn('Profile sync error:', res.error);
+                    else console.log('Profile synced OK for:', user.email);
+                });
+            }
             
             // Update Auth Button State
             const loginBtn = document.getElementById('login-btn');
@@ -5802,7 +5821,13 @@
                     name = profile.full_name || name;
                     if (profile.avatar_url && profile.avatar_url !== "") avatar = profile.avatar_url;
                 }
-             } catch(e) {}
+                // SYNC: Ensure email is in profiles for search
+                if (email) {
+                    await window.supabaseClient.from('profiles').update({ email: email }).eq('id', uid);
+                }
+             } catch(e) {
+                 console.warn("Profile sync error:", e);
+             }
              
              // Check localStorage for offline data/overrides
              const savedData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
@@ -6004,61 +6029,110 @@
             }).join('');
         }
 
-        function renderBuddySystem() {
-            // Render requests
+        async function renderBuddySystem() {
+            if (!window.currentUserUid) return;
+
             const reqContainerBox = document.getElementById('home-friend-requests-container');
             const reqContainer = document.getElementById('home-friend-requests');
             const reqCount = document.getElementById('home-req-count');
             if (!reqContainerBox) return;
 
-            if (homeFriendRequests.length > 0) {
-                reqContainerBox.classList.remove('hidden');
-                reqCount.innerText = homeFriendRequests.length;
-                reqContainer.innerHTML = homeFriendRequests.map(req => `
-                    <div class="flex items-center justify-between p-2 lg:p-2.5 bg-black/40 rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
-                        <div class="flex items-center gap-2 lg:gap-3 overflow-hidden pr-2">
-                            <img src="${req.avatar}" class="w-8 h-8 rounded-full bg-white/10 border border-white/5 flex-shrink-0">
-                            <div class="min-w-0 flex-1">
-                                <p class="text-[11px] lg:text-[12px] text-white font-bold truncate">${req.name}</p>
-                                <p class="text-[9px] text-slate-500 truncate">${req.email}</p>
+            try {
+                // Fetch PENDING requests where current user is receiver
+                const { data: requests, error } = await window.supabaseClient
+                    .from('friendships')
+                    .select('*')
+                    .eq('receiver_id', window.currentUserUid)
+                    .eq('status', 'pending');
+
+                if (error) console.warn('Fetch requests error:', error);
+
+                if (requests && requests.length > 0) {
+                    // Fetch sender profiles separately
+                    const senderIds = requests.map(r => r.sender_id);
+                    const { data: senderProfiles } = await window.supabaseClient
+                        .from('profiles')
+                        .select('id, full_name, avatar_url, email')
+                        .in('id', senderIds);
+
+                    const profileMap = {};
+                    (senderProfiles || []).forEach(p => profileMap[p.id] = p);
+
+                    reqContainerBox.classList.remove('hidden');
+                    reqCount.innerText = requests.length;
+                    reqContainer.innerHTML = requests.map(req => {
+                        const sender = profileMap[req.sender_id] || { full_name: 'User', email: '...', avatar_url: '' };
+                        return `
+                            <div class="flex items-center justify-between p-2 lg:p-2.5 bg-black/40 rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
+                                <div class="flex items-center gap-2 lg:gap-3 overflow-hidden pr-2">
+                                    <img src="${sender.avatar_url || 'https://i.pravatar.cc/150?img=1'}" class="w-8 h-8 rounded-full bg-white/10 border border-white/5 flex-shrink-0">
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-[11px] lg:text-[12px] text-white font-bold truncate">${sender.full_name}</p>
+                                        <p class="text-[9px] text-slate-500 truncate">${sender.email}</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-1 flex-shrink-0">
+                                    <button onclick="acceptFriend(${req.id})" class="w-7 h-7 flex items-center justify-center bg-primary text-[#0a0a0a] rounded hover:bg-white hover:scale-105 active:scale-95 transition-all tooltip" title="Chấp nhận"><span class="material-icons-round text-sm">check</span></button>
+                                    <button onclick="rejectFriend(${req.id})" class="w-7 h-7 flex items-center justify-center bg-white/5 text-slate-400 rounded hover:bg-red-500/20 hover:text-red-400 active:scale-95 transition-all tooltip" title="Từ chối"><span class="material-icons-round text-sm">close</span></button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="flex gap-1 flex-shrink-0">
-                            <button onclick="acceptFriend(${req.id})" class="w-7 h-7 flex items-center justify-center bg-primary text-[#0a0a0a] rounded hover:bg-white hover:scale-105 active:scale-95 transition-all tooltip" title="Chấp nhận"><span class="material-icons-round text-sm">check</span></button>
-                            <button onclick="rejectFriend(${req.id})" class="w-7 h-7 flex items-center justify-center bg-white/5 text-slate-400 rounded hover:bg-red-500/20 hover:text-red-400 active:scale-95 transition-all tooltip" title="Từ chối"><span class="material-icons-round text-sm">close</span></button>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                reqContainerBox.classList.add('hidden');
-            }
+                        `;
+                    }).join('');
+                } else {
+                    reqContainerBox.classList.add('hidden');
+                }
 
-            // Render friends
-            const friendList = document.getElementById('home-friends-list');
-            document.getElementById('home-friend-count').innerText = homeFriends.length;
+                // Fetch ACCEPTED friends
+                const { data: friendsData, error: fError } = await window.supabaseClient
+                    .from('friendships')
+                    .select('*')
+                    .eq('status', 'accepted')
+                    .or(`sender_id.eq.${window.currentUserUid},receiver_id.eq.${window.currentUserUid}`);
 
-            if (homeFriends.length > 0) {
-                friendList.innerHTML = homeFriends.map(f => `
-                    <div class="flex items-center gap-3 p-2.5 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5 transition-all cursor-pointer group">
-                        <div class="relative flex-shrink-0">
-                            <img src="${f.avatar}" class="w-10 h-10 rounded-full border border-white/5 object-cover">
-                            <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-bg-dark rounded-full shadow-sm"></span>
+                if (fError) console.warn('Fetch friends error:', fError);
+
+                // Get friend user IDs
+                const friendUserIds = (friendsData || []).map(f => 
+                    f.sender_id === window.currentUserUid ? f.receiver_id : f.sender_id
+                );
+
+                let friends = [];
+                if (friendUserIds.length > 0) {
+                    const { data: friendProfiles } = await window.supabaseClient
+                        .from('profiles')
+                        .select('id, full_name, avatar_url, email')
+                        .in('id', friendUserIds);
+                    friends = friendProfiles || [];
+                }
+                
+                const friendList = document.getElementById('home-friends-list');
+                document.getElementById('home-friend-count').innerText = friends.length;
+
+                if (friends.length > 0) {
+                    friendList.innerHTML = friends.map(f => `
+                        <div class="flex items-center gap-3 p-2.5 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5 transition-all cursor-pointer group">
+                            <div class="relative flex-shrink-0">
+                                <img src="${f.avatar_url || 'https://i.pravatar.cc/150?img=1'}" class="w-10 h-10 rounded-full border border-white/5 object-cover">
+                                <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-bg-dark rounded-full shadow-sm"></span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[13px] text-white font-bold group-hover:text-primary transition-colors truncate">${f.full_name}</p>
+                                <p class="text-[10px] text-slate-500 truncate font-medium">${f.email}</p>
+                            </div>
+                            <button class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
+                                <span class="material-icons-round text-[15px]">chat</span>
+                            </button>
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-[13px] text-white font-bold group-hover:text-primary transition-colors truncate">${f.name}</p>
-                            <p class="text-[10px] text-slate-500 truncate font-medium">${f.email}</p>
-                        </div>
-                        <button class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
-                            <span class="material-icons-round text-[15px]">chat</span>
-                        </button>
-                    </div>
-                `).join('');
-            } else {
-                friendList.innerHTML = `
-                    <div class="py-8 text-center text-slate-500 opacity-60">
-                        <span class="material-icons-round mb-2 text-3xl">sentiment_dissatisfied</span>
-                        <p class="text-[10px] font-bold uppercase tracking-wider">Chưa có bạn bè nào.<br>Hãy tìm kiếm bằng Email nhé!</p>
-                    </div>`;
+                    `).join('');
+                } else {
+                    friendList.innerHTML = `
+                        <div class="py-8 text-center text-slate-500 opacity-60">
+                            <span class="material-icons-round mb-2 text-3xl">sentiment_dissatisfied</span>
+                            <p class="text-[10px] font-bold uppercase tracking-wider">Chưa có bạn bè nào.<br>Hãy tìm kiếm bằng Email nhé!</p>
+                        </div>`;
+                }
+            } catch (e) {
+                console.error("Buddy System Error:", e);
             }
         }
 
@@ -6108,11 +6182,17 @@
         }
 
         function setupRealtimeNewsfeed() {
-            const channel = window.supabaseClient
+            const channelPosts = window.supabaseClient
                 .channel('public:posts')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, payload => {
-                    console.log('Real-time update:', payload);
-                    fetchHomePosts(); // Refresh on any change for simplicity, or handle specific events
+                    fetchHomePosts();
+                })
+                .subscribe();
+
+            const channelFriends = window.supabaseClient
+                .channel('public:friendships')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, payload => {
+                    renderBuddySystem();
                 })
                 .subscribe();
         }
@@ -6186,36 +6266,77 @@
             }
         }
 
-        window.sendFriendRequest = () => {
+        window.sendFriendRequest = async () => {
+            if (!window.currentUserUid) return alert("Vui lòng đăng nhập để kết bạn!");
+
             const emailInput = document.getElementById('home-add-friend-email');
             const email = emailInput.value.trim();
 
             if (!email) return alert('Vui lòng nhập email người cần tìm!');
-            if (!email.includes('@')) return alert('Email không hợp lệ!');
+            if (email === document.getElementById('user-email-display').innerText) return alert('Bạn không thể tự kết bạn với chính mình!');
 
-            alert(`Đã gửi lời mời kết bạn đến: ${email}`); // Mock
-            emailInput.value = '';
+            try {
+                // Find user by email (case-insensitive)
+                const { data: targetUser, error } = await window.supabaseClient
+                    .from('profiles')
+                    .select('id, email, full_name')
+                    .ilike('email', email)
+                    .maybeSingle();
 
-            // supabaseClient.from('friend_requests').insert({ to_email: email, ... })
-        }
+                if (error) throw error;
+                
+                if (!targetUser) {
+                    return alert('Không tìm thấy người dùng với email này! Hãy chắc chắn bạn bè đã nhấn "Cập nhật hồ sơ"!');
+                }
 
-        window.acceptFriend = (id) => {
-            const reqIdx = homeFriendRequests.findIndex(r => r.id === id);
-            if (reqIdx > -1) {
-                const req = homeFriendRequests.splice(reqIdx, 1)[0];
-                homeFriends.unshift({ id: req.id, name: req.name, email: req.email, avatar: req.avatar });
+                // Check if already friends or requested
+                const { data: existing, error: e2 } = await window.supabaseClient
+                    .from('friendships')
+                    .select('*')
+                    .or(`and(sender_id.eq.${window.currentUserUid},receiver_id.eq.${targetUser.id}),and(sender_id.eq.${targetUser.id},receiver_id.eq.${window.currentUserUid})`);
+
+                if (existing && existing.length > 0) return alert('Bạn đã là bạn bè hoặc đã gửi yêu cầu rồi!');
+
+                // Create request
+                const { error: e3 } = await window.supabaseClient
+                    .from('friendships')
+                    .insert([{
+                        sender_id: window.currentUserUid,
+                        receiver_id: targetUser.id,
+                        status: 'pending'
+                    }]);
+
+                if (e3) throw e3;
+
+                alert(`Đã gửi lời mời kết bạn đến: ${email} ✨`);
+                emailInput.value = '';
                 renderBuddySystem();
+            } catch (e) {
+                alert("Lỗi: " + e.message);
             }
-            // supabase logic
-        }
+        };
 
-        window.rejectFriend = (id) => {
-            const reqIdx = homeFriendRequests.findIndex(r => r.id === id);
-            if (reqIdx > -1) {
-                homeFriendRequests.splice(reqIdx, 1);
+        window.acceptFriend = async (id) => {
+            try {
+                await window.supabaseClient
+                    .from('friendships')
+                    .update({ status: 'accepted' })
+                    .eq('id', id);
                 renderBuddySystem();
-            }
-        }
+            } catch (e) {}
+        };
+
+        window.rejectFriend = async (id) => {
+            try {
+                await window.supabaseClient
+                    .from('friendships')
+                    .delete()
+                    .eq('id', id);
+                renderBuddySystem();
+            } catch (e) {}
+        };
+
+
 
         window.shareCurrentMediaToHome = () => {
             const title = document.getElementById('player-title')?.innerText || '';
