@@ -336,14 +336,24 @@
                                 placeholder="Bạn đang nghĩ gì? Hoặc chia sẻ ngay một bộ phim, bản nhạc thú vị..."></textarea>
 
                             <!-- Media URL inputs / Image Preview -->
-                            <div id="home-post-media-container" class="hidden relative">
+                            <div id="home-post-media-container" class="hidden relative space-y-3">
                                 <input type="text" id="home-post-media-url" placeholder="Nhập URL Hình ảnh / Video..."
                                     class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-primary/50 focus:ring-1">
                                 <button
-                                    onclick="document.getElementById('home-post-media-container').classList.add('hidden'); document.getElementById('home-post-media-url').value=''; homePostSelectedMedia=''; document.getElementById('home-post-media-file').value='';"
+                                    onclick="clearHomePostMedia()"
                                     class="absolute right-2 top-2 text-slate-400 hover:text-white material-icons-round text-sm">close</button>
+                                <!-- Selected images preview -->
+                                <div id="home-post-media-preview" class="hidden">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Ảnh đã chọn</p>
+                                        <button type="button" onclick="clearHomePostMedia()" class="text-[10px] font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1">
+                                            <span class="material-icons-round text-xs">delete</span> Xóa tất cả
+                                        </button>
+                                    </div>
+                                    <div id="home-post-media-preview-grid" class="mt-2 grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+                                </div>
                             </div>
-                            <input type="file" id="home-post-media-file" accept="image/*" class="hidden"
+                            <input type="file" id="home-post-media-file" accept="image/*" multiple class="hidden"
                                 onchange="handleHomePostImageUpload(event)">
 
                             <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
@@ -5499,6 +5509,12 @@
         let appNotifications = JSON.parse(localStorage.getItem('app_notifications') || '[]');
         let unreadNotifications = Number(localStorage.getItem('app_notifications_unread') || 0);
         let globalRealtimeChannel = null;
+        let friendUnreadCounts = JSON.parse(localStorage.getItem('friend_unread_counts') || '{}');
+        let notifPollingInterval = null;
+        let notifSeenEvents = JSON.parse(localStorage.getItem('notif_seen_events') || '[]');
+        let notifLastMessageAt = localStorage.getItem('notif_last_message_at') || new Date(0).toISOString();
+        let notifLastFriendReqAt = localStorage.getItem('notif_last_friendreq_at') || new Date(0).toISOString();
+        let notifLastCommentAt = localStorage.getItem('notif_last_comment_at') || new Date(0).toISOString();
 
         function toggleAiChat(forceOpen = false) {
             const windowEl = document.getElementById('ai-chat-window');
@@ -5562,16 +5578,39 @@
                 list.innerHTML = `<p class="text-xs text-slate-500 p-3 text-center">Chưa có thông báo nào.</p>`;
                 return;
             }
-            list.innerHTML = appNotifications.slice(0, 40).map(n => `
-                <div
-                    onclick="openNotification('${String(n.id).replace(/'/g, "\\'")}')"
-                    role="button"
-                    class="p-2.5 rounded-xl cursor-pointer select-none ${n.read ? 'bg-white/5' : 'bg-primary/10 border border-primary/20'} hover:bg-white/10 transition-colors"
-                >
-                    <p class="text-[11px] text-white leading-relaxed">${n.text}</p>
-                    <p class="text-[10px] text-slate-500 mt-1">${new Date(n.created_at).toLocaleString()}</p>
-                </div>
-            `).join('');
+            list.innerHTML = appNotifications.slice(0, 40).map(n => {
+                const safeId = String(n.id).replace(/'/g, "\\'");
+                if (n.type === 'friend_message') {
+                    const name = n.friendName || 'Bạn bè';
+                    const avatar = n.friendAvatar || 'https://i.pravatar.cc/150?img=1';
+                    const preview = n.preview || n.text || 'Bạn có tin nhắn mới.';
+                    return `
+                        <div
+                            onclick="openNotification('${safeId}')"
+                            role="button"
+                            class="p-2.5 rounded-xl cursor-pointer select-none ${n.read ? 'bg-white/5' : 'bg-primary/10 border border-primary/20'} hover:bg-white/10 transition-colors flex gap-3 items-center"
+                        >
+                            <img src="${avatar}" class="w-10 h-10 rounded-2xl object-cover border border-white/10 flex-shrink-0">
+                            <div class="min-w-0 flex-1">
+                                <p class="text-[11px] font-black text-white truncate">${name}</p>
+                                <p class="text-[11px] text-slate-300 truncate">${escapeHtml(preview)}</p>
+                                <p class="text-[10px] text-slate-500 mt-0.5">${new Date(n.created_at).toLocaleString()}</p>
+                            </div>
+                            <span class="material-icons-round text-slate-400 text-[18px] flex-shrink-0">chat</span>
+                        </div>
+                    `;
+                }
+                return `
+                    <div
+                        onclick="openNotification('${safeId}')"
+                        role="button"
+                        class="p-2.5 rounded-xl cursor-pointer select-none ${n.read ? 'bg-white/5' : 'bg-primary/10 border border-primary/20'} hover:bg-white/10 transition-colors"
+                    >
+                        <p class="text-[11px] text-white leading-relaxed">${n.text}</p>
+                        <p class="text-[10px] text-slate-500 mt-1">${new Date(n.created_at).toLocaleString()}</p>
+                    </div>
+                `;
+            }).join('');
         }
 
         function persistNotifications() {
@@ -5579,9 +5618,39 @@
             localStorage.setItem('app_notifications_unread', String(unreadNotifications));
         }
 
+        function persistFriendUnreadCounts() {
+            localStorage.setItem('friend_unread_counts', JSON.stringify(friendUnreadCounts));
+        }
+
+        function persistNotifWatchState() {
+            localStorage.setItem('notif_seen_events', JSON.stringify(notifSeenEvents.slice(-500)));
+            localStorage.setItem('notif_last_message_at', notifLastMessageAt);
+            localStorage.setItem('notif_last_friendreq_at', notifLastFriendReqAt);
+            localStorage.setItem('notif_last_comment_at', notifLastCommentAt);
+        }
+
+        function updateFriendUnreadBadge(friendId) {
+            const badge = document.getElementById(`friend-unread-${friendId}`);
+            if (!badge) return;
+            const count = Number(friendUnreadCounts[friendId] || 0);
+            if (count <= 0) {
+                badge.classList.add('hidden');
+                badge.textContent = '0';
+            } else {
+                badge.classList.remove('hidden');
+                badge.textContent = count > 9 ? '9+' : String(count);
+            }
+        }
+
         function pushNotification(payload) {
             const text = typeof payload === 'string' ? payload : payload?.text;
             if (!text) return;
+            const eventKey = typeof payload === 'string' ? null : (payload?.eventKey || null);
+            if (eventKey) {
+                if (notifSeenEvents.includes(eventKey)) return;
+                notifSeenEvents.push(eventKey);
+                persistNotifWatchState();
+            }
             const item = {
                 id: `n_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
                 text,
@@ -5591,6 +5660,7 @@
                 friendId: typeof payload === 'string' ? null : (payload?.friendId || null),
                 friendName: typeof payload === 'string' ? null : (payload?.friendName || null),
                 friendAvatar: typeof payload === 'string' ? null : (payload?.friendAvatar || null),
+                preview: typeof payload === 'string' ? null : (payload?.preview || null),
                 postId: typeof payload === 'string' ? null : (payload?.postId || null),
                 action: typeof payload === 'string' ? null : (payload?.action || null)
             };
@@ -5598,7 +5668,241 @@
             unreadNotifications += 1;
             persistNotifications();
             renderNotifications();
-            showSuccessToast(text);
+            if (item.type === 'friend_message') {
+                showMessageToast(item);
+            } else {
+                showSuccessToast(text);
+            }
+        }
+
+        function ensureMessageToastHost() {
+            let host = document.getElementById('message-toast-host');
+            if (host) return host;
+            host = document.createElement('div');
+            host.id = 'message-toast-host';
+            host.className = 'fixed bottom-24 right-4 sm:right-6 z-[10001] flex flex-col gap-3 pointer-events-none';
+            document.body.appendChild(host);
+            return host;
+        }
+
+        const messageToastAgg = { byFriend: {} };
+
+        function showMessageToast(notifItem) {
+            const host = ensureMessageToastHost();
+            const friendId = notifItem.friendId ? String(notifItem.friendId) : '';
+            const name = notifItem.friendName || 'Tin nhắn';
+            const avatar = notifItem.friendAvatar || 'https://i.pravatar.cc/150?img=1';
+            const preview = notifItem.preview || notifItem.text || 'Bạn có tin nhắn mới.';
+
+            // Aggregate by friend within the toast lifetime
+            if (friendId && messageToastAgg.byFriend[friendId]?.elId) {
+                const state = messageToastAgg.byFriend[friendId];
+                const el = document.getElementById(state.elId);
+                if (el) {
+                    state.count = Number(state.count || 1) + 1;
+                    state.lastNotifId = notifItem.id;
+                    const nameEl = el.querySelector('[data-toast-name]');
+                    const previewEl = el.querySelector('[data-toast-preview]');
+                    const avatarEl = el.querySelector('[data-toast-avatar]');
+                    const badgeEl = el.querySelector('[data-toast-count]');
+                    if (nameEl) nameEl.textContent = name;
+                    if (previewEl) previewEl.textContent = preview;
+                    if (avatarEl) avatarEl.src = avatar;
+                    if (badgeEl) {
+                        badgeEl.textContent = `x${state.count}`;
+                        badgeEl.classList.remove('hidden');
+                    }
+                    // reset auto-close
+                    if (state.timeout) clearTimeout(state.timeout);
+                    state.timeout = setTimeout(() => {
+                        const cur = document.getElementById(state.elId);
+                        if (cur) {
+                            cur.classList.add('opacity-0', 'translate-y-1');
+                            setTimeout(() => cur.remove(), 250);
+                        }
+                        delete messageToastAgg.byFriend[friendId];
+                    }, 4500);
+                    // move to top
+                    if (el.parentElement === host) host.prepend(el);
+                    return;
+                }
+                delete messageToastAgg.byFriend[friendId];
+            }
+
+            const id = `msgtoast_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+            const html = document.createElement('div');
+            html.id = id;
+            html.className = 'pointer-events-auto w-[320px] max-w-[calc(100vw-24px)] bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-in';
+            html.innerHTML = `
+                <button class="w-full text-left p-3 flex items-center gap-3 hover:bg-white/5 transition-colors" onclick="openNotification('${notifItem.id}')">
+                    <div class="relative flex-shrink-0">
+                        <img data-toast-avatar src="${avatar}" class="w-11 h-11 rounded-2xl object-cover border border-white/10">
+                        <span data-toast-count class="hidden absolute -top-1 -right-1 text-[9px] font-black bg-primary text-black rounded-full px-1.5 py-0.5 border border-black/30">x1</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p data-toast-name class="text-xs font-black text-white truncate">${name}</p>
+                        <p data-toast-preview class="text-[11px] text-slate-300 truncate">${escapeHtml(preview)}</p>
+                    </div>
+                    <span class="material-icons-round text-slate-300 text-[18px] flex-shrink-0">chat</span>
+                </button>
+            `;
+            host.prepend(html);
+
+            if (friendId) {
+                messageToastAgg.byFriend[friendId] = { elId: id, count: 1, lastNotifId: notifItem.id, timeout: null };
+                messageToastAgg.byFriend[friendId].timeout = setTimeout(() => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.classList.add('opacity-0', 'translate-y-1');
+                    setTimeout(() => el.remove(), 250);
+                    delete messageToastAgg.byFriend[friendId];
+                }, 4500);
+            } else {
+                setTimeout(() => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.classList.add('opacity-0', 'translate-y-1');
+                    setTimeout(() => el.remove(), 250);
+                }, 4500);
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        const friendProfileCache = {};
+        async function getFriendProfile(friendId) {
+            const fid = String(friendId || '');
+            if (!fid) return { name: 'Bạn bè', avatar: 'https://i.pravatar.cc/150?img=1' };
+            if (friendProfileCache[fid]) return friendProfileCache[fid];
+
+            // Try from current rendered buddy list (if any)
+            try {
+                const existing = (typeof homeFriends !== 'undefined' ? (homeFriends || []) : []);
+                const match = existing.find(f => String(f.id) === fid);
+                if (match) {
+                    const prof = { name: match.name || match.full_name || 'Bạn bè', avatar: match.avatar || match.avatar_url || 'https://i.pravatar.cc/150?img=1' };
+                    friendProfileCache[fid] = prof;
+                    return prof;
+                }
+            } catch (e) { /* ignore */ }
+
+            // Fetch from Supabase profiles
+            if (window.supabaseClient) {
+                try {
+                    const { data } = await window.supabaseClient
+                        .from('profiles')
+                        .select('id, full_name, avatar_url')
+                        .eq('id', fid)
+                        .maybeSingle();
+                    const prof = {
+                        name: data?.full_name || 'Bạn bè',
+                        avatar: data?.avatar_url || 'https://i.pravatar.cc/150?img=1'
+                    };
+                    friendProfileCache[fid] = prof;
+                    return prof;
+                } catch (e) { /* ignore */ }
+            }
+
+            const fallback = { name: 'Bạn bè', avatar: 'https://i.pravatar.cc/150?img=1' };
+            friendProfileCache[fid] = fallback;
+            return fallback;
+        }
+
+        async function pollNotificationsFallback() {
+            if (!window.supabaseClient || !window.currentUserUid) return;
+            const me = window.currentUserUid;
+            await refreshMyPostIds();
+
+            // New incoming messages
+            const { data: msgRows } = await window.supabaseClient
+                .from('friend_messages')
+                .select('id, sender_id, receiver_id, content, created_at')
+                .eq('receiver_id', me)
+                .gt('created_at', notifLastMessageAt)
+                .order('created_at', { ascending: true })
+                .limit(30);
+            for (const row of (msgRows || [])) {
+                notifLastMessageAt = row.created_at || notifLastMessageAt;
+                const isChatOpenNow = activeFriendChat?.id === row.sender_id && !document.getElementById('friend-chat-modal')?.classList.contains('hidden');
+                if (isChatOpenNow) continue; // đang mở đúng đoạn chat => không popup/không badge
+
+                friendUnreadCounts[row.sender_id] = Number(friendUnreadCounts[row.sender_id] || 0) + 1;
+                updateFriendUnreadBadge(row.sender_id);
+
+                const prof = await getFriendProfile(row.sender_id);
+                pushNotification({
+                    type: 'friend_message',
+                    text: `${prof.name} đã nhắn bạn.`,
+                    friendId: row.sender_id,
+                    friendName: prof.name,
+                    friendAvatar: prof.avatar,
+                    preview: row.content ? String(row.content).slice(0, 120) : '',
+                    eventKey: `msg_${row.id}`
+                });
+            }
+
+            // New friend requests
+            const { data: frRows } = await window.supabaseClient
+                .from('friendships')
+                .select('id, sender_id, receiver_id, status, created_at')
+                .eq('receiver_id', me)
+                .eq('status', 'pending')
+                .gt('created_at', notifLastFriendReqAt)
+                .order('created_at', { ascending: true })
+                .limit(30);
+            (frRows || []).forEach(row => {
+                notifLastFriendReqAt = row.created_at || notifLastFriendReqAt;
+                pushNotification({
+                    type: 'friend_request',
+                    text: 'Bạn có lời mời kết bạn mới.',
+                    friendId: row.sender_id,
+                    eventKey: `fr_${row.id}`
+                });
+            });
+
+            // New comments on my posts
+            const myIds = Array.from(myPostIds);
+            if (myIds.length > 0) {
+                const { data: cRows } = await window.supabaseClient
+                    .from('post_comments')
+                    .select('id, post_id, user_id, created_at')
+                    .in('post_id', myIds)
+                    .neq('user_id', me)
+                    .gt('created_at', notifLastCommentAt)
+                    .order('created_at', { ascending: true })
+                    .limit(30);
+                (cRows || []).forEach(row => {
+                    notifLastCommentAt = row.created_at || notifLastCommentAt;
+                    pushNotification({
+                        type: 'post_comment',
+                        text: 'Bài viết của bạn có bình luận mới.',
+                        postId: row.post_id,
+                        eventKey: `cmt_${row.id}`
+                    });
+                });
+            }
+
+            persistFriendUnreadCounts();
+            persistNotifWatchState();
+        }
+
+        function startNotificationsEngine() {
+            renderNotifications();
+            if (!window.supabaseClient || !window.currentUserUid) return;
+            refreshMyPostIds();
+            setupGlobalRealtimeNotifications();
+            if (notifPollingInterval) clearInterval(notifPollingInterval);
+            notifPollingInterval = setInterval(() => {
+                pollNotificationsFallback().catch(() => { });
+            }, 5000);
+            pollNotificationsFallback().catch(() => { });
         }
 
         async function openNotification(notificationId) {
@@ -5692,14 +5996,31 @@
             const me = window.currentUserUid;
             globalRealtimeChannel = window.supabaseClient
                 .channel(`global-notifs-${me}-${Date.now()}`)
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'friend_messages' }, payload => {
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'friend_messages' }, async payload => {
                     const row = payload.new;
                     if (!row || row.receiver_id !== me) return;
-                    if (activeFriendChat?.id === row.sender_id) loadFriendMessages();
+                    const isChatOpenNow = activeFriendChat?.id === row.sender_id && !document.getElementById('friend-chat-modal')?.classList.contains('hidden');
+                    if (isChatOpenNow) {
+                        const exists = friendChatMessages.some(m => m.id && row.id && m.id === row.id);
+                        if (!exists) {
+                            friendChatMessages.push(row);
+                            renderFriendChatMessages(friendChatMessages);
+                        }
+                        return; // đang mở đúng chat => không thông báo popup/badge
+                    } else {
+                        friendUnreadCounts[row.sender_id] = Number(friendUnreadCounts[row.sender_id] || 0) + 1;
+                        persistFriendUnreadCounts();
+                        updateFriendUnreadBadge(row.sender_id);
+                    }
+                    const prof = await getFriendProfile(row.sender_id);
                     pushNotification({
                         type: 'friend_message',
-                        text: 'Bạn có tin nhắn mới.',
-                        friendId: row.sender_id
+                        text: `${prof.name} đã nhắn bạn.`,
+                        friendId: row.sender_id,
+                        friendName: prof.name,
+                        friendAvatar: prof.avatar,
+                        preview: row.content ? String(row.content).slice(0, 120) : '',
+                        eventKey: row.id ? `msg_${row.id}` : null
                     });
                 })
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'friendships' }, payload => {
@@ -5837,7 +6158,16 @@
                     const isThisConversation =
                         (row.sender_id === me && row.receiver_id === fid) ||
                         (row.sender_id === fid && row.receiver_id === me);
-                    if (isThisConversation) loadFriendMessages();
+                    if (!isThisConversation) return;
+                    if (payload.eventType === 'INSERT' && payload.new) {
+                        const exists = friendChatMessages.some(m => m.id && payload.new.id && m.id === payload.new.id);
+                        if (!exists) {
+                            friendChatMessages.push(payload.new);
+                            renderFriendChatMessages(friendChatMessages);
+                        }
+                    } else {
+                        loadFriendMessages();
+                    }
                 })
                 .subscribe();
         }
@@ -5860,6 +6190,9 @@
                 }, 10);
             }
             if (friendChatMinimized) toggleFriendChatMinimize();
+            friendUnreadCounts[friendId] = 0;
+            persistFriendUnreadCounts();
+            updateFriendUnreadBadge(friendId);
 
             setupFriendChatRealtime();
             await loadFriendMessages();
@@ -5935,6 +6268,7 @@
                 const dd = document.getElementById('notif-dropdown');
                 if (dd) dd.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
             });
+            if (typeof startNotificationsEngine !== 'undefined') startNotificationsEngine();
         });
 
         async function sendAiMessage(e) {
@@ -6337,9 +6671,7 @@
 
             // Setup Realtime after login
             if (typeof setupRealtimeNewsfeed !== 'undefined') setupRealtimeNewsfeed();
-            if (typeof refreshMyPostIds !== 'undefined') refreshMyPostIds();
-            if (typeof setupGlobalRealtimeNotifications !== 'undefined') setupGlobalRealtimeNotifications();
-            if (typeof renderNotifications !== 'undefined') renderNotifications();
+            if (typeof startNotificationsEngine !== 'undefined') startNotificationsEngine();
 
             // Hydrate Profile View
             if (typeof loadUserProfile !== 'undefined') loadUserProfile();
@@ -6514,22 +6846,83 @@
         ];
 
         let homePostSelectedMedia = '';
+        let homePostSelectedMediaList = [];
         let postCommentsMap = {};
         let commentsRealtimeSetup = false;
 
         window.handleHomePostImageUpload = (event) => {
-            const file = event?.target?.files?.[0];
-            if (!file) return;
+            const files = Array.from(event?.target?.files || []).filter(Boolean);
+            if (files.length === 0) return;
 
-            const reader = new FileReader();
-            reader.onload = () => {
-                homePostSelectedMedia = reader.result;
-                const mediaInput = document.getElementById('home-post-media-url');
+            const mediaInput = document.getElementById('home-post-media-url');
+            const mediaContainer = document.getElementById('home-post-media-container');
+            if (mediaInput) mediaInput.value = `[Đã chọn ${files.length} ảnh từ máy]`;
+            if (mediaContainer) mediaContainer.classList.remove('hidden');
+
+            // Reset & load previews
+            homePostSelectedMediaList = [];
+            homePostSelectedMedia = '';
+            const readers = files.map(f => new Promise((resolve) => {
+                const r = new FileReader();
+                r.onload = () => resolve(String(r.result || ''));
+                r.readAsDataURL(f);
+            }));
+            Promise.all(readers).then(urls => {
+                homePostSelectedMediaList = (urls || []).filter(Boolean);
+                renderHomePostMediaPreview();
+            });
+        };
+
+        window.clearHomePostMedia = () => {
+            const mediaContainer = document.getElementById('home-post-media-container');
+            const mediaInput = document.getElementById('home-post-media-url');
+            const fileInput = document.getElementById('home-post-media-file');
+            homePostSelectedMedia = '';
+            homePostSelectedMediaList = [];
+            if (mediaInput) mediaInput.value = '';
+            if (fileInput) fileInput.value = '';
+            if (mediaContainer) mediaContainer.classList.add('hidden');
+            renderHomePostMediaPreview();
+        };
+
+        function renderHomePostMediaPreview() {
+            const box = document.getElementById('home-post-media-preview');
+            const grid = document.getElementById('home-post-media-preview-grid');
+            if (!box || !grid) return;
+            const list = homePostSelectedMediaList || [];
+            if (list.length === 0) {
+                box.classList.add('hidden');
+                grid.innerHTML = '';
+                return;
+            }
+            box.classList.remove('hidden');
+            grid.innerHTML = list.map((src, idx) => `
+                <div class="relative group rounded-xl overflow-hidden border border-white/10 bg-black/40">
+                    <img src="${src}" class="w-full h-20 object-cover">
+                    <button type="button" onclick="removeHomePostSelectedImage(${idx})" class="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 hover:bg-red-500/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                        <span class="material-icons-round text-[14px]">close</span>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        window.removeHomePostSelectedImage = (idx) => {
+            const i = Number(idx);
+            if (Number.isNaN(i)) return;
+            homePostSelectedMediaList = (homePostSelectedMediaList || []).filter((_, k) => k !== i);
+            const mediaInput = document.getElementById('home-post-media-url');
+            if (mediaInput) {
+                mediaInput.value = homePostSelectedMediaList.length > 0
+                    ? `[Đã chọn ${homePostSelectedMediaList.length} ảnh từ máy]`
+                    : '';
+            }
+            if (homePostSelectedMediaList.length === 0) {
+                const fileInput = document.getElementById('home-post-media-file');
+                if (fileInput) fileInput.value = '';
                 const mediaContainer = document.getElementById('home-post-media-container');
-                if (mediaInput) mediaInput.value = '[Ảnh đã chọn từ máy]';
-                if (mediaContainer) mediaContainer.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
+                if (mediaContainer) mediaContainer.classList.add('hidden');
+            }
+            renderHomePostMediaPreview();
         };
 
         function getLocalPostComments(postId) {
@@ -6615,8 +7008,51 @@
             feedContainer.innerHTML = homePosts.map(post => {
                 let mediaHtml = '';
                 if (post.media) {
-                    const mediaValue = String(post.media).toLowerCase();
-                    if (mediaValue.endsWith('.mp4') || mediaValue.endsWith('.webm')) {
+                    const raw = String(post.media);
+                    const mediaValue = raw.toLowerCase();
+                    // Multi images stored as JSON array string
+                    if (raw.trim().startsWith('[')) {
+                        try {
+                            const arr = JSON.parse(raw);
+                            const imgs = Array.isArray(arr) ? arr.filter(Boolean) : [];
+                            if (imgs.length === 1) {
+                                mediaHtml = `
+                                    <button type="button" onclick="openMediaViewer('${post.id}',0)" class="block w-full mt-3 border-t border-b border-white/5 bg-black/40">
+                                        <img src="${imgs[0]}" class="w-full object-cover max-h-[520px]">
+                                    </button>
+                                `;
+                            } else if (imgs.length > 1) {
+                                const dots = imgs.map((_, i) => `
+                                    <button type="button" onclick="postMediaGo('${post.id}',${i})" class="w-2 h-2 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/30'}" id="post-media-dot-${post.id}-${i}"></button>
+                                `).join('');
+                                mediaHtml = `
+                                    <div class="mt-3 border-t border-b border-white/5 bg-black/40 relative">
+                                        <button type="button" onclick="postMediaPrev('${post.id}')" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all">
+                                            <span class="material-icons-round">chevron_left</span>
+                                        </button>
+                                        <button type="button" onclick="postMediaNext('${post.id}')" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all">
+                                            <span class="material-icons-round">chevron_right</span>
+                                        </button>
+                                        <div class="absolute top-2 right-2 z-10 text-[10px] font-black text-white bg-black/50 rounded-full px-2 py-1 border border-white/10">
+                                            <span id="post-media-counter-${post.id}">1/${imgs.length}</span>
+                                        </div>
+                                        <div id="post-media-strip-${post.id}" class="w-full flex overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth" onscroll="syncPostMediaDots('${post.id}')">
+                                            ${imgs.map((src, i) => `
+                                                <div class="w-full flex-shrink-0 snap-center">
+                                                    <button type="button" onclick="openMediaViewer('${post.id}',${i})" class="block w-full">
+                                                        <img src="${src}" class="w-full max-h-[520px] object-cover">
+                                                    </button>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                        <div class="flex items-center justify-center gap-2 py-2">${dots}</div>
+                                    </div>
+                                `;
+                            }
+                        } catch (e) {
+                            mediaHtml = `<img src="${post.media}" class="w-full mt-3 border-t border-b border-white/5 object-cover max-h-[500px]">`;
+                        }
+                    } else if (mediaValue.endsWith('.mp4') || mediaValue.endsWith('.webm')) {
                         mediaHtml = `<video src="${post.media}" controls class="w-full mt-3 border-t border-b border-white/5 bg-black/50 max-h-[500px]"></video>`;
                     } else {
                         mediaHtml = `<img src="${post.media}" class="w-full mt-3 border-t border-b border-white/5 object-cover max-h-[500px]">`;
@@ -6641,9 +7077,22 @@
                                 <span class="material-icons-round text-[11px]">${privIcon}</span>
                             </div>
                         </div>
-                        <button class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all">
+                        <div class="relative">
+                        <button onclick="togglePostMenu('${post.id}')" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all">
                             <span class="material-icons-round text-lg">more_horiz</span>
                         </button>
+                        <div id="post-menu-${post.id}" class="hidden absolute right-0 mt-2 w-44 rounded-2xl border border-white/10 bg-black/80 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+                            <button onclick="editPost('${post.id}')" class="w-full px-3 py-2.5 text-left text-xs font-bold text-slate-200 hover:bg-white/10 flex items-center gap-2 ${post.authorId && window.currentUserUid && post.authorId !== window.currentUserUid ? 'hidden' : ''}">
+                                <span class="material-icons-round text-sm text-primary">edit</span> Chỉnh sửa bài viết
+                            </button>
+                            <button onclick="deletePost('${post.id}')" class="w-full px-3 py-2.5 text-left text-xs font-bold text-red-300 hover:bg-red-500/10 flex items-center gap-2 ${post.authorId && window.currentUserUid && post.authorId !== window.currentUserUid ? 'hidden' : ''}">
+                                <span class="material-icons-round text-sm">delete</span> Xóa bài viết
+                            </button>
+                            <button onclick="copyPostLink('${post.id}')" class="w-full px-3 py-2.5 text-left text-xs font-bold text-slate-200 hover:bg-white/10 flex items-center gap-2">
+                                <span class="material-icons-round text-sm text-slate-300">content_copy</span> Sao chép ID
+                            </button>
+                        </div>
+                        </div>
                     </div>
 
                     <!-- Content -->
@@ -6672,10 +7121,10 @@
                             <span class="material-icons-round text-lg group-active:scale-125 transition-transform">${post.hasLiked ? 'favorite' : 'favorite_border'}</span> Yêu thích
                         </button>
                         <button onclick="toggleComment('${post.id}')" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-slate-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer">
-                            <span class="material-icons-round text-lg">chat_bubble_outline</span> Bình luận (${post.commentsCount || 0})
+                            <span class="material-icons-round text-lg">chat_bubble_outline</span> Bình luận (<span id="comment-btn-count-${post.id}">${post.commentsCount || 0}</span>)
                         </button>
                         <button onclick="sharePost('${post.id}')" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-slate-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer">
-                            <span class="material-icons-round text-lg">share</span> Chia sẻ (${post.shares || 0})
+                            <span class="material-icons-round text-lg">share</span> Chia sẻ (<span id="share-btn-count-${post.id}">${post.shares || 0}</span>)
                         </button>
                     </div>
 
@@ -6786,11 +7235,13 @@
                                 <p class="text-[13px] text-white font-bold group-hover:text-primary transition-colors truncate">${f.full_name}</p>
                                 <p class="text-[10px] text-slate-500 truncate font-medium">${f.email}</p>
                             </div>
-                            <button onclick="event.stopPropagation(); openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || 'https://i.pravatar.cc/150?img=1').replace(/'/g, "\\'")}')" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
+                            <button onclick="event.stopPropagation(); openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || 'https://i.pravatar.cc/150?img=1').replace(/'/g, "\\'")}')" class="relative w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
                                 <span class="material-icons-round text-[15px]">chat</span>
+                                <span id="friend-unread-${f.id}" class="hidden absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none flex items-center justify-center">0</span>
                             </button>
                         </div>
                     `).join('');
+                    friends.forEach(f => updateFriendUnreadBadge(f.id));
                 } else {
                     friendList.innerHTML = `
                         <div class="py-8 text-center text-slate-500 opacity-60">
@@ -6877,6 +7328,7 @@
 
                     return {
                         id: p.id,
+                        authorId: p.author_id,
                         author: {
                             name: authorMap[p.author_id]?.full_name || 'User',
                             avatar: authorMap[p.author_id]?.avatar_url || 'https://i.pravatar.cc/150?img=1'
@@ -6950,7 +7402,9 @@
 
             const content = contentInput.value.trim();
             const media = mediaInput.value.trim();
-            const finalMedia = homePostSelectedMedia || media;
+            const finalMedia = (homePostSelectedMediaList && homePostSelectedMediaList.length > 0)
+                ? JSON.stringify(homePostSelectedMediaList)
+                : (homePostSelectedMedia || media);
             const privacy = privacySelect.value;
 
             if (!content && !finalMedia) {
@@ -6974,9 +7428,11 @@
                 contentInput.value = '';
                 mediaInput.value = '';
                 homePostSelectedMedia = '';
+                homePostSelectedMediaList = [];
                 const fileInput = document.getElementById('home-post-media-file');
                 if (fileInput) fileInput.value = '';
                 document.getElementById('home-post-media-container').classList.add('hidden');
+                renderHomePostMediaPreview();
 
                 // Track Stat
                 trackActivity('posts_created');
@@ -7074,6 +7530,8 @@
             if (post) post.commentsCount = (postCommentsMap[id] || []).length;
             const commentCountEl = document.getElementById(`comment-count-${id}`);
             if (commentCountEl) commentCountEl.textContent = `${post?.commentsCount || 0} bình luận`;
+            const commentBtnCountEl = document.getElementById(`comment-btn-count-${id}`);
+            if (commentBtnCountEl) commentBtnCountEl.textContent = String(post?.commentsCount || 0);
             input.value = '';
 
             try {
@@ -7093,6 +7551,8 @@
             localStorage.setItem(`post_shares_${id}`, String(post.shares));
             const shareCountEl = document.getElementById(`share-count-${id}`);
             if (shareCountEl) shareCountEl.textContent = `${post.shares} chia sẻ`;
+            const shareBtnCountEl = document.getElementById(`share-btn-count-${id}`);
+            if (shareBtnCountEl) shareBtnCountEl.textContent = String(post.shares || 0);
 
             if (navigator.share) {
                 navigator.share({ title: 'KietStation', text: shareText }).catch(() => { });
@@ -7111,6 +7571,79 @@
                 console.warn('Save share fallback local only:', e?.message || e);
             }
         };
+
+        window.togglePostMenu = (postId) => {
+            const menu = document.getElementById(`post-menu-${postId}`);
+            if (!menu) return;
+            const isOpen = !menu.classList.contains('hidden');
+            document.querySelectorAll('[id^="post-menu-"]').forEach(el => el.classList.add('hidden'));
+            if (!isOpen) menu.classList.remove('hidden');
+        };
+
+        window.copyPostLink = async (postId) => {
+            try {
+                await navigator.clipboard.writeText(String(postId));
+                showSuccessToast('Đã sao chép ID bài viết.');
+            } catch (e) {
+                alert('Không thể sao chép.');
+            }
+        };
+
+        window.editPost = async (postId) => {
+            const post = homePosts.find(p => String(p.id) === String(postId));
+            if (!post) return;
+            if (post.authorId && window.currentUserUid && post.authorId !== window.currentUserUid) return;
+            const next = prompt('Chỉnh sửa nội dung bài viết:', post.content || '');
+            if (next === null) return;
+            const newContent = String(next).trim();
+            try {
+                post.content = newContent;
+                renderHomeNewsfeed();
+                if (window.supabaseClient) {
+                    const { error } = await window.supabaseClient.from('posts').update({ content: newContent }).eq('id', postId);
+                    if (error) throw error;
+                }
+            } catch (e) {
+                alert('Lỗi khi chỉnh sửa: ' + (e?.message || e));
+            }
+        };
+
+        window.deletePost = async (postId) => {
+            const post = homePosts.find(p => String(p.id) === String(postId));
+            if (!post) return;
+            if (post.authorId && window.currentUserUid && post.authorId !== window.currentUserUid) return;
+            if (!confirm('Xóa bài viết này? Hành động không thể hoàn tác.')) return;
+            try {
+                homePosts = homePosts.filter(p => String(p.id) !== String(postId));
+                renderHomeNewsfeed();
+                if (window.supabaseClient) {
+                    const { error } = await window.supabaseClient.from('posts').delete().eq('id', postId);
+                    if (error) throw error;
+                }
+            } catch (e) {
+                alert('Lỗi khi xóa: ' + (e?.message || e));
+            }
+        };
+
+        window.syncPostMediaDots = (postId) => {
+            const strip = document.getElementById(`post-media-strip-${postId}`);
+            if (!strip) return;
+            const children = Array.from(strip.children || []);
+            if (children.length <= 1) return;
+            const idx = Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth));
+            children.forEach((_, i) => {
+                const dot = document.getElementById(`post-media-dot-${postId}-${i}`);
+                if (!dot) return;
+                dot.className = `w-1.5 h-1.5 rounded-full ${i === idx ? 'bg-white' : 'bg-white/30'}`;
+            });
+        };
+
+        document.addEventListener('click', (e) => {
+            const t = e?.target;
+            if (t && t.closest && t.closest('[id^="post-menu-"]')) return;
+            if (t && t.closest && t.closest('button') && t.closest('button')?.getAttribute('onclick')?.includes('togglePostMenu')) return;
+            document.querySelectorAll('[id^="post-menu-"]').forEach(el => el.classList.add('hidden'));
+        });
 
         // Load user's own posts on profile page
         window.loadMyPosts = async () => {
@@ -7521,6 +8054,190 @@
             window.renderBadges();
             window.renderUserLeveling();
         });
+        // --- Instagram-like Media Viewer (Full-screen) ---
+        let mediaViewerState = { open: false, postId: null, index: 0, items: [] };
+
+        function ensureMediaViewer() {
+            let modal = document.getElementById('media-viewer-modal');
+            if (modal) return modal;
+            modal = document.createElement('div');
+            modal.id = 'media-viewer-modal';
+            modal.className = 'fixed inset-0 z-[10050] hidden';
+            modal.innerHTML = `
+                <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeMediaViewer()"></div>
+                <div class="absolute inset-0 flex items-center justify-center p-3 sm:p-6">
+                    <div class="w-full max-w-4xl h-[80vh] sm:h-[86vh] bg-black/60 border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative">
+                        <button type="button" onclick="closeMediaViewer()" class="absolute top-3 right-3 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all">
+                            <span class="material-icons-round">close</span>
+                        </button>
+                        <button type="button" onclick="mediaViewerPrev()" class="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all">
+                            <span class="material-icons-round">chevron_left</span>
+                        </button>
+                        <button type="button" onclick="mediaViewerNext()" class="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all">
+                            <span class="material-icons-round">chevron_right</span>
+                        </button>
+                        <div id="media-viewer-strip" class="w-full h-full flex overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth" onscroll="syncMediaViewerDots()"></div>
+                        <div class="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-2 z-20">
+                            <div id="media-viewer-dots" class="flex items-center justify-center gap-1.5 bg-black/30 border border-white/10 rounded-full px-3 py-2"></div>
+                        </div>
+                        <div class="absolute top-3 left-3 z-20 text-[10px] font-black uppercase tracking-widest text-slate-200 bg-black/30 border border-white/10 rounded-full px-3 py-2">
+                            <span id="media-viewer-counter">1/1</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            return modal;
+        }
+
+        function getPostMediaList(postId) {
+            const post = homePosts.find(p => String(p.id) === String(postId));
+            if (!post || !post.media) return [];
+            const raw = String(post.media);
+            if (raw.trim().startsWith('[')) {
+                try {
+                    const arr = JSON.parse(raw);
+                    return Array.isArray(arr) ? arr.filter(Boolean) : [];
+                } catch (e) {
+                    return [raw];
+                }
+            }
+            return [raw];
+        }
+
+        window.openMediaViewer = (postId, startIndex = 0) => {
+            const items = getPostMediaList(postId);
+            if (!items || items.length === 0) return;
+            ensureMediaViewer();
+
+            mediaViewerState = { open: true, postId, index: Math.max(0, Math.min(items.length - 1, Number(startIndex) || 0)), items };
+            const modal = document.getElementById('media-viewer-modal');
+            const strip = document.getElementById('media-viewer-strip');
+            const dots = document.getElementById('media-viewer-dots');
+            const counter = document.getElementById('media-viewer-counter');
+            if (!modal || !strip || !dots || !counter) return;
+
+            strip.innerHTML = items.map(src => `
+                <div class="w-full h-full flex-shrink-0 snap-center flex items-center justify-center bg-black">
+                    <img src="${src}" class="w-full h-full object-contain select-none" draggable="false">
+                </div>
+            `).join('');
+            dots.innerHTML = items.map((_, i) => `
+                <button type="button" class="w-2 h-2 rounded-full ${i === mediaViewerState.index ? 'bg-white' : 'bg-white/30'}" onclick="mediaViewerGo(${i})"></button>
+            `).join('');
+            counter.textContent = `${mediaViewerState.index + 1}/${items.length}`;
+
+            modal.classList.remove('hidden');
+            // scroll to selected
+            requestAnimationFrame(() => {
+                strip.scrollLeft = strip.clientWidth * mediaViewerState.index;
+                syncMediaViewerDots();
+            });
+            // lock page scroll
+            document.documentElement.style.overflow = 'hidden';
+        };
+
+        window.closeMediaViewer = () => {
+            const modal = document.getElementById('media-viewer-modal');
+            if (modal) modal.classList.add('hidden');
+            mediaViewerState = { open: false, postId: null, index: 0, items: [] };
+            document.documentElement.style.overflow = '';
+        };
+
+        window.mediaViewerGo = (idx) => {
+            const strip = document.getElementById('media-viewer-strip');
+            if (!strip || !mediaViewerState.open) return;
+            const i = Math.max(0, Math.min((mediaViewerState.items || []).length - 1, Number(idx) || 0));
+            strip.scrollTo({ left: strip.clientWidth * i, behavior: 'smooth' });
+        };
+
+        window.mediaViewerPrev = () => {
+            if (!mediaViewerState.open) return;
+            mediaViewerGo((mediaViewerState.index || 0) - 1);
+        };
+
+        window.mediaViewerNext = () => {
+            if (!mediaViewerState.open) return;
+            mediaViewerGo((mediaViewerState.index || 0) + 1);
+        };
+
+        window.syncMediaViewerDots = () => {
+            if (!mediaViewerState.open) return;
+            const strip = document.getElementById('media-viewer-strip');
+            const dots = document.getElementById('media-viewer-dots');
+            const counter = document.getElementById('media-viewer-counter');
+            if (!strip || !dots || !counter) return;
+            const items = mediaViewerState.items || [];
+            const idx = Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth));
+            mediaViewerState.index = Math.max(0, Math.min(items.length - 1, idx));
+            Array.from(dots.children || []).forEach((el, i) => {
+                el.className = `w-2 h-2 rounded-full ${i === mediaViewerState.index ? 'bg-white' : 'bg-white/30'}`;
+            });
+            counter.textContent = `${mediaViewerState.index + 1}/${items.length || 1}`;
+        };
+
+        // ESC / keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (!mediaViewerState.open) return;
+            if (e.key === 'Escape') closeMediaViewer();
+            if (e.key === 'ArrowLeft') mediaViewerPrev();
+            if (e.key === 'ArrowRight') mediaViewerNext();
+        });
+
+        // Touch swipe for viewer (simple)
+        document.addEventListener('touchstart', (e) => {
+            if (!mediaViewerState.open) return;
+            const strip = document.getElementById('media-viewer-strip');
+            if (!strip || !e.target.closest('#media-viewer-strip')) return;
+            strip._swipeX = e.touches[0]?.clientX || 0;
+        }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            if (!mediaViewerState.open) return;
+            const strip = document.getElementById('media-viewer-strip');
+            if (!strip || strip._swipeX == null) return;
+            const endX = e.changedTouches[0]?.clientX || 0;
+            const dx = endX - strip._swipeX;
+            strip._swipeX = null;
+            if (Math.abs(dx) < 40) return;
+            if (dx > 0) mediaViewerPrev();
+            else mediaViewerNext();
+        }, { passive: true });
+
+        // Upgrade in-feed carousel controls + dot click + open viewer
+        window.postMediaGo = (postId, idx) => {
+            const strip = document.getElementById(`post-media-strip-${postId}`);
+            if (!strip) return;
+            const i = Math.max(0, Number(idx) || 0);
+            strip.scrollTo({ left: strip.clientWidth * i, behavior: 'smooth' });
+        };
+
+        window.postMediaPrev = (postId) => {
+            const strip = document.getElementById(`post-media-strip-${postId}`);
+            if (!strip) return;
+            const idx = Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth));
+            postMediaGo(postId, idx - 1);
+        };
+
+        window.postMediaNext = (postId) => {
+            const strip = document.getElementById(`post-media-strip-${postId}`);
+            if (!strip) return;
+            const idx = Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth));
+            postMediaGo(postId, idx + 1);
+        };
+
+        // Patch existing dot sync to also allow click + open viewer from feed images.
+        const _origSyncPostMediaDots = window.syncPostMediaDots;
+        window.syncPostMediaDots = (postId) => {
+            if (typeof _origSyncPostMediaDots === 'function') _origSyncPostMediaDots(postId);
+            // also update counter if exists
+            const strip = document.getElementById(`post-media-strip-${postId}`);
+            const counter = document.getElementById(`post-media-counter-${postId}`);
+            if (!strip || !counter) return;
+            const idx = Math.round(strip.scrollLeft / Math.max(1, strip.clientWidth));
+            const total = strip.children?.length || 1;
+            counter.textContent = `${Math.max(1, Math.min(total, idx + 1))}/${total}`;
+        };
+
     </script>
 </body>
 
