@@ -5829,19 +5829,63 @@
 
         // INIT HOME
         document.addEventListener('DOMContentLoaded', () => {
-            // We can hook to showView to refresh feed
             const origShowView = window.showView;
             window.showView = (viewName) => {
                 if (origShowView) origShowView(viewName);
                 if (viewName === 'home') {
-                    renderHomeNewsfeed();
+                    fetchHomePosts(); // Initial fetch
                     renderBuddySystem();
                 }
             };
+            
+            // Setup Real-time listener if client exists
+            if (window.supabaseClient) {
+                setupRealtimeNewsfeed();
+            }
         });
 
+        async function fetchHomePosts() {
+            if (!window.supabaseClient) return;
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('posts')
+                    .select('*, profiles(full_name, avatar_url)')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                homePosts = data.map(p => ({
+                    id: p.id,
+                    author: {
+                        name: p.profiles?.full_name || 'User',
+                        avatar: p.profiles?.avatar_url || 'https://i.pravatar.cc/150?img=1'
+                    },
+                    content: p.content,
+                    media: p.media_url,
+                    privacy: p.visibility,
+                    likes: p.likes || 0,
+                    time: new Date(p.created_at).toLocaleTimeString()
+                }));
+                renderHomeNewsfeed();
+            } catch (e) {
+                console.error("Error fetching posts:", e);
+            }
+        }
+
+        function setupRealtimeNewsfeed() {
+            const channel = window.supabaseClient
+                .channel('public:posts')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, payload => {
+                    console.log('Real-time update:', payload);
+                    fetchHomePosts(); // Refresh on any change for simplicity, or handle specific events
+                })
+                .subscribe();
+        }
+
         // ACTION HANDLERS
-        window.createHomePost = () => {
+        window.createHomePost = async () => {
+            if (!window.currentUserUid) return alert("Vui lòng đăng nhập để chia sẻ!");
+
             const contentInput = document.getElementById('home-post-content');
             const mediaInput = document.getElementById('home-post-media-url');
             const privacySelect = document.getElementById('home-post-privacy');
@@ -5855,43 +5899,49 @@
                 return;
             }
 
-            const newPost = {
-                id: Date.now(),
-                author: {
-                    name: document.getElementById('user-display')?.innerText || 'Bạn',
-                    avatar: document.getElementById('user-avatar')?.src || 'https://i.pravatar.cc/150?img=1'
-                },
-                content: content,
-                media: media || null,
-                privacy: privacy,
-                likes: 0,
-                time: 'Vừa xong'
-            };
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('posts')
+                    .insert([{
+                        author_id: window.currentUserUid,
+                        content: content,
+                        media_url: media || null,
+                        visibility: privacy
+                    }]);
 
-            // SUPABASE DB Action Example:
-            // supabaseClient.from('posts').insert({...})
+                if (error) throw error;
 
-            homePosts.unshift(newPost);
-
-            // Clean UI
-            contentInput.value = '';
-            mediaInput.value = '';
-            document.getElementById('home-post-media-container').classList.add('hidden');
-
-            renderHomeNewsfeed();
+                // Clean UI
+                contentInput.value = '';
+                mediaInput.value = '';
+                document.getElementById('home-post-media-container').classList.add('hidden');
+                
+                // Real-time listener will handle the update
+            } catch (e) {
+                alert("Lỗi khi đăng bài: " + e.message);
+            }
         }
 
-        window.likePost = (id) => {
-            const post = homePosts.find(p => p.id === id);
-            if (post) {
-                if (!post.hasLiked) {
-                    post.likes++;
-                    post.hasLiked = true;
-                } else {
-                    post.likes--;
-                    post.hasLiked = false;
+        window.likePost = async (id) => {
+            if (!window.currentUserUid) return alert("Vui lòng đăng nhập để tương tác!");
+            
+            try {
+                // For simplicity, we just increment 'likes' count. 
+                // A better way is a separate 'likes' table, but let's stick to the current schema.
+                const { data, error } = await window.supabaseClient.rpc('increment_likes', { post_id: id });
+                
+                if (error) {
+                    // Fallback if RPC not setup yet: manual update
+                    const post = homePosts.find(p => p.id === id);
+                    if (post) {
+                        await window.supabaseClient
+                            .from('posts')
+                            .update({ likes: (post.likes || 0) + 1 })
+                            .eq('id', id);
+                    }
                 }
-                renderHomeNewsfeed();
+            } catch (e) {
+                console.error("Like error:", e);
             }
         }
 
