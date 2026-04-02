@@ -249,8 +249,8 @@
                                 class="text-[10px] sm:text-xs font-bold text-white truncate text-right">User Name</span>
                         </div>
                         <div class="relative">
-                            <img id="user-avatar" src="https://i.pravatar.cc/150?img=1"
-                                onerror="this.src='https://via.placeholder.com/160'"
+                            <img id="user-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest&size=128"
+                                onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=guest&size=128'"
                                 class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl border-2 border-white/10 shadow-lg group-hover:border-primary/50 transition-all object-cover bg-black/20">
                             <div
                                 class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-[#090A0C] rounded-full">
@@ -328,7 +328,7 @@
                 <!-- Create Post -->
                 <div class="glass-card rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 border border-white/10">
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <img id="home-create-avatar" src="https://i.pravatar.cc/150?img=1"
+                        <img id="home-create-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest&size=128"
                             class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl border border-white/10 object-cover hidden sm:block">
                         <div class="flex-1 space-y-3">
                             <textarea id="home-post-content"
@@ -1999,8 +1999,8 @@
 
                         <!-- Avatar Upload Section -->
                         <div class="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto mb-6">
-                            <img id="profile-view-avatar" src="https://i.pravatar.cc/150?img=1"
-                                onerror="this.src='https://via.placeholder.com/160'"
+                            <img id="profile-view-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest&size=128"
+                                onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=guest&size=128'"
                                 class="w-full h-full rounded-[2.5rem] border-4 border-white/10 shadow-2xl object-cover transition-all group-hover:scale-105">
                             <label for="avatar-input"
                                 class="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-[2.5rem] opacity-0 group-hover:opacity-100 cursor-pointer transition-all border-2 border-primary/50">
@@ -5467,7 +5467,7 @@
         <div id="friend-chat-panel" class="glass-card w-[360px] max-w-[calc(100vw-24px)] h-[560px] max-h-[calc(100vh-120px)] rounded-3xl border border-white/10 flex flex-col overflow-hidden shadow-2xl transition-all duration-200 opacity-0 scale-95 translate-y-2">
             <div id="friend-chat-header" class="bg-primary/20 p-4 border-b border-white/10 flex items-center justify-between cursor-move select-none">
                 <div class="flex items-center gap-3 min-w-0">
-                    <img id="friend-chat-avatar" src="https://i.pravatar.cc/150?img=1" class="w-9 h-9 rounded-full border border-white/10 object-cover">
+                    <img id="friend-chat-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest&size=128" class="w-9 h-9 rounded-full border border-white/10 object-cover">
                     <div class="min-w-0">
                         <p id="friend-chat-name" class="text-white font-bold text-sm truncate">Bạn bè</p>
                         <p class="text-[10px] text-primary flex items-center gap-1">
@@ -5503,6 +5503,7 @@
         let activeFriendChat = null;
         let friendChatMessages = [];
         let friendChatRealtimeChannel = null;
+        let friendChatProfileChannel = null;
         let friendChatDragState = { active: false, offsetX: 0, offsetY: 0 };
         let friendChatMinimized = false;
         let myPostIds = new Set();
@@ -5538,11 +5539,14 @@
             const box = document.getElementById('friend-chat-messages');
             if (!box) return;
             const rows = messages || [];
+            const myAvatarFallback = avatarFromEmail(document.getElementById('user-email-display')?.textContent || window.currentUserUid);
             box.innerHTML = rows.map((m, idx) => {
                 const mine = m.sender_id === window.currentUserUid;
-                const myAvatarFallback = avatarFromEmail(document.getElementById('user-email-display')?.textContent || window.currentUserUid);
+                const myAvatar = (typeof window.currentUserAvatarUrl === 'string' && window.currentUserAvatarUrl)
+                    ? window.currentUserAvatarUrl
+                    : myAvatarFallback;
                 const senderAvatar = mine
-                    ? (document.getElementById('user-avatar')?.src || myAvatarFallback)
+                    ? myAvatar
                     : (activeFriendChat?.avatar || avatarFromEmail(activeFriendChat?.id));
                 const next = rows[idx + 1];
                 const thisTs = m.created_at ? new Date(m.created_at) : null;
@@ -5825,6 +5829,64 @@
             return fallback;
         }
 
+        // Realtime: keep avatars/names in sync across Home (feed + buddy + chat header)
+        let profileRealtimeChannel = null;
+        function startProfileRealtimeSync() {
+            if (!window.supabaseClient || !window.currentUserUid) return;
+            if (profileRealtimeChannel) {
+                window.supabaseClient.removeChannel(profileRealtimeChannel);
+                profileRealtimeChannel = null;
+            }
+            const me = window.currentUserUid;
+            profileRealtimeChannel = window.supabaseClient
+                .channel(`profiles-sync-${me}-${Date.now()}`)
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
+                    const row = payload.new;
+                    if (!row || !row.id) return;
+                    const id = String(row.id);
+                    const nextName = row.full_name || null;
+                    const nextAvatar = row.avatar_url || avatarFromEmail(row.email || id);
+
+                    // Invalidate cache for this user
+                    try { delete friendProfileCache[id]; } catch (e) { }
+
+                    // Update any DOM images tied to this profile id (Buddy list, requests, etc.)
+                    document.querySelectorAll(`img[data-profile-id="${id}"]`).forEach(img => {
+                        if (img && img.src !== nextAvatar) img.src = nextAvatar;
+                    });
+
+                    // Update feed author avatar if present
+                    document.querySelectorAll(`img[data-author-id="${id}"]`).forEach(img => {
+                        if (img && img.src !== nextAvatar) img.src = nextAvatar;
+                    });
+
+                    // If it's me, also update top avatars
+                    if (id === String(me)) {
+                        window.currentUserAvatarUrl = nextAvatar;
+                        document.querySelectorAll('#user-avatar, #home-create-avatar').forEach(img => {
+                            if (img) img.src = nextAvatar;
+                        });
+                        const profileViewAvatar = document.getElementById('profile-view-avatar');
+                        if (profileViewAvatar) profileViewAvatar.src = nextAvatar;
+                    }
+
+                    // If currently chatting with this user, update header too
+                    if (activeFriendChat?.id && String(activeFriendChat.id) === id) {
+                        if (nextName) activeFriendChat.name = nextName;
+                        activeFriendChat.avatar = nextAvatar;
+                        const nameEl = document.getElementById('friend-chat-name');
+                        const avatarEl = document.getElementById('friend-chat-avatar');
+                        if (nameEl && nextName) nameEl.textContent = nextName;
+                        if (avatarEl) avatarEl.src = nextAvatar;
+                        renderFriendChatMessages(friendChatMessages);
+                    }
+
+                    // Notifications list may display avatar/name
+                    if (typeof renderNotifications === 'function') renderNotifications();
+                })
+                .subscribe();
+        }
+
         async function pollNotificationsFallback() {
             if (!window.supabaseClient || !window.currentUserUid) return;
             const me = window.currentUserUid;
@@ -5935,11 +5997,11 @@
                     try {
                         const { data } = await window.supabaseClient
                             .from('profiles')
-                            .select('id, full_name, avatar_url')
+                            .select('id, full_name, avatar_url, email')
                             .eq('id', notif.friendId)
                             .maybeSingle();
                         notif.friendName = data?.full_name || notif.friendName || 'Bạn bè';
-                        notif.friendAvatar = data?.avatar_url || notif.friendAvatar || 'https://i.pravatar.cc/150?img=1';
+                        notif.friendAvatar = data?.avatar_url || notif.friendAvatar || avatarFromEmail(data?.email || notif.friendId);
                     } catch (e) { /* ignore */ }
                 }
                 window.openFriendChat(notif.friendId, notif.friendName, notif.friendAvatar);
@@ -6156,6 +6218,10 @@
                 window.supabaseClient.removeChannel(friendChatRealtimeChannel);
                 friendChatRealtimeChannel = null;
             }
+            if (friendChatProfileChannel) {
+                window.supabaseClient.removeChannel(friendChatProfileChannel);
+                friendChatProfileChannel = null;
+            }
 
             friendChatRealtimeChannel = window.supabaseClient
                 .channel(`friend-chat-${window.currentUserUid}-${Date.now()}`)
@@ -6180,11 +6246,52 @@
                     }
                 })
                 .subscribe();
+
+            // Watch profile updates so avatar/name auto-refresh in chat UI
+            const me = window.currentUserUid;
+            const fid = activeFriendChat?.id;
+            if (!fid) return;
+            friendChatProfileChannel = window.supabaseClient
+                .channel(`friend-chat-profiles-${me}-${fid}-${Date.now()}`)
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
+                    const row = payload.new;
+                    if (!row) return;
+                    if (row.id !== fid && row.id !== me) return;
+
+                    if (row.id === fid && activeFriendChat) {
+                        const nextName = row.full_name || activeFriendChat.name || 'Bạn bè';
+                        const nextAvatar = row.avatar_url || avatarFromEmail(row.email || fid);
+                        activeFriendChat.name = nextName;
+                        activeFriendChat.avatar = nextAvatar;
+                        const nameEl = document.getElementById('friend-chat-name');
+                        const avatarEl = document.getElementById('friend-chat-avatar');
+                        if (nameEl) nameEl.textContent = nextName;
+                        if (avatarEl) avatarEl.src = nextAvatar;
+                        try { delete friendProfileCache[String(fid)]; } catch (e) { }
+                    }
+
+                    if (row.id === me) {
+                        const nextMyAvatar = row.avatar_url || avatarFromEmail(row.email || me);
+                        window.currentUserAvatarUrl = nextMyAvatar;
+                        // Update topbar + home create avatar immediately so my bubbles update too
+                        document.querySelectorAll('#user-avatar, #home-create-avatar').forEach(img => {
+                            if (img) img.src = nextMyAvatar;
+                        });
+                        const profileViewAvatar = document.getElementById('profile-view-avatar');
+                        if (profileViewAvatar) profileViewAvatar.src = nextMyAvatar;
+                        try { delete friendProfileCache[String(me)]; } catch (e) { }
+                    }
+
+                    // re-render bubbles (mine uses currentUserAvatarUrl; theirs uses activeFriendChat.avatar)
+                    renderFriendChatMessages(friendChatMessages);
+                })
+                .subscribe();
         }
 
         window.openFriendChat = async (friendId, friendName, friendAvatar) => {
             if (!window.currentUserUid) return alert('Vui lòng đăng nhập để chat!');
-            activeFriendChat = { id: friendId, name: friendName || 'Bạn bè', avatar: friendAvatar || 'https://i.pravatar.cc/150?img=1' };
+            try { delete friendProfileCache[String(friendId)]; } catch (e) { }
+            activeFriendChat = { id: friendId, name: friendName || 'Bạn bè', avatar: friendAvatar || avatarFromEmail(friendId) };
 
             const modal = document.getElementById('friend-chat-modal');
             const panel = document.getElementById('friend-chat-panel');
@@ -6205,6 +6312,14 @@
             updateFriendUnreadBadge(friendId);
 
             setupFriendChatRealtime();
+            // Pull latest profile once to avoid stale avatar/name
+            try {
+                const prof = await getFriendProfile(friendId);
+                activeFriendChat.name = prof.name || activeFriendChat.name;
+                activeFriendChat.avatar = prof.avatar || activeFriendChat.avatar;
+                if (nameEl) nameEl.textContent = activeFriendChat.name;
+                if (avatarEl) avatarEl.src = activeFriendChat.avatar;
+            } catch (e) { /* ignore */ }
             await loadFriendMessages();
             const input = document.getElementById('friend-chat-input');
             if (input) input.focus();
@@ -6216,6 +6331,10 @@
             if (modal) {
                 if (panel) panel.classList.add('opacity-0', 'scale-95', 'translate-y-2');
                 setTimeout(() => modal.classList.add('hidden'), 200);
+            }
+            if (friendChatProfileChannel && window.supabaseClient) {
+                window.supabaseClient.removeChannel(friendChatProfileChannel);
+                friendChatProfileChannel = null;
             }
             activeFriendChat = null;
         };
@@ -6615,7 +6734,7 @@
                             username: email.split('@')[0] + Math.floor(Math.random() * 1000), // unique username
                             full_name: fullName,
                             email: email,
-                            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.id}`
+                            avatar_url: avatarFromEmail(email)
                         }]);
                         if (profileErr) console.warn("Profile creation warn:", profileErr);
                         handleLoginSuccess(data.user);
@@ -6647,19 +6766,20 @@
             hideAuthModal();
 
             const dispName = user.user_metadata?.full_name || user.email.split('@')[0];
-            const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`;
+            const avatar = avatarFromEmail(user.email || user.id);
 
             // Sync UI Display globals
             document.querySelectorAll('#user-display').forEach(el => el.innerText = dispName);
             document.querySelectorAll('#user-avatar, #home-create-avatar').forEach(img => img.src = avatar);
+            window.currentUserAvatarUrl = avatar;
 
             // Sync email to profiles table for searchability (UPSERT - create if missing)
             if (window.supabaseClient) {
+                // Do not force avatar_url here: default avatar is derived from email.
                 window.supabaseClient.from('profiles').upsert({
                     id: user.id,
                     email: user.email,
                     full_name: dispName,
-                    avatar_url: avatar,
                     username: user.email.split('@')[0] + Math.floor(Math.random() * 100)
                 }, { onConflict: 'id' }).then(res => {
                     if (res.error) console.warn('Profile sync error:', res.error);
@@ -6682,6 +6802,7 @@
             // Setup Realtime after login
             if (typeof setupRealtimeNewsfeed !== 'undefined') setupRealtimeNewsfeed();
             if (typeof startNotificationsEngine !== 'undefined') startNotificationsEngine();
+            if (typeof startProfileRealtimeSync !== 'undefined') startProfileRealtimeSync();
 
             // Hydrate Profile View
             if (typeof loadUserProfile !== 'undefined') loadUserProfile();
@@ -6703,7 +6824,7 @@
 
             let name = user.user_metadata?.full_name || user.email.split('@')[0];
             let email = user.email;
-            let avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`;
+            let avatar = avatarFromEmail(email || user.id);
             let dob = "";
 
             try {
@@ -6752,6 +6873,7 @@
 
             const userTopAvatar = document.querySelectorAll('#user-avatar, #home-create-avatar');
             userTopAvatar.forEach(img => img.src = avatar);
+            window.currentUserAvatarUrl = avatar;
         };
 
         window.saveUserProfile = async (event) => {
@@ -7078,7 +7200,7 @@
                 <div class="glass-card rounded-2xl border border-white/10 shadow-lg hover:border-white/20 transition-all overflow-hidden" id="post-${post.id}">
                     <!-- Header: Avatar + Name + Time -->
                     <div class="flex items-center gap-3 p-4 pb-2">
-                        <img src="${post.author.avatar}" class="w-10 h-10 rounded-full border-2 border-white/10 object-cover flex-shrink-0 cursor-pointer hover:border-primary/50 transition-colors">
+                        <img data-author-id="${post.authorId || ''}" src="${post.author.avatar}" class="w-10 h-10 rounded-full border-2 border-white/10 object-cover flex-shrink-0 cursor-pointer hover:border-primary/50 transition-colors">
                         <div class="flex-1 min-w-0">
                             <h4 class="text-[13px] font-bold text-white hover:underline cursor-pointer">${post.author.name}</h4>
                             <div class="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
@@ -7187,11 +7309,12 @@
                     reqContainerBox.classList.remove('hidden');
                     reqCount.innerText = requests.length;
                     reqContainer.innerHTML = requests.map(req => {
-                        const sender = profileMap[req.sender_id] || { full_name: 'User', email: '...', avatar_url: '' };
+                        const sender = profileMap[req.sender_id] || { full_name: 'User', email: String(req.sender_id || ''), avatar_url: '' };
+                        const senderAvatar = sender.avatar_url || avatarFromEmail(sender.email || req.sender_id);
                         return `
                             <div class="flex items-center justify-between p-2 lg:p-2.5 bg-black/40 rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
                                 <div class="flex items-center gap-2 lg:gap-3 overflow-hidden pr-2">
-                                    <img src="${sender.avatar_url || 'https://i.pravatar.cc/150?img=1'}" class="w-8 h-8 rounded-full bg-white/10 border border-white/5 flex-shrink-0">
+                                    <img data-profile-id="${sender.id || req.sender_id}" src="${senderAvatar}" class="w-8 h-8 rounded-full bg-white/10 border border-white/5 flex-shrink-0 object-cover">
                                     <div class="min-w-0 flex-1">
                                         <p class="text-[11px] lg:text-[12px] text-white font-bold truncate">${sender.full_name}</p>
                                         <p class="text-[9px] text-slate-500 truncate">${sender.email}</p>
@@ -7236,16 +7359,16 @@
 
                 if (friends.length > 0) {
                     friendList.innerHTML = friends.map(f => `
-                        <div onclick="openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || 'https://i.pravatar.cc/150?img=1').replace(/'/g, "\\'")}')" class="flex items-center gap-3 p-2.5 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5 transition-all cursor-pointer group">
+                        <div onclick="openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || avatarFromEmail(f.email || f.id)).replace(/'/g, "\\'")}')" class="flex items-center gap-3 p-2.5 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5 transition-all cursor-pointer group">
                             <div class="relative flex-shrink-0">
-                                <img src="${f.avatar_url || 'https://i.pravatar.cc/150?img=1'}" class="w-10 h-10 rounded-full border border-white/5 object-cover">
+                                <img data-profile-id="${f.id}" src="${f.avatar_url || avatarFromEmail(f.email || f.id)}" class="w-10 h-10 rounded-full border border-white/5 object-cover">
                                 <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-bg-dark rounded-full shadow-sm"></span>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-[13px] text-white font-bold group-hover:text-primary transition-colors truncate">${f.full_name}</p>
                                 <p class="text-[10px] text-slate-500 truncate font-medium">${f.email}</p>
                             </div>
-                            <button onclick="event.stopPropagation(); openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || 'https://i.pravatar.cc/150?img=1').replace(/'/g, "\\'")}')" class="relative w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
+                            <button onclick="event.stopPropagation(); openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || avatarFromEmail(f.email || f.id)).replace(/'/g, "\\'")}')" class="relative w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
                                 <span class="material-icons-round text-[15px]">chat</span>
                                 <span id="friend-unread-${f.id}" class="hidden absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none flex items-center justify-center">0</span>
                             </button>
@@ -7522,7 +7645,9 @@
             if (!text) return;
 
             const userName = document.querySelector('#user-display')?.textContent || 'Bạn';
-            const userAvatar = document.querySelector('#user-avatar')?.src || 'https://i.pravatar.cc/150?img=1';
+            const userAvatar = (typeof window.currentUserAvatarUrl === 'string' && window.currentUserAvatarUrl)
+                ? window.currentUserAvatarUrl
+                : (document.querySelector('#user-avatar')?.src || avatarFromEmail(document.getElementById('user-email-display')?.textContent || window.currentUserUid));
             const newComment = {
                 post_id: id,
                 user_id: window.currentUserUid,
