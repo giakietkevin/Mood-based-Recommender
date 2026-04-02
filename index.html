@@ -23,6 +23,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <!-- MediaPipe for Background Removal -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -31,7 +32,7 @@
             darkMode: "class",
             theme: {
                 extend: {
-                    colors: { primary: "#C6A87C", "bg-dark": "#0A0A0A" },
+                    colors: { primary: "var(--primary, #C6A87C)", "bg-dark": "#0A0A0A" },
                     fontFamily: { sans: ["Inter", "sans-serif"], display: ["Outfit", "sans-serif"] },
                 },
             },
@@ -39,8 +40,20 @@
     </script>
 
     <style type="text/tailwindcss">
+        :root {
+            --primary: #C6A87C;
+        }
         html { -webkit-text-size-adjust: 100%; }
-        body { background-color: #090A0C; color: #e2e8f0; overscroll-behavior-y: none; min-height: 100vh; min-height: 100dvh; overflow-x: hidden; }
+        body { 
+            background-color: #090A0C; 
+            color: #e2e8f0; 
+            overscroll-behavior-y: none; 
+            min-height: 100vh; 
+            min-height: 100dvh; 
+            overflow-x: hidden; 
+            transition: background-color 0.8s ease-in-out;
+            background-attachment: fixed;
+        }
         .safe-nav-pad { padding-top: max(0.75rem, env(safe-area-inset-top)); }
         .pb-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
         .mb-player-safe { margin-bottom: env(safe-area-inset-bottom, 0px); }
@@ -54,13 +67,63 @@
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
 
-        /* Chips / Tags */
+        /* Chips / Tags (No @apply) */
         .chip-option { 
-            @apply px-3 py-1.5 rounded-lg text-[11px] font-bold border border-white/10 text-slate-400 bg-white/5 cursor-pointer hover:bg-white/10 whitespace-nowrap transition-all select-none; 
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .chip-option:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
         .chip-option.active { 
-            @apply bg-primary text-[#0a0a0a] border-primary shadow-lg shadow-primary/30; 
+            background-color: var(--primary);
+            color: #0a0a0a;
+            border-color: var(--primary);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
+
+        /* Badge Styles (No @apply) */
+        .badge-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+            cursor: help;
+            position: relative;
+        }
+        .badge-card:hover {
+            transform: scale(1.1);
+        }
+        .badge-card.locked {
+            filter: grayscale(1);
+            opacity: 0.3;
+        }
+        .badge-card .badge-icon {
+            font-size: 1.875rem;
+            margin-bottom: 0.25rem;
+            transition: transform 0.3s;
+        }
+        .badge-card:hover .badge-icon {
+            transform: rotate(12deg);
+        }
+        
+        .badge-glow { box-shadow: 0 0 20px -5px var(--primary); }
+        .xp-bar-inner { transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
         /* Scrollbar An/Hien */
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -68,40 +131,30 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
-        @keyframes flash {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
-        }
+        @keyframes flash { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
         .animate-flash { animation: flash 0.3s ease-out; }
 
-        @keyframes countdown-pop {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 0; }
-        }
+        @keyframes countdown-pop { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
         .animate-countdown { animation: countdown-pop 1s ease-in-out forwards; }
 
-        .pb-layout-btn.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.2); }
-        .pb-filter-btn.active { background: var(--primary); border-color: var(--primary); }
+        .pb-layout-btn.active { border-color: var(--primary); background: rgba(198, 168, 124, 0.2); }
+        .pb-filter-btn.active { background-color: var(--primary); border-color: var(--primary); }
 
         .filter-bw { filter: grayscale(1); }
         .filter-vintage { filter: sepia(0.5) contrast(1.2) brightness(0.9); }
         .filter-bright { filter: brightness(1.2) contrast(1.1) saturate(1.1); }
         .filter-cold { filter: hue-rotate(180deg) saturate(0.8) brightness(1.1); }
 
-        .shadow-2xl-primary { box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.4); }
-
         /* Sliders */
-        input[type=range] { -webkit-appearance: none; background: transparent; cursor: pointer; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #C6A87C; margin-top: -6px; border: 2px solid white; box-shadow: 0 0 10px rgba(198,168,124,0.3); }
+        input[type=range] { -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--primary); margin-top: -6px; border: 2px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; }
 
         /* Animation */
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
         
-        .scan-line { height: 2px; background: linear-gradient(to right, transparent, #C6A87C, transparent); position: absolute; width: 100%; top: 0; animation: scan 3s linear infinite; }
+        .scan-line { height: 2px; background: linear-gradient(to right, transparent, var(--primary), transparent); position: absolute; width: 100%; top: 0; animation: scan 3s linear infinite; }
         @keyframes scan { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
 
         /* Gacha Animation */
@@ -1888,14 +1941,33 @@
                             </p>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-2 gap-3 mb-6">
                             <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
                                 <p id="profile-stat-songs" class="text-xl font-black text-primary leading-none">0</p>
                                 <p class="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-1">Songs</p>
                             </div>
                             <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
-                                <p id="profile-stat-joined" class="text-xl font-black text-white leading-none">2026</p>
-                                <p class="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-1">Joined</p>
+                                <p id="profile-stat-xp" class="text-xl font-black text-white leading-none">0</p>
+                                <p class="text-[8px] text-slate-500 uppercase font-bold tracking-widest mt-1">Total XP</p>
+                            </div>
+                        </div>
+
+                        <!-- Level & XP Bar -->
+                        <div class="space-y-2 mb-8">
+                            <div class="flex justify-between items-end px-1">
+                                <span class="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Level <span id="profile-level">1</span></span>
+                                <span class="text-[9px] font-bold text-slate-500"><span id="profile-xp-current">0</span> / <span id="profile-xp-next">100</span> XP</span>
+                            </div>
+                            <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                <div id="profile-xp-bar" class="xp-bar-inner h-full bg-primary shadow-[0_0_15px_rgba(198,168,124,0.5)]" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Badge Section -->
+                        <div class="space-y-4">
+                            <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] text-left px-1">Huy chương đạt được</h4>
+                            <div id="profile-badges-grid" class="grid grid-cols-3 gap-3">
+                                <!-- Badges will be injected here -->
                             </div>
                         </div>
                     </div>
@@ -2220,6 +2292,47 @@
             initUI(); // Re-render
         };
 
+        // Global helper for PiP Logic
+        window.attemptSmartPiP = async (videoEl) => {
+            if (!videoEl || videoEl.paused || !document.pictureInPictureEnabled) {
+                if (videoEl && !videoEl.paused) videoEl.pause();
+                return;
+            }
+            try {
+                if (document.pictureInPictureElement !== videoEl) {
+                    await videoEl.requestPictureInPicture();
+                }
+            } catch (e) {
+                console.warn("PiP failed, pausing video as fallback", e);
+                videoEl.pause();
+            }
+        };
+
+        window.exitSmartPiP = async () => {
+             if (document.pictureInPictureElement) {
+                try { await document.exitPictureInPicture(); } catch (e) {}
+             }
+        };
+
+        // Listen for Browser Tab Switching (External)
+        document.addEventListener('visibilitychange', () => {
+            const filmVideo = document.getElementById('film-video-player');
+            const legacyVideo = document.getElementById('video-player');
+            const activeVideo = (filmVideo && !filmVideo.paused) ? filmVideo : (legacyVideo && !legacyVideo.paused ? legacyVideo : null);
+
+            if (document.visibilityState === 'hidden') {
+                // User left the browser tab entirely
+                if (activeVideo) window.attemptSmartPiP(activeVideo);
+            } else {
+                // User came back to the browser tab
+                // If they are on the film view, exit PiP
+                const currentView = Array.from(document.querySelectorAll('[id^="view-"]')).find(v => !v.classList.contains('hidden'))?.id;
+                if (currentView === 'view-film') {
+                    window.exitSmartPiP();
+                }
+            }
+        });
+
         window.showView = (viewName) => {
             const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'guide'];
             views.forEach(v => {
@@ -2241,26 +2354,14 @@
                 activeNav.classList.remove('text-slate-400');
             }
             
-            // Smart PiP Management for Videos
+            // Smart PiP Management for Internal Navigation
             if (viewName !== 'film') {
-                const attemptPiP = (videoEl) => {
-                    if (videoEl && !videoEl.paused) {
-                        if (document.pictureInPictureEnabled) {
-                            videoEl.requestPictureInPicture().catch(() => {
-                                videoEl.pause(); // Fallback if API restricted
-                            });
-                        } else {
-                            videoEl.pause();
-                        }
-                    }
-                };
-                attemptPiP(document.getElementById('film-video-player'));
-                attemptPiP(document.getElementById('video-player')); // Legacy P2P video
+                const filmVideo = document.getElementById('film-video-player');
+                const legacyVideo = document.getElementById('video-player');
+                if (filmVideo && !filmVideo.paused) window.attemptSmartPiP(filmVideo);
+                else if (legacyVideo && !legacyVideo.paused) window.attemptSmartPiP(legacyVideo);
             } else {
-                // If switching BACK to the Film tab, elegantly exit PiP
-                if (document.pictureInPictureElement) {
-                    document.exitPictureInPicture().catch(console.warn);
-                }
+                window.exitSmartPiP();
             }
 
             // Camera Management
@@ -2450,6 +2551,9 @@
 
                     // Load and play
                     await loadMySongs();
+                    
+                    // Track Stat
+                    trackActivity('songs_generated');
 
                     // Auto-play after a short delay
                     setTimeout(() => {
@@ -2624,7 +2728,103 @@
                     playIcon.innerText = "pause";
                 }
             }
+            
+            // Adaptive Vibe Update
+            updateUITheme(pThumb.src);
+            
+            // Achievement Track: Watch/Listen
+            trackActivity('consume_media');
         }
+
+        const colorThief = new ColorThief();
+        window.updateUITheme = async (imgUrl) => {
+            if (!imgUrl || imgUrl.includes('placeholder')) return;
+            
+            const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(imgUrl)}&w=100`;
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.src = proxyUrl;
+            
+            img.onload = () => {
+                try {
+                    const color = colorThief.getColor(img);
+                    
+                    // --- COLOR BOOST MAGIC ---
+                    // Convert RGB to HSL, boost Saturation, then back to RGB
+                    const rgbToHsl = (r, g, b) => {
+                        r /= 255; g /= 255; b /= 255;
+                        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+                        let h, s, l = (max + min) / 2;
+                        if (max === min) h = s = 0;
+                        else {
+                            const d = max - min;
+                            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                            switch (max) {
+                                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                                case g: h = (b - r) / d + 2; break;
+                                case b: h = (r - g) / d + 4; break;
+                            }
+                            h /= 6;
+                        }
+                        return [h, s, l];
+                    };
+                    const hslToRgb = (h, s, l) => {
+                        let r, g, b;
+                        if (s === 0) r = g = b = l;
+                        else {
+                            const hue2rgb = (p, q, t) => {
+                                if (t < 0) t += 1; if (t > 1) t -= 1;
+                                if (t < 1/6) return p + (q - p) * 6 * t;
+                                if (t < 1/2) return q;
+                                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                                return p;
+                            };
+                            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                            const p = 2 * l - q;
+                            r = hue2rgb(p, q, h + 1/3);
+                            g = hue2rgb(p, q, h);
+                            b = hue2rgb(p, q, h - 1/3);
+                        }
+                        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+                    };
+
+                    const [h, s, l] = rgbToHsl(color[0], color[1], color[2]);
+                    // Boost saturation and fix brightness for a deep cinematic look
+                    const boostedS = Math.min(1, s * 2.2); 
+                    const cinematicL = 0.04; // Very dark for body bg
+                    const glowL = 0.15; // Slightly brighter for the top glow
+                    
+                    const [br, bg, bb] = hslToRgb(h, boostedS, 0.5); // Rich accent color
+                    const [bgr, bgg, bgb] = hslToRgb(h, boostedS * 0.5, cinematicL); // Dark themed background
+                    const [glr, glg, glb] = hslToRgb(h, boostedS, glowL); // Themed glow
+                    
+                    const accentRgb = `rgb(${br}, ${bg}, ${bb})`;
+                    const bgRgb = `rgb(${bgr}, ${bgg}, ${bgb})`;
+                    const glowRgba = `rgba(${glr}, ${glg}, glb, 0.6)`;
+                    
+                    document.documentElement.style.setProperty('--primary', accentRgb);
+                    
+                    // Transformation: Change the WHOLE body background to match the theme
+                    document.body.style.backgroundColor = bgRgb;
+                    document.body.style.backgroundImage = `radial-gradient(circle at 50% -20%, ${glowRgba} 0%, transparent 75%)`;
+                    
+                    // Update Glass Cards for extra immersion
+                    const glassRgba = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.05)`;
+                    document.querySelectorAll('.glass-card').forEach(card => {
+                        card.style.backgroundColor = glassRgba;
+                        card.style.borderColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.15)`;
+                    });
+                    
+                    const nav = document.querySelector('nav');
+                    if (nav) {
+                        nav.style.backgroundColor = `rgba(${bgr}, ${bgg}, ${bgb}, 0.8)`;
+                        nav.style.boxShadow = `0 10px 60px -15px ${accentRgb}`;
+                    }
+                } catch (e) {
+                    console.warn("Color extraction failed:", e);
+                }
+            };
+        };
 
         function toggleMainPlay() {
             const playIcon = document.getElementById('play-icon');
@@ -5916,6 +6116,9 @@
                 mediaInput.value = '';
                 document.getElementById('home-post-media-container').classList.add('hidden');
                 
+                // Track Stat
+                trackActivity('posts_created');
+                
                 // Real-time listener will handle the update
             } catch (e) {
                 alert("Lỗi khi đăng bài: " + e.message);
@@ -5940,6 +6143,9 @@
                             .eq('id', id);
                     }
                 }
+                
+                // Track Stat
+                trackActivity('likes_given');
             } catch (e) {
                 console.error("Like error:", e);
             }
@@ -6004,6 +6210,102 @@
 
             if (contentInput) contentInput.focus();
         };
+        // --- GAMIFICATION LOGIC (NEW) ---
+        let userStats = {
+            xp: 0,
+            songs_generated: 0,
+            consume_media: 0,
+            posts_created: 0,
+            likes_given: 0,
+            photos_taken: 0,
+            badges: []
+        };
+
+        const BADGE_DEFS = [
+            { id: 'melody_master', name: 'Melody Master', icon: '🎵', desc: 'Sáng tác 5 bài hát', goal: 5, category: 'songs_generated' },
+            { id: 'night_owl', name: 'Cú Đêm', icon: '🦉', desc: 'Thưởng thức 10 tác phẩm', goal: 10, category: 'consume_media' },
+            { id: 'super_model', name: 'Super Model', icon: '📸', desc: 'Chụp 3 album ảnh', goal: 3, category: 'photos_taken' },
+            { id: 'social_star', name: 'Ngôi Sao Phố', icon: '✨', desc: 'Đăng 3 bài viết', goal: 3, category: 'posts_created' },
+            { id: 'heart_breaker', name: 'Người Lan Tỏa', icon: '❤️', desc: 'Thả 5 tim', goal: 5, category: 'likes_given' }
+        ];
+
+        window.trackActivity = (type, amount = 1) => {
+            if (!userStats.hasOwnProperty(type)) userStats[type] = 0;
+            userStats[type] += amount;
+            const xpGain = (type === 'songs_generated') ? 50 : (type === 'photos_taken' ? 30 : 10);
+            window.addXP(xpGain);
+            window.checkAchievements();
+        };
+
+        window.addXP = (amount) => {
+            userStats.xp += amount;
+            window.renderUserLeveling();
+        };
+
+        window.renderUserLeveling = () => {
+            const level = Math.floor(userStats.xp / 100) + 1;
+            const currentLevelXP = userStats.xp % 100;
+            
+            const xpBar = document.getElementById('profile-xp-bar');
+            const levelText = document.getElementById('profile-level');
+            const currentXPText = document.getElementById('profile-xp-current');
+            const nextXPText = document.getElementById('profile-xp-next');
+            const totalXPText = document.getElementById('profile-stat-xp');
+
+            if (xpBar) xpBar.style.width = `${currentLevelXP}%`;
+            if (levelText) levelText.innerText = level;
+            if (currentXPText) currentXPText.innerText = currentLevelXP;
+            if (nextXPText) nextXPText.innerText = 100;
+            if (totalXPText) totalXPText.innerText = userStats.xp;
+        };
+
+        window.checkAchievements = () => {
+            let newlyUnlocked = false;
+            BADGE_DEFS.forEach(b => {
+                if (!userStats.badges.includes(b.id) && userStats[b.category] >= b.goal) {
+                    userStats.badges.push(b.id);
+                    newlyUnlocked = true;
+                    window.showAchievementToast(b);
+                }
+            });
+            if (newlyUnlocked) window.renderBadges();
+        };
+
+        window.showAchievementToast = (badge) => {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-24 left-1/2 -translate-x-1/2 z-[300] glass-card badge-glow border-primary/50 p-6 rounded-[3rem] animate-countdown flex items-center gap-6 shadow-2xl';
+            toast.innerHTML = `
+                <div class="text-5xl drop-shadow-lg">${badge.icon}</div>
+                <div class="text-left">
+                    <p class="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1">Achievement Unlocked!</p>
+                    <p class="text-white font-black text-xl uppercase italic tracking-tighter">${badge.name}</p>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        };
+
+        window.renderBadges = () => {
+            const grid = document.getElementById('profile-badges-grid');
+            if (!grid) return;
+            
+            grid.innerHTML = BADGE_DEFS.map(b => {
+                const isLocked = !userStats.badges.includes(b.id);
+                return `
+                    <div class="badge-card ${isLocked ? 'locked' : 'badge-glow border-primary/30'}" title="${b.desc}">
+                        <span class="badge-icon">${b.icon}</span>
+                        <span class="text-[8px] font-bold text-white uppercase tracking-tighter text-center leading-tight">${b.name}</span>
+                        ${!isLocked ? '<div class="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-[#090A0C] flex items-center justify-center"><span class="material-icons-round text-[8px] text-black">check</span></div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        };
+
+        // Initial render for Gamification
+        document.addEventListener('DOMContentLoaded', () => {
+            window.renderBadges();
+            window.renderUserLeveling();
+        });
     </script>
 </body>
 
