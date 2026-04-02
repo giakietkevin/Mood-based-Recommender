@@ -5351,7 +5351,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             initUI();
-            showView('dashboard');
+            showView('home');
         });
 
     </script>
@@ -5540,9 +5540,10 @@
             const rows = messages || [];
             box.innerHTML = rows.map((m, idx) => {
                 const mine = m.sender_id === window.currentUserUid;
+                const myAvatarFallback = avatarFromEmail(document.getElementById('user-email-display')?.textContent || window.currentUserUid);
                 const senderAvatar = mine
-                    ? (document.getElementById('user-avatar')?.src || 'https://i.pravatar.cc/150?img=1')
-                    : (activeFriendChat?.avatar || 'https://i.pravatar.cc/150?img=1');
+                    ? (document.getElementById('user-avatar')?.src || myAvatarFallback)
+                    : (activeFriendChat?.avatar || avatarFromEmail(activeFriendChat?.id));
                 const next = rows[idx + 1];
                 const thisTs = m.created_at ? new Date(m.created_at) : null;
                 const nextTs = next?.created_at ? new Date(next.created_at) : null;
@@ -5582,7 +5583,7 @@
                 const safeId = String(n.id).replace(/'/g, "\\'");
                 if (n.type === 'friend_message') {
                     const name = n.friendName || 'Bạn bè';
-                    const avatar = n.friendAvatar || 'https://i.pravatar.cc/150?img=1';
+                    const avatar = n.friendAvatar || avatarFromEmail(n.friendId || n.friendName);
                     const preview = n.preview || n.text || 'Bạn có tin nhắn mới.';
                     return `
                         <div
@@ -5691,7 +5692,7 @@
             const host = ensureMessageToastHost();
             const friendId = notifItem.friendId ? String(notifItem.friendId) : '';
             const name = notifItem.friendName || 'Tin nhắn';
-            const avatar = notifItem.friendAvatar || 'https://i.pravatar.cc/150?img=1';
+            const avatar = notifItem.friendAvatar || avatarFromEmail(notifItem.friendId || notifItem.friendName);
             const preview = notifItem.preview || notifItem.text || 'Bạn có tin nhắn mới.';
 
             // Aggregate by friend within the toast lifetime
@@ -5776,10 +5777,16 @@
                 .replaceAll("'", '&#039;');
         }
 
+        function avatarFromEmail(email, size = 128) {
+            const seed = encodeURIComponent(String(email || '').trim().toLowerCase() || 'user');
+            // Deterministic, non-human placeholder avatar (no fake faces)
+            return `https://api.dicebear.com/7.x/identicon/svg?seed=${seed}&size=${Number(size) || 128}`;
+        }
+
         const friendProfileCache = {};
         async function getFriendProfile(friendId) {
             const fid = String(friendId || '');
-            if (!fid) return { name: 'Bạn bè', avatar: 'https://i.pravatar.cc/150?img=1' };
+            if (!fid) return { name: 'Bạn bè', avatar: avatarFromEmail('friend') };
             if (friendProfileCache[fid]) return friendProfileCache[fid];
 
             // Try from current rendered buddy list (if any)
@@ -5787,7 +5794,10 @@
                 const existing = (typeof homeFriends !== 'undefined' ? (homeFriends || []) : []);
                 const match = existing.find(f => String(f.id) === fid);
                 if (match) {
-                    const prof = { name: match.name || match.full_name || 'Bạn bè', avatar: match.avatar || match.avatar_url || 'https://i.pravatar.cc/150?img=1' };
+                    const prof = {
+                        name: match.name || match.full_name || 'Bạn bè',
+                        avatar: match.avatar || match.avatar_url || avatarFromEmail(match.email || fid)
+                    };
                     friendProfileCache[fid] = prof;
                     return prof;
                 }
@@ -5798,19 +5808,19 @@
                 try {
                     const { data } = await window.supabaseClient
                         .from('profiles')
-                        .select('id, full_name, avatar_url')
+                        .select('id, full_name, avatar_url, email')
                         .eq('id', fid)
                         .maybeSingle();
                     const prof = {
                         name: data?.full_name || 'Bạn bè',
-                        avatar: data?.avatar_url || 'https://i.pravatar.cc/150?img=1'
+                        avatar: data?.avatar_url || avatarFromEmail(data?.email || fid)
                     };
                     friendProfileCache[fid] = prof;
                     return prof;
                 } catch (e) { /* ignore */ }
             }
 
-            const fallback = { name: 'Bạn bè', avatar: 'https://i.pravatar.cc/150?img=1' };
+            const fallback = { name: 'Bạn bè', avatar: avatarFromEmail(fid) };
             friendProfileCache[fid] = fallback;
             return fallback;
         }
@@ -7315,7 +7325,7 @@
                 const authorIds = [...new Set(filteredPosts.map(p => p.author_id))];
                 const { data: authors } = await window.supabaseClient
                     .from('profiles')
-                    .select('id, full_name, avatar_url')
+                    .select('id, full_name, avatar_url, email')
                     .in('id', authorIds);
 
                 const authorMap = {};
@@ -7331,7 +7341,7 @@
                         authorId: p.author_id,
                         author: {
                             name: authorMap[p.author_id]?.full_name || 'User',
-                            avatar: authorMap[p.author_id]?.avatar_url || 'https://i.pravatar.cc/150?img=1'
+                            avatar: authorMap[p.author_id]?.avatar_url || avatarFromEmail(authorMap[p.author_id]?.email || p.author_id)
                         },
                         content: p.content,
                         media: p.media_url,
