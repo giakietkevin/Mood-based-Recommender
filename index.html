@@ -2241,15 +2241,25 @@
                 activeNav.classList.remove('text-slate-400');
             }
             
-            // Auto-pause film if switching away from Film tab
+            // Smart PiP Management for Videos
             if (viewName !== 'film') {
-                const filmPlayer = document.getElementById('film-video-player');
-                if (filmPlayer && typeof filmPlayer.pause === 'function') {
-                    filmPlayer.pause();
-                }
-                const legacyVideo = document.getElementById('video-player');
-                if (legacyVideo && typeof legacyVideo.pause === 'function') {
-                    legacyVideo.pause();
+                const attemptPiP = (videoEl) => {
+                    if (videoEl && !videoEl.paused) {
+                        if (document.pictureInPictureEnabled) {
+                            videoEl.requestPictureInPicture().catch(() => {
+                                videoEl.pause(); // Fallback if API restricted
+                            });
+                        } else {
+                            videoEl.pause();
+                        }
+                    }
+                };
+                attemptPiP(document.getElementById('film-video-player'));
+                attemptPiP(document.getElementById('video-player')); // Legacy P2P video
+            } else {
+                // If switching BACK to the Film tab, elegantly exit PiP
+                if (document.pictureInPictureElement) {
+                    document.exitPictureInPicture().catch(console.warn);
                 }
             }
 
