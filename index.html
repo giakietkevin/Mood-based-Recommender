@@ -205,6 +205,22 @@
 
                 <!-- User Account (Far Right) -->
                 <div class="relative flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <div class="relative">
+                        <button id="notif-btn" onclick="toggleNotificationsDropdown(event)"
+                            class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-all flex items-center justify-center relative">
+                            <span class="material-icons-round text-[18px]">notifications</span>
+                            <span id="notif-badge"
+                                class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">0</span>
+                        </button>
+                        <div id="notif-dropdown"
+                            class="absolute top-full right-0 mt-3 w-80 max-w-[calc(100vw-24px)] glass-card rounded-2xl border border-white/10 shadow-2xl opacity-0 pointer-events-none translate-y-2 transition-all duration-300 z-[160] overflow-hidden">
+                            <div class="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                                <p class="text-[11px] text-white font-black uppercase tracking-widest">Thông báo</p>
+                                <button onclick="markAllNotificationsRead()" class="text-[10px] text-primary font-bold">Đánh dấu đã đọc</button>
+                            </div>
+                            <div id="notif-list" class="max-h-80 overflow-y-auto custom-scrollbar p-2 space-y-1"></div>
+                        </div>
+                    </div>
                     <!-- Watch Party Quick Access -->
                     <div id="nav-party-status"
                         class="hidden sm:flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-3 py-1.5 animate-pulse">
@@ -5475,9 +5491,14 @@
     <script>
         let aiChatHistory = [];
         let activeFriendChat = null;
+        let friendChatMessages = [];
         let friendChatRealtimeChannel = null;
         let friendChatDragState = { active: false, offsetX: 0, offsetY: 0 };
         let friendChatMinimized = false;
+        let myPostIds = new Set();
+        let appNotifications = JSON.parse(localStorage.getItem('app_notifications') || '[]');
+        let unreadNotifications = Number(localStorage.getItem('app_notifications_unread') || 0);
+        let globalRealtimeChannel = null;
 
         function toggleAiChat(forceOpen = false) {
             const windowEl = document.getElementById('ai-chat-window');
@@ -5527,6 +5548,198 @@
                 `;
             }).join('');
             box.scrollTop = box.scrollHeight;
+        }
+
+        function renderNotifications() {
+            const badge = document.getElementById('notif-badge');
+            const list = document.getElementById('notif-list');
+            if (badge) {
+                badge.textContent = unreadNotifications > 99 ? '99+' : String(unreadNotifications);
+                badge.classList.toggle('hidden', unreadNotifications <= 0);
+            }
+            if (!list) return;
+            if (!appNotifications.length) {
+                list.innerHTML = `<p class="text-xs text-slate-500 p-3 text-center">Chưa có thông báo nào.</p>`;
+                return;
+            }
+            list.innerHTML = appNotifications.slice(0, 40).map(n => `
+                <div
+                    onclick="openNotification('${String(n.id).replace(/'/g, "\\'")}')"
+                    role="button"
+                    class="p-2.5 rounded-xl cursor-pointer select-none ${n.read ? 'bg-white/5' : 'bg-primary/10 border border-primary/20'} hover:bg-white/10 transition-colors"
+                >
+                    <p class="text-[11px] text-white leading-relaxed">${n.text}</p>
+                    <p class="text-[10px] text-slate-500 mt-1">${new Date(n.created_at).toLocaleString()}</p>
+                </div>
+            `).join('');
+        }
+
+        function persistNotifications() {
+            localStorage.setItem('app_notifications', JSON.stringify(appNotifications.slice(0, 100)));
+            localStorage.setItem('app_notifications_unread', String(unreadNotifications));
+        }
+
+        function pushNotification(payload) {
+            const text = typeof payload === 'string' ? payload : payload?.text;
+            if (!text) return;
+            const item = {
+                id: `n_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+                text,
+                created_at: new Date().toISOString(),
+                read: false,
+                type: typeof payload === 'string' ? 'generic' : (payload?.type || 'generic'),
+                friendId: typeof payload === 'string' ? null : (payload?.friendId || null),
+                friendName: typeof payload === 'string' ? null : (payload?.friendName || null),
+                friendAvatar: typeof payload === 'string' ? null : (payload?.friendAvatar || null),
+                postId: typeof payload === 'string' ? null : (payload?.postId || null),
+                action: typeof payload === 'string' ? null : (payload?.action || null)
+            };
+            appNotifications.unshift(item);
+            unreadNotifications += 1;
+            persistNotifications();
+            renderNotifications();
+            showSuccessToast(text);
+        }
+
+        async function openNotification(notificationId) {
+            const notif = appNotifications.find(n => n.id === notificationId);
+            if (!notif) return;
+
+            // mark read
+            if (!notif.read) {
+                notif.read = true;
+                unreadNotifications = Math.max(0, unreadNotifications - 1);
+                persistNotifications();
+                renderNotifications();
+            }
+
+            // route
+            if (notif.type === 'friend_message') {
+                if (!notif.friendId) return;
+                // Fetch friend profile if thiếu
+                if ((!notif.friendName || !notif.friendAvatar) && window.supabaseClient) {
+                    try {
+                        const { data } = await window.supabaseClient
+                            .from('profiles')
+                            .select('id, full_name, avatar_url')
+                            .eq('id', notif.friendId)
+                            .maybeSingle();
+                        notif.friendName = data?.full_name || notif.friendName || 'Bạn bè';
+                        notif.friendAvatar = data?.avatar_url || notif.friendAvatar || 'https://i.pravatar.cc/150?img=1';
+                    } catch (e) { /* ignore */ }
+                }
+                window.openFriendChat(notif.friendId, notif.friendName, notif.friendAvatar);
+                return;
+            }
+
+            if (notif.type === 'friend_request') {
+                // Show Buddy System and pending requests
+                showView('home');
+                setTimeout(() => renderBuddySystem(), 150);
+                return;
+            }
+
+            if (notif.type === 'post_like' || notif.type === 'post_share' || notif.type === 'post_comment') {
+                if (!notif.postId) return;
+                showView('home');
+                // Ensure feed rendered then scroll into view
+                setTimeout(() => {
+                    const el = document.getElementById(`post-${notif.postId}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.classList.add('border-primary/50');
+                        setTimeout(() => el.classList.remove('border-primary/50'), 1500);
+                    }
+                    if (notif.type === 'post_comment') {
+                        const section = document.getElementById(`comment-section-${notif.postId}`);
+                        if (section && section.classList.contains('hidden') && typeof window.toggleComment === 'function') {
+                            window.toggleComment(notif.postId);
+                        }
+                    }
+                }, 350);
+                return;
+            }
+        }
+
+        window.toggleNotificationsDropdown = (event) => {
+            if (event) event.stopPropagation();
+            const dd = document.getElementById('notif-dropdown');
+            if (!dd) return;
+            const open = !dd.classList.contains('opacity-0');
+            if (open) dd.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+            else dd.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+        };
+
+        window.markAllNotificationsRead = () => {
+            appNotifications = appNotifications.map(n => ({ ...n, read: true }));
+            unreadNotifications = 0;
+            persistNotifications();
+            renderNotifications();
+        };
+
+        async function refreshMyPostIds() {
+            if (!window.supabaseClient || !window.currentUserUid) return;
+            const { data } = await window.supabaseClient.from('posts').select('id').eq('author_id', window.currentUserUid);
+            myPostIds = new Set((data || []).map(p => p.id));
+        }
+
+        function setupGlobalRealtimeNotifications() {
+            if (!window.supabaseClient || !window.currentUserUid) return;
+            if (globalRealtimeChannel) {
+                window.supabaseClient.removeChannel(globalRealtimeChannel);
+                globalRealtimeChannel = null;
+            }
+            const me = window.currentUserUid;
+            globalRealtimeChannel = window.supabaseClient
+                .channel(`global-notifs-${me}-${Date.now()}`)
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'friend_messages' }, payload => {
+                    const row = payload.new;
+                    if (!row || row.receiver_id !== me) return;
+                    if (activeFriendChat?.id === row.sender_id) loadFriendMessages();
+                    pushNotification({
+                        type: 'friend_message',
+                        text: 'Bạn có tin nhắn mới.',
+                        friendId: row.sender_id
+                    });
+                })
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'friendships' }, payload => {
+                    const row = payload.new;
+                    if (!row) return;
+                    if (row.receiver_id === me && row.status === 'pending') pushNotification({
+                        type: 'friend_request',
+                        action: 'invite',
+                        text: 'Bạn có lời mời kết bạn mới.',
+                        friendId: row.sender_id
+                    });
+                })
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, payload => {
+                    const oldRow = payload.old;
+                    const row = payload.new;
+                    if (!row || !myPostIds.has(row.id) || row.author_id !== me) return;
+                    if ((row.likes || 0) > (oldRow.likes || 0)) pushNotification({
+                        type: 'post_like',
+                        action: 'like',
+                        text: 'Bài viết của bạn có lượt thích mới.',
+                        postId: row.id
+                    });
+                    if ((row.shares || 0) > (oldRow.shares || 0)) pushNotification({
+                        type: 'post_share',
+                        action: 'share',
+                        text: 'Bài viết của bạn vừa được chia sẻ.',
+                        postId: row.id
+                    });
+                })
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_comments' }, payload => {
+                    const row = payload.new;
+                    if (!row) return;
+                    if (myPostIds.has(row.post_id) && row.user_id !== me) pushNotification({
+                        type: 'post_comment',
+                        action: 'comment',
+                        text: 'Bài viết của bạn có bình luận mới.',
+                        postId: row.post_id
+                    });
+                })
+                .subscribe();
         }
 
         function startFriendChatDrag(clientX, clientY) {
@@ -5602,8 +5815,8 @@
                 console.warn('Friend chat load error:', error.message);
                 return;
             }
-
-            renderFriendChatMessages(data || []);
+            friendChatMessages = data || [];
+            renderFriendChatMessages(friendChatMessages);
         }
 
         function setupFriendChatRealtime() {
@@ -5676,14 +5889,16 @@
                 receiver_id: activeFriendChat.id,
                 content
             };
+            friendChatMessages.push({ ...payload, created_at: new Date().toISOString() });
+            renderFriendChatMessages(friendChatMessages);
+            if (input) input.value = '';
             const { error } = await window.supabaseClient.from('friend_messages').insert([payload]);
             if (error) {
                 alert('Gửi tin nhắn thất bại. Kiểm tra bảng friend_messages trên Supabase.');
                 console.warn('Friend chat send error:', error.message);
+                await loadFriendMessages();
                 return;
             }
-            if (input) input.value = '';
-            await loadFriendMessages();
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -5713,6 +5928,12 @@
             dragHandle.addEventListener('dblclick', (e) => {
                 if (e.target.closest('button')) return;
                 snapFriendChatToDefault();
+            });
+
+            renderNotifications();
+            document.addEventListener('click', () => {
+                const dd = document.getElementById('notif-dropdown');
+                if (dd) dd.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
             });
         });
 
@@ -6116,6 +6337,9 @@
 
             // Setup Realtime after login
             if (typeof setupRealtimeNewsfeed !== 'undefined') setupRealtimeNewsfeed();
+            if (typeof refreshMyPostIds !== 'undefined') refreshMyPostIds();
+            if (typeof setupGlobalRealtimeNotifications !== 'undefined') setupGlobalRealtimeNotifications();
+            if (typeof renderNotifications !== 'undefined') renderNotifications();
 
             // Hydrate Profile View
             if (typeof loadUserProfile !== 'undefined') loadUserProfile();
@@ -6756,6 +6980,7 @@
 
                 // Track Stat
                 trackActivity('posts_created');
+                refreshMyPostIds();
 
                 // Real-time listener will handle the update
             } catch (e) {
