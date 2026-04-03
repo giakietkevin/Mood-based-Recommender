@@ -8830,8 +8830,9 @@
                     <p class="text-[9px] font-black text-primary uppercase tracking-widest">Watch Party Active</p>
                     <p class="text-white font-bold text-xs">${text}</p>
                 </div>
-                ${canCopy ? `<button onclick="navigator.clipboard.writeText('${partyId}'); alert('Đã chép ID!')" class="p-2 bg-white/5 rounded-lg text-slate-400 hover:text-white"><span class="material-icons-round text-sm">content_copy</span></button>` : ''}
-                <button onclick="leaveParty()" class="p-2 bg-red-500/10 rounded-lg text-red-400 hover:bg-red-500 hover:text-white"><span class="material-icons-round text-sm">close</span></button>
+                ${canCopy ? `<button onclick="navigator.clipboard.writeText('${partyId}'); alert('Đã chép ID!')" class="p-2 bg-white/5 rounded-lg text-slate-400 hover:text-white" title="Copy ID"><span class="material-icons-round text-sm">content_copy</span></button>` : ''}
+                <button id="camera-toggle-btn" onclick="togglePartyCamera()" class="p-2 bg-primary/10 rounded-lg text-primary hover:bg-primary/30" title="Bật/tắt Camera"><span class="material-icons-round text-sm">videocam</span></button>
+                <button onclick="leaveParty()" class="p-2 bg-red-500/10 rounded-lg text-red-400 hover:bg-red-500 hover:text-white" title="Leave Party"><span class="material-icons-round text-sm">close</span></button>
             `;
             document.getElementById('party-status-overlay')?.remove();
             document.body.appendChild(overlay);
@@ -8858,6 +8859,33 @@
             partyId = null;
             document.getElementById('party-status-overlay')?.remove();
             alert("Đã rời phòng Party.");
+        };
+
+        window.togglePartyCamera = () => {
+            if (localStream) {
+                const videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.enabled = !videoTrack.enabled;
+                    const btn = document.getElementById('camera-toggle-btn');
+                    if (btn) {
+                        if (videoTrack.enabled) {
+                            btn.className = 'p-2 bg-primary/10 rounded-lg text-primary hover:bg-primary/30';
+                            btn.innerHTML = '<span class="material-icons-round text-sm">videocam</span>';
+                        } else {
+                            btn.className = 'p-2 bg-red-500/10 rounded-lg text-red-400 hover:bg-red-500/30 hover:text-white';
+                            btn.innerHTML = '<span class="material-icons-round text-sm">videocam_off</span>';
+                        }
+                    }
+                    
+                    ['party-mesh-grid', 'dashboard-party-mesh-grid'].forEach(gridId => {
+                        const localVid = document.getElementById(`video-${gridId}-peer-local`);
+                        if (localVid) {
+                            localVid.style.opacity = videoTrack.enabled ? '1' : '0.2';
+                            localVid.style.filter = videoTrack.enabled ? 'none' : 'grayscale(100%)';
+                        }
+                    });
+                }
+            }
         };
 
         let peers = {}; // id -> Peer instance
