@@ -268,11 +268,11 @@
                             </p>
                         </div>
                         <div class="p-2">
-                            <button onclick="showView('guide')"
+                            <button onclick="window.profileViewTargetUid=null;showView('guide')"
                                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition-all text-xs font-bold">
                                 <span class="material-icons-round text-sm">person</span> Trang cá nhân
                             </button>
-                            <button onclick="showView('guide')"
+                            <button onclick="window.profileViewTargetUid=null;showView('guide')"
                                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition-all text-xs font-bold">
                                 <span class="material-icons-round text-sm">settings</span> Cập nhật thông tin
                             </button>
@@ -286,15 +286,12 @@
                 </div>
             </div>
 
-            <!-- ROW 2: Navigation Tabs (Full Width) -->
             <div
                 class="flex w-full overflow-x-auto no-scrollbar gap-1 p-1 bg-white/10 sm:bg-white/5 rounded-2xl border border-white/5 sm:border-none">
                 <button type="button" onclick="showView('home')" id="nav-home"
                     class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all bg-white/10 text-white shadow-sm whitespace-nowrap">HOME</button>
                 <button type="button" onclick="showView('dashboard')" id="nav-dashboard"
                     class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all text-slate-400 hover:text-white whitespace-nowrap">MUSIC-RECOMMENDER</button>
-                <button type="button" onclick="showView('studio')" id="nav-studio"
-                    class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">STUDIO</button>
                 <button type="button" onclick="showView('library')" id="nav-library"
                     class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">LIBRARY</button>
                 <button type="button" onclick="showView('film')" id="nav-film"
@@ -303,6 +300,8 @@
                     class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">GAME</button>
                 <button type="button" onclick="showView('photobooth')" id="nav-photobooth"
                     class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">PHOTOBOOTH</button>
+                <button type="button" onclick="alert('Tính năng đang trong giai đoạn phát triển')" id="nav-studio"
+                    class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-500 hover:text-white transition-all whitespace-nowrap flex items-center gap-1 opacity-60">STUDIO <span class="material-icons-round text-[10px]">lock</span></button>
             </div>
         </div>
     </nav>
@@ -399,7 +398,7 @@
                     <h3
                         class="font-bold text-white flex items-center justify-between mb-5 border-b border-white/5 pb-4">
                         <span class="flex items-center gap-2 text-lg"><span
-                                class="material-icons-round text-primary">diversity_1</span> Buddy System</span>
+                                class="material-icons-round text-primary">diversity_1</span> Friend List</span>
                         <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded text-white font-bold"
                             id="home-friend-count">0</span>
                     </h3>
@@ -408,9 +407,9 @@
                         <div class="flex items-center relative">
                             <span
                                 class="material-icons-round absolute left-3 text-slate-400 text-[18px]">person_search</span>
-                            <input type="email" id="home-add-friend-email"
+                            <input type="text" id="home-add-friend-email"
                                 class="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-24 py-3 text-[13px] font-medium text-white focus:border-primary/50 focus:ring-1 focus:ring-primary placeholder-slate-500"
-                                placeholder="Email người dùng...">
+                                placeholder="Tên hoặc Email người dùng...">
                             <button onclick="sendFriendRequest()"
                                 class="absolute right-1.5 top-1.5 bottom-1.5 px-3 flex justify-center items-center bg-primary text-black font-bold text-[10px] rounded-lg transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20 uppercase tracking-tighter">TÌM
                                 BẠN</button>
@@ -1166,9 +1165,12 @@
                             <div class="flex gap-2"><span
                                     class="text-primary font-bold flex-shrink-0">2.</span><span><strong>Bộ lọc:</strong>
                                     Dùng các tab phía trên để lọc Phim Lẻ / Phim Bộ / Hoạt Hình.</span></div>
-                            <div class="flex gap-2"><span
-                                    class="text-primary font-bold flex-shrink-0">3.</span><span><strong>Phụ đề:</strong>
-                                    Đa phần phim đã có phụ đề Tiếng Việt tích hợp.</span></div>
+                             <div class="flex gap-2"><span
+                                     class="text-primary font-bold flex-shrink-0">3.</span><span><strong>Phụ đề:</strong>
+                                     Đa phần phim đã có phụ đề Tiếng Việt tích hợp.</span></div>
+                             <div class="flex gap-2"><span
+                                     class="text-blue-400 font-bold flex-shrink-0">4.</span><span><strong>Xem cùng bạn bè:</strong>
+                                     Dùng tính năng "Watch Party" để mời bạn bè xem phim cùng lúc và đồng bộ.</span></div>
                             <p class="text-green-400/80 mt-1">✅ Tốc độ load nhanh, hỗ trợ mobile!</p>
                         </div>
                     </div>
@@ -2002,7 +2004,7 @@
                             <img id="profile-view-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest&size=128"
                                 onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=guest&size=128'"
                                 class="w-full h-full rounded-[2.5rem] border-4 border-white/10 shadow-2xl object-cover transition-all group-hover:scale-105">
-                            <label for="avatar-input"
+                            <label for="avatar-input" id="profile-avatar-upload-label"
                                 class="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-[2.5rem] opacity-0 group-hover:opacity-100 cursor-pointer transition-all border-2 border-primary/50">
                                 <span class="material-icons-round text-white text-3xl">photo_camera</span>
                                 <input type="file" id="avatar-input" class="hidden" accept="image/*"
@@ -2069,7 +2071,7 @@
                 <!-- RIGHT: SETTINGS & POSTS -->
                 <main class="lg:col-span-8 space-y-8">
                     <!-- Basic Info Form -->
-                    <div
+                    <div id="profile-account-settings-block"
                         class="glass-card rounded-[3rem] p-8 sm:p-12 border border-white/10 shadow-2xl relative overflow-hidden">
                         <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/10 blur-[100px] rounded-full">
                         </div>
@@ -2117,7 +2119,7 @@
                     </div>
 
                     <!-- My Recent Songs (Posts) -->
-                    <div class="space-y-6">
+                    <div id="profile-songs-section" class="space-y-6">
                         <div class="flex items-center justify-between px-4">
                             <h4 class="text-xl font-display font-bold text-white uppercase italic tracking-tighter">Bộ
                                 sưu tập <span class="text-primary">của tôi</span></h4>
@@ -2134,7 +2136,7 @@
                     <!-- My Posts (like Facebook) -->
                     <div class="space-y-6">
                         <div class="flex items-center justify-between px-4">
-                            <h4 class="text-xl font-display font-bold text-white uppercase italic tracking-tighter">Bài
+                            <h4 id="profile-posts-section-heading" class="text-xl font-display font-bold text-white uppercase italic tracking-tighter">Bài
                                 viết <span class="text-primary">của tôi</span></h4>
                             <span id="profile-post-count"
                                 class="text-[10px] bg-white/10 px-3 py-1 rounded-full text-slate-400 font-bold uppercase tracking-widest">0
@@ -5468,11 +5470,9 @@
             <div id="friend-chat-header" class="bg-primary/20 p-4 border-b border-white/10 flex items-center justify-between cursor-move select-none">
                 <div class="flex items-center gap-3 min-w-0">
                     <img id="friend-chat-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest&size=128" class="w-9 h-9 rounded-full border border-white/10 object-cover">
-                    <div class="min-w-0">
-                        <p id="friend-chat-name" class="text-white font-bold text-sm truncate">Bạn bè</p>
-                        <p class="text-[10px] text-primary flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Realtime Supabase
-                        </p>
+                    <div class="min-w-0 group cursor-pointer" onclick="if(activeFriendChat?.id) openUserProfile(activeFriendChat.id)">
+                        <p id="friend-chat-name" class="text-white font-bold text-sm truncate hover:underline">Bạn bè</p>
+                        <p class="text-[9px] text-slate-500 group-hover:text-primary transition-colors">Xem trang cá nhân</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5">
@@ -6981,6 +6981,25 @@
         let homePostSelectedMediaList = [];
         let postCommentsMap = {};
         let commentsRealtimeSetup = false;
+        window.profileFeedPosts = [];
+        window.profileViewTargetUid = null;
+
+        window.openUserProfile = (uid) => {
+            if (!uid) return;
+            if (!window.currentUserUid) {
+                alert('Vui lòng đăng nhập để xem trang cá nhân.');
+                return;
+            }
+            window.profileViewTargetUid = String(uid) === String(window.currentUserUid) ? null : uid;
+            showView('guide');
+        };
+
+        function findFeedPost(postId) {
+            const id = String(postId);
+            const fromHome = homePosts.find(p => String(p.id) === id);
+            if (fromHome) return fromHome;
+            return (window.profileFeedPosts || []).find(p => String(p.id) === id);
+        }
 
         window.handleHomePostImageUpload = (event) => {
             const files = Array.from(event?.target?.files || []).filter(Boolean);
@@ -7083,7 +7102,6 @@
         async function loadCommentsForPosts(postIds) {
             const ids = (postIds || []).filter(Boolean);
             if (ids.length === 0) return;
-            postCommentsMap = {};
 
             try {
                 const { data, error } = await window.supabaseClient
@@ -7094,9 +7112,13 @@
 
                 if (error) throw error;
 
+                const byPost = {};
                 (data || []).forEach(c => {
-                    if (!postCommentsMap[c.post_id]) postCommentsMap[c.post_id] = [];
-                    postCommentsMap[c.post_id].push(c);
+                    if (!byPost[c.post_id]) byPost[c.post_id] = [];
+                    byPost[c.post_id].push(c);
+                });
+                ids.forEach(id => {
+                    postCommentsMap[id] = byPost[id] || [];
                 });
             } catch (e) {
                 ids.forEach(id => {
@@ -7108,6 +7130,12 @@
                 ...p,
                 commentsCount: (postCommentsMap[p.id] || []).length
             }));
+            if (window.profileFeedPosts && window.profileFeedPosts.length) {
+                window.profileFeedPosts = window.profileFeedPosts.map(p => ({
+                    ...p,
+                    commentsCount: (postCommentsMap[p.id] || []).length
+                }));
+            }
         }
 
         function syncLocalInteractionStates() {
@@ -7121,88 +7149,120 @@
                     commentsCount: (postCommentsMap[p.id] || []).length
                 };
             });
+            if (window.profileFeedPosts && window.profileFeedPosts.length) {
+                window.profileFeedPosts = window.profileFeedPosts.map(p => {
+                    const localShares = Number(localStorage.getItem(`post_shares_${p.id}`) || 0);
+                    const localLikes = Number(localStorage.getItem(`post_likes_${p.id}`) || 0);
+                    return {
+                        ...p,
+                        likes: Math.max(Number(p.likes || 0), localLikes),
+                        shares: Math.max(Number(p.shares || 0), localShares),
+                        commentsCount: (postCommentsMap[p.id] || []).length
+                    };
+                });
+            }
         }
 
-        // RENDER LOGIC
-        function renderHomeNewsfeed() {
-            const feedContainer = document.getElementById('home-newsfeed');
-            if (!feedContainer) return;
+        function buildPostMediaHtml(media, postId) {
+            if (!media) return '';
+            const raw = String(media);
+            const mediaValue = raw.toLowerCase();
+            if (raw.trim().startsWith('[')) {
+                try {
+                    const arr = JSON.parse(raw);
+                    const imgs = Array.isArray(arr) ? arr.filter(Boolean) : [];
+                    if (imgs.length === 1) {
+                        return `
+                            <button type="button" onclick="openMediaViewer('${postId}',0)" class="block w-full mt-3 border-t border-b border-white/5 bg-black/40">
+                                <img src="${imgs[0]}" class="w-full object-cover max-h-[520px]">
+                            </button>
+                        `;
+                    }
+                    if (imgs.length > 1) {
+                        const dots = imgs.map((_, i) => `
+                            <button type="button" onclick="postMediaGo('${postId}',${i})" class="w-2 h-2 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/30'}" id="post-media-dot-${postId}-${i}"></button>
+                        `).join('');
+                        return `
+                            <div class="mt-3 border-t border-b border-white/5 bg-black/40 relative">
+                                <button type="button" onclick="postMediaPrev('${postId}')" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all">
+                                    <span class="material-icons-round">chevron_left</span>
+                                </button>
+                                <button type="button" onclick="postMediaNext('${postId}')" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all">
+                                    <span class="material-icons-round">chevron_right</span>
+                                </button>
+                                <div class="absolute top-2 right-2 z-10 text-[10px] font-black text-white bg-black/50 rounded-full px-2 py-1 border border-white/10">
+                                    <span id="post-media-counter-${postId}">1/${imgs.length}</span>
+                                </div>
+                                <div id="post-media-strip-${postId}" class="w-full flex overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth" onscroll="syncPostMediaDots('${postId}')">
+                                    ${imgs.map((src, i) => `
+                                        <div class="w-full flex-shrink-0 snap-center">
+                                            <button type="button" onclick="openMediaViewer('${postId}',${i})" class="block w-full">
+                                                <img src="${src}" class="w-full max-h-[520px] object-cover">
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div class="flex items-center justify-center gap-2 py-2">${dots}</div>
+                            </div>
+                        `;
+                    }
+                } catch (e) { /* fall through */ }
+                return `<img src="${raw}" class="w-full mt-3 border-t border-b border-white/5 object-cover max-h-[500px]">`;
+            }
+            if (mediaValue.endsWith('.mp4') || mediaValue.endsWith('.webm')) {
+                return `<video src="${raw}" controls class="w-full mt-3 border-t border-b border-white/5 bg-black/50 max-h-[500px]"></video>`;
+            }
+            return `<img src="${raw}" class="w-full mt-3 border-t border-b border-white/5 object-cover max-h-[500px]">`;
+        }
 
-            if (homePosts.length === 0) {
-                feedContainer.innerHTML = `
-                    <div class="glass-card p-10 rounded-[2rem] border border-white/10 text-center opacity-50">
-                        <span class="material-icons-round text-5xl mb-3 text-slate-400">hourglass_empty</span>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Bảng tin đang trống...</p>
-                    </div>`;
-                return;
+        function homePostCardHtml(post) {
+            let isSharedPost = false;
+            let displayContent = String(post.content || '');
+            let sharedHeaderHtml = '';
+
+            if (displayContent.startsWith('🔁 Chia sẻ từ')) {
+                isSharedPost = true;
+                const lines = displayContent.split('\n\n');
+                const headerLine = lines[0];
+                const actualContent = lines.slice(1).join('\n\n');
+                sharedHeaderHtml = `<div class="mb-2 text-[12px] font-bold text-primary flex items-center gap-1.5"><span class="material-icons-round text-sm">share</span> ${headerLine.replace('🔁 Chia sẻ từ ', '')}</div>`;
+                displayContent = actualContent;
             }
 
-            feedContainer.innerHTML = homePosts.map(post => {
-                let mediaHtml = '';
-                if (post.media) {
-                    const raw = String(post.media);
-                    const mediaValue = raw.toLowerCase();
-                    // Multi images stored as JSON array string
-                    if (raw.trim().startsWith('[')) {
-                        try {
-                            const arr = JSON.parse(raw);
-                            const imgs = Array.isArray(arr) ? arr.filter(Boolean) : [];
-                            if (imgs.length === 1) {
-                                mediaHtml = `
-                                    <button type="button" onclick="openMediaViewer('${post.id}',0)" class="block w-full mt-3 border-t border-b border-white/5 bg-black/40">
-                                        <img src="${imgs[0]}" class="w-full object-cover max-h-[520px]">
-                                    </button>
-                                `;
-                            } else if (imgs.length > 1) {
-                                const dots = imgs.map((_, i) => `
-                                    <button type="button" onclick="postMediaGo('${post.id}',${i})" class="w-2 h-2 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/30'}" id="post-media-dot-${post.id}-${i}"></button>
-                                `).join('');
-                                mediaHtml = `
-                                    <div class="mt-3 border-t border-b border-white/5 bg-black/40 relative">
-                                        <button type="button" onclick="postMediaPrev('${post.id}')" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all">
-                                            <span class="material-icons-round">chevron_left</span>
-                                        </button>
-                                        <button type="button" onclick="postMediaNext('${post.id}')" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all">
-                                            <span class="material-icons-round">chevron_right</span>
-                                        </button>
-                                        <div class="absolute top-2 right-2 z-10 text-[10px] font-black text-white bg-black/50 rounded-full px-2 py-1 border border-white/10">
-                                            <span id="post-media-counter-${post.id}">1/${imgs.length}</span>
-                                        </div>
-                                        <div id="post-media-strip-${post.id}" class="w-full flex overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth" onscroll="syncPostMediaDots('${post.id}')">
-                                            ${imgs.map((src, i) => `
-                                                <div class="w-full flex-shrink-0 snap-center">
-                                                    <button type="button" onclick="openMediaViewer('${post.id}',${i})" class="block w-full">
-                                                        <img src="${src}" class="w-full max-h-[520px] object-cover">
-                                                    </button>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                        <div class="flex items-center justify-center gap-2 py-2">${dots}</div>
-                                    </div>
-                                `;
-                            }
-                        } catch (e) {
-                            mediaHtml = `<img src="${post.media}" class="w-full mt-3 border-t border-b border-white/5 object-cover max-h-[500px]">`;
-                        }
-                    } else if (mediaValue.endsWith('.mp4') || mediaValue.endsWith('.webm')) {
-                        mediaHtml = `<video src="${post.media}" controls class="w-full mt-3 border-t border-b border-white/5 bg-black/50 max-h-[500px]"></video>`;
-                    } else {
-                        mediaHtml = `<img src="${post.media}" class="w-full mt-3 border-t border-b border-white/5 object-cover max-h-[500px]">`;
-                    }
-                }
+            const mediaHtml = buildPostMediaHtml(post.media, post.id);
+            let privIcon = 'public';
+            if (post.privacy === 'friends') privIcon = 'people';
+            if (post.privacy === 'private') privIcon = 'lock';
+            const authorClick = post.authorId ? `onclick="openUserProfile('${post.authorId}')" ` : '';
+            const safeContent = displayContent.replace(/\n/g, '<br>');
 
-                let privIcon = 'public';
-                let privText = 'Công khai';
-                if (post.privacy === 'friends') { privIcon = 'people'; privText = 'Bạn bè'; }
-                if (post.privacy === 'private') { privIcon = 'lock'; privText = 'Chỉ mình tôi'; }
+            let postBodyHtml = `
+                <div class="px-4 pb-3 text-[14px] text-slate-100 leading-relaxed">
+                    ${safeContent}
+                </div>
+                ${mediaHtml}
+            `;
 
-                return `
+            if (isSharedPost) {
+                postBodyHtml = `
+                    <div class="px-4 pb-3">
+                        ${sharedHeaderHtml}
+                        <div class="p-3 border border-white/10 rounded-xl bg-white/5 hover:border-white/20 transition-all">
+                            <div class="text-[13px] text-slate-200 leading-relaxed italic">
+                                ${safeContent || '<span class="opacity-40">Không có nội dung văn bản</span>'}
+                            </div>
+                            <div class="mt-2 scale-95 origin-top-left">${mediaHtml}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
                 <div class="glass-card rounded-2xl border border-white/10 shadow-lg hover:border-white/20 transition-all overflow-hidden" id="post-${post.id}">
-                    <!-- Header: Avatar + Name + Time -->
                     <div class="flex items-center gap-3 p-4 pb-2">
-                        <img data-author-id="${post.authorId || ''}" src="${post.author.avatar}" class="w-10 h-10 rounded-full border-2 border-white/10 object-cover flex-shrink-0 cursor-pointer hover:border-primary/50 transition-colors">
+                        <img ${authorClick} data-author-id="${post.authorId || ''}" src="${post.author.avatar}" class="w-10 h-10 rounded-full border-2 border-white/10 object-cover flex-shrink-0 cursor-pointer hover:border-primary/50 transition-colors">
                         <div class="flex-1 min-w-0">
-                            <h4 class="text-[13px] font-bold text-white hover:underline cursor-pointer">${post.author.name}</h4>
+                            <h4 ${authorClick} class="text-[13px] font-bold text-white hover:underline cursor-pointer">${post.author.name}</h4>
                             <div class="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
                                 <span>${post.time}</span>
                                 <span class="w-1 h-1 rounded-full bg-slate-600"></span>
@@ -7226,16 +7286,7 @@
                         </div>
                         </div>
                     </div>
-
-                    <!-- Content -->
-                    <div class="px-4 pb-3 text-[14px] text-slate-100 leading-relaxed">
-                        ${post.content.replace(/\\n/g, '<br>')}
-                    </div>
-
-                    <!-- Media (Full Width like FB) -->
-                    ${mediaHtml}
-
-                    <!-- Like Count Bar -->
+                    ${postBodyHtml}
                     <div class="flex items-center justify-between px-4 py-2 text-[11px] text-slate-500">
                         <div class="flex items-center gap-1">
                             <span class="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center text-[10px]">❤</span>
@@ -7246,8 +7297,6 @@
                             <span id="share-count-${post.id}">${post.shares || 0} chia sẻ</span>
                         </div>
                     </div>
-
-                    <!-- Action Buttons (FB-style) -->
                     <div class="flex items-center border-t border-white/5 mx-4 mb-1">
                         <button onclick="likePost('${post.id}')" id="like-btn-${post.id}" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold ${post.hasLiked ? 'text-red-400' : 'text-slate-400'} hover:bg-white/5 rounded-lg transition-all cursor-pointer group">
                             <span class="material-icons-round text-lg group-active:scale-125 transition-transform">${post.hasLiked ? 'favorite' : 'favorite_border'}</span> Yêu thích
@@ -7259,12 +7308,10 @@
                             <span class="material-icons-round text-lg">share</span> Chia sẻ (<span id="share-btn-count-${post.id}">${post.shares || 0}</span>)
                         </button>
                     </div>
-
-                    <!-- Comment Section -->
                     <div id="comment-section-${post.id}" class="hidden border-t border-white/5 p-4 space-y-3 bg-black/20">
                         <div id="comments-list-${post.id}" class="space-y-3 max-h-60 overflow-y-auto custom-scrollbar"></div>
                         <div class="flex gap-2 items-center">
-                            <input type="text" id="comment-input-${post.id}" placeholder="Viết bình luận..." 
+                            <input type="text" id="comment-input-${post.id}" placeholder="Viết bình luận..."
                                 class="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:border-primary/50 outline-none"
                                 onkeydown="if(event.key==='Enter')submitComment('${post.id}')">
                             <button onclick="submitComment('${post.id}')" class="w-8 h-8 rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-black flex items-center justify-center transition-all hover:scale-105 active:scale-95 flex-shrink-0">
@@ -7274,7 +7321,23 @@
                     </div>
                 </div>
                 `;
-            }).join('');
+        }
+
+        // RENDER LOGIC
+        function renderHomeNewsfeed() {
+            const feedContainer = document.getElementById('home-newsfeed');
+            if (!feedContainer) return;
+
+            if (homePosts.length === 0) {
+                feedContainer.innerHTML = `
+                    <div class="glass-card p-10 rounded-[2rem] border border-white/10 text-center opacity-50">
+                        <span class="material-icons-round text-5xl mb-3 text-slate-400">hourglass_empty</span>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Bảng tin đang trống...</p>
+                    </div>`;
+                return;
+            }
+
+            feedContainer.innerHTML = homePosts.map(homePostCardHtml).join('');
         }
 
         async function renderBuddySystem() {
@@ -7314,9 +7377,9 @@
                         return `
                             <div class="flex items-center justify-between p-2 lg:p-2.5 bg-black/40 rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
                                 <div class="flex items-center gap-2 lg:gap-3 overflow-hidden pr-2">
-                                    <img data-profile-id="${sender.id || req.sender_id}" src="${senderAvatar}" class="w-8 h-8 rounded-full bg-white/10 border border-white/5 flex-shrink-0 object-cover">
+                                    <img data-profile-id="${sender.id || req.sender_id}" onclick="openUserProfile('${sender.id || req.sender_id}')" src="${senderAvatar}" class="w-8 h-8 rounded-full bg-white/10 border border-white/5 flex-shrink-0 object-cover cursor-pointer hover:border-primary/40">
                                     <div class="min-w-0 flex-1">
-                                        <p class="text-[11px] lg:text-[12px] text-white font-bold truncate">${sender.full_name}</p>
+                                        <p onclick="openUserProfile('${sender.id || req.sender_id}')" class="text-[11px] lg:text-[12px] text-white font-bold truncate cursor-pointer hover:underline">${sender.full_name}</p>
                                         <p class="text-[9px] text-slate-500 truncate">${sender.email}</p>
                                     </div>
                                 </div>
@@ -7361,11 +7424,11 @@
                     friendList.innerHTML = friends.map(f => `
                         <div onclick="openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || avatarFromEmail(f.email || f.id)).replace(/'/g, "\\'")}')" class="flex items-center gap-3 p-2.5 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5 transition-all cursor-pointer group">
                             <div class="relative flex-shrink-0">
-                                <img data-profile-id="${f.id}" src="${f.avatar_url || avatarFromEmail(f.email || f.id)}" class="w-10 h-10 rounded-full border border-white/5 object-cover">
+                                <img data-profile-id="${f.id}" onclick="event.stopPropagation();openUserProfile('${f.id}')" src="${f.avatar_url || avatarFromEmail(f.email || f.id)}" class="w-10 h-10 rounded-full border border-white/5 object-cover cursor-pointer hover:border-primary/40">
                                 <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-bg-dark rounded-full shadow-sm"></span>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-[13px] text-white font-bold group-hover:text-primary transition-colors truncate">${f.full_name}</p>
+                                <p onclick="event.stopPropagation();openUserProfile('${f.id}')" class="text-[13px] text-white font-bold group-hover:text-primary transition-colors truncate cursor-pointer hover:underline">${f.full_name}</p>
                                 <p class="text-[10px] text-slate-500 truncate font-medium">${f.email}</p>
                             </div>
                             <button onclick="event.stopPropagation(); openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || avatarFromEmail(f.email || f.id)).replace(/'/g, "\\'")}')" class="relative w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
@@ -7397,7 +7460,7 @@
                     renderBuddySystem();
                 }
                 if (viewName === 'guide') {
-                    if (typeof loadMyPosts !== 'undefined') loadMyPosts();
+                    if (typeof hydrateProfileView !== 'undefined') hydrateProfileView();
                 }
             };
 
@@ -7581,7 +7644,7 @@
             if (!window.currentUserUid) return alert("Vui lòng đăng nhập để tương tác!");
 
             try {
-                const post = homePosts.find(p => p.id === id);
+                const post = findFeedPost(id);
                 if (!post) return;
 
                 post.hasLiked = !post.hasLiked;
@@ -7661,7 +7724,7 @@
             saveLocalPostComments(id, postCommentsMap[id]);
             renderPostComments(id);
 
-            const post = homePosts.find(p => p.id === id);
+            const post = findFeedPost(id);
             if (post) post.commentsCount = (postCommentsMap[id] || []).length;
             const commentCountEl = document.getElementById(`comment-count-${id}`);
             if (commentCountEl) commentCountEl.textContent = `${post?.commentsCount || 0} bình luận`;
@@ -7679,23 +7742,36 @@
         };
 
         window.sharePost = async (id) => {
-            const post = homePosts.find(p => p.id === id);
+            if (!window.currentUserUid) return alert("Vui lòng đăng nhập để chia sẻ!");
+            const post = findFeedPost(id);
             if (!post) return;
-            const shareText = `${post.author.name}: ${post.content}`;
+
+            const headerLine = `🔁 Chia sẻ từ ${post.author.name}:`;
+            const body = String(post.content || '').trim();
+            const newContent = body ? `${headerLine}\n\n${body}` : headerLine;
+            const mediaToShare = post.media ? String(post.media) : null;
+
+            try {
+                const { error: insErr } = await window.supabaseClient
+                    .from('posts')
+                    .insert([{
+                        author_id: window.currentUserUid,
+                        content: newContent,
+                        media_url: mediaToShare,
+                        visibility: 'public'
+                    }]);
+                if (insErr) throw insErr;
+            } catch (e) {
+                alert('Không thể đăng bài chia sẻ lên trang cá nhân: ' + (e?.message || e));
+                return;
+            }
+
             post.shares = (post.shares || 0) + 1;
             localStorage.setItem(`post_shares_${id}`, String(post.shares));
             const shareCountEl = document.getElementById(`share-count-${id}`);
             if (shareCountEl) shareCountEl.textContent = `${post.shares} chia sẻ`;
             const shareBtnCountEl = document.getElementById(`share-btn-count-${id}`);
             if (shareBtnCountEl) shareBtnCountEl.textContent = String(post.shares || 0);
-
-            if (navigator.share) {
-                navigator.share({ title: 'KietStation', text: shareText }).catch(() => { });
-            } else {
-                navigator.clipboard.writeText(shareText).then(() => {
-                    alert('Đã sao chép nội dung bài viết vào clipboard! ✨');
-                }).catch(() => alert('Không thể chia sẻ!'));
-            }
 
             try {
                 await window.supabaseClient
@@ -7704,6 +7780,16 @@
                     .eq('id', id);
             } catch (e) {
                 console.warn('Save share fallback local only:', e?.message || e);
+            }
+
+            if (typeof showSuccessToast === 'function') {
+                showSuccessToast('Đã đăng bài chia sẻ lên trang cá nhân của bạn (công khai).');
+            } else {
+                alert('Đã đăng bài chia sẻ lên trang cá nhân của bạn.');
+            }
+            if (typeof fetchHomePosts === 'function') fetchHomePosts();
+            if (document.getElementById('view-guide') && !document.getElementById('view-guide').classList.contains('hidden') && typeof loadProfilePosts === 'function') {
+                loadProfilePosts();
             }
         };
 
@@ -7725,7 +7811,7 @@
         };
 
         window.editPost = async (postId) => {
-            const post = homePosts.find(p => String(p.id) === String(postId));
+            const post = findFeedPost(postId);
             if (!post) return;
             if (post.authorId && window.currentUserUid && post.authorId !== window.currentUserUid) return;
             const next = prompt('Chỉnh sửa nội dung bài viết:', post.content || '');
@@ -7734,6 +7820,7 @@
             try {
                 post.content = newContent;
                 renderHomeNewsfeed();
+                if (window.profileFeedPosts && window.profileFeedPosts.some(p => String(p.id) === String(postId)) && typeof loadProfilePosts === 'function') loadProfilePosts();
                 if (window.supabaseClient) {
                     const { error } = await window.supabaseClient.from('posts').update({ content: newContent }).eq('id', postId);
                     if (error) throw error;
@@ -7744,13 +7831,15 @@
         };
 
         window.deletePost = async (postId) => {
-            const post = homePosts.find(p => String(p.id) === String(postId));
+            const post = findFeedPost(postId);
             if (!post) return;
             if (post.authorId && window.currentUserUid && post.authorId !== window.currentUserUid) return;
             if (!confirm('Xóa bài viết này? Hành động không thể hoàn tác.')) return;
             try {
                 homePosts = homePosts.filter(p => String(p.id) !== String(postId));
+                window.profileFeedPosts = (window.profileFeedPosts || []).filter(p => String(p.id) !== String(postId));
                 renderHomeNewsfeed();
+                if (typeof loadProfilePosts === 'function') loadProfilePosts();
                 if (window.supabaseClient) {
                     const { error } = await window.supabaseClient.from('posts').delete().eq('id', postId);
                     if (error) throw error;
@@ -7780,43 +7869,156 @@
             document.querySelectorAll('[id^="post-menu-"]').forEach(el => el.classList.add('hidden'));
         });
 
-        // Load user's own posts on profile page
-        window.loadMyPosts = async () => {
+        window.hydrateProfileView = async () => {
             if (!window.currentUserUid || !window.supabaseClient) return;
+
+            const settingsBlock = document.getElementById('profile-account-settings-block');
+            const avatarLabel = document.getElementById('profile-avatar-upload-label');
+            const songsSection = document.getElementById('profile-songs-section');
+            const titleEl = document.getElementById('profile-posts-section-heading');
+
+            const target = window.profileViewTargetUid;
+            if (!target || String(target) === String(window.currentUserUid)) {
+                window.profileViewTargetUid = null;
+                if (settingsBlock) settingsBlock.classList.remove('hidden');
+                if (avatarLabel) avatarLabel.classList.remove('hidden');
+                if (songsSection) songsSection.classList.remove('hidden');
+                if (titleEl) {
+                    titleEl.textContent = '';
+                    titleEl.appendChild(document.createTextNode('Bài viết '));
+                    const sp = document.createElement('span');
+                    sp.className = 'text-primary';
+                    sp.textContent = 'của tôi';
+                    titleEl.appendChild(sp);
+                }
+                if (typeof loadUserProfile === 'function') await loadUserProfile();
+            } else {
+                if (settingsBlock) settingsBlock.classList.add('hidden');
+                if (avatarLabel) avatarLabel.classList.add('hidden');
+                if (songsSection) songsSection.classList.add('hidden');
+                try {
+                    const { data: profile } = await window.supabaseClient
+                        .from('profiles')
+                        .select('id, full_name, avatar_url, email')
+                        .eq('id', target)
+                        .maybeSingle();
+                    const name = profile?.full_name || 'User';
+                    const email = profile?.email || '';
+                    const avatar = profile?.avatar_url || avatarFromEmail(email || target);
+                    const nameEl = document.getElementById('profile-view-name');
+                    const emailEl = document.getElementById('profile-view-email');
+                    const avatarEl = document.getElementById('profile-view-avatar');
+                    if (nameEl) nameEl.textContent = name;
+                    if (emailEl) emailEl.textContent = email || 'Thành viên KietStation';
+                    if (avatarEl) avatarEl.src = avatar;
+                    if (titleEl) {
+                        titleEl.textContent = '';
+                        titleEl.appendChild(document.createTextNode('Bài viết '));
+                        const sp = document.createElement('span');
+                        sp.className = 'text-primary';
+                        sp.textContent = `của ${name}`;
+                        titleEl.appendChild(sp);
+                    }
+                } catch (e) {
+                    console.warn('Load other profile error:', e);
+                }
+            }
+
+            if (typeof loadProfilePosts === 'function') await loadProfilePosts();
+        };
+
+        window.loadProfilePosts = async () => {
+            if (!window.supabaseClient) return;
+            const viewerUid = window.currentUserUid;
+            const targetUid = window.profileViewTargetUid || viewerUid;
+            if (!targetUid) return;
+
+            const container = document.getElementById('profile-my-posts');
+            const countEl = document.getElementById('profile-post-count');
+            if (!container) return;
+
             try {
-                const { data: myPosts, error } = await window.supabaseClient
+                let acceptedFriendIds = new Set();
+                if (viewerUid && String(targetUid) !== String(viewerUid)) {
+                    const { data: friendshipRows } = await window.supabaseClient
+                        .from('friendships')
+                        .select('sender_id, receiver_id')
+                        .eq('status', 'accepted')
+                        .or(`sender_id.eq.${viewerUid},receiver_id.eq.${viewerUid}`);
+                    (friendshipRows || []).forEach(f => {
+                        acceptedFriendIds.add(f.sender_id === viewerUid ? f.receiver_id : f.sender_id);
+                    });
+                }
+
+                const { data: rows, error } = await window.supabaseClient
                     .from('posts')
                     .select('*')
-                    .eq('author_id', window.currentUserUid)
+                    .eq('author_id', targetUid)
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
 
-                const container = document.getElementById('profile-my-posts');
-                const countEl = document.getElementById('profile-post-count');
-                if (!container) return;
-                if (countEl) countEl.textContent = `${(myPosts || []).length} Bài`;
+                const filtered = (rows || []).filter(p => {
+                    if (String(targetUid) === String(viewerUid)) return true;
+                    if (!viewerUid) {
+                        return (p.visibility || 'public') === 'public';
+                    }
+                    const visibility = p.visibility || 'public';
+                    if (visibility === 'public') return true;
+                    if (visibility === 'private') return false;
+                    if (visibility === 'friends') return acceptedFriendIds.has(targetUid);
+                    return false;
+                });
 
-                if (myPosts && myPosts.length > 0) {
-                    container.innerHTML = myPosts.map(p => `
-                        <div class="glass-card rounded-2xl p-5 border border-white/10">
-                            <div class="text-sm text-slate-200 leading-relaxed font-medium">${p.content}</div>
-                            ${p.media_url ? `<img src="${p.media_url}" class="w-full rounded-xl mt-3 border border-white/5 object-cover max-h-[300px]">` : ''}
-                            <div class="flex items-center gap-3 mt-4 pt-3 border-t border-white/5">
-                                <span class="text-[10px] text-slate-500 font-bold">${new Date(p.created_at).toLocaleString()}</span>
-                                <span class="text-[10px] text-red-400 font-bold ml-auto">❤ ${p.likes || 0}</span>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
+                if (countEl) countEl.textContent = `${filtered.length} Bài`;
+
+                if (filtered.length === 0) {
                     container.innerHTML = `
                         <div class="text-center py-8 text-slate-500 opacity-60">
                             <span class="material-icons-round text-3xl mb-2">article</span>
-                            <p class="text-[10px] font-bold uppercase tracking-wider">Chưa có bài viết nào.<br>Hãy chia sẻ suy nghĩ của bạn tại tab HOME!</p>
+                            <p class="text-[10px] font-bold uppercase tracking-wider">Chưa có bài viết hiển thị.<br>Bài chỉ mình tôi / bạn bè chỉ người liên quan mới xem được.</p>
                         </div>`;
+                    window.profileFeedPosts = [];
+                    return;
                 }
+
+                const { data: authorProfile } = await window.supabaseClient
+                    .from('profiles')
+                    .select('id, full_name, avatar_url, email')
+                    .eq('id', targetUid)
+                    .maybeSingle();
+
+                const author = {
+                    name: authorProfile?.full_name || 'User',
+                    avatar: authorProfile?.avatar_url || avatarFromEmail(authorProfile?.email || targetUid)
+                };
+
+                const localLikes = JSON.parse(localStorage.getItem(`local_likes_${viewerUid}`) || '{}');
+
+                window.profileFeedPosts = filtered.map(p => {
+                    const likedBy = p.liked_by || [];
+                    const hasLikedDB = p.hasOwnProperty('liked_by') ? likedBy.includes(viewerUid) : !!localLikes[p.id];
+                    return {
+                        id: p.id,
+                        authorId: p.author_id,
+                        author,
+                        content: p.content || '',
+                        media: p.media_url,
+                        privacy: p.visibility,
+                        likes: p.likes || 0,
+                        shares: p.shares || 0,
+                        liked_by: likedBy,
+                        hasLiked: hasLikedDB,
+                        time: new Date(p.created_at).toLocaleTimeString(),
+                        commentsCount: 0
+                    };
+                });
+
+                await loadCommentsForPosts(window.profileFeedPosts.map(p => p.id));
+                syncLocalInteractionStates();
+                container.innerHTML = window.profileFeedPosts.map(homePostCardHtml).join('');
             } catch (e) {
-                console.error('Load my posts error:', e);
+                console.error('Load profile posts error:', e);
             }
         };
 
@@ -7824,23 +8026,34 @@
             if (!window.currentUserUid) return alert("Vui lòng đăng nhập để kết bạn!");
 
             const emailInput = document.getElementById('home-add-friend-email');
-            const email = emailInput.value.trim();
+            const searchValue = emailInput.value.trim();
 
-            if (!email) return alert('Vui lòng nhập email người cần tìm!');
-            if (email === document.getElementById('user-email-display').innerText) return alert('Bạn không thể tự kết bạn với chính mình!');
+            if (!searchValue) return alert('Vui lòng nhập Tên hoặc Email người cần tìm!');
+            const myEmail = document.getElementById('user-email-display').innerText;
 
             try {
-                // Find user by email (case-insensitive)
-                const { data: targetUser, error } = await window.supabaseClient
-                    .from('profiles')
-                    .select('id, email, full_name')
-                    .ilike('email', email)
-                    .maybeSingle();
+                // Determine if searching by email or name
+                const isEmail = searchValue.includes('@');
+                let query = window.supabaseClient.from('profiles').select('id, email, full_name');
+                
+                if (isEmail) {
+                    if (searchValue === myEmail) return alert('Bạn không thể tự kết bạn với chính mình!');
+                    query = query.ilike('email', searchValue);
+                } else {
+                    query = query.ilike('full_name', `%${searchValue}%`);
+                }
 
+                const { data: targetUsers, error } = await query;
                 if (error) throw error;
 
-                if (!targetUser) {
-                    return alert('Không tìm thấy người dùng với email này! Hãy chắc chắn bạn bè đã nhấn "Cập nhật hồ sơ"!');
+                if (!targetUsers || targetUsers.length === 0) {
+                    return alert('Không tìm thấy người dùng nào phù hợp!');
+                }
+
+                // If multiple users found (by name), let user choose (simplified for this task - pick first or refine search)
+                const targetUser = targetUsers.find(u => u.id !== window.currentUserUid) || targetUsers[0];
+                if (targetUser.id === window.currentUserUid && targetUsers.length === 1) {
+                    return alert('Bạn không thể tự kết bạn với chính mình!');
                 }
 
                 // Check if already friends or requested
@@ -7862,7 +8075,7 @@
 
                 if (e3) throw e3;
 
-                alert(`Đã gửi lời mời kết bạn đến: ${email} ✨`);
+                alert(`Đã gửi lời mời kết bạn đến: ${targetUser.full_name} (${targetUser.email}) ✨`);
                 emailInput.value = '';
                 renderBuddySystem();
             } catch (e) {
@@ -8226,7 +8439,7 @@
         }
 
         function getPostMediaList(postId) {
-            const post = homePosts.find(p => String(p.id) === String(postId));
+            const post = findFeedPost(postId);
             if (!post || !post.media) return [];
             const raw = String(post.media);
             if (raw.trim().startsWith('[')) {
