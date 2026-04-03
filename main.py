@@ -915,6 +915,22 @@ async def search(q: str, type: str="music"):
     except: pass
     return {"mood": "manual", "recommendations": res}
 
+@app.post("/api/emotion")
+async def get_emotion(file: UploadFile = File(...)):
+    t = f"watch_{uuid.uuid4()}.jpg"
+    try:
+        with open(t, "wb") as b:
+            shutil.copyfileobj(file.file, b)
+        # Dùng opencv cho nhanh (Real-time Watch Party)
+        res = DeepFace.analyze(t, actions=['emotion'], enforce_detection=False, detector_backend='opencv')
+        return {"status": "success", "emotion": res[0]['dominant_emotion']}
+    except Exception as e:
+        return {"status": "error", "emotion": "neutral", "message": str(e)}
+    finally:
+        if os.path.exists(t):
+            try: os.remove(t)
+            except: pass
+
 @app.post("/recommend")
 async def recommend(file: UploadFile = File(...), type: str="music", q: str = Query("")):
     t = f"temp_{uuid.uuid4()}.jpg"

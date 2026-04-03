@@ -30,6 +30,7 @@
     <!-- MediaPipe for Background Removal -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -57,6 +58,8 @@
             transition: background-color 0.8s ease-in-out;
             background-attachment: fixed;
         }
+        .mirror-mode { transform: scaleX(-1); }
+        .camera-select-dropdown option { background-color: #0f172a; color: white; padding: 10px; }
         .safe-nav-pad { padding-top: max(0.75rem, env(safe-area-inset-top)); }
         .pb-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
         .mb-player-safe { margin-bottom: env(safe-area-inset-bottom, 0px); }
@@ -549,6 +552,15 @@
 
                 <div
                     class="glass-card rounded-2xl p-4 space-y-3 border border-white/10 bg-white/5 backdrop-blur-md mb-4">
+                    <!-- CAMERA SELECTOR -->
+                    <div class="relative group/cam">
+                        <select onchange="handleCameraChange(this.value)"
+                            class="camera-select-dropdown w-full bg-white/5 hover:bg-white/10 text-white/80 py-3 px-4 pl-10 rounded-2xl font-bold text-[10px] uppercase tracking-widest appearance-none transition-all border border-white/10 cursor-pointer">
+                            <option value="">Đang tải camera...</option>
+                        </select>
+                        <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm">videocam</span>
+                    </div>
+
                     <button id="analyze-btn"
                         class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-xl shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2">
                         <span class="material-icons-round">face_retouching_natural</span> ANALYZE MOOD
@@ -987,6 +999,23 @@
                             <div id="film-output" class="absolute inset-0 w-full h-full hidden">
                                 <!-- HLS.js will inject video element here -->
                             </div>
+                        </div>
+
+                        <!-- Watch Party Camera Selector -->
+                        <div id="party-camera-selector" class="hidden flex items-center justify-between mb-2 px-2">
+                             <div class="flex items-center gap-2">
+                                <span class="material-icons-round text-primary text-xs">videocam</span>
+                                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Đổi Camera</span>
+                             </div>
+                             <select onchange="handleCameraChange(this.value)"
+                                class="camera-select-dropdown bg-transparent text-white/70 text-[9px] font-black uppercase tracking-widest outline-none cursor-pointer text-right min-w-[150px]">
+                                <option value="">Đang tải...</option>
+                             </select>
+                        </div>
+
+                        <!-- Watch Party Video Grid (P2P Feed) -->
+                        <div id="party-mesh-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 animate-fade-in">
+                            <!-- Local and Remote videos will be injected here -->
                         </div>
                     </div>
 
@@ -1924,6 +1953,19 @@
                                 onchange="handlePBBgUpload(this)">
 
                             <!-- Presets will be injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- PHOTOBOOTH CAMERA SELECTOR -->
+                    <div class="glass-card rounded-[2rem] p-4 flex items-center gap-4 border border-white/10 px-8">
+                        <div class="flex-shrink-0 w-8 h-8 bg-white/5 rounded-full flex items-center justify-center text-slate-400">
+                            <span class="material-icons-round text-sm">settings_input_component</span>
+                        </div>
+                        <div class="flex-1">
+                            <select onchange="handleCameraChange(this.value)"
+                                class="camera-select-dropdown w-full bg-transparent text-white/70 text-[10px] font-bold uppercase tracking-widest outline-none cursor-pointer">
+                                <option value="">Chọn Camera...</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -3320,12 +3362,21 @@
             const video = document.getElementById('video');
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 try {
-                    // Stop any existing tracks first
                     stopMainCamera();
-                    mainStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                    const constraints = { 
+                        video: selectedVideoDeviceId ? { deviceId: { exact: selectedVideoDeviceId } } : { facingMode: "user" }
+                    };
+                    mainStream = await navigator.mediaDevices.getUserMedia(constraints);
                     if (video) video.srcObject = mainStream;
+                    // Refresh labels after permission granted
+                    refreshCameraDevices();
                 } catch (err) {
                     console.error("Dashboard Camera Error", err);
+                    // Fallback to any camera if exact fails
+                    if (selectedVideoDeviceId) {
+                        mainStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        if (video) video.srcObject = mainStream;
+                    }
                 }
             }
         }
@@ -3641,6 +3692,13 @@
                 : m.type === 'hoathinh'
                     ? '<span class="absolute top-1.5 left-1.5 bg-purple-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">HH</span>'
                     : '<span class="absolute top-1.5 left-1.5 bg-green-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">LẺ</span>';
+            
+            // Thêm tag Trailer nếu chưa có bản full
+            const isTrailer = (m.episode_current && m.episode_current.toLowerCase().includes('trailer')) || (m.status === 'trailer');
+            const trailerBadge = isTrailer
+                ? '<span class="absolute top-1.5 right-1.5 bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider z-10 shadow-lg shadow-red-600/50">TRAILER</span>'
+                : '';
+
             const nameSafe = (m.name || '').replace(/'/g, "&#39;");
             return `
             <div class="glass-card rounded-xl overflow-hidden cursor-pointer hover:border-primary/50 border border-white/5 transition-all hover:scale-[1.02] shadow-sm group"
@@ -3650,9 +3708,10 @@
                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span class="material-icons-round text-white text-4xl drop-shadow-lg">play_circle</span>
+                        <span class="material-icons-round text-white text-4xl drop-shadow-lg">${isTrailer ? 'videocam' : 'play_circle'}</span>
                     </div>
                     ${typeBadge}
+                    ${trailerBadge}
                     ${m.year ? `<span class="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md">${m.year}</span>` : ''}
                 </div>
                 <div class="p-2">
@@ -5211,9 +5270,15 @@
             const video = document.getElementById('pb-video');
             if (!video) return;
             try {
-                pbStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
+                const constraints = { 
+                    video: selectedVideoDeviceId ? 
+                        { deviceId: { exact: selectedVideoDeviceId }, width: 1280, height: 720 } : 
+                        { width: 1280, height: 720 } 
+                };
+                pbStream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = pbStream;
                 initSelfieSegmentation();
+                refreshCameraDevices();
             } catch (e) {
                 console.error("PB Camera Error", e);
             }
@@ -6779,15 +6844,22 @@
                                 if (oData.status === 'success' && oData.data && oData.data.items && oData.data.items.length > 0) {
                                     const item = oData.data.items[0];
                                     const imgDomain = oData.data.APP_DOMAIN_CDN_IMAGE || 'https://img.ophim.live';
+                                    
+                                    const isTrailer = (item.episode_current && item.episode_current.toLowerCase().includes('trailer')) || (item.status === 'trailer');
+                                    const trailerBadge = isTrailer 
+                                        ? '<span class="absolute top-1.5 right-1.5 bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider z-10 shadow-lg shadow-red-600/50">TRAILER</span>'
+                                        : '';
+
                                     el.className = 'my-3 p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 flex items-center gap-4 cursor-pointer transition-all group relative overflow-hidden shadow-xl hover:shadow-primary/5 active:scale-[0.98]';
                                     el.onclick = () => { toggleAiChat(); showView('film'); streamFilmOphim(item.slug, item.name); };
                                     el.innerHTML = `
                                         <div class="w-18 h-24 rounded-xl bg-cover bg-center flex-shrink-0 relative overflow-hidden shadow-lg border border-white/10" style="background-image: url('${imgDomain}/${item.thumb_url}')">
                                             <div class="absolute inset-0 bg-black/50 group-hover:bg-primary/20 transition-all flex items-center justify-center">
                                                 <div class="w-10 h-10 bg-primary/80 text-black rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 shadow-xl">
-                                                    <span class="material-icons-round text-2xl">play_arrow</span>
+                                                    <span class="material-icons-round text-2xl">${isTrailer ? 'videocam' : 'play_arrow'}</span>
                                                 </div>
                                             </div>
+                                            ${trailerBadge}
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="font-bold text-white text-sm group-hover:text-primary transition-colors truncate mb-0.5" title="${item.name}">${item.name}</div>
@@ -6795,7 +6867,7 @@
                                             <div class="flex items-center justify-between">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="text-[9px] font-black bg-white/10 text-slate-300 px-1.5 py-0.5 rounded uppercase tracking-tighter">${item.year}</span>
-                                                    <span class="text-[9px] font-black bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase tracking-tighter">HD</span>
+                                                    <span class="text-[9px] font-black bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase tracking-tighter">${isTrailer ? 'COMING' : 'HD'}</span>
                                                 </div>
                                                 <div class="flex items-center gap-1 text-primary animate-pulse group-hover:animate-none">
                                                     <span class="text-[10px] font-bold uppercase tracking-widest">Xem ngay</span>
@@ -6923,6 +6995,56 @@
         const SUPABASE_URL = 'https://kdvhawbcduqdidkysvcq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtkdmhhd2JjZHVxZGlka3lzdmNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTkyMDMsImV4cCI6MjA5MDY3NTIwM30.LdL-5L_z3Phs6rDtmCkPtIJMw1tp9U2ny0rsUm412cw';
         window.supabaseClient = null;
+        let selectedVideoDeviceId = localStorage.getItem('kiet-camera-id') || null;
+        let cameraDevices = [];
+
+        async function refreshCameraDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                cameraDevices = devices.filter(d => d.kind === 'videoinput');
+                
+                // Auto-detect if selected camera was unplugged
+                if (selectedVideoDeviceId && !cameraDevices.find(d => d.deviceId === selectedVideoDeviceId)) {
+                    console.log("Selected camera unplugged, falling back...");
+                    selectedVideoDeviceId = cameraDevices.length > 0 ? cameraDevices[0].deviceId : null;
+                    if (selectedVideoDeviceId) handleCameraChange(selectedVideoDeviceId);
+                }
+
+                syncAllCameraSelectors();
+            } catch (e) { console.error("Enumerate Error", e); }
+        }
+        
+        // Auto-detect new cameras
+        if (navigator.mediaDevices) {
+            navigator.mediaDevices.ondevicechange = refreshCameraDevices;
+        }
+
+        function syncAllCameraSelectors() {
+            const selectors = document.querySelectorAll('.camera-select-dropdown');
+            selectors.forEach(select => {
+                const currentVal = select.value || selectedVideoDeviceId;
+                select.innerHTML = cameraDevices.map(d => `<option value="${d.deviceId}" ${d.deviceId === currentVal ? 'selected' : ''}>${d.label || 'Camera ' + (cameraDevices.indexOf(d)+1)}</option>`).join('');
+                if (cameraDevices.length > 0 && !selectedVideoDeviceId) {
+                    // Default to first if none saved
+                    // selectedVideoDeviceId = cameraDevices[0].deviceId;
+                }
+            });
+        }
+
+        async function handleCameraChange(deviceId) {
+            selectedVideoDeviceId = deviceId;
+            localStorage.setItem('kiet-camera-id', deviceId);
+            syncAllCameraSelectors();
+            
+            // Hot-switch if active
+            if (activeView === 'home') initCamera();
+            if (activeView === 'photobooth') initPhotoboothCamera();
+            // Watch Party hot-switch
+            if (activeView === 'film' && partyId) {
+                // Re-init with same ID to refresh stream
+                initPartyChannel(partyId);
+            }
+        }
 
         try {
             if (window.supabase) {
@@ -8679,20 +8801,71 @@
                 activePartyChannel.unsubscribe();
                 activePartyChannel = null;
             }
+            // Cleanup WebRTC
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            Object.values(peers).forEach(p => p.destroy());
+            peers = {};
+            document.getElementById('party-mesh-grid').innerHTML = '';
+            document.getElementById('party-mesh-grid').classList.add('hidden');
+
             isPartyHost = false;
             partyId = null;
             document.getElementById('party-status-overlay')?.remove();
             alert("Đã rời phòng Party.");
         };
 
-        function initPartyChannel(id) {
+        let peers = {}; // id -> Peer instance
+        let localStream = null;
+
+        async function initPartyChannel(id) {
             if (activePartyChannel) activePartyChannel.unsubscribe();
 
+            const myUid = window.currentUserUid || 'guest-' + Math.random().toString(36).substring(2, 6);
+
+            // Prepare Webcam for Party
+            try {
+                const constraints = { 
+                    video: selectedVideoDeviceId ? { deviceId: { exact: selectedVideoDeviceId } } : true, 
+                    audio: true 
+                };
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                renderWebcam('local', localStream, 'Bạn (Tôi)', true);
+                document.getElementById('party-mesh-grid')?.classList.remove('hidden');
+                document.getElementById('party-camera-selector')?.classList.remove('hidden');
+                refreshCameraDevices();
+            } catch (err) {
+                console.error("Webcam Error:", err);
+                alert("Không thể mở Webcam. Bạn vẫn có thể xem nhưng không hiện mặt.");
+            }
+
             activePartyChannel = window.supabaseClient.channel(`party:${id}`, {
-                config: { broadcast: { self: false } }
+                config: { broadcast: { self: false }, presence: { key: myUid } }
             });
 
             activePartyChannel
+                .on('presence', { event: 'sync' }, () => {
+                    const state = activePartyChannel.presenceState();
+                    Object.keys(state).forEach(uid => {
+                        if (uid !== myUid && !peers[uid]) {
+                            // As a new joiner, we initiate to everyone already there
+                            createPeer(uid, true);
+                        }
+                    });
+                })
+                .on('broadcast', { event: 'webrtc-signal' }, (payload) => {
+                    const { from, target, signal } = payload.payload;
+                    if (target === myUid) {
+                         if (!peers[from]) createPeer(from, false);
+                         peers[from].signal(signal);
+                    }
+                })
+                .on('broadcast', { event: 'peer-emotion' }, (payload) => {
+                    const { from, emotion } = payload.payload;
+                    showRemoteEmotion(from, emotion);
+                })
                 .on('broadcast', { event: 'sync_play' }, (payload) => {
                     if (isPartyHost) return;
                     syncPlayer('play', payload.payload);
@@ -8713,7 +8886,6 @@
                     }
                 })
                 .on('broadcast', { event: 'request_sync' }, () => {
-                    // Host replies with current status
                     if (isPartyHost) {
                         const video = document.getElementById('film-video-player');
                         activePartyChannel.send({
@@ -8721,7 +8893,7 @@
                             event: 'respond_sync',
                             payload: {
                                 slug: currentFilmSlug,
-                                epIndex: 0, // Simplified for now
+                                epIndex: 0,
                                 time: video ? video.currentTime : 0,
                                 paused: video ? video.paused : true
                             }
@@ -8739,14 +8911,70 @@
                         syncPlayer(paused ? 'pause' : 'play', { time });
                     }
                 })
-                .subscribe((status) => {
-                    if (status === 'SUBSCRIBED' && !isPartyHost) {
-                        // Ask host for current status
-                        activePartyChannel.send({ type: 'broadcast', event: 'request_sync' });
+                .subscribe(async (status) => {
+                    if (status === 'SUBSCRIBED') {
+                        await activePartyChannel.track({ online_at: new Date().toISOString(), user_id: window.currentUserUid });
+                        if (!isPartyHost) {
+                            activePartyChannel.send({ type: 'broadcast', event: 'request_sync' });
+                        }
+                        if (localStream) startEmotionTracking();
                     }
                 });
 
             setupHostListeners();
+        }
+
+        function createPeer(targetUid, initiator) {
+            const peer = new SimplePeer({
+                initiator: initiator,
+                trickle: false,
+                stream: localStream
+            });
+
+            peer.on('signal', data => {
+                activePartyChannel.send({
+                    type: 'broadcast',
+                    event: 'webrtc-signal',
+                    payload: { from: window.currentUserUid || 'me', target: targetUid, signal: data }
+                });
+            });
+
+            peer.on('stream', stream => {
+                renderWebcam(targetUid, stream, `Bạn bè (${targetUid.substring(0,4)})`);
+            });
+
+            peer.on('close', () => {
+                document.getElementById(`peer-video-${targetUid}`)?.parentElement?.remove();
+                delete peers[targetUid];
+            });
+
+            peers[targetUid] = peer;
+            return peer;
+        }
+
+        function renderWebcam(id, stream, label, isLocal = false) {
+            const grid = document.getElementById('party-mesh-grid');
+            if (!grid) return;
+
+            let container = document.getElementById(`peer-cont-${id}`);
+            if (!container) {
+                container = document.createElement('div');
+                container.id = `peer-cont-${id}`;
+                container.className = 'relative aspect-video bg-black/40 rounded-xl overflow-hidden border border-white/10 group';
+                container.innerHTML = `
+                    <video id="peer-video-${id}" class="w-full h-full object-cover ${isLocal ? 'mirror-mode' : ''}" autoplay playsinline ${isLocal ? 'muted' : ''}></video>
+                    <div class="absolute bottom-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                        <span class="text-[9px] font-bold text-white uppercase tracking-tight">${label}</span>
+                    </div>
+                    <div id="peer-emotion-${id}" class="absolute top-2 right-2 px-2 py-1 bg-primary/20 backdrop-blur-md rounded-lg border border-primary/40 opacity-0 transition-opacity">
+                        <span class="text-lg">😊</span>
+                    </div>
+                `;
+                grid.appendChild(container);
+            }
+            const video = document.getElementById(`peer-video-${id}`);
+            video.srcObject = stream;
         }
 
         function setupHostListeners() {
@@ -8781,9 +9009,7 @@
 
             if (action === 'play') {
                 if (data && Math.abs(video.currentTime - data.time) > 1.5) video.currentTime = data.time;
-                video.play().catch(() => {
-                    // Autoplay might be blocked, show a small hint if needed
-                });
+                video.play().catch(() => {});
             } else if (action === 'pause') {
                 video.pause();
                 if (data) video.currentTime = data.time;
@@ -8796,6 +9022,57 @@
                 video.onpause = oldOnPause;
                 video.onseeked = oldOnSeek;
             }, 500);
+        }
+
+        // --- EMOTION TRACKING ---
+        let emotionInterval = null;
+        const EMOTION_MAP = {
+            'angry': '🔥', 'disgust': '🤢', 'fear': '😨', 'happy': '😂', 
+            'sad': '😭', 'surprise': '😲', 'neutral': '😐'
+        };
+
+        function startEmotionTracking() {
+            if (emotionInterval) clearInterval(emotionInterval);
+            emotionInterval = setInterval(async () => {
+                const video = document.getElementById('peer-video-local');
+                if (!video || !activePartyChannel) return;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = 160; canvas.height = 120;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                canvas.toBlob(async (blob) => {
+                    const formData = new FormData();
+                    formData.append('file', blob, 'emotion.jpg');
+                    try {
+                        const res = await fetch('/api/emotion', { method: 'POST', body: formData });
+                        const data = await res.json();
+                        if (data.status === 'success') {
+                            const em = data.emotion;
+                            showRemoteEmotion('local', em);
+                            activePartyChannel.send({
+                                type: 'broadcast',
+                                event: 'peer-emotion',
+                                payload: { from: window.currentUserUid || 'me', emotion: em }
+                            });
+                        }
+                    } catch (e) {}
+                }, 'image/jpeg', 0.5);
+            }, 4000); // 4 seconds interval to be polite to server
+        }
+
+        function showRemoteEmotion(uid, emotion) {
+            const el = document.getElementById(`peer-emotion-${uid}`);
+            if (!el) return;
+            const emoji = EMOTION_MAP[emotion] || '😐';
+            el.querySelector('span').innerText = emoji;
+            el.style.opacity = '1';
+            el.classList.add('scale-125');
+            setTimeout(() => { 
+                el.style.opacity = '0';
+                el.classList.remove('scale-125');
+            }, 3000);
         }
 
         const observer = new MutationObserver(() => {
