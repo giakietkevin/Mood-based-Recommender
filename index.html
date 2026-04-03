@@ -581,6 +581,32 @@
                         <span class="material-icons-round text-primary text-2xl animate-pulse">sensors</span>
                     </div>
                 </div>
+
+                <!-- Watch Party Status and Controls -->
+                <div class="glass-card rounded-2xl p-4 border border-primary/20 flex flex-col gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                            <span class="material-icons-round">groups</span>
+                        </div>
+                        <div>
+                            <h4 class="text-white font-bold text-xs uppercase tracking-tight">Music Watch Party</h4>
+                            <p class="text-[10px] text-slate-500 font-bold">Cùng nhau thưởng thức âm nhạc</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <button onclick="promptJoinParty()"
+                            class="flex-1 py-2 rounded-xl bg-white/5 text-slate-300 hover:text-white text-[10px] font-black uppercase border border-white/10 transition-all">Join
+                            Party</button>
+                        <button onclick="startWatchParty()"
+                            class="flex-1 py-2 rounded-xl bg-primary text-[#0a0a0a] text-[10px] font-black uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">Start
+                            Party</button>
+                    </div>
+                </div>
+
+                <!-- Dashboard Watch Party Video Grid (P2P Feed) -->
+                <div id="dashboard-party-mesh-grid" class="hidden grid grid-cols-2 gap-3 mt-4 animate-fade-in">
+                    <!-- Local and Remote videos will be injected here -->
+                </div>
             </section>
 
             <section class="lg:col-span-7 space-y-4">
@@ -3102,7 +3128,12 @@
         // ==========================================
         // 5. PLAYER LOGIC (Unified Local + Youtube)
         // ==========================================
+        window.currentTrackData = null;
         function playTrack(data, mode) {
+            window.currentTrackData = data;
+            if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel) {
+                activePartyChannel.send({ type: 'broadcast', event: 'change_track', payload: { data, mode } });
+            }
             const playerBar = document.getElementById('player-bar');
             const pTitle = document.getElementById('player-title');
             const pDesc = document.getElementById('player-desc');
@@ -3312,8 +3343,18 @@
                     'onStateChange': (event) => {
                         const playIcon = document.getElementById('play-icon');
                         if (currentMode === 'youtube') {
-                            if (event.data === YT.PlayerState.PLAYING) playIcon.innerText = "pause";
-                            else playIcon.innerText = "play_arrow";
+                            if (event.data === YT.PlayerState.PLAYING) {
+                                playIcon.innerText = "pause";
+                                if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel) {
+                                    activePartyChannel.send({ type: 'broadcast', event: 'sync_play', payload: { time: ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0 } });
+                                }
+                            }
+                            else {
+                                playIcon.innerText = "play_arrow";
+                                if (event.data === YT.PlayerState.PAUSED && typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel) {
+                                    activePartyChannel.send({ type: 'broadcast', event: 'sync_pause', payload: { time: ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0 }});
+                                }
+                            }
                         }
                     }
                 }
@@ -8808,8 +8849,10 @@
             }
             Object.values(peers).forEach(p => p.destroy());
             peers = {};
-            document.getElementById('party-mesh-grid').innerHTML = '';
-            document.getElementById('party-mesh-grid').classList.add('hidden');
+            ['party-mesh-grid', 'dashboard-party-mesh-grid'].forEach(gId => {
+                const g = document.getElementById(gId);
+                if (g) { g.innerHTML = ''; g.classList.add('hidden'); }
+            });
 
             isPartyHost = false;
             partyId = null;
@@ -8834,6 +8877,7 @@
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
                 renderWebcam('local', localStream, 'Bạn (Tôi)', true);
                 document.getElementById('party-mesh-grid')?.classList.remove('hidden');
+                document.getElementById('dashboard-party-mesh-grid')?.classList.remove('hidden');
                 document.getElementById('party-camera-selector')?.classList.remove('hidden');
                 refreshCameraDevices();
             } catch (err) {
@@ -8888,27 +8932,59 @@
                 .on('broadcast', { event: 'request_sync' }, () => {
                     if (isPartyHost) {
                         const video = document.getElementById('film-video-player');
+                        const audio = document.getElementById('local-audio');
+                        const media = (video && !video.paused) ? video : ((audio && !audio.paused) ? audio : (video || audio));
+                        
+                        let yTime = 0, yPaused = true;
+                        if (typeof isYtReady !== 'undefined' && isYtReady && typeof ytPlayer !== 'undefined' && typeof currentMode !== 'undefined' && currentMode === 'youtube') {
+                            yTime = (typeof ytPlayer.getCurrentTime === 'function') ? ytPlayer.getCurrentTime() : 0;
+                            yPaused = (typeof ytPlayer.getPlayerState === 'function') ? (ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) : true;
+                        }
+
                         activePartyChannel.send({
                             type: 'broadcast',
                             event: 'respond_sync',
                             payload: {
-                                slug: currentFilmSlug,
+                                slug: typeof currentFilmSlug !== 'undefined' ? currentFilmSlug : null,
                                 epIndex: 0,
-                                time: video ? video.currentTime : 0,
-                                paused: video ? video.paused : true
+                                time: typeof currentMode !== 'undefined' && currentMode === 'youtube' ? yTime : (media ? media.currentTime : 0),
+                                paused: typeof currentMode !== 'undefined' && currentMode === 'youtube' ? yPaused : (media ? media.paused : true),
+                                audioSrc: audio ? audio.src : null,
+                                currentMode: typeof currentMode !== 'undefined' ? currentMode : null,
+                                trackData: typeof window.currentTrackData !== 'undefined' ? window.currentTrackData : null
                             }
                         });
                     }
                 })
                 .on('broadcast', { event: 'respond_sync' }, (payload) => {
                     if (isPartyHost) return;
-                    const { slug, epIndex, time, paused } = payload.payload;
-                    if (slug && currentFilmSlug !== slug) {
+                    const { slug, epIndex, time, paused, audioSrc, currentMode: cMode, trackData } = payload.payload;
+                    if (slug && typeof currentFilmSlug !== 'undefined' && currentFilmSlug !== slug && typeof window.streamFilmOphim === 'function') {
                         window.streamFilmOphim(slug, "", epIndex).then(() => {
                             setTimeout(() => syncPlayer(paused ? 'pause' : 'play', { time }), 1000);
                         });
-                    } else if (slug) {
+                    } else if (cMode && trackData && typeof playTrack === 'function') {
+                        let shouldPlay = false;
+                        if (typeof currentMode === 'undefined' || currentMode !== cMode) shouldPlay = true;
+                        if (!window.currentTrackData || window.currentTrackData.link !== trackData.link) shouldPlay = true;
+                        
+                        if (shouldPlay) {
+                            playTrack(trackData, cMode);
+                        }
+                        setTimeout(() => syncPlayer(paused ? 'pause' : 'play', { time }), 1500);
+                    } else if (audioSrc && document.getElementById('local-audio') && (!document.getElementById('local-audio').src || !document.getElementById('local-audio').src.includes(audioSrc))) {
+                        document.getElementById('local-audio').src = audioSrc;
+                        document.getElementById('local-audio').load();
+                        setTimeout(() => syncPlayer(paused ? 'pause' : 'play', { time }), 500);
+                    } else {
                         syncPlayer(paused ? 'pause' : 'play', { time });
+                    }
+                })
+                .on('broadcast', { event: 'change_track' }, (payload) => {
+                    if (isPartyHost) return;
+                    const { data, mode } = payload.payload;
+                    if (typeof playTrack === 'function') {
+                        playTrack(data, mode);
                     }
                 })
                 .subscribe(async (status) => {
@@ -8944,7 +9020,9 @@
             });
 
             peer.on('close', () => {
-                document.getElementById(`peer-video-${targetUid}`)?.parentElement?.remove();
+                ['party-mesh-grid', 'dashboard-party-mesh-grid'].forEach(gridId => {
+                    document.getElementById(`video-${gridId}-peer-${targetUid}`)?.parentElement?.remove();
+                });
                 delete peers[targetUid];
             });
 
@@ -8953,75 +9031,94 @@
         }
 
         function renderWebcam(id, stream, label, isLocal = false) {
-            const grid = document.getElementById('party-mesh-grid');
-            if (!grid) return;
+            ['party-mesh-grid', 'dashboard-party-mesh-grid'].forEach(gridId => {
+                const grid = document.getElementById(gridId);
+                if (!grid) return;
 
-            let container = document.getElementById(`peer-cont-${id}`);
-            if (!container) {
-                container = document.createElement('div');
-                container.id = `peer-cont-${id}`;
-                container.className = 'relative aspect-video bg-black/40 rounded-xl overflow-hidden border border-white/10 group';
-                container.innerHTML = `
-                    <video id="peer-video-${id}" class="w-full h-full object-cover ${isLocal ? 'mirror-mode' : ''}" autoplay playsinline ${isLocal ? 'muted' : ''}></video>
-                    <div class="absolute bottom-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
-                        <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                        <span class="text-[9px] font-bold text-white uppercase tracking-tight">${label}</span>
-                    </div>
-                    <div id="peer-emotion-${id}" class="absolute top-2 right-2 px-2 py-1 bg-primary/20 backdrop-blur-md rounded-lg border border-primary/40 opacity-0 transition-opacity">
-                        <span class="text-lg">😊</span>
-                    </div>
-                `;
-                grid.appendChild(container);
-            }
-            const video = document.getElementById(`peer-video-${id}`);
-            video.srcObject = stream;
+                const contId = `${gridId}-peer-${id}`;
+                let container = document.getElementById(contId);
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = contId;
+                    container.className = 'relative aspect-video bg-black/40 rounded-xl overflow-hidden border border-white/10 group';
+                    container.innerHTML = `
+                        <video id="video-${contId}" class="w-full h-full object-cover ${isLocal ? 'mirror-mode' : ''}" autoplay playsinline ${isLocal ? 'muted' : ''}></video>
+                        <div class="absolute bottom-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                            <span class="text-[9px] font-bold text-white uppercase tracking-tight">${label}</span>
+                        </div>
+                        <div id="emotion-${contId}" class="absolute top-2 right-2 px-2 py-1 bg-primary/20 backdrop-blur-md rounded-lg border border-primary/40 opacity-0 transition-opacity">
+                            <span class="text-lg">😊</span>
+                        </div>
+                    `;
+                    grid.appendChild(container);
+                }
+                const video = document.getElementById(`video-${contId}`);
+                video.srcObject = stream;
+            });
         }
 
         function setupHostListeners() {
-            const video = document.getElementById('film-video-player');
-            if (!video) return;
+            ['film-video-player', 'local-audio'].forEach(id => {
+                const media = document.getElementById(id);
+                if (!media) return;
 
-            video.onplay = () => {
-                if (isPartyHost && activePartyChannel) {
-                    activePartyChannel.send({ type: 'broadcast', event: 'sync_play', payload: { time: video.currentTime } });
-                }
-            };
-            video.onpause = () => {
-                if (isPartyHost && activePartyChannel) {
-                    activePartyChannel.send({ type: 'broadcast', event: 'sync_pause' });
-                }
-            };
-            video.onseeked = () => {
-                if (isPartyHost && activePartyChannel) {
-                    activePartyChannel.send({ type: 'broadcast', event: 'sync_seek', payload: { time: video.currentTime } });
-                }
-            };
+                media.onplay = () => {
+                    if (isPartyHost && activePartyChannel) {
+                        activePartyChannel.send({ type: 'broadcast', event: 'sync_play', payload: { time: media.currentTime } });
+                    }
+                };
+                media.onpause = () => {
+                    if (isPartyHost && activePartyChannel) {
+                        activePartyChannel.send({ type: 'broadcast', event: 'sync_pause' });
+                    }
+                };
+                media.onseeked = () => {
+                    if (isPartyHost && activePartyChannel) {
+                        activePartyChannel.send({ type: 'broadcast', event: 'sync_seek', payload: { time: media.currentTime } });
+                    }
+                };
+            });
         }
 
         function syncPlayer(action, data) {
-            const video = document.getElementById('film-video-player');
-            if (!video) return;
+            ['film-video-player', 'local-audio'].forEach(id => {
+                const media = document.getElementById(id);
+                if (!media) return;
 
-            const oldOnPlay = video.onplay;
-            const oldOnPause = video.onpause;
-            const oldOnSeek = video.onseeked;
-            video.onplay = video.onpause = video.onseeked = null;
+                const oldOnPlay = media.onplay;
+                const oldOnPause = media.onpause;
+                const oldOnSeek = media.onseeked;
+                media.onplay = media.onpause = media.onseeked = null;
 
-            if (action === 'play') {
-                if (data && Math.abs(video.currentTime - data.time) > 1.5) video.currentTime = data.time;
-                video.play().catch(() => {});
-            } else if (action === 'pause') {
-                video.pause();
-                if (data) video.currentTime = data.time;
-            } else if (action === 'seek') {
-                if (data) video.currentTime = data.time;
+                if (action === 'play') {
+                    if (data && Math.abs(media.currentTime - data.time) > 1.5) media.currentTime = data.time;
+                    media.play().catch(() => {});
+                } else if (action === 'pause') {
+                    media.pause();
+                    if (data) media.currentTime = data.time;
+                } else if (action === 'seek') {
+                    if (data) media.currentTime = data.time;
+                }
+
+                setTimeout(() => {
+                    media.onplay = oldOnPlay;
+                    media.onpause = oldOnPause;
+                    media.onseeked = oldOnSeek;
+                }, 500);
+            });
+
+            if (typeof currentMode !== 'undefined' && currentMode === 'youtube' && typeof isYtReady !== 'undefined' && isYtReady && typeof ytPlayer !== 'undefined' && ytPlayer.playVideo) {
+                if (action === 'play') {
+                    if (data && ytPlayer.getCurrentTime && Math.abs(ytPlayer.getCurrentTime() - data.time) > 1.5) ytPlayer.seekTo(data.time, true);
+                    ytPlayer.playVideo();
+                } else if (action === 'pause') {
+                    ytPlayer.pauseVideo();
+                    if (data && ytPlayer.seekTo) ytPlayer.seekTo(data.time, true);
+                } else if (action === 'seek') {
+                    if (data && ytPlayer.seekTo) ytPlayer.seekTo(data.time, true);
+                }
             }
-
-            setTimeout(() => {
-                video.onplay = oldOnPlay;
-                video.onpause = oldOnPause;
-                video.onseeked = oldOnSeek;
-            }, 500);
         }
 
         // --- EMOTION TRACKING ---
@@ -9063,16 +9160,19 @@
         }
 
         function showRemoteEmotion(uid, emotion) {
-            const el = document.getElementById(`peer-emotion-${uid}`);
-            if (!el) return;
             const emoji = EMOTION_MAP[emotion] || '😐';
-            el.querySelector('span').innerText = emoji;
-            el.style.opacity = '1';
-            el.classList.add('scale-125');
-            setTimeout(() => { 
-                el.style.opacity = '0';
-                el.classList.remove('scale-125');
-            }, 3000);
+            ['party-mesh-grid', 'dashboard-party-mesh-grid'].forEach(gridId => {
+                const el = document.getElementById(`emotion-${gridId}-peer-${uid}`);
+                if (el) {
+                    el.querySelector('span').innerText = emoji;
+                    el.style.opacity = '1';
+                    el.classList.add('scale-125');
+                    setTimeout(() => { 
+                        el.style.opacity = '0';
+                        el.classList.remove('scale-125');
+                    }, 3000);
+                }
+            });
         }
 
         const observer = new MutationObserver(() => {
