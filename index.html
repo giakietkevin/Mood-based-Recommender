@@ -419,6 +419,7 @@
                                 class="absolute right-1.5 top-1.5 bottom-1.5 px-3 flex justify-center items-center bg-primary text-black font-bold text-[10px] rounded-lg transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20 uppercase tracking-tighter">TÌM
                                 BẠN</button>
                         </div>
+                        <div id="home-search-results" class="mb-5 hidden space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1"></div>
                         <p class="text-[8px] text-slate-500 mt-2 px-1 leading-relaxed">
                             <span class="text-primary font-black">LƯU Ý:</span> Bạn bè cần
                             <button
@@ -8180,18 +8181,20 @@
             if (!window.currentUserUid) return alert("Vui lòng đăng nhập để kết bạn!");
 
             const emailInput = document.getElementById('home-add-friend-email');
+            const resultsContainer = document.getElementById('home-search-results');
             const searchValue = emailInput.value.trim();
 
             if (!searchValue) return alert('Vui lòng nhập Tên hoặc Email người cần tìm!');
             const myEmail = document.getElementById('user-email-display').innerText;
 
             try {
-                // Determine if searching by email or name
+                resultsContainer.innerHTML = '<p class="text-[10px] text-slate-500 animate-pulse text-center py-2">Đang tìm kiếm...</p>';
+                resultsContainer.classList.remove('hidden');
+
                 const isEmail = searchValue.includes('@');
-                let query = window.supabaseClient.from('profiles').select('id, email, full_name');
+                let query = window.supabaseClient.from('profiles').select('id, email, full_name, avatar_url');
 
                 if (isEmail) {
-                    if (searchValue === myEmail) return alert('Bạn không thể tự kết bạn với chính mình!');
                     query = query.ilike('email', searchValue);
                 } else {
                     query = query.ilike('full_name', `%${searchValue}%`);
@@ -8201,36 +8204,66 @@
                 if (error) throw error;
 
                 if (!targetUsers || targetUsers.length === 0) {
-                    return alert('Không tìm thấy người dùng nào phù hợp!');
+                    resultsContainer.innerHTML = '<p class="text-[10px] text-red-400 text-center py-2 uppercase font-black tracking-widest">Không tìm thấy ai!</p>';
+                    return;
                 }
 
-                // If multiple users found (by name), let user choose (simplified for this task - pick first or refine search)
-                const targetUser = targetUsers.find(u => u.id !== window.currentUserUid) || targetUsers[0];
-                if (targetUser.id === window.currentUserUid && targetUsers.length === 1) {
-                    return alert('Bạn không thể tự kết bạn với chính mình!');
-                }
+                resultsContainer.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[9px] text-primary font-black uppercase tracking-widest">Kết quả tìm kiếm</span>
+                        <button onclick="document.getElementById('home-search-results').classList.add('hidden')" class="material-icons-round text-slate-500 text-sm hover:text-white">close</button>
+                    </div>
+                    ${targetUsers.map(u => {
+                        const isMe = u.id === window.currentUserUid;
+                        const avatar = u.avatar_url || avatarFromEmail(u.email || u.id);
+                        return `
+                            <div class="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5 hover:border-primary/30 transition-all group">
+                                <div class="flex items-center gap-3 overflow-hidden pr-2">
+                                    <img src="${avatar}" class="w-9 h-9 rounded-full border border-white/10 object-cover bg-black/20">
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] text-white font-bold truncate">${u.full_name}${isMe ? ' (Bạn)' : ''}</p>
+                                        <p class="text-[9px] text-slate-500 truncate">${u.email}</p>
+                                    </div>
+                                </div>
+                                ${!isMe ? `
+                                    <button onclick="requestFriendDirect('${u.id}', '${u.full_name}', '${u.email}')" 
+                                        class="w-8 h-8 flex items-center justify-center bg-primary/20 text-primary rounded-lg hover:bg-primary hover:text-black transition-all active:scale-90"
+                                        title="Thêm bạn">
+                                        <span class="material-icons-round text-[18px]">person_add</span>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                `;
+            } catch (e) {
+                resultsContainer.innerHTML = `<p class="text-[10px] text-red-500 py-1">Lỗi: ${e.message}</p>`;
+            }
+        };
 
-                // Check if already friends or requested
-                const { data: existing, error: e2 } = await window.supabaseClient
+        window.requestFriendDirect = async (targetId, targetName, targetEmail) => {
+            try {
+                // Check existing
+                const { data: existing } = await window.supabaseClient
                     .from('friendships')
                     .select('*')
-                    .or(`and(sender_id.eq.${window.currentUserUid},receiver_id.eq.${targetUser.id}),and(sender_id.eq.${targetUser.id},receiver_id.eq.${window.currentUserUid})`);
+                    .or(`and(sender_id.eq.${window.currentUserUid},receiver_id.eq.${targetId}),and(sender_id.eq.${targetId},receiver_id.eq.${window.currentUserUid})`);
 
-                if (existing && existing.length > 0) return alert('Bạn đã là bạn bè hoặc đã gửi yêu cầu rồi!');
+                if (existing && existing.length > 0) return alert('Đã là bạn bè hoặc đã gửi yêu cầu!');
 
-                // Create request
-                const { error: e3 } = await window.supabaseClient
+                const { error } = await window.supabaseClient
                     .from('friendships')
                     .insert([{
                         sender_id: window.currentUserUid,
-                        receiver_id: targetUser.id,
+                        receiver_id: targetId,
                         status: 'pending'
                     }]);
 
-                if (e3) throw e3;
+                if (error) throw error;
 
-                alert(`Đã gửi lời mời kết bạn đến: ${targetUser.full_name} (${targetUser.email}) ✨`);
-                emailInput.value = '';
+                alert(`Đã gửi lời mời đến ${targetName} ✨`);
+                document.getElementById('home-search-results').classList.add('hidden');
+                document.getElementById('home-add-friend-email').value = '';
                 renderBuddySystem();
             } catch (e) {
                 alert("Lỗi: " + e.message);
