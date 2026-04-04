@@ -845,6 +845,33 @@
 
         <!-- FILM STATION VIEW -->
         <div id="view-film" class="hidden animate-fade-in space-y-6">
+            <!-- VIP ACCESS MODAL -->
+            <div id="film-vip-modal" class="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-fade-in">
+                <div class="glass-card w-full max-w-sm rounded-[2.5rem] border border-white/10 p-10 flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
+                    <div class="absolute -top-24 -left-24 w-48 h-48 bg-primary/10 blur-[80px] rounded-full"></div>
+                    <div class="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-6 border border-primary/20">
+                        <span class="material-icons-round text-primary text-3xl">lock</span>
+                    </div>
+                    <h3 class="text-2xl font-display font-bold text-white mb-2 uppercase tracking-tight">VIP Access</h3>
+                    <p class="text-slate-400 text-xs mb-8 leading-relaxed">Tính năng này chỉ dành cho người dùng được cấp quyền. Vui lòng nhập mã truy cập của bạn.</p>
+                    
+                    <div class="w-full space-y-4">
+                        <input type="text" id="film-vip-code" placeholder="******" maxlength="6"
+                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-700">
+                        <button onclick="verifyFilmVipCode()" 
+                            class="w-full bg-primary text-[#0a0a0a] font-black py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 uppercase tracking-widest text-sm">
+                            XÁC NHẬN TRUY CẬP
+                        </button>
+                    </div>
+                    
+                    <div class="mt-6 text-slate-500 text-[10px] font-bold">
+                        LIÊN HỆ GMAIL: <span class="text-primary selection:bg-primary/30">giakiethcb1@gmail.com</span> ĐỂ NHẬN MÃ
+                    </div>
+                    
+                    <button onclick="showView('home')" class="mt-8 text-slate-500 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors">Quay lại trang chủ</button>
+                </div>
+            </div>
+
 
             <!-- Header + Search Bar -->
             <div class="glass-card rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 border border-white/10">
@@ -2857,6 +2884,24 @@
                 // Photobooth extra init if needed
             }
 
+            // VIP Access Check
+            if (viewName === 'film') {
+                const checkVip = async () => {
+                    const modal = document.getElementById('film-vip-modal');
+                    if (!modal) return;
+                    
+                    if (window.currentUserUid && window.supabaseClient) {
+                        const { data: profile } = await window.supabaseClient.from('profiles').select('type').eq('id', window.currentUserUid).single();
+                        if (profile && profile.type === 'vip') {
+                            modal.classList.add('hidden');
+                            return;
+                        }
+                    }
+                    modal.classList.remove('hidden');
+                };
+                checkVip();
+            }
+
             // History Management
             try {
                 const url = new URL(window.location.href);
@@ -4380,6 +4425,16 @@
             filmHistory = filmHistory.filter(f => f.slug !== slug);
             renderFilmHistory();
             fetch(`/films?uid=${window.currentUserUid}&slug=${encodeURIComponent(slug)}`, { method: 'DELETE' }).catch(console.error);
+        };
+
+        window.verifyFilmVipCode = () => {
+            const input = document.getElementById('film-vip-code');
+            const code = input.value.trim();
+            if (code === '100705') {
+                document.getElementById('film-vip-modal').classList.add('hidden');
+            } else {
+                alert('Mã truy cập không chính xác. Vui lòng kiểm tra lại!');
+            }
         };
 
         window.renderFilmHistory = () => {
