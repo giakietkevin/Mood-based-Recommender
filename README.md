@@ -1,90 +1,70 @@
 ---
 title: KietSound Pro - AI Music & Film Studio
 emoji: 🎵🎬
-colorFrom: pink
-colorTo: blue
-sdk: docker
-pinned: false
 short_description: AI Music Studio with Mood Detection & Film Streaming
+sdk: docker
 ---
 
 # 🎵 KietSound Pro - AI Music & Film Studio
 
-An all-in-one entertainment platform featuring AI-powered music generation, facial mood-based music recommendations, and high-speed Vietnamese movie streaming.
+Hệ thống giải trí cao cấp tích hợp AI nhận diện khuôn mặt để đề xuất nhạc và xem phim chất lượng cao.
 
-## ✨ Key Features
+## ✨ Tính năng nổi bật
 
-### 🎬 KietFilm Player (New!)
-- **Seamless Movie Streaming**: Integrated with the Open OPhim API for lightning-fast, ad-free movie streaming.
-- **HLS Architecture**: Uses `HLS.js` to deliver native, high-performance video streaming without heavy backend proxies.
-- **Auto-Subtitles**: All movies are pre-equipped with high-quality Vietnamese subtitles perfectly synced.
-- **Smart History**: Automatically tracks your recently watched movies for easy resume/replay.
+### 🎬 KietFilm Player
+- **Stream Tốc Độ Cao**: Tích hợp OPhim API, hỗ trợ định dạng HLS (.m3u8) truyền tải mượt mà.
+- **Không Quảng Cáo**: Trải nghiệm xem phim sạch, không popup khó chịu.
+- **Phụ Đề Tiếng Việt**: Tự động đồng bộ sub cho mọi đại lộ phim.
+- **Lịch Sử Xem**: Ghi nhớ phim đang xem dở để tiếp tục bất cứ lúc nào.
 
-### 🎭 Mood-Based Recommendation
-- **Facial Recognition**: Analyze facial emotions using DeepFace.
-- **Smart Search**: DuckDuckGo-powered YouTube search based on detected mood.
-- **Music & Podcast**: Support for both music and podcast recommendations.
+### 🎭 Đề xuất theo cảm xúc (Mood-Based)
+- **Face AI**: Sử dụng thư viện DeepFace phân tích biểu cảm từ Webcam.
+- **Smart Mapping**: Tự động chuyển đổi cảm xúc (Vui, Buồn, Giận dữ...) thành từ khóa tìm kiếm nhạc/phim phù hợp.
+- **Đa nền tảng**: Tìm kiếm trực tiếp trên YouTube và Podcast.
 
-### 🎹 AI Music Generator (Text-to-Music)
-Professional-grade music generation from lyrics with:
+### 🎹 Trình tạo nhạc AI (Text-to-Music)
+- **Vocal chuyên nghiệp**: Sử dụng Edge-TTS tạo giọng hát tự nhiên với nhiều tùy chọn vùng miền.
+- **Xử lý âm thanh Studio**: Tự động Mix & Master, thêm hiệu ứng Reverb, Delay, và Compression theo Style.
+- **Cấu trúc bài hát**: Auto-generate Intro, Verse, Chorus, Outro.
 
-#### 🎤 Advanced Vocal Processing
-- **Multi-TTS Support**: Edge-TTS (primary) with gTTS fallback.
-- **Intelligent Pitch Contouring**: Custom melodic patterns tailored for Rap, Ballad, EDM, Rock, and more.
-- **Vibrato Effects**: Natural vibrato for Ballad, Soul, Jazz styles.
-- **12+ Voice Profiles**: Wide range of Male/Female regional variations.
+---
 
-#### 🎵 Studio-Grade Audio Processing
-- **Time Stretching**: Rubberband-powered tempo matching.
-- **Multi-Band Compression**: Adaptive compression per style.
-- **Style-Specific EQ**: Optimized frequency curves.
-- **Adaptive Reverb & Delay**: Context-aware spatial effects.
+## 🛠️ Yêu cầu hệ thống
+- **OS**: Windows 10/11, Linux hoặc macOS.
+- **Python**: 3.10 trở lên.
+- **RAM**: Tối thiểu 4GB (Khuyên dùng 8GB để chạy AI mượt hơn).
+- **Phần cứng**: Webcam (để dùng tính năng nhận diện cảm xúc).
 
-#### 🎼 Intelligent Music Structure
-- **Auto Song Structure**: Intro → Verse → Chorus → Bridge → Outro.
-- **Hook Detection**: Automatic chorus identification.
-- **Adaptive Spacing**: Style-specific breathing room.
+---
 
-#### 🎚️ Professional Mixing
-- **Auto-Ducking**: Beat volume reduction during vocals.
-- **Gain Staging**: Style & mood-aware volume balance.
-- **Mastering Chain**: Peak normalization, soft clipping, final limiting.
-- **320kbps MP3 Export**: High-quality audio output.
+## 🚀 Hướng dẫn cài đặt
 
-### 🎨 70+ Music Styles Supported
-- Chill, Urban, Electronic, Rock, Pop & More
+### 1. Cài đặt các công cụ bổ trợ
+Bạn cần cài đặt **FFmpeg** để xử lý âm thanh và video:
+- **Windows**: Tải tại [ffmpeg.org](https://ffmpeg.org/download.html) và thêm vào PATH.
+- **Linux**: `sudo apt install ffmpeg`
 
-### 🎭 10+ Mood Profiles
-Joy, Sadness, Anger, Fear, Surprise, Anticipation, Calmness, Romantic, Nostalgia, Triumph.
-
-## 🛠️ Technical Stack
-
-### Backend
-- **FastAPI**: High-performance async web framework
-- **DeepFace**: Facial emotion detection
-- **OPhim API**: Comprehensive Vietnamese movie streaming
-- **librosa & pydub**: Audio analysis and manipulation
-- **pyrubberband & pedalboard**: Pitch shifting, time stretching, effects
-- **edge-tts**: High-quality text-to-speech
-
-### Frontend
-- **TailwindCSS**: Modern UI framework
-- **Vanilla JS**: Lightweight, zero-dependency components
-- **HLS.js**: Lightning-fast `.m3u8` video streaming
-- **YouTube IFrame API**: Embedded playback
-- **Firebase Auth**: Google OAuth integration
-
-## 🚀 Installation
-
-### Requirements
-- Python 3.10+
-- FFmpeg (included in repo)
-- 4GB RAM minimum (8GB recommended)
-
-### Setup
+### 2. Cài đặt Python Dependencies
+Mở Terminal/Command Prompt tại thư mục dự án và chạy:
 ```bash
-# Install dependencies
 pip install -r requirements.txt
+```
 
-# Run server
+### 3. Khởi chạy ứng dụng
+Chạy lệnh sau để bắt đầu:
+```bash
 python main.py
+```
+Sau đó truy cập địa chỉ: `http://localhost:8000` trên trình duyệt.
+
+---
+
+## 🏗️ Kiến trúc kỹ thuật
+- **Backend**: FastAPI (Python) - Xử lý logic AI và API.
+- **Frontend**: Vanilla JS, HTML5, CSS3 (Tailwind-style) - Giao diện hiện đại, responsive.
+- **AI Models**: DeepFace (Emotion Detection).
+- **Streaming**: HLS.js cho trình phát video.
+- **Database/Auth**: Firebase Integration.
+
+## 📝 Lưu ý bản quyền
+Dự án được xây dựng phục vụ mục đích học tập và nghiên cứu công nghệ AI. Chúng tôi không lưu trữ bất kỳ tệp video nào trên máy chủ. Mọi dữ liệu phim được lấy từ các API công cộng.
