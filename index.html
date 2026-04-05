@@ -328,7 +328,7 @@
                     <h4 class="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-3">Sinh nhật</h4>
                     <div class="flex items-center gap-3">
                         <span class="material-icons-round text-primary text-2xl">cake</span>
-                        <p class="text-xs text-slate-300">Hôm nay là sinh nhật của <b>Gia Bảo</b> và 2 người khác.</p>
+                        <p class="text-xs text-slate-300">Hôm nay là sinh nhật của <b>Kevin</b> và những người bạn.</p>
                     </div>
                 </div>
 
@@ -372,6 +372,344 @@
                     <div id="home-friend-requests" class="space-y-3"></div>
                 </div>
             </aside>
+        </div>
+
+        <!-- STORY CREATOR MODAL (Facebook Style) -->
+        <div id="story-creator-modal" class="fixed inset-0 z-[1000] bg-[#0a0a0a] hidden animate-fade-in flex">
+            <!-- Sidebar Controls -->
+            <aside class="w-[360px] h-full bg-[#1c1e21] border-r border-white/5 flex flex-col shadow-2xl">
+                <div class="p-4 flex items-center justify-between border-b border-white/5">
+                    <div class="flex items-center gap-2">
+                        <button onclick="closeStoryCreator()"
+                            class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-400 transtion-all">
+                            <span class="material-icons-round">close</span>
+                        </button>
+                        <img src="https://static.xx.fbcdn.net/rsrc.php/v3/y2/r/y99vry8q99v.png" class="w-9 h-9">
+                    </div>
+                </div>
+
+                <div class="px-4 py-6 flex-1 overflow-y-auto no-scrollbar">
+                    <h2 class="text-2xl font-black text-white mb-6">Tin của bạn</h2>
+
+                    <div class="flex items-center gap-3 p-2 mb-8">
+                        <img id="story-creator-user-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest"
+                            class="w-12 h-12 rounded-full border border-white/10 object-cover">
+                        <span id="story-creator-user-name" class="font-bold text-white text-lg">Bạn</span>
+                    </div>
+
+                    <!-- Editor Controls (Hidden initially) -->
+                    <div id="story-editor-controls" class="hidden space-y-2">
+                        <button
+                            class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
+                            onclick="addTextToStory()">
+                            <div
+                                class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10">
+                                <span class="material-icons-round text-xl">type_specimen</span>
+                            </div>
+                            <span class="font-bold">Thêm văn bản</span>
+                        </button>
+                        <button
+                            class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
+                            onclick="addMusicToStory()">
+                            <div
+                                class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10">
+                                <span class="material-icons-round text-xl">music_note</span>
+                            </div>
+                            <span class="font-bold">Thêm nhạc</span>
+                        </button>
+                        <button
+                            class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group">
+                            <div
+                                class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10">
+                                <span class="material-icons-round text-xl">sticky_note_2</span>
+                            </div>
+                            <span class="font-bold">Văn bản thay thế</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bottom Actions -->
+                <div id="story-creator-footer" class="p-4 border-t border-white/5 bg-[#1c1e21] hidden">
+                    <div class="flex gap-2">
+                        <button onclick="closeStoryCreator()"
+                            class="flex-1 py-2.5 rounded-xl bg-white/5 text-white font-bold hover:bg-white/10 active:scale-95 transition-all">Bỏ</button>
+                        <button id="share-story-btn" onclick="submitHomeStory()"
+                            class="flex-[2] py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 active:scale-95 transition-all shadow-lg shadow-blue-500/20">Chia
+                            sẻ lên tin</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Preview Area -->
+            <main class="flex-1 h-full bg-[#0a0a0a] relative flex items-center justify-center p-8 overflow-hidden">
+                <!-- Initial State: Pick Type -->
+                <div id="story-type-picker" class="flex gap-4 animate-fade-in">
+                    <div onclick="document.getElementById('story-image-input').click()"
+                        class="w-[220px] h-[330px] rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-400 flex flex-col items-center justify-center gap-3 cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-2xl group">
+                        <div
+                            class="w-12 h-12 rounded-full bg-black/80 flex items-center justify-center text-white group-hover:bg-black transition-colors">
+                            <span class="material-icons-round">photo_library</span>
+                        </div>
+                        <p class="text-white font-bold text-sm">Tạo tin dạng ảnh</p>
+                    </div>
+                    <div onclick="startTextStory()"
+                        class="w-[220px] h-[330px] rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex flex-col items-center justify-center gap-3 cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-2xl group">
+                        <div
+                            class="w-12 h-12 rounded-full bg-black/80 flex items-center justify-center text-white group-hover:bg-black transition-colors">
+                            <span class="material-icons-round">type_specimen</span>
+                        </div>
+                        <p class="text-white font-bold text-sm">Tạo tin dạng văn bản</p>
+                    </div>
+                </div>
+
+                <!-- Editor State: Image Preview -->
+                <div id="story-editor-preview"
+                    class="hidden w-full h-full flex flex-col items-center justify-center animate-fade-in relative">
+                    <div class="relative max-w-[400px] h-full max-h-[700px] aspect-[9/16] bg-[#18191a] rounded-2xl overflow-hidden shadow-2xl border border-white/5 flex items-center justify-center bg-cover bg-center"
+                        id="story-preview-bg">
+                        <img id="story-preview-img"
+                            class="max-w-full max-h-full object-contain transition-transform duration-300" src="">
+
+                        <!-- Text Overlay Container -->
+                        <div id="story-text-container"
+                            class="absolute inset-0 pointer-events-none flex items-center justify-center p-8">
+                            <p id="story-display-text"
+                                class="text-white font-black text-3xl text-center drop-shadow-2xl break-words"></p>
+                        </div>
+
+                        <!-- Music Badge (Floating) -->
+                        <div id="story-music-badge"
+                            class="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl hidden flex items-center gap-3 border border-white/20 animate-bounce cursor-move shadow-2xl">
+                            <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center">
+                                <span class="material-icons-round text-white text-sm">music_note</span>
+                            </div>
+                            <div>
+                                <p id="story-music-name" class="text-white text-xs font-black truncate max-w-[120px]">
+                                    Tên bài hát</p>
+                                <p id="story-music-artist"
+                                    class="text-white/60 text-[9px] font-bold truncate max-w-[120px]">Nghệ sĩ</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Editor Tools (Zoom/Rotate/Music Trimmer) -->
+                    <div class="mt-6 flex flex-col items-center gap-4">
+                        <!-- Music Trimmer (Visible when music selected) -->
+                        <div id="story-music-trimmer"
+                            class="hidden flex items-center gap-4 bg-black/80 backdrop-blur-2xl p-3 px-5 rounded-2xl border border-white/10 shadow-2xl animate-fade-in">
+                            <button id="trimmer-play-btn"
+                                class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg active:scale-90 transition-all">
+                                <span class="material-icons-round">play_arrow</span>
+                            </button>
+                            <div
+                                class="relative w-[300px] h-12 bg-white/5 rounded-lg overflow-hidden flex items-center">
+                                <!-- Simple Waveform Mock -->
+                                <div
+                                    class="absolute inset-y-0 left-0 w-full flex items-center gap-[2px] px-2 opacity-30 pointer-events-none">
+                                    <div class="w-[2px] h-3 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-3 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
+                                </div>
+                                <!-- Draggable Handle -->
+                                <input type="range" id="story-music-slider" min="0" max="100" value="0"
+                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                <div id="trimmer-handle"
+                                    class="absolute top-0 bottom-0 left-0 w-[60px] bg-primary/20 border-x-2 border-primary rounded-md pointer-events-none flex items-center justify-center">
+                                    <div class="text-[8px] font-black text-primary">15s</div>
+                                </div>
+                            </div>
+                            <button onclick="confirmMusicTrim()"
+                                class="w-10 h-10 rounded-xl bg-primary text-black flex items-center justify-center shadow-lg hover:scale-105 transition-all">
+                                <span class="material-icons-round">check</span>
+                            </button>
+                        </div>
+
+                        <div
+                            class="flex items-center gap-6 bg-black/80 backdrop-blur-xl px-6 py-3 rounded-full border border-white/10 shadow-2xl">
+                            <div class="flex items-center gap-3 min-w-[200px]">
+                                <span class="material-icons-round text-slate-500 text-sm">remove</span>
+                                <input type="range" id="story-zoom-slider" min="0.5" max="3" step="0.1" value="1"
+                                    class="flex-1 accent-primary h-1 bg-white/10 rounded-full appearance-none">
+                                <span class="material-icons-round text-slate-500 text-sm">add</span>
+                            </div>
+                            <div class="w-px h-6 bg-white/10"></div>
+                            <button
+                                class="flex items-center gap-2 text-white hover:text-primary transition-colors font-bold text-sm"
+                                onclick="rotateStoryImage()">
+                                <span class="material-icons-round text-lg">rotate_right</span> Xoay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="file" id="story-image-input" class="hidden" accept="image/*"
+                    onchange="handleStoryImageSelect(event)">
+            </main>
+        </div>
+
+        <!-- MUSIC PICKER MODAL (Inside Story Modal context but absolute) -->
+        <div id="music-picker-modal"
+            class="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden">
+            <div
+                class="w-[380px] bg-[#242526] rounded-2xl shadow-2xl overflow-hidden border border-white/10 animate-fade-in">
+                <div class="p-4 border-b border-white/5 flex items-center justify-between bg-[#242526]">
+                    <h3 class="text-white font-black text-lg">Chọn nhạc</h3>
+                    <button onclick="closeMusicPicker()"
+                        class="w-8 h-8 rounded-full hover:bg-white/5 text-slate-400 flex items-center justify-center"><span
+                            class="material-icons-round">close</span></button>
+                </div>
+                <div class="p-4">
+                    <div class="relative mb-4">
+                        <span
+                            class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">search</span>
+                        <input type="text" id="music-search-input" oninput="debounceSearchMusic(this.value)"
+                            placeholder="Tìm kiếm bài hát, nghệ sĩ..."
+                            class="w-full bg-[#3a3b3c] border-none rounded-full py-2.5 pl-10 pr-4 text-white placeholder-slate-500 focus:ring-1 focus:ring-primary/40 text-sm">
+                    </div>
+
+                    <div id="music-results" class="space-y-1 max-h-[400px] overflow-y-auto pr-1 no-scrollbar">
+                        <!-- Music Results Placeholder -->
+                        <div class="py-12 text-center text-slate-600">
+                            <span class="material-icons-round text-4xl mb-2">music_note</span>
+                            <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Bắt đầu tìm nhạc</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STORY VIEWER MODAL (Facebook Style Fullscreen) -->
+        <div id="story-viewer-modal" class="fixed inset-0 z-[2000] bg-black hidden animate-fade-in flex">
+            <!-- Left Sidebar: Story List -->
+            <aside class="w-[360px] h-full bg-[#1c1e21] border-r border-white/5 flex flex-col hidden md:flex">
+                <div class="p-4 flex items-center justify-between border-b border-white/5">
+                    <button onclick="closeStoryViewer()"
+                        class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                    <img src="https://static.xx.fbcdn.net/rsrc.php/v3/y2/r/y99vry8q99v.png" class="w-10 h-10">
+                </div>
+                <div class="p-4 overflow-y-auto no-scrollbar flex-1">
+                    <h2 class="text-2xl font-black text-white mb-4">Tin</h2>
+                    <div id="viewer-sidebar-list" class="space-y-1">
+                        <!-- Story items will be injected here -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 h-full bg-[#0a0a0a] relative flex items-center justify-center overflow-hidden">
+                <!-- Close button for mobile -->
+                <button onclick="closeStoryViewer()"
+                    class="absolute top-4 left-4 z-50 md:hidden w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center">
+                    <span class="material-icons-round">close</span>
+                </button>
+
+                <!-- Navigation Arrows -->
+                <button id="viewer-prev-btn"
+                    class="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all z-20">
+                    <span class="material-icons-round">chevron_left</span>
+                </button>
+                <button id="viewer-next-btn"
+                    class="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all z-20">
+                    <span class="material-icons-round">chevron_right</span>
+                </button>
+
+                <!-- Image Container -->
+                <div
+                    class="relative h-full max-h-[90vh] aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/5 flex items-center justify-center">
+                    <img id="story-view-img" class="max-w-full max-h-full object-contain" src="">
+
+                    <!-- User Info Header (Inside image area) -->
+                    <div
+                        class="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/60 to-transparent flex items-center gap-3">
+                        <img id="story-view-avatar" src="" class="w-10 h-10 rounded-full border-2 border-primary">
+                        <div>
+                            <p id="story-view-author" class="text-white font-bold text-sm"></p>
+                            <p id="story-view-time" class="text-white/60 text-[10px]"></p>
+                        </div>
+                    </div>
+
+                    <!-- Overlay Text -->
+                    <div id="story-view-text-container"
+                        class="absolute inset-0 flex items-center justify-center p-8 pointer-events-none">
+                        <p id="story-view-display-text"
+                            class="text-white font-black text-3xl text-center drop-shadow-2xl"></p>
+                    </div>
+
+                    <!-- Music Badge -->
+                    <div id="story-view-music-badge"
+                        class="absolute bottom-20 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl hidden flex items-center gap-3 border border-white/20 animate-bounce">
+                        <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center text-white">
+                            <span class="material-icons-round text-sm">music_note</span>
+                        </div>
+                        <p id="story-view-music-name" class="text-white text-xs font-black truncate max-w-[150px]">Tên
+                            bài hát</p>
+                    </div>
+                </div>
+
+                <!-- Reactions & Message Bar -->
+                <div
+                    class="absolute bottom-0 left-0 right-0 p-6 flex items-center justify-center gap-4 bg-gradient-to-t from-black/80 to-transparent">
+                    <div class="flex-1 max-w-[500px] relative">
+                        <input type="text" placeholder="Gửi tin nhắn..."
+                            class="w-full bg-white/10 border border-white/10 rounded-full py-3 px-6 text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('like')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yv/r/S069_X2fS98.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('love')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yO/r/v2pD7Y6YvY8.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('care')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yT/r/H_LOfR67pXm.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('haha')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/y6/r/59MAnB5F54H.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('wow')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/y9/r/W7g7M84z0M7.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('sad')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/y0/r/c38r-Wf_K5m.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all"
+                            onclick="reactToStory('angry')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yt/r/86jU-H5_hV-.png"
+                                class="w-full h-full"></button>
+                    </div>
+                </div>
+            </main>
         </div>
 
         <!-- NEW: HOME POST MODAL (Like FB) -->
