@@ -61,13 +61,16 @@
         const icon      = likeBtn?.querySelector('.material-icons-round');
 
         if (icon) {
-            icon.textContent = post.hasLiked ? 'favorite' : 'favorite_border';
-            icon.classList.remove('heart-pop');
-            void icon.offsetWidth;
-            icon.classList.add('heart-pop');
-            icon.addEventListener('animationend', () => icon.classList.remove('heart-pop'), { once: true });
+            icon.textContent = post.hasLiked ? 'thumb_up' : 'thumb_up_off_alt';
+            icon.classList.toggle('scale-110', post.hasLiked);
         }
-        if (likeBtn) likeBtn.style.color = post.hasLiked ? '#f87171' : '#94a3b8';
+        if (likeBtn) {
+            if (post.hasLiked) {
+                likeBtn.classList.add('text-blue-400');
+            } else {
+                likeBtn.classList.remove('text-blue-400');
+            }
+        }
         if (likeCount) likeCount.textContent = post.likes;
         if (post.hasLiked && likeBtn) spawnFloatingHeart(likeBtn);
 
@@ -76,19 +79,14 @@
                 .from('posts')
                 .update({ likes: post.likes, liked_by: post.liked_by })
                 .eq('id', id);
-            if (error) {
-                await window.supabaseClient.from('posts').update({ likes: post.likes }).eq('id', id);
-            }
         } catch (e) {
             // Rollback
             post.hasLiked = wasLiked;
             post.likes    = wasLiked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1);
-            if (icon) icon.textContent = wasLiked ? 'favorite' : 'favorite_border';
-            if (likeBtn) likeBtn.style.color = wasLiked ? '#f87171' : '#94a3b8';
+            if (icon) icon.textContent = wasLiked ? 'thumb_up' : 'thumb_up_off_alt';
+            if (likeBtn) likeBtn.classList.toggle('text-blue-400', wasLiked);
             if (likeCount) likeCount.textContent = post.likes;
-            console.error('Like error (rolled back):', e);
         }
-        if (typeof trackActivity === 'function') trackActivity('likes_given');
     };
 
     /* 4. OVERRIDE submitComment — insert 1 item, không re-render list */
@@ -101,7 +99,7 @@
         const userName   = document.querySelector('#user-display')?.textContent || 'Bạn';
         const userAvatar = (typeof window.currentUserAvatarUrl === 'string' && window.currentUserAvatarUrl)
             ? window.currentUserAvatarUrl
-            : (document.querySelector('#user-avatar')?.src || 'https://i.pravatar.cc/150?img=1');
+            : (document.querySelector('#user-avatar')?.src || 'https://api.dicebear.com/7.x/identicon/svg?seed=guest');
 
         const newComment = {
             post_id: id, user_id: window.currentUserUid, content: text,
@@ -119,11 +117,10 @@
             const div = document.createElement('div');
             div.className = 'flex gap-2 items-start comment-slide-in';
             div.innerHTML = `
-                <img src="${userAvatar}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0"
-                     onerror="this.src='https://i.pravatar.cc/150?img=1'">
+                <img src="${userAvatar}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0 object-cover">
                 <div class="bg-white/5 rounded-xl px-3 py-2 flex-1">
                     <p class="text-[10px] font-bold text-primary">${userName}</p>
-                    <p class="text-[11px] text-slate-300">${text}</p>
+                    <p class="text-[11px] text-slate-300 leading-tight">${text}</p>
                 </div>`;
             commentsList.appendChild(div);
             commentsList.scrollTop = commentsList.scrollHeight;
@@ -133,9 +130,7 @@
         const post = (typeof findFeedPost === 'function') ? findFeedPost(id) : null;
         if (post) post.commentsCount = cnt;
         const cc  = document.getElementById(`comment-count-${id}`);
-        const cbc = document.getElementById(`comment-btn-count-${id}`);
         if (cc)  cc.textContent  = `${cnt} bình luận`;
-        if (cbc) cbc.textContent = String(cnt);
 
         try {
             await window.supabaseClient.from('post_comments').insert([newComment]);
@@ -154,52 +149,53 @@
                 if (!row) return;
                 const el = document.getElementById(`like-count-${row.id}`);
                 if (el) el.textContent = row.likes || 0;
-                const sc  = document.getElementById(`share-count-${row.id}`);
-                const sbc = document.getElementById(`share-btn-count-${row.id}`);
-                if (sc)  sc.textContent  = `${row.shares || 0} chia sẻ`;
-                if (sbc) sbc.textContent = String(row.shares || 0);
+                
                 // Sync memory
                 if (typeof findFeedPost === 'function') {
                     const p = findFeedPost(row.id);
                     if (p) {
                         p.likes = row.likes || 0;
+                        p.shares = row.shares || 0;
                         const likedBy = row.liked_by || [];
                         p.liked_by = likedBy;
                         if (window.currentUserUid) p.hasLiked = likedBy.includes(window.currentUserUid);
+                        
+                        const likeBtn = document.getElementById(`like-btn-${row.id}`);
+                        if (likeBtn) {
+                            likeBtn.classList.toggle('text-blue-400', p.hasLiked);
+                            const icon = likeBtn.querySelector('.material-icons-round');
+                            if (icon) icon.textContent = p.hasLiked ? 'thumb_up' : 'thumb_up_off_alt';
+                        }
                     }
                 }
             })
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_comments' }, payload => {
                 const row = payload.new;
                 if (!row || !row.post_id) return;
-                if (row.user_id === window.currentUserUid) return; // đã insert optimistic rồi
+                if (row.user_id === window.currentUserUid) return; 
                 const pid = row.post_id;
                 if (!window.postCommentsMap)      window.postCommentsMap = {};
                 if (!window.postCommentsMap[pid]) window.postCommentsMap[pid] = [];
-                const dup = window.postCommentsMap[pid].some(c => c.content === row.content && c.user_id === row.user_id);
+                const dup = window.postCommentsMap[pid].some(c => c.created_at === row.created_at && c.user_id === row.user_id);
                 if (!dup) window.postCommentsMap[pid].push(row);
 
                 const list    = document.getElementById(`comments-list-${pid}`);
-                const section = document.getElementById(`comment-section-${pid}`);
-                if (list && section && !section.classList.contains('hidden')) {
+                if (list) {
                     const div = document.createElement('div');
                     div.className = 'flex gap-2 items-start comment-slide-in';
                     div.innerHTML = `
-                        <img src="${row.author_avatar || 'https://i.pravatar.cc/150?img=1'}"
-                             class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0"
-                             onerror="this.src='https://i.pravatar.cc/150?img=1'">
+                        <img src="${row.author_avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=guest'}"
+                             class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0 object-cover">
                         <div class="bg-white/5 rounded-xl px-3 py-2 flex-1">
                             <p class="text-[10px] font-bold text-primary">${row.author_name || 'User'}</p>
-                            <p class="text-[11px] text-slate-300">${row.content || ''}</p>
+                            <p class="text-[11px] text-slate-300 leading-tight">${row.content || ''}</p>
                         </div>`;
                     list.appendChild(div);
                     list.scrollTop = list.scrollHeight;
                 }
                 const cnt = window.postCommentsMap[pid].length;
                 const cc  = document.getElementById(`comment-count-${pid}`);
-                const cbc = document.getElementById(`comment-btn-count-${pid}`);
                 if (cc)  cc.textContent  = `${cnt} bình luận`;
-                if (cbc) cbc.textContent = String(cnt);
             })
             .subscribe();
     }
@@ -215,8 +211,8 @@
                     const btn  = document.getElementById(`like-btn-${post.id}`);
                     const icon = btn?.querySelector('.material-icons-round');
                     if (!btn) return;
-                    btn.style.color = post.hasLiked ? '#f87171' : '#94a3b8';
-                    if (icon) icon.textContent = post.hasLiked ? 'favorite' : 'favorite_border';
+                    btn.classList.toggle('text-blue-400', post.hasLiked);
+                    if (icon) icon.textContent = post.hasLiked ? 'thumb_up' : 'thumb_up_off_alt';
                 });
             });
         };

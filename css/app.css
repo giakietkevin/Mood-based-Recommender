@@ -1,16 +1,28 @@
 :root {
             --primary: #C6A87C;
+            --primary-glow: rgba(198, 168, 124, 0.3);
+            --bg-darker: #050608;
         }
-        html { -webkit-text-size-adjust: 100%; }
+        html { -webkit-text-size-adjust: 100%; transition: all 0.5s ease; }
         body { 
-            background-color: #090A0C; 
+            background-color: var(--bg-darker); 
             color: #e2e8f0; 
             overscroll-behavior-y: none; 
             min-height: 100vh; 
             min-height: 100dvh; 
             overflow-x: hidden; 
-            transition: background-color 0.8s ease-in-out;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             background-attachment: fixed;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: -10%; left: -10%; width: 120%; height: 120%;
+            background: radial-gradient(circle at 50% 50%, var(--primary-glow) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: -1;
+            transition: all 1s ease;
         }
         .mirror-mode { transform: scaleX(-1); }
         .camera-select-dropdown option { background-color: #0f172a; color: white; padding: 10px; }
@@ -141,3 +153,22 @@
         .game-hud { font-family: 'Outfit', sans-serif; font-weight: 900; letter-spacing: 2px; }
         .btn-game-control { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; color: white; transition: all 0.2s; }
         .btn-game-control:active { transform: scale(0.9); background: #C6A87C; color: #0a0a0a; }
+
+        /* Watchlist Badge */
+        .watchlist-btn {
+            position: absolute; top: 8px; right: 8px; z-index: 20;
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center; 
+            color: white; transform: scale(0); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .film-card:hover .watchlist-btn { transform: scale(1); }
+        .watchlist-btn.active { background: var(--primary); color: #000; }
+
+        /* Progress Bar on Card */
+        .progress-overlay {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
+            background: rgba(255,255,255,0.1); overflow: hidden;
+            border-radius: 0 0 12px 12px;
+        }
+        .progress-fill { height: 100%; background: var(--primary); transition: width 0.3s; }
