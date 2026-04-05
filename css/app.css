@@ -14,6 +14,9 @@
         }
         .mirror-mode { transform: scaleX(-1); }
         .camera-select-dropdown option { background-color: #0f172a; color: white; padding: 10px; }
+        select { color-scheme: dark; }
+        select option { background-color: #0f1115; color: #ffffff; font-weight: 700; padding: 10px; }
+        select:focus option { background-color: #0f1115; color: #ffffff; }
         .safe-nav-pad { padding-top: max(0.75rem, env(safe-area-inset-top)); }
         .pb-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
         .mb-player-safe { margin-bottom: env(safe-area-inset-bottom, 0px); }

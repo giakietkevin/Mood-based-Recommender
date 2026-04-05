@@ -1119,6 +1119,8 @@
         let filmTotalPages = 1;
         let filmCurrentEndpoint = 'https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat';
         let filmIsSearchMode = false;
+        let filmCurrentYearFilter = null;
+        window.filmAdvCriteria = null; // Stored as { genre, country, year }
 
         // Build a film card HTML snippet
         function buildFilmCard(m, imgDomain) {
@@ -1207,17 +1209,83 @@
                 grid.innerHTML = `<div class="col-span-full text-center py-10 text-primary text-sm flex items-center justify-center gap-2"><span class="material-icons-round animate-spin">sync</span> Đang tải phim...</div>`;
             }
 
+            // Pagination management
+            const paginationEl = document.getElementById('film-pagination');
+            const pageInfoEl = document.getElementById('film-page-info');
+
             try {
-                const url = `${filmCurrentEndpoint}?page=${page}&limit=${FILM_PAGE_SIZE}`;
-                const res = await fetch(url);
-                const data = await res.json();
-                const imgDomain = data.data?.APP_DOMAIN_CDN_IMAGE || 'https://img.ophim.live';
-                const items = data.data?.items || data.items || [];
-                const pagination = data.data?.params?.pagination || {};
-                filmTotalPages = pagination.totalPages || Math.ceil((pagination.totalItems || items.length) / FILM_PAGE_SIZE) || 1;
-                renderFilmGrid(items, imgDomain);
-                updateFilmPagination();
+                let items = [];
+                let imgDomain = 'https://img.ophim.live';
+                let apiPagination = {};
+                let attempts = 0;
+                let currentApiPage = page;
+                const MAX_ATTEMPTS = window.filmAdvCriteria ? 10 : 1;
+                const API_LIMIT = window.filmAdvCriteria ? 72 : FILM_PAGE_SIZE;
+
+                while (items.length < FILM_PAGE_SIZE && attempts < MAX_ATTEMPTS) {
+                    if (window.filmAdvCriteria && grid) {
+                        grid.innerHTML = `<div class="col-span-full text-center py-10 text-primary text-sm flex flex-col items-center gap-3">
+                            <span class="material-icons-round animate-spin text-3xl">sync</span>
+                            <div class="font-bold">Đang quét kho phim (Trang ${attempts + 1}/${MAX_ATTEMPTS})...</div>
+                            <div class="text-[10px] text-slate-500 uppercase tracking-widest">Đã tìm thấy ${items.length} phim khớp</div>
+                        </div>`;
+                    }
+                    
+                    let url = `${filmCurrentEndpoint}?page=${currentApiPage}&limit=${API_LIMIT}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    
+                    imgDomain = data.data?.APP_DOMAIN_CDN_IMAGE || 'https://img.ophim.live';
+                    let rawItems = data.data?.items || data.items || [];
+                    apiPagination = data.data?.params?.pagination || {};
+
+                    // Filtering
+                    let filtered = [...rawItems];
+                    if (window.filmAdvCriteria) {
+                        const { genre, country, year } = window.filmAdvCriteria;
+                        if (genre) filtered = filtered.filter(m => m.category && m.category.some(c => c.slug === genre));
+                        if (country) filtered = filtered.filter(m => m.country && m.country.some(c => c.slug === country));
+                        if (year) filtered = filtered.filter(m => m.year == year);
+                    } else if (filmCurrentYearFilter) {
+                        filtered = filtered.filter(m => m.year == filmCurrentYearFilter);
+                    }
+
+                    items = [...items, ...filtered];
+                    attempts++;
+                    currentApiPage++;
+                    
+                    // Stop if no more API pages
+                    if (currentApiPage > (apiPagination.totalPages || 999)) break;
+                }
+
+                // Slice to exact page size for UI consistency
+                const displayItems = items.slice(0, FILM_PAGE_SIZE);
+
+                if (displayItems.length === 0) {
+                    if (grid) grid.innerHTML = `
+                        <div class="col-span-full text-center py-20 animate-fade-in">
+                            <span class="material-icons-round text-6xl text-slate-700 mb-4">search_off</span>
+                            <h3 class="text-white font-bold text-lg">Không tìm thấy phim</h3>
+                            <p class="text-slate-500 text-sm mt-1">Thử thay đổi bộ lọc hoặc tiêu chí khác bạn nhé!</p>
+                            <button onclick="switchFilmCategory('all')" class="mt-6 px-6 py-2 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-black uppercase hover:bg-primary/20 transition-all">Xem Phim Mới</button>
+                        </div>
+                    `;
+                    if (paginationEl) paginationEl.classList.add('hidden');
+                } else {
+                    renderFilmGrid(displayItems, imgDomain);
+                    if (paginationEl) paginationEl.classList.remove('hidden');
+                    
+                    // Correct total pages for filtered mode is complex, using API total as reference
+                    filmTotalPages = apiPagination.totalPages || 1;
+                    updateFilmPagination();
+                    
+                    if (window.filmAdvCriteria && pageInfoEl) {
+                        pageInfoEl.textContent = `Kết quả khớp: ${displayItems.length}+ (Trang ${page})`;
+                        pageInfoEl.classList.add('text-primary');
+                    }
+                }
             } catch (err) {
+                console.error("Load Grid Error:", err);
                 if (grid) grid.innerHTML = `<div class="col-span-full text-center py-10 text-red-400 text-sm">Lỗi kết nối OPhim API. Vui lòng thử lại.</div>`;
             }
         }
@@ -1234,6 +1302,8 @@
         // Switch main category tabs
         window.switchFilmCategory = (cat) => {
             filmCurrentCategory = cat;
+            filmCurrentYearFilter = null;
+            window.filmAdvCriteria = null;
             // Update tab styles
             document.querySelectorAll('.film-cat-tab').forEach(b => {
                 b.classList.remove('bg-white/10', 'text-white', 'shadow-inner', 'border-white/20');
@@ -1251,6 +1321,7 @@
                 'phim-bo': { url: 'https://ophim1.com/v1/api/danh-sach/phim-bo', label: 'Phim Bộ 📺', sub: 'Series phim nhiều tập' },
                 'hoat-hinh': { url: 'https://ophim1.com/v1/api/danh-sach/hoat-hinh', label: 'Hoạt Hình 🎨', sub: 'Anime & phim hoạt hình' },
                 'tv-shows': { url: 'https://ophim1.com/v1/api/danh-sach/tv-shows', label: 'TV Shows 📡', sub: 'Chương trình truyền hình' },
+                'chieu-rap': { url: 'https://ophim1.com/v1/api/danh-sach/phim-sap-chieu', label: 'Chiếu Rạp 🎬', sub: 'Phim sắp chiếu & đang chiếu rạp' },
             };
             const info = catMap[cat] || catMap['all'];
             filmCurrentEndpoint = info.url;
@@ -1282,6 +1353,8 @@
             };
             const info = subMap[sub] || subMap['vietsub'];
             filmCurrentEndpoint = info.url;
+            filmCurrentYearFilter = null;
+            window.filmAdvCriteria = null;
             const titleEl = document.getElementById('film-grid-title');
             const subEl = document.getElementById('film-grid-subtitle');
             if (titleEl) titleEl.innerHTML = `<span class="material-icons-round text-primary text-lg">subtitles</span> ${info.label}`;
@@ -1321,6 +1394,7 @@
         ];
 
         window.openGenreMenu = () => {
+            if (!window.advFiltersInited) initAdvancedFilters();
             const m = document.getElementById('genre-modal');
             const grid = document.getElementById('genre-grid');
             if (m && grid) {
@@ -1357,6 +1431,8 @@
             if (subEl) subEl.textContent = `Khám phá các phim thuộc nhóm ${displayLabel}`;
 
             filmCurrentEndpoint = `https://ophim1.com/v1/api/the-loai/${genre}`;
+            filmCurrentYearFilter = null;
+            window.filmAdvCriteria = null;
 
             // Reset tab styles
             document.querySelectorAll('.film-cat-tab').forEach(b => {
@@ -1372,7 +1448,137 @@
             loadFilmGrid(1);
         };
 
-        // Gacha Random Logic
+        // ===== COUNTRY FILTER =====
+        const filmCountries = [
+            { name: "Hàn Quốc", slug: "han-quoc", flag: "🇰🇷" },
+            { name: "Trung Quốc", slug: "trung-quoc", flag: "🇨🇳" },
+            { name: "Nhật Bản", slug: "nhat-ban", flag: "🇯🇵" },
+            { name: "Thái Lan", slug: "thai-lan", flag: "🇹🇭" },
+            { name: "Âu Mỹ", slug: "au-my", flag: "🇺🇸" },
+            { name: "Đài Loan", slug: "dai-loan", flag: "🇹🇼" },
+            { name: "Hồng Kông", slug: "hong-kong", flag: "🇭🇰" },
+            { name: "Ấn Độ", slug: "an-do", flag: "🇮🇳" },
+            { name: "Anh", slug: "anh", flag: "🇬🇧" },
+            { name: "Pháp", slug: "phap", flag: "🇫🇷" },
+            { name: "Đức", slug: "duc", flag: "🇩🇪" },
+            { name: "Tây Ban Nha", slug: "tay-ban-nha", flag: "🇪🇸" },
+            { name: "Việt Nam", slug: "viet-nam", flag: "🇻🇳" },
+            { name: "Indonesia", slug: "indonesia", flag: "🇮🇩" },
+            { name: "Philippines", slug: "philippines", flag: "🇵🇭" },
+            { name: "Canada", slug: "canada", flag: "🇨🇦" },
+            { name: "Nga", slug: "nga", flag: "🇷🇺" },
+            { name: "Úc", slug: "uc", flag: "🇦🇺" },
+            { name: "Brazil", slug: "brazil", flag: "🇧🇷" },
+            { name: "Ý", slug: "y", flag: "🇮🇹" },
+        ];
+
+        window.openCountryMenu = () => {
+            const m = document.getElementById('country-modal');
+            const grid = document.getElementById('country-grid');
+            if (m && grid) {
+                grid.innerHTML = filmCountries.map(c => `
+                    <button onclick="searchFilmByCountry('${c.slug}', '${c.name}')" 
+                        class="bg-white/5 border border-white/5 hover:border-primary/50 hover:bg-primary/10 p-4 rounded-2xl flex flex-col items-center gap-3 transition-all group active:scale-95">
+                        <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors text-2xl">
+                            ${c.flag}
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-300 group-hover:text-white uppercase tracking-wider">${c.name}</span>
+                    </button>
+                `).join('');
+                m.classList.remove('hidden');
+                m.classList.add('flex');
+            }
+        };
+
+        window.closeCountryMenu = () => {
+            const m = document.getElementById('country-modal');
+            if (m) {
+                m.classList.add('hidden');
+                m.classList.remove('flex');
+            }
+        };
+
+        window.searchFilmByCountry = async (country, label = "") => {
+            closeCountryMenu();
+            const titleEl = document.getElementById('film-grid-title');
+            const subEl = document.getElementById('film-grid-subtitle');
+            const displayLabel = label || country.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+            if (titleEl) titleEl.innerHTML = `<span class="material-icons-round text-primary text-lg">public</span> Quốc gia: ${displayLabel}`;
+            if (subEl) subEl.textContent = `Phim từ ${displayLabel}`;
+
+            filmCurrentEndpoint = `https://ophim1.com/v1/api/quoc-gia/${country}`;
+            filmCurrentYearFilter = null;
+            window.filmAdvCriteria = null;
+
+            document.querySelectorAll('.film-cat-tab').forEach(b => {
+                b.classList.remove('bg-white/10', 'text-white', 'shadow-inner', 'border-white/20');
+                b.classList.add('bg-transparent', 'text-slate-400', 'border-transparent');
+            });
+            const countryTab = document.getElementById('film-tab-country');
+            if (countryTab) {
+                countryTab.classList.add('bg-white/10', 'text-white', 'shadow-inner', 'border-white/20');
+                countryTab.classList.remove('bg-transparent', 'text-slate-400', 'border-transparent');
+            }
+
+            loadFilmGrid(1);
+        };
+
+        // ===== YEAR FILTER =====
+        window.openYearMenu = () => {
+            const m = document.getElementById('year-modal');
+            const grid = document.getElementById('year-grid');
+            if (m && grid) {
+                const currentYear = new Date().getFullYear();
+                let html = '';
+                for (let y = currentYear; y >= 2000; y--) {
+                    html += `
+                        <button onclick="searchFilmByYear(${y})" 
+                            class="bg-white/5 border border-white/5 hover:border-amber-400/50 hover:bg-amber-400/10 p-3 rounded-xl flex items-center justify-center transition-all group active:scale-95">
+                            <span class="text-sm font-bold text-slate-300 group-hover:text-amber-400 tracking-wider">${y}</span>
+                        </button>`;
+                }
+                grid.innerHTML = html;
+                m.classList.remove('hidden');
+                m.classList.add('flex');
+            }
+        };
+
+        window.closeYearMenu = () => {
+            const m = document.getElementById('year-modal');
+            if (m) {
+                m.classList.add('hidden');
+                m.classList.remove('flex');
+            }
+        };
+
+        window.searchFilmByYear = async (year) => {
+            closeYearMenu();
+            const titleEl = document.getElementById('film-grid-title');
+            const subEl = document.getElementById('film-grid-subtitle');
+
+            if (titleEl) titleEl.innerHTML = `<span class="material-icons-round text-amber-400 text-lg">calendar_month</span> Năm: ${year}`;
+            if (subEl) subEl.textContent = `Phim phát hành năm ${year}`;
+
+            // OPhim supports year filter via query param
+            filmCurrentEndpoint = `https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat`;
+            filmCurrentYearFilter = year;
+            window.filmAdvCriteria = null;
+
+            document.querySelectorAll('.film-cat-tab').forEach(b => {
+                b.classList.remove('bg-white/10', 'text-white', 'shadow-inner', 'border-white/20');
+                b.classList.add('bg-transparent', 'text-slate-400', 'border-transparent');
+            });
+            const yearTab = document.getElementById('film-tab-year');
+            if (yearTab) {
+                yearTab.classList.add('bg-white/10', 'text-white', 'shadow-inner', 'border-white/20');
+                yearTab.classList.remove('bg-transparent', 'text-slate-400', 'border-transparent');
+            }
+
+            loadFilmGrid(1);
+        };
+
+
         window.toggleGachaModal = () => {
             const m = document.getElementById('gacha-modal');
             if (m) {
@@ -1494,6 +1700,88 @@
                 searchResults.innerHTML = '<div class="col-span-full text-center text-red-500 py-8 text-xs">Lỗi kết nối API OPhim.</div>';
             }
         };
+
+        // --- ADVANCED FILTER COMPONENT (NEW) ---
+        window.advFiltersInited = false;
+        window.initAdvancedFilters = () => {
+            const genreSelect = document.getElementById('adv-filter-genre');
+            const countrySelect = document.getElementById('adv-filter-country');
+            const yearSelect = document.getElementById('adv-filter-year');
+
+            if (!genreSelect || !countrySelect || !yearSelect) return;
+
+            genreSelect.innerHTML = '<option value="">Tất cả thể loại</option>';
+            countrySelect.innerHTML = '<option value="">Tất cả quốc gia</option>';
+            yearSelect.innerHTML = '<option value="">Tất cả năm</option>';
+
+            if (typeof filmGenres !== 'undefined') {
+                genreSelect.innerHTML += filmGenres.map(g => `<option value="${g.slug}">${g.name}</option>`).join('');
+            }
+            if (typeof filmCountries !== 'undefined') {
+                countrySelect.innerHTML += filmCountries.map(c => `<option value="${c.slug}">${c.name}</option>`).join('');
+            }
+            
+            const currentYear = new Date().getFullYear();
+            let yearHtml = '';
+            for (let y = currentYear; y >= 2000; y--) {
+                yearHtml += `<option value="${y}">${y}</option>`;
+            }
+            yearSelect.innerHTML += yearHtml;
+            
+            window.advFiltersInited = true;
+        };
+
+        window.applyAdvancedFilter = async () => {
+            const typeSelect = document.getElementById('adv-filter-type');
+            const genreSelect = document.getElementById('adv-filter-genre');
+            const countrySelect = document.getElementById('adv-filter-country');
+            const yearSelect = document.getElementById('adv-filter-year');
+
+            if (!typeSelect) return;
+
+            const type = typeSelect.value;
+            const genre = genreSelect ? genreSelect.value : "";
+            const country = countrySelect ? countrySelect.value : "";
+            const year = yearSelect ? yearSelect.value : "";
+
+            filmCurrentYearFilter = year || null;
+            window.filmAdvCriteria = { genre, country, year };
+
+            // Optimization: Start from the most specific endpoint
+            // Usually Country or Genre are more specific than a general Category (Type)
+            if (country) {
+                filmCurrentEndpoint = `https://ophim1.com/v1/api/quoc-gia/${country}`;
+            } else if (genre) {
+                filmCurrentEndpoint = `https://ophim1.com/v1/api/the-loai/${genre}`;
+            } else if (type !== 'all') {
+                const catMap = {
+                    'phim-le': 'https://ophim1.com/v1/api/danh-sach/phim-le',
+                    'phim-bo': 'https://ophim1.com/v1/api/danh-sach/phim-bo',
+                    'hoat-hinh': 'https://ophim1.com/v1/api/danh-sach/hoat-hinh',
+                    'tv-shows': 'https://ophim1.com/v1/api/danh-sach/tv-shows',
+                    'chieu-rap': 'https://ophim1.com/v1/api/danh-sach/phim-sap-chieu'
+                };
+                filmCurrentEndpoint = catMap[type] || 'https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat';
+            } else {
+                filmCurrentEndpoint = 'https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat';
+            }
+
+            const titleEl = document.getElementById('film-grid-title');
+            const subEl = document.getElementById('film-grid-subtitle');
+            if (titleEl) titleEl.innerHTML = `<span class="material-icons-round text-primary text-lg">filter_alt</span> Kết quả lọc phim`;
+            if (subEl) subEl.textContent = 'Danh sách phim khớp với các tiêu chí đã chọn';
+
+            // Reset tab styles
+            document.querySelectorAll('.film-cat-tab').forEach(b => {
+                b.classList.remove('bg-white/10', 'text-white', 'shadow-inner', 'border-white/20');
+                b.classList.add('bg-transparent', 'text-slate-400', 'border-transparent');
+            });
+
+            loadFilmGrid(1);
+        };
+
+        // Initialize Advanced Filters
+        setTimeout(() => { if (!window.advFiltersInited) window.initAdvancedFilters(); }, 1500);
 
         let currentFilmSlug = null;
         let currentFilmData = null;

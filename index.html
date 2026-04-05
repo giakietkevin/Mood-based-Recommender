@@ -848,6 +848,24 @@
                             class="material-icons-round text-sm text-slate-500 group-hover:text-primary transition-colors">grid_view</span>
                         Thể loại
                     </button>
+                    <button onclick="openCountryMenu()" id="film-tab-country"
+                        class="film-cat-tab flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-transparent text-slate-400 hover:bg-white/5 hover:text-white border border-transparent whitespace-nowrap flex items-center gap-1.5 group">
+                        <span
+                            class="material-icons-round text-sm text-slate-500 group-hover:text-primary transition-colors">public</span>
+                        Quốc Gia
+                    </button>
+                    <button onclick="switchFilmCategory('chieu-rap')" id="film-tab-chieu-rap"
+                        class="film-cat-tab flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-transparent text-slate-400 hover:bg-white/5 hover:text-white border border-transparent whitespace-nowrap flex items-center gap-1.5 group">
+                        <span
+                            class="material-icons-round text-sm text-slate-500 group-hover:text-red-400 transition-colors">theaters</span>
+                        Chiếu Rạp
+                    </button>
+                    <button onclick="openYearMenu()" id="film-tab-year"
+                        class="film-cat-tab flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-transparent text-slate-400 hover:bg-white/5 hover:text-white border border-transparent whitespace-nowrap flex items-center gap-1.5 group">
+                        <span
+                            class="material-icons-round text-sm text-slate-500 group-hover:text-amber-400 transition-colors">calendar_month</span>
+                        Năm
+                    </button>
                     <button onclick="switchFilmSubCat('vietsub')" id="film-tab-vietsub"
                         class="film-cat-tab flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-transparent text-slate-400 hover:bg-white/5 hover:text-white border border-transparent whitespace-nowrap">
                         Vietsub
@@ -886,6 +904,80 @@
 
                     <div id="genre-grid"
                         class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 overflow-y-auto pr-2 custom-scrollbar pb-6 contents-fade-bottom">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t border-white/5 text-center">
+                        <p class="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-bold">KietFilm Database •
+                            OPhim API</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Country Selection Modal -->
+            <div id="country-modal"
+                class="fixed inset-0 z-[10000] flex items-start justify-center p-4 sm:pt-14 bg-black/95 backdrop-blur-xl hidden animate-fade-in">
+                <div
+                    class="glass-card w-full max-w-4xl rounded-[3rem] border border-white/10 pt-5 px-8 pb-8 flex flex-col shadow-2xl relative overflow-hidden max-h-[90vh]">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/20">
+                                <span class="material-icons-round text-primary text-2xl">public</span>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-display font-bold text-white uppercase tracking-tight">Lọc Theo
+                                    <span class="text-primary">Quốc Gia</span>
+                                </h3>
+                                <p class="text-slate-500 text-xs font-medium tracking-widest uppercase mt-1">Chọn quốc
+                                    gia bạn muốn xem phim</p>
+                            </div>
+                        </div>
+                        <button onclick="closeCountryMenu()"
+                            class="w-12 h-12 bg-white/5 hover:bg-red-500/20 hover:text-red-400 text-slate-400 rounded-full flex items-center justify-center transition-all">
+                            <span class="material-icons-round">close</span>
+                        </button>
+                    </div>
+
+                    <div id="country-grid"
+                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 overflow-y-auto pr-2 custom-scrollbar pb-6 contents-fade-bottom">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t border-white/5 text-center">
+                        <p class="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-bold">KietFilm Database •
+                            OPhim API</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Year Selection Modal -->
+            <div id="year-modal"
+                class="fixed inset-0 z-[10000] flex items-start justify-center p-4 sm:pt-14 bg-black/95 backdrop-blur-xl hidden animate-fade-in">
+                <div
+                    class="glass-card w-full max-w-3xl rounded-[3rem] border border-white/10 pt-5 px-8 pb-8 flex flex-col shadow-2xl relative overflow-hidden max-h-[90vh]">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-12 h-12 bg-amber-500/20 rounded-2xl flex items-center justify-center border border-amber-500/20">
+                                <span class="material-icons-round text-amber-400 text-2xl">calendar_month</span>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-display font-bold text-white uppercase tracking-tight">Lọc Theo
+                                    <span class="text-amber-400">Năm</span>
+                                </h3>
+                                <p class="text-slate-500 text-xs font-medium tracking-widest uppercase mt-1">Chọn năm
+                                    phát hành phim</p>
+                            </div>
+                        </div>
+                        <button onclick="closeYearMenu()"
+                            class="w-12 h-12 bg-white/5 hover:bg-red-500/20 hover:text-red-400 text-slate-400 rounded-full flex items-center justify-center transition-all">
+                            <span class="material-icons-round">close</span>
+                        </button>
+                    </div>
+
+                    <div id="year-grid"
+                        class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 overflow-y-auto pr-2 custom-scrollbar pb-6 contents-fade-bottom">
                         <!-- Populated by JS -->
                     </div>
 
@@ -1045,6 +1137,47 @@
 
                         <!-- Comments List -->
                         <div id="film-comments-list" class="flex flex-col gap-4 mt-2">
+                        </div>
+                    </div>
+
+                    <!-- Advanced Multi-Filter (NEW) -->
+                    <div class="glass-card mb-5 p-5 rounded-3xl border border-white/10 relative overflow-hidden group shadow-2xl">
+                        <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-30"></div>
+                        <div class="relative flex flex-col lg:flex-row items-end gap-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
+                                <div class="flex flex-col gap-1.5 min-w-0">
+                                    <label class="text-[9px] text-primary font-black uppercase tracking-[0.2em] px-1">Định dạng</label>
+                                    <select id="adv-filter-type" onchange="updateAdvFilters()" class="w-full bg-white/5 border border-white/5 text-white rounded-xl px-3 py-2 text-[11px] font-bold focus:border-primary/40 focus:bg-white/10 outline-none transition-all cursor-pointer appearance-none">
+                                        <option value="all">Tất cả định dạng</option>
+                                        <option value="phim-le">Phim Lẻ</option>
+                                        <option value="phim-bo">Phim Bộ</option>
+                                        <option value="hoat-hinh">Hoạt Hình</option>
+                                        <option value="tv-shows">TV Shows</option>
+                                        <option value="chieu-rap">Phim Chiếu Rạp</option>
+                                    </select>
+                                </div>
+                                <div class="flex flex-col gap-1.5 min-w-0">
+                                    <label class="text-[9px] text-primary font-black uppercase tracking-[0.2em] px-1">Thể loại</label>
+                                    <select id="adv-filter-genre" class="w-full bg-white/5 border border-white/5 text-white rounded-xl px-3 py-2 text-[11px] font-bold focus:border-primary/40 focus:bg-white/10 outline-none transition-all cursor-pointer appearance-none">
+                                        <option value="">Tất cả thể loại</option>
+                                    </select>
+                                </div>
+                                <div class="flex flex-col gap-1.5 min-w-0">
+                                    <label class="text-[9px] text-primary font-black uppercase tracking-[0.2em] px-1">Quốc gia</label>
+                                    <select id="adv-filter-country" class="w-full bg-white/5 border border-white/5 text-white rounded-xl px-3 py-2 text-[11px] font-bold focus:border-primary/40 focus:bg-white/10 outline-none transition-all cursor-pointer appearance-none">
+                                        <option value="">Tất cả quốc gia</option>
+                                    </select>
+                                </div>
+                                <div class="flex flex-col gap-1.5 min-w-0">
+                                    <label class="text-[9px] text-primary font-black uppercase tracking-[0.2em] px-1">Năm</label>
+                                    <select id="adv-filter-year" class="w-full bg-white/5 border border-white/5 text-white rounded-xl px-3 py-2 text-[11px] font-bold focus:border-primary/40 focus:bg-white/10 outline-none transition-all cursor-pointer appearance-none">
+                                        <option value="">Tất cả năm</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button onclick="applyAdvancedFilter()" class="h-10 w-full lg:w-12 flex items-center justify-center bg-primary rounded-xl text-[#0a0a0a] shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all flex-shrink-0">
+                                <span class="material-icons-round text-lg">filter_alt</span>
+                            </button>
                         </div>
                     </div>
 
