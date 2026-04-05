@@ -24,7 +24,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Dict, Any
-
+from hf_music_gen import get_hf_beat, generate_singing_vocal, HF_AVAILABLE
 try:
     import g4f
     import g4f.client
@@ -73,6 +73,14 @@ os.makedirs(os.path.join(BASE_DIR, "assets"), exist_ok=True)  # Tạo nếu chư
 
 app.mount("/generated_music", StaticFiles(directory=os.path.join(BASE_DIR, "generated_music")), name="generated_music")
 app.mount("/assets", StaticFiles(directory=os.path.join(BASE_DIR, "assets")), name="assets")
+
+# Static files cho refactored CSS/JS
+_css_dir = os.path.join(BASE_DIR, "css")
+_js_dir  = os.path.join(BASE_DIR, "js")
+os.makedirs(_css_dir, exist_ok=True)
+os.makedirs(_js_dir,  exist_ok=True)
+app.mount("/css", StaticFiles(directory=_css_dir), name="css")
+app.mount("/js",  StaticFiles(directory=_js_dir),  name="js")
 
 @app.get("/")
 async def get_index():
