@@ -1,0 +1,76 @@
+4394:             list.insertAdjacentHTML('afterbegin', html);
+5985:         let appNotifications = JSON.parse(localStorage.getItem('app_notifications') || '[]');
+5986:         let unreadNotifications = Number(localStorage.getItem('app_notifications_unread') || 0);
+5988:         let friendUnreadCounts = JSON.parse(localStorage.getItem('friend_unread_counts') || '{}');
+5990:         let notifSeenEvents = JSON.parse(localStorage.getItem('notif_seen_events') || '[]');
+5991:         let notifLastMessageAt = localStorage.getItem('notif_last_message_at') || new Date(0).toISOString();
+5992:         let notifLastFriendReqAt = localStorage.getItem('notif_last_friendreq_at') || new Date(0).toISOString();
+5993:         let notifLastCommentAt = localStorage.getItem('notif_last_comment_at') || new Date(0).toISOString();
+6097:             localStorage.setItem('app_notifications', JSON.stringify(appNotifications.slice(0, 100)));
+6098:             localStorage.setItem('app_notifications_unread', String(unreadNotifications));
+6102:             localStorage.setItem('friend_unread_counts', JSON.stringify(friendUnreadCounts));
+6106:             localStorage.setItem('notif_seen_events', JSON.stringify(notifSeenEvents.slice(-500)));
+6107:             localStorage.setItem('notif_last_message_at', notifLastMessageAt);
+6108:             localStorage.setItem('notif_last_friendreq_at', notifLastFriendReqAt);
+6109:             localStorage.setItem('notif_last_comment_at', notifLastCommentAt);
+6893:             msgs.insertAdjacentHTML('beforeend', `
+7047:                 msgs.insertAdjacentHTML('beforeend', `
+7124:         let selectedVideoDeviceId = localStorage.getItem('kiet-camera-id') || null;
+7162:             localStorage.setItem('kiet-camera-id', deviceId);
+7376:             // Check localStorage for offline data/overrides
+7377:             const savedData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+7431:                 const existingData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+7433:                 localStorage.setItem(`profile_${uid}`, JSON.stringify(existingData));
+7455:                 const existingData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+7457:                 localStorage.setItem(`profile_${uid}`, JSON.stringify(existingData));
+7514:         let postCommentsMap = {};
+7612:             return JSON.parse(localStorage.getItem(`post_comments_${postId}`) || '[]');
+7616:             localStorage.setItem(`post_comments_${postId}`, JSON.stringify(comments || []));
+7619:         function renderPostComments(postId) {
+7622:             const comments = postCommentsMap[postId] || [];
+7653:                     postCommentsMap[id] = byPost[id] || [];
+7657:                     postCommentsMap[id] = getLocalPostComments(id);
+7663:                 commentsCount: (postCommentsMap[p.id] || []).length
+7668:                     commentsCount: (postCommentsMap[p.id] || []).length
+7675:                 const localShares = Number(localStorage.getItem(`post_shares_${p.id}`) || 0);
+7676:                 const localLikes = Number(localStorage.getItem(`post_likes_${p.id}`) || 0);
+7681:                     commentsCount: (postCommentsMap[p.id] || []).length
+7686:                     const localShares = Number(localStorage.getItem(`post_shares_${p.id}`) || 0);
+7687:                     const localLikes = Number(localStorage.getItem(`post_likes_${p.id}`) || 0);
+7692:                         commentsCount: (postCommentsMap[p.id] || []).length
+7849:                             <span id="like-count-${post.id}">${post.likes}</span>
+7857:                         <button onclick="likePost('${post.id}')" id="like-btn-${post.id}" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold ${post.hasLiked ? 'text-red-400' : 'text-slate-400'} hover:bg-white/5 rounded-lg transition-all cursor-pointer group">
+7858:                             <span class="material-icons-round text-lg group-active:scale-125 transition-transform">${post.hasLiked ? 'favorite' : 'favorite_border'}</span> Yêu thích
+8076:                 const localLikes = JSON.parse(localStorage.getItem(`local_likes_${window.currentUserUid}`) || '{}');
+8078:                     const likedBy = p.liked_by || [];
+8079:                     const hasLikedDB = p.hasOwnProperty('liked_by') ? likedBy.includes(window.currentUserUid) : !!localLikes[p.id];
+8093:                         liked_by: likedBy,
+8094:                         hasLiked: hasLikedDB,
+8206:                 post.hasLiked = !post.hasLiked;
+8207:                 post.likes = post.hasLiked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1);
+8210:                 post.liked_by = post.liked_by || [];
+8211:                 if (post.hasLiked) {
+8212:                     if (!post.liked_by.includes(window.currentUserUid)) post.liked_by.push(window.currentUserUid);
+8214:                     post.liked_by = post.liked_by.filter(uid => uid !== window.currentUserUid);
+8219:                 const likeCount = document.getElementById(`like-count-${id}`);
+8221:                     likeBtn.className = `flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold ${post.hasLiked ? 'text-red-400' : 'text-slate-400'} hover:bg-white/5 rounded-lg transition-all cursor-pointer group`;
+8222:                     likeBtn.querySelector('.material-icons-round').textContent = post.hasLiked ? 'favorite' : 'favorite_border';
+8225:                 localStorage.setItem(`post_likes_${id}`, String(post.likes));
+8227:                 // Save to DB (try with liked_by column first, fallback if it doesn't exist in Supabase)
+8230:                     .update({ likes: post.likes, liked_by: post.liked_by })
+8234:                     console.warn(`Could not save 'liked_by' array to DB: ${error.message}. Fallback to standard tracking.`);
+8241:                     const localLikes = JSON.parse(localStorage.getItem(`local_likes_${window.currentUserUid}`) || '{}');
+8242:                     localLikes[id] = post.hasLiked;
+8243:                     localStorage.setItem(`local_likes_${window.currentUserUid}`, JSON.stringify(localLikes));
+8256:                 if (!section.classList.contains('hidden')) renderPostComments(id);
+8278:             if (!postCommentsMap[id]) postCommentsMap[id] = [];
+8279:             postCommentsMap[id].push(newComment);
+8280:             saveLocalPostComments(id, postCommentsMap[id]);
+8281:             renderPostComments(id);
+8284:             if (post) post.commentsCount = (postCommentsMap[id] || []).length;
+8379:                 localStorage.setItem(`post_shares_${id}`, String(post.shares));
+8604:                 const localLikes = JSON.parse(localStorage.getItem(`local_likes_${viewerUid}`) || '{}');
+8607:                     const likedBy = p.liked_by || [];
+8608:                     const hasLikedDB = p.hasOwnProperty('liked_by') ? likedBy.includes(viewerUid) : !!localLikes[p.id];
+8618:                         liked_by: likedBy,
+8619:                         hasLiked: hasLikedDB,

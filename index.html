@@ -7671,27 +7671,18 @@
         }
 
         function syncLocalInteractionStates() {
-            homePosts = homePosts.map(p => {
-                const localShares = Number(localStorage.getItem(`post_shares_${p.id}`) || 0);
-                const localLikes = Number(localStorage.getItem(`post_likes_${p.id}`) || 0);
-                return {
-                    ...p,
-                    likes: Math.max(Number(p.likes || 0), localLikes),
-                    shares: Math.max(Number(p.shares || 0), localShares),
-                    commentsCount: (postCommentsMap[p.id] || []).length
-                };
-            });
+            // Only sync shares from localStorage (likes are now fully DB-driven via liked_by)
+            homePosts = homePosts.map(p => ({
+                ...p,
+                shares: Math.max(Number(p.shares || 0), Number(localStorage.getItem(`post_shares_${p.id}`) || 0)),
+                commentsCount: (postCommentsMap[p.id] || []).length
+            }));
             if (window.profileFeedPosts && window.profileFeedPosts.length) {
-                window.profileFeedPosts = window.profileFeedPosts.map(p => {
-                    const localShares = Number(localStorage.getItem(`post_shares_${p.id}`) || 0);
-                    const localLikes = Number(localStorage.getItem(`post_likes_${p.id}`) || 0);
-                    return {
-                        ...p,
-                        likes: Math.max(Number(p.likes || 0), localLikes),
-                        shares: Math.max(Number(p.shares || 0), localShares),
-                        commentsCount: (postCommentsMap[p.id] || []).length
-                    };
-                });
+                window.profileFeedPosts = window.profileFeedPosts.map(p => ({
+                    ...p,
+                    shares: Math.max(Number(p.shares || 0), Number(localStorage.getItem(`post_shares_${p.id}`) || 0)),
+                    commentsCount: (postCommentsMap[p.id] || []).length
+                }));
             }
         }
 
@@ -8073,10 +8064,9 @@
                 const authorMap = {};
                 (authors || []).forEach(a => authorMap[a.id] = a);
 
-                const localLikes = JSON.parse(localStorage.getItem(`local_likes_${window.currentUserUid}`) || '{}');
                 homePosts = filteredPosts.map(p => {
                     const likedBy = p.liked_by || [];
-                    const hasLikedDB = p.hasOwnProperty('liked_by') ? likedBy.includes(window.currentUserUid) : !!localLikes[p.id];
+                    const hasLiked = likedBy.includes(window.currentUserUid);
 
                     return {
                         id: p.id,
@@ -8091,7 +8081,7 @@
                         likes: p.likes || 0,
                         shares: p.shares || 0,
                         liked_by: likedBy,
-                        hasLiked: hasLikedDB,
+                        hasLiked: hasLiked,
                         time: new Date(p.created_at).toLocaleTimeString()
                     };
                 });
@@ -8107,41 +8097,82 @@
         function setupRealtimeNewsfeed() {
             if (!window.supabaseClient || realtimeSetup) return;
             realtimeSetup = true;
-            console.log('[RT] Setting up realtime listeners...');
 
-            const channelPosts = window.supabaseClient
+            // Posts: smart patch — UPDATE only touches DOM directly, INSERT/DELETE refetch
+            window.supabaseClient
                 .channel('home-posts-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, payload => {
-                    console.log('[RT] Post change detected:', payload.eventType);
-                    fetchHomePosts();
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, payload => {
+                    const updated = payload.new;
+                    if (!updated) return;
+                    // Patch in-memory post
+                    const post = findFeedPost(updated.id);
+                    if (post) {
+                        const likedBy = updated.liked_by || [];
+                        post.likes = updated.likes || 0;
+                        post.liked_by = likedBy;
+                        post.hasLiked = likedBy.includes(window.currentUserUid);
+                        // Patch DOM directly — no full re-render
+                        const countEl = document.getElementById(`like-count-${updated.id}`);
+                        if (countEl) countEl.textContent = post.likes;
+                        const likeBtn = document.getElementById(`like-btn-${updated.id}`);
+                        if (likeBtn) {
+                            likeBtn.className = `flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold ${post.hasLiked ? 'text-red-400' : 'text-slate-400'} hover:bg-white/5 rounded-lg transition-all cursor-pointer group`;
+                            likeBtn.querySelector('.material-icons-round').textContent = post.hasLiked ? 'favorite' : 'favorite_border';
+                        }
+                    }
                 })
-                .subscribe((status) => console.log('[RT] Posts channel:', status));
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, () => fetchHomePosts())
+                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, () => fetchHomePosts())
+                .subscribe();
 
-            const channelFriends = window.supabaseClient
+            window.supabaseClient
                 .channel('home-friends-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, payload => {
-                    console.log('[RT] Friend change detected:', payload.eventType);
-                    renderBuddySystem();
-                })
-                .subscribe((status) => console.log('[RT] Friends channel:', status));
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => renderBuddySystem())
+                .subscribe();
 
             if (!commentsRealtimeSetup) {
                 commentsRealtimeSetup = true;
                 window.supabaseClient
                     .channel('home-comments-changes')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, () => {
-                        fetchHomePosts();
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_comments' }, payload => {
+                        const c = payload.new;
+                        if (!c || !c.post_id) return;
+                        // Optimistic insert into DOM without refetch
+                        if (!postCommentsMap[c.post_id]) postCommentsMap[c.post_id] = [];
+                        const alreadyExists = postCommentsMap[c.post_id].some(x => x.created_at === c.created_at && x.user_id === c.user_id);
+                        if (!alreadyExists) {
+                            postCommentsMap[c.post_id].push(c);
+                            const commentsList = document.getElementById(`comments-list-${c.post_id}`);
+                            if (commentsList) {
+                                commentsList.insertAdjacentHTML('beforeend', `
+                                    <div class="flex gap-2 items-start animate-fade-in">
+                                        <img src="${c.author_avatar || 'https://i.pravatar.cc/150?img=1'}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0">
+                                        <div class="bg-white/5 rounded-xl px-3 py-2 flex-1">
+                                            <p class="text-[10px] font-bold text-primary">${c.author_name || 'User'}</p>
+                                            <p class="text-[11px] text-slate-300">${c.content || ''}</p>
+                                        </div>
+                                    </div>`);
+                            }
+                            const post = findFeedPost(c.post_id);
+                            if (post) {
+                                post.commentsCount = (postCommentsMap[c.post_id] || []).length;
+                                const countEl = document.getElementById(`comment-count-${c.post_id}`);
+                                if (countEl) countEl.textContent = `${post.commentsCount} bình luận`;
+                                const btnCountEl = document.getElementById(`comment-btn-count-${c.post_id}`);
+                                if (btnCountEl) btnCountEl.textContent = String(post.commentsCount);
+                            }
+                        }
                     })
                     .subscribe();
             }
 
-            // Auto-refresh backup every 15 seconds
+            // Backup refresh every 30s (reduced from 15s)
             setInterval(() => {
                 if (document.getElementById('view-home') && !document.getElementById('view-home').classList.contains('hidden')) {
                     fetchHomePosts();
                     renderBuddySystem();
                 }
-            }, 15000);
+            }, 30000);
         }
 
         // ACTION HANDLERS
@@ -8203,10 +8234,9 @@
                 const post = findFeedPost(id);
                 if (!post) return;
 
+                // Optimistic update
                 post.hasLiked = !post.hasLiked;
                 post.likes = post.hasLiked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1);
-
-                // Track liked users array
                 post.liked_by = post.liked_by || [];
                 if (post.hasLiked) {
                     if (!post.liked_by.includes(window.currentUserUid)) post.liked_by.push(window.currentUserUid);
@@ -8214,33 +8244,33 @@
                     post.liked_by = post.liked_by.filter(uid => uid !== window.currentUserUid);
                 }
 
-                // Update UI instantly
+                // Update UI with heartbeat animation
                 const likeBtn = document.getElementById(`like-btn-${id}`);
                 const likeCount = document.getElementById(`like-count-${id}`);
                 if (likeBtn) {
                     likeBtn.className = `flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold ${post.hasLiked ? 'text-red-400' : 'text-slate-400'} hover:bg-white/5 rounded-lg transition-all cursor-pointer group`;
-                    likeBtn.querySelector('.material-icons-round').textContent = post.hasLiked ? 'favorite' : 'favorite_border';
+                    const icon = likeBtn.querySelector('.material-icons-round');
+                    icon.textContent = post.hasLiked ? 'favorite' : 'favorite_border';
+                    if (post.hasLiked) {
+                        icon.style.transform = 'scale(1.5)';
+                        icon.style.transition = 'transform 0.15s cubic-bezier(0.17,0.89,0.32,1.49)';
+                        setTimeout(() => { icon.style.transform = 'scale(1)'; }, 200);
+                    }
                 }
                 if (likeCount) likeCount.textContent = post.likes;
-                localStorage.setItem(`post_likes_${id}`, String(post.likes));
 
-                // Save to DB (try with liked_by column first, fallback if it doesn't exist in Supabase)
+                // Save to DB — liked_by is the source of truth
                 const { error } = await window.supabaseClient
                     .from('posts')
                     .update({ likes: post.likes, liked_by: post.liked_by })
                     .eq('id', id);
 
                 if (error) {
-                    console.warn(`Could not save 'liked_by' array to DB: ${error.message}. Fallback to standard tracking.`);
+                    // liked_by column may not exist — fallback to likes count only
                     await window.supabaseClient
                         .from('posts')
                         .update({ likes: post.likes })
                         .eq('id', id);
-
-                    // Fallback: LocalStorage memory
-                    const localLikes = JSON.parse(localStorage.getItem(`local_likes_${window.currentUserUid}`) || '{}');
-                    localLikes[id] = post.hasLiked;
-                    localStorage.setItem(`local_likes_${window.currentUserUid}`, JSON.stringify(localLikes));
                 }
 
                 trackActivity('likes_given');
@@ -8277,8 +8307,21 @@
             };
             if (!postCommentsMap[id]) postCommentsMap[id] = [];
             postCommentsMap[id].push(newComment);
-            saveLocalPostComments(id, postCommentsMap[id]);
-            renderPostComments(id);
+            input.value = '';
+
+            // Optimistic insert at bottom (no full re-render)
+            const commentsList = document.getElementById(`comments-list-${id}`);
+            if (commentsList) {
+                commentsList.insertAdjacentHTML('beforeend', `
+                    <div class="flex gap-2 items-start animate-fade-in">
+                        <img src="${newComment.author_avatar}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0">
+                        <div class="bg-white/5 rounded-xl px-3 py-2 flex-1">
+                            <p class="text-[10px] font-bold text-primary">${newComment.author_name}</p>
+                            <p class="text-[11px] text-slate-300">${newComment.content}</p>
+                        </div>
+                    </div>`);
+                commentsList.scrollTop = commentsList.scrollHeight;
+            }
 
             const post = findFeedPost(id);
             if (post) post.commentsCount = (postCommentsMap[id] || []).length;
@@ -8286,14 +8329,13 @@
             if (commentCountEl) commentCountEl.textContent = `${post?.commentsCount || 0} bình luận`;
             const commentBtnCountEl = document.getElementById(`comment-btn-count-${id}`);
             if (commentBtnCountEl) commentBtnCountEl.textContent = String(post?.commentsCount || 0);
-            input.value = '';
 
             try {
                 await window.supabaseClient
                     .from('post_comments')
                     .insert([newComment]);
             } catch (e) {
-                console.warn('Save comment fallback local only:', e?.message || e);
+                console.warn('Save comment failed:', e?.message || e);
             }
         };
 
@@ -9516,6 +9558,242 @@
         loadAboutImages();
 
     </script>
+
+<script>
+/* ============================================================
+   PATCH: Social Interactions v2 — Like & Comment
+   Inject cuối <body>: fix hasLiked, animation, realtime DOM
+============================================================ */
+(function () {
+    /* 1. CSS ANIMATIONS */
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes heartPop {
+            0%   { transform: scale(1); }
+            30%  { transform: scale(1.45); }
+            60%  { transform: scale(0.88); }
+            100% { transform: scale(1); }
+        }
+        @keyframes floatHeart {
+            0%   { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-52px) scale(1.5); }
+        }
+        @keyframes commentSlideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .heart-pop { animation: heartPop 0.35s cubic-bezier(.36,.07,.19,.97) forwards; }
+        .comment-slide-in { animation: commentSlideIn 0.25s ease forwards; }
+    `;
+    document.head.appendChild(style);
+
+    /* 2. Spawn floating heart particle */
+    function spawnFloatingHeart(btn) {
+        const heart = document.createElement('span');
+        heart.textContent = '❤';
+        heart.style.cssText = `
+            position:fixed; font-size:18px; pointer-events:none; z-index:9999;
+            animation: floatHeart 0.65s ease forwards;
+        `;
+        const rect = btn.getBoundingClientRect();
+        heart.style.left = (rect.left + rect.width / 2 - 9) + 'px';
+        heart.style.top  = (rect.top - 4) + 'px';
+        document.body.appendChild(heart);
+        heart.addEventListener('animationend', () => heart.remove());
+    }
+
+    /* 3. OVERRIDE likePost — optimistic + animation + DB sync */
+    window.likePost = async function (id) {
+        if (!window.currentUserUid) return alert('Vui lòng đăng nhập để tương tác!');
+        const post = (typeof findFeedPost === 'function') ? findFeedPost(id) : null;
+        if (!post) return;
+
+        const wasLiked = post.hasLiked;
+        post.hasLiked  = !wasLiked;
+        post.likes     = post.hasLiked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1);
+        post.liked_by  = post.liked_by || [];
+        if (post.hasLiked) {
+            if (!post.liked_by.includes(window.currentUserUid)) post.liked_by.push(window.currentUserUid);
+        } else {
+            post.liked_by = post.liked_by.filter(u => u !== window.currentUserUid);
+        }
+
+        const likeBtn   = document.getElementById(`like-btn-${id}`);
+        const likeCount = document.getElementById(`like-count-${id}`);
+        const icon      = likeBtn?.querySelector('.material-icons-round');
+
+        if (icon) {
+            icon.textContent = post.hasLiked ? 'favorite' : 'favorite_border';
+            icon.classList.remove('heart-pop');
+            void icon.offsetWidth;
+            icon.classList.add('heart-pop');
+            icon.addEventListener('animationend', () => icon.classList.remove('heart-pop'), { once: true });
+        }
+        if (likeBtn) likeBtn.style.color = post.hasLiked ? '#f87171' : '#94a3b8';
+        if (likeCount) likeCount.textContent = post.likes;
+        if (post.hasLiked && likeBtn) spawnFloatingHeart(likeBtn);
+
+        try {
+            const { error } = await window.supabaseClient
+                .from('posts')
+                .update({ likes: post.likes, liked_by: post.liked_by })
+                .eq('id', id);
+            if (error) {
+                await window.supabaseClient.from('posts').update({ likes: post.likes }).eq('id', id);
+            }
+        } catch (e) {
+            // Rollback
+            post.hasLiked = wasLiked;
+            post.likes    = wasLiked ? (post.likes || 0) + 1 : Math.max(0, (post.likes || 0) - 1);
+            if (icon) icon.textContent = wasLiked ? 'favorite' : 'favorite_border';
+            if (likeBtn) likeBtn.style.color = wasLiked ? '#f87171' : '#94a3b8';
+            if (likeCount) likeCount.textContent = post.likes;
+            console.error('Like error (rolled back):', e);
+        }
+        if (typeof trackActivity === 'function') trackActivity('likes_given');
+    };
+
+    /* 4. OVERRIDE submitComment — insert 1 item, không re-render list */
+    window.submitComment = async function (id) {
+        if (!window.currentUserUid) return alert('Vui lòng đăng nhập!');
+        const input = document.getElementById(`comment-input-${id}`);
+        const text  = input?.value.trim();
+        if (!text) return;
+
+        const userName   = document.querySelector('#user-display')?.textContent || 'Bạn';
+        const userAvatar = (typeof window.currentUserAvatarUrl === 'string' && window.currentUserAvatarUrl)
+            ? window.currentUserAvatarUrl
+            : (document.querySelector('#user-avatar')?.src || 'https://i.pravatar.cc/150?img=1');
+
+        const newComment = {
+            post_id: id, user_id: window.currentUserUid, content: text,
+            author_name: userName, author_avatar: userAvatar,
+            created_at: new Date().toISOString()
+        };
+
+        if (!window.postCommentsMap)       window.postCommentsMap = {};
+        if (!window.postCommentsMap[id])   window.postCommentsMap[id] = [];
+        window.postCommentsMap[id].push(newComment);
+        if (input) input.value = '';
+
+        const commentsList = document.getElementById(`comments-list-${id}`);
+        if (commentsList) {
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-start comment-slide-in';
+            div.innerHTML = `
+                <img src="${userAvatar}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0"
+                     onerror="this.src='https://i.pravatar.cc/150?img=1'">
+                <div class="bg-white/5 rounded-xl px-3 py-2 flex-1">
+                    <p class="text-[10px] font-bold text-primary">${userName}</p>
+                    <p class="text-[11px] text-slate-300">${text}</p>
+                </div>`;
+            commentsList.appendChild(div);
+            commentsList.scrollTop = commentsList.scrollHeight;
+        }
+
+        const cnt = window.postCommentsMap[id].length;
+        const post = (typeof findFeedPost === 'function') ? findFeedPost(id) : null;
+        if (post) post.commentsCount = cnt;
+        const cc  = document.getElementById(`comment-count-${id}`);
+        const cbc = document.getElementById(`comment-btn-count-${id}`);
+        if (cc)  cc.textContent  = `${cnt} bình luận`;
+        if (cbc) cbc.textContent = String(cnt);
+
+        try {
+            await window.supabaseClient.from('post_comments').insert([newComment]);
+        } catch (e) {
+            console.warn('Save comment failed:', e?.message || e);
+        }
+    };
+
+    /* 5. PATCH REALTIME: cập nhật DOM trực tiếp, không reload feed */
+    function patchRealtimeLikeCount() {
+        if (!window.supabaseClient) return;
+        window.supabaseClient
+            .channel('patch-social-v2')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, payload => {
+                const row = payload.new;
+                if (!row) return;
+                const el = document.getElementById(`like-count-${row.id}`);
+                if (el) el.textContent = row.likes || 0;
+                const sc  = document.getElementById(`share-count-${row.id}`);
+                const sbc = document.getElementById(`share-btn-count-${row.id}`);
+                if (sc)  sc.textContent  = `${row.shares || 0} chia sẻ`;
+                if (sbc) sbc.textContent = String(row.shares || 0);
+                // Sync memory
+                if (typeof findFeedPost === 'function') {
+                    const p = findFeedPost(row.id);
+                    if (p) {
+                        p.likes = row.likes || 0;
+                        const likedBy = row.liked_by || [];
+                        p.liked_by = likedBy;
+                        if (window.currentUserUid) p.hasLiked = likedBy.includes(window.currentUserUid);
+                    }
+                }
+            })
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_comments' }, payload => {
+                const row = payload.new;
+                if (!row || !row.post_id) return;
+                if (row.user_id === window.currentUserUid) return; // đã insert optimistic rồi
+                const pid = row.post_id;
+                if (!window.postCommentsMap)      window.postCommentsMap = {};
+                if (!window.postCommentsMap[pid]) window.postCommentsMap[pid] = [];
+                const dup = window.postCommentsMap[pid].some(c => c.content === row.content && c.user_id === row.user_id);
+                if (!dup) window.postCommentsMap[pid].push(row);
+
+                const list    = document.getElementById(`comments-list-${pid}`);
+                const section = document.getElementById(`comment-section-${pid}`);
+                if (list && section && !section.classList.contains('hidden')) {
+                    const div = document.createElement('div');
+                    div.className = 'flex gap-2 items-start comment-slide-in';
+                    div.innerHTML = `
+                        <img src="${row.author_avatar || 'https://i.pravatar.cc/150?img=1'}"
+                             class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0"
+                             onerror="this.src='https://i.pravatar.cc/150?img=1'">
+                        <div class="bg-white/5 rounded-xl px-3 py-2 flex-1">
+                            <p class="text-[10px] font-bold text-primary">${row.author_name || 'User'}</p>
+                            <p class="text-[11px] text-slate-300">${row.content || ''}</p>
+                        </div>`;
+                    list.appendChild(div);
+                    list.scrollTop = list.scrollHeight;
+                }
+                const cnt = window.postCommentsMap[pid].length;
+                const cc  = document.getElementById(`comment-count-${pid}`);
+                const cbc = document.getElementById(`comment-btn-count-${pid}`);
+                if (cc)  cc.textContent  = `${cnt} bình luận`;
+                if (cbc) cbc.textContent = String(cnt);
+            })
+            .subscribe();
+    }
+
+    /* 6. PATCH renderHomeNewsfeed — sync màu like button sau render */
+    const _origRender = window.renderHomeNewsfeed;
+    if (typeof _origRender === 'function') {
+        window.renderHomeNewsfeed = function () {
+            _origRender.apply(this, arguments);
+            requestAnimationFrame(() => {
+                const posts = [...(window.homePosts || []), ...(window.profileFeedPosts || [])];
+                posts.forEach(post => {
+                    const btn  = document.getElementById(`like-btn-${post.id}`);
+                    const icon = btn?.querySelector('.material-icons-round');
+                    if (!btn) return;
+                    btn.style.color = post.hasLiked ? '#f87171' : '#94a3b8';
+                    if (icon) icon.textContent = post.hasLiked ? 'favorite' : 'favorite_border';
+                });
+            });
+        };
+    }
+
+    /* 7. INIT */
+    function waitForSupabase(cb, tries = 0) {
+        if (window.supabaseClient) return cb();
+        if (tries > 30) return console.warn('[Patch] supabaseClient timeout');
+        setTimeout(() => waitForSupabase(cb, tries + 1), 300);
+    }
+    waitForSupabase(patchRealtimeLikeCount);
+    console.log('[Patch Social v2] loaded ✓');
+})();
+</script>
 </body>
 
 </html>
