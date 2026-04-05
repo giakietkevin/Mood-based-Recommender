@@ -862,6 +862,10 @@
                             class="w-full bg-primary text-[#0a0a0a] font-black py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 uppercase tracking-widest text-sm">
                             XÁC NHẬN TRUY CẬP
                         </button>
+                        <button onclick="requestVipAccess()" 
+                            class="w-full bg-white/5 text-slate-300 font-bold py-3 rounded-xl hover:bg-white/10 transition-all border border-white/10 uppercase tracking-widest text-[10px]">
+                            Yêu cầu cấp quyền VIP
+                        </button>
                     </div>
                     
                     <div class="mt-6 text-slate-500 text-[10px] font-bold">
@@ -2810,6 +2814,11 @@
         });
 
         window.showView = (viewName) => {
+            if (viewName === 'film' && !window.currentUserUid) {
+                showAuthModal();
+                showAuthError("Vui lòng đăng nhập để sử dụng tính năng Phim!");
+                return;
+            }
             const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'guide', 'about'];
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
@@ -4434,6 +4443,27 @@
                 document.getElementById('film-vip-modal').classList.add('hidden');
             } else {
                 alert('Mã truy cập không chính xác. Vui lòng kiểm tra lại!');
+            }
+        };
+
+        window.requestVipAccess = async () => {
+            if (!window.currentUserUid) {
+                alert("Vui lòng đăng nhập trước!");
+                return;
+            }
+            const userEmail = (await window.supabaseClient.auth.getUser()).data.user.email;
+            try {
+                const res = await fetch('/request-vip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid: window.currentUserUid, email: userEmail })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    alert('Đã gửi yêu cầu VIP thành công! Vui lòng chờ Admin phê duyệt qua Email.');
+                }
+            } catch (e) {
+                alert('Gửi yêu cầu thất bại. Vui lòng thử lại sau!');
             }
         };
 
@@ -8887,6 +8917,7 @@
                 </div>
                 ${canCopy ? `<button onclick="navigator.clipboard.writeText('${partyId}'); alert('Đã chép ID!')" class="p-2 bg-white/5 rounded-lg text-slate-400 hover:text-white" title="Copy ID"><span class="material-icons-round text-sm">content_copy</span></button>` : ''}
                 <button id="camera-toggle-btn" onclick="togglePartyCamera()" class="p-2 bg-primary/10 rounded-lg text-primary hover:bg-primary/30" title="Bật/tắt Camera"><span class="material-icons-round text-sm">videocam</span></button>
+                <button id="mic-toggle-btn" onclick="togglePartyMic()" class="p-2 bg-primary/10 rounded-lg text-primary hover:bg-primary/30" title="Bật/tắt Micro"><span class="material-icons-round text-sm">mic</span></button>
                 <button onclick="leaveParty()" class="p-2 bg-red-500/10 rounded-lg text-red-400 hover:bg-red-500 hover:text-white" title="Leave Party"><span class="material-icons-round text-sm">close</span></button>
             `;
             document.getElementById('party-status-overlay')?.remove();
@@ -8939,6 +8970,27 @@
                             localVid.style.filter = videoTrack.enabled ? 'none' : 'grayscale(100%)';
                         }
                     });
+                }
+            }
+        };
+
+        window.togglePartyMic = () => {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    audioTrack.enabled = !audioTrack.enabled;
+                    const btn = document.getElementById('mic-toggle-btn');
+                    if (btn) {
+                        if (audioTrack.enabled) {
+                            btn.className = 'p-2 bg-primary/10 rounded-lg text-primary hover:bg-primary/30';
+                            btn.innerHTML = '<span class="material-icons-round text-sm">mic</span>';
+                            btn.title = 'Tắt Micro';
+                        } else {
+                            btn.className = 'p-2 bg-red-500/10 rounded-lg text-red-400 hover:bg-red-500/30 hover:text-white';
+                            btn.innerHTML = '<span class="material-icons-round text-sm">mic_off</span>';
+                            btn.title = 'Bật Micro';
+                        }
+                    }
                 }
             }
         };

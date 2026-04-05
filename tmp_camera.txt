@@ -1,0 +1,2 @@
+8919:                 <button id="camera-toggle-btn" onclick="togglePartyCamera()" class="p-2 bg-primary/10 rounded-lg text-primary hover:bg-primary/30" title="Bật/tắt Camera"><span class="material-icons-round text-sm">videocam</span></button>
+8949:         window.togglePartyCamera = () => {
