@@ -1215,7 +1215,7 @@ async def generate_music(
     """
     print(f"🎹 STUDIO GEN: {title} | Style: {style} | Tempo: {tempo}")
     final_id = str(uuid.uuid4())
-    final_path = os.path.join("generated_music", f"{final_id}.mp3")
+    final_path = os.path.join("generated_music", f"{final_id}.wav")
 
     # A. XÁC ĐỊNH BPM MỤC TIÊU (tempo + style)
     target_bpm = resolve_target_bpm(tempo, style)
@@ -1598,14 +1598,12 @@ async def generate_music(
     # Save mastered audio to temp wav
     sf.write(master_wav_path, y_master, sr_master)
 
-    # Convert to MP3 with high quality
+    # Convert to WAV (no FFmpeg needed)
     mastered = AudioSegment.from_wav(master_wav_path)
     mastered.export(
-        final_path,
-        format="mp3",
-        bitrate="320k",
-        tags={"title": title, "artist": f"AI Studio - {voice}", "album": style},
-    )
+    final_path,
+    format="wav",
+)
 
     # Cleanup
     if os.path.exists(beat_proc_path):
@@ -1620,9 +1618,9 @@ async def generate_music(
         "lyrics": lyrics[:50] + "...",
         "style": style,
         "mood": mood,
-        "file_url": f"/generated_music/{final_id}.mp3",
+        "file_url": f"/generated_music/{final_id}.wav",
     }
-    save_song_to_db(song_data)
+    save_song_to_db(uid, song_data)
 
     print(
         f"✅ Generated: {title} ({len(full_vocal) / 1000:.1f}s vocal, {target_bpm} BPM)"
