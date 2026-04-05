@@ -98,16 +98,3 @@ node_modules/
 backend_results.json
 out.txt
 test_*.py
-tmp_*.py
-tmp_*.txt
-tmp_*.json
-
-# Backup files
-index.html.bak
-*.bak
-*.backup
-
-# Windows ffmpeg stubs
-ffmpeg.exe
-ffplay.exe
-ffprobe.exe

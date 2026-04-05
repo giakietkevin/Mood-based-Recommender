@@ -25,7 +25,6 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Dict, Any
-from hf_music_gen import get_hf_beat, generate_singing_vocal, HF_AVAILABLE
 
 try:
     import g4f
@@ -56,6 +55,15 @@ except Exception as e:
 # --- 1. CẤU HÌNH HỆ THỐNG ---
 os.environ["TF_USE_LEGACY_KERAS"] = "1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
+# HuggingFace API Token (set trong HF Space Secrets)
+HF_TOKEN = os.getenv("HF_TOKEN", "")
+
+# Import HF music gen sau khi đã có HF_TOKEN
+from hf_music_gen import get_hf_beat, generate_singing_vocal, HF_AVAILABLE
+
+if HF_TOKEN:
+    os.environ["HF_TOKEN"] = HF_TOKEN
 
 # Fix lỗi SSL (Quan trọng cho tải Beat/Search)
 try:
@@ -1370,7 +1378,74 @@ async def generate_music(
         if not tts_success or not os.path.exists(t_raw):
             continue
 
-        # 1.5. Convert TTS to Singing Voice (RVC)
+        # 1.5. THỬ BARK SINGING (HF) - chỉ cho High Quality mode
+        bark_success = False
+        use_hq_singing = os.getenv("HQ_SINGING", "false").lower() == "true"
+
+        if HF_AVAILABLE and use_hq_singing:
+            try:
+                bark_success = generate_singing_vocal(line, voice, style, t_raw)
+                if bark_success:
+                    print(f"[HF/Bark] ✅ Line {idx + 1}: Singing vocal generated")
+            except Exception as e:
+                print(f"[HF/Bark] ⚠️ Failed: {e}")
+
+        # Nếu Bark fail hoặc không dùng HQ, dùng Edge TTS như cũ
+        if not bark_success:
+            # 1. Text-to-Speech với Singing-like Parameters
+            tts_success = False
+            try:
+                # Edge-TTS với singing-style parameters
+                rate_adjust = "+0%"
+                pitch_adjust = "+0Hz"
+
+                # Style-specific singing adjustments
+                if style in ["Ballad", "Soul", "Jazz", "Blues"]:
+                    rate_adjust = "-10%"  # Chậm hơn để sustain notes
+                    pitch_adjust = "+5Hz"  # Tăng pitch nhẹ, expressive hơn
+                elif style in ["Pop", "Pop Rock", "Indie"]:
+                    rate_adjust = "+5%"  # Bright, upbeat
+                    pitch_adjust = "+10Hz"  # Higher pitch cho pop
+                elif style in ["Rap", "Hip-Hop"]:
+                    rate_adjust = "+15%"  # Fast flow
+                    pitch_adjust = "-5Hz"  # Lower pitch cho rap
+                elif style in ["Rock", "Metal", "Punk"]:
+                    rate_adjust = "+10%"  # Energetic
+                    pitch_adjust = "+0Hz"  # Natural
+                elif style in ["EDM", "Electronic", "House", "Techno"]:
+                    rate_adjust = "+5%"  # Dance tempo
+                    pitch_adjust = "+15Hz"  # Bright, synthetic feel
+
+                # Thêm prosody marks để giọng "sing-songy" hơn
+                enhanced_line = line
+                enhanced_line = enhanced_line.replace(",", ' <break time="300ms"/> ')
+                enhanced_line = enhanced_line.replace(".", ' <break time="500ms"/> ')
+
+                comm = edge_tts.Communicate(
+                    enhanced_line, tts_voice_id, rate=rate_adjust, pitch=pitch_adjust
+                )
+                await comm.save(t_raw)
+                tts_success = True
+            except Exception as e:
+                print(f"⚠️ Edge-TTS failed: {e}")
+                try:
+                    gTTS(text=line, lang="vi", slow=(style in ["Ballad", "Soul"])).save(
+                        t_raw
+                    )
+                    tts_success = True
+                except:
+                    pass
+
+            if not tts_success or not os.path.exists(t_raw):
+                continue
+
+        # Nếu dùng Bark (singing), skip pitch contour vì đã có melody
+        if bark_success:
+            src_for_flow = t_raw
+        else:
+            # 2. Apply Melodic Contour (cho Edge TTS)
+            apply_pitch_contour(t_raw, t_mel, mood, tempo, style, intensity=1.4)
+            src_for_flow = t_mel if os.path.exists(t_mel) else t_raw
         if RVC_AVAILABLE:
             try:
                 voice_type = "female" if "Female" in voice else "male"
@@ -1397,10 +1472,6 @@ async def generate_music(
 
             except Exception as e:
                 print(f"[WARNING] RVC conversion error: {e}, using TTS")
-
-        # 2. Apply Melodic Contour
-        apply_pitch_contour(t_raw, t_mel, mood, tempo, style, intensity=1.4)
-        src_for_flow = t_mel if os.path.exists(t_mel) else t_raw
 
         # 3. INTELLIGENT FLOW TIMING
         y_check, sr_check = librosa.load(src_for_flow)
