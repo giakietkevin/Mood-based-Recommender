@@ -211,6 +211,7 @@
             if (viewName !== 'game' && typeof stopSnake === 'function') stopSnake();
 
             // Refresh Data
+            if (viewName === 'home' && typeof window.fetchHomeStories === 'function') window.fetchHomeStories();
             if (viewName === 'studio') loadMySongs();
             if (viewName === 'library') {
                 if (!window.currentUserUid) {
@@ -5813,20 +5814,30 @@ let aiChatHistory = [];
             }
         };
 
+        // Social Stories Logic
+        let currentStoryData = {
+            type: 'photo',
+            media_url: '',
+            content: '',
+            music: null,
+            rotation: 0,
+            zoom: 1
+        };
+
         window.fetchHomeStories = async () => {
             if (!window.supabaseClient) return;
             try {
                 const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-                const { data: stories, error } = await window.supabaseClient
+                const { data, error } = await window.supabaseClient
                     .from('stories')
                     .select('*, profiles(*) ')
                     .gt('created_at', oneDayAgo)
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
-                renderHomeStories(stories || []);
+                renderHomeStories(data || []);
             } catch (e) {
-                console.error("Stories fetch error:", e);
+                console.error("Story fetch error:", e);
                 renderHomeStories([]);
             }
         };
@@ -5869,374 +5880,22 @@ let aiChatHistory = [];
             container.innerHTML = createStoryCard + stories.map(storyCardHtml).join('');
         }
 
-        let currentStoryData = {
-            type: 'photo',
-            media_url: '',
-            content: '',
-            music: null,
-            rotation: 0,
-            zoom: 1
-        };
-
         window.createHomeStory = () => {
              const modal = document.getElementById('story-creator-modal');
              if (!modal) return;
-             
              modal.classList.remove('hidden');
+             modal.classList.add('flex');
              document.getElementById('story-creator-user-name').innerText = window.currentUserDisplayName || 'Bạn';
              document.getElementById('story-creator-user-avatar').src = window.currentUserAvatarUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=guest';
-             
              resetStoryCreator();
         };
 
         window.closeStoryCreator = () => {
-             document.getElementById('story-creator-modal').classList.add('hidden');
-             if (window.storyPreviewAudio) {
-                 window.storyPreviewAudio.pause();
-                 window.storyPreviewAudio = null;
-             }
-        };
-
-        function resetStoryCreator() {
-             currentStoryData = { type: 'photo', media_url: '', content: '', music: null, rotation: 0, zoom: 1 };
-             
-             // Show picker, hide editor
-             const picker = document.getElementById('story-type-picker');
-             if (picker) picker.classList.remove('hidden');
-             const editorPreview = document.getElementById('story-editor-preview');
-             if (editorPreview) editorPreview.classList.add('hidden');
-             const editorControls = document.getElementById('story-editor-controls');
-             if (editorControls) editorControls.classList.add('hidden');
-             const editorFooter = document.getElementById('story-creator-footer');
-             if (editorFooter) editorFooter.classList.add('hidden');
-
-             // Reset inputs
-             const mresults = document.getElementById('music-results');
-             if (mresults) mresults.innerHTML = '';
-             const minput = document.getElementById('music-search-input');
-             if (minput) minput.value = '';
-             
-             updateStoryCreatorPreview();
-        }
-
-        window.startTextStory = () => {
-             currentStoryData.type = 'text';
-             showStoryEditor();
-        };
-
-        window.handleStoryImageSelect = (event) => {
-             const file = event.target.files[0];
-             if (file) {
-                 const reader = new FileReader();
-                 reader.onload = (e) => {
-                     currentStoryData.type = 'photo';
-                     currentStoryData.media_url = e.target.result;
-                     showStoryEditor();
-                 };
-                 reader.readAsDataURL(file);
-             }
-        };
-
-        function showStoryEditor() {
-            document.getElementById('story-type-picker').classList.add('hidden');
-            document.getElementById('story-editor-preview').classList.remove('hidden');
-            document.getElementById('story-editor-controls').classList.remove('hidden');
-            document.getElementById('story-creator-footer').classList.remove('hidden');
-            updateStoryCreatorPreview();
-        }
-
-        function updateStoryCreatorPreview() {
-            const previewImg = document.getElementById('story-preview-img');
-            const previewBg = document.getElementById('story-preview-bg');
-            const displayText = document.getElementById('story-display-text');
-            const musicBadge = document.getElementById('story-music-badge');
-            
-            if (!previewImg || !previewBg) return;
-
-            if (currentStoryData.type === 'photo') {
-                previewImg.src = currentStoryData.media_url;
-                previewImg.classList.remove('hidden');
-                previewBg.style.backgroundImage = 'none';
-                displayText.innerText = '';
-            } else {
-                previewImg.classList.add('hidden');
-                previewBg.style.backgroundImage = 'linear-gradient(to bottom right, #9333ea, #ec4899)';
-                displayText.innerText = currentStoryData.content || 'Bắt đầu nhập...';
-            }
-
-            if (currentStoryData.music) {
-                musicBadge?.classList.remove('hidden');
-                const mName = document.getElementById('story-music-name');
-                const mArtist = document.getElementById('story-music-artist');
-                if (mName) mName.innerText = currentStoryData.music.trackName;
-                if (mArtist) mArtist.innerText = currentStoryData.music.artistName;
-            } else {
-                musicBadge?.classList.add('hidden');
-            }
-        }
-
-        window.addTextToStory = () => {
-             const text = prompt("Nhập văn bản cho tin:", currentStoryData.content);
-             if (text !== null) {
-                 currentStoryData.content = text;
-                 updateStoryCreatorPreview();
-             }
-        };
-
-        window.addMusicToStory = () => {
-             const picker = document.getElementById('music-picker-modal');
-             if (picker) picker.classList.remove('hidden');
-        };
-
-        window.closeMusicPicker = () => {
-             const picker = document.getElementById('music-picker-modal');
-             if (picker) picker.classList.add('hidden');
-        };
-
-        window.debounceSearchMusic = (val) => {
-             if (window._searchTimeout) clearTimeout(window._searchTimeout);
-             window._searchTimeout = setTimeout(() => searchStoryMusic(val), 500);
-        };
-
-        async function searchStoryMusic(query) {
-             if (!query) return;
-             const results = document.getElementById('music-results');
-             if (!results) return;
-             results.innerHTML = '<div class="p-4 text-center text-slate-500">Đang tìm...</div>';
-
-             try {
-                 const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=20`);
-                 const data = await res.json();
-                 results.innerHTML = data.results.map(track => `
-                    <div class="flex items-center gap-3 p-3 hover:bg-white/5 rounded-xl cursor-pointer group transtion-all" onclick='selectStoryMusic(${JSON.stringify(track).replace(/'/g, "&#39;")})'>
-                        <img src="${track.artworkUrl60}" class="w-12 h-12 rounded-lg shadow-lg group-hover:scale-105 transition-transform">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-white font-bold truncate text-sm">${track.trackName}</p>
-                            <p class="text-slate-500 text-xs truncate">${track.artistName}</p>
-                        </div>
-                        <span class="material-icons-round text-slate-700 group-hover:text-primary transition-colors">play_circle</span>
-                    </div>
-                 `).join('');
-             } catch (e) {
-                 results.innerHTML = '<div class="p-4 text-center text-red-500">Lỗi kết nối</div>';
-             }
-        }
-
-        window.selectStoryMusic = (track) => {
-             currentStoryData.music = track;
-             closeMusicPicker();
-             // Show trimmer logic if needed
-             const trimmer = document.getElementById('story-music-trimmer');
-             if (trimmer) trimmer.classList.remove('hidden');
-             updateStoryCreatorPreview();
-        };
-
-        window.confirmMusicTrim = () => {
-             document.getElementById('story-music-trimmer').classList.add('hidden');
-        };
-
-        window.rotateStoryImage = () => {
-             currentStoryData.rotation = (currentStoryData.rotation + 90) % 360;
-             const img = document.getElementById('story-preview-img');
-             if (img) img.style.transform = `rotate(${currentStoryData.rotation}deg) scale(${currentStoryData.zoom})`;
-        };
-
-        window.submitHomeStory = async () => {
-             if (!window.supabaseClient) return;
-             const btn = document.querySelector('[onclick="submitHomeStory()"]');
-             if (btn) {
-                 btn.disabled = true;
-                 btn.innerText = 'Đang đăng...';
-             }
-
-             try {
-                 const { error } = await window.supabaseClient
-                     .from('stories')
-                     .insert([{
-                         author_id: window.currentUserUid,
-                         content: currentStoryData.content,
-                         media_url: currentStoryData.media_url,
-                         music_info: currentStoryData.music ? {
-                             name: currentStoryData.music.trackName,
-                             artist: currentStoryData.music.artistName,
-                             preview_url: currentStoryData.music.previewUrl,
-                             start_time: parseFloat(document.getElementById('story-music-trimmer')?.value || 0)
-                         } : null,
-                         metadata: {
-                             rotation: currentStoryData.rotation,
-                             zoom: currentStoryData.zoom
-                         }
-                     }]);
-
-                 if (error) throw error;
-                 closeStoryCreator();
-                 if (window.fetchHomeStories) window.fetchHomeStories();
-             } catch (e) {
-                 alert("Lỗi khi đăng tin: " + e.message);
-             } finally {
-                 if (btn) {
-                    btn.disabled = false;
-                    btn.innerText = 'Chia sẻ lên tin';
-                 }
-             }
-        };
-
-        // STORY VIEWER LOGIC
-        let allStories = [];
-        let currentViewerIndex = 0;
-        let storyViewAudio = null;
-
-        window.openStoryViewer = async (targetId) => {
-             const modal = document.getElementById('story-viewer-modal');
-             if (!modal) return;
-             
-             modal.classList.remove('hidden');
-             
-             // Refresh list from DB
-             const { data, error } = await window.supabaseClient
-                 .from('stories')
-                 .select('*, profiles(*) ')
-                 .order('created_at', { ascending: false });
-
-             if (data) {
-                 allStories = data;
-                 currentViewerIndex = allStories.findIndex(s => s.id === targetId);
-                 if (currentViewerIndex === -1) currentViewerIndex = 0;
-                 
-                 renderViewerSidebar();
-                 showStoryInViewer(currentViewerIndex);
-             }
-        };
-
-        window.closeStoryViewer = () => {
-             document.getElementById('story-viewer-modal').classList.add('hidden');
-             if (storyViewAudio) {
-                 storyViewAudio.pause();
-                 storyViewAudio = null;
-             }
-        };
-
-        function renderViewerSidebar() {
-             const list = document.getElementById('viewer-sidebar-list');
-             if (!list) return;
-             list.innerHTML = allStories.map((s, idx) => {
-                 const author = s.profiles || {};
-                 const isActive = idx === currentViewerIndex;
-                 const avatar = author.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${s.author_id}`;
-                 return `
-                    <div class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}" onclick="showStoryInViewer(${idx})">
-                         <div class="relative">
-                            <img src="${avatar}" class="w-12 h-12 rounded-full border-2 ${isActive ? 'border-primary' : 'border-slate-700'}">
-                         </div>
-                         <div class="flex-1 min-w-0">
-                            <p class="text-white font-bold text-sm truncate">${author.display_name || 'Người dùng'}</p>
-                            <p class="text-slate-500 text-[10px]">${new Date(s.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                         </div>
-                    </div>
-                 `;
-             }).join('');
-        }
-
-        window.showStoryInViewer = (index) => {
-             if (index < 0 || index >= allStories.length) return;
-             currentViewerIndex = index;
-             const story = allStories[index];
-             const author = story.profiles || {};
-
-             // Update UI
-             const imgEl = document.getElementById('story-view-img');
-             const avatarEl = document.getElementById('story-view-avatar');
-             const authorEl = document.getElementById('story-view-author');
-             const timeEl = document.getElementById('story-view-time');
-             const textEl = document.getElementById('story-view-display-text');
-             
-             if (imgEl) imgEl.src = story.media_url || (author.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${story.author_id}`);
-             if (avatarEl) avatarEl.src = author.avatar_url || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + story.author_id;
-             if (authorEl) authorEl.innerText = author.display_name || 'Người dùng';
-             if (timeEl) timeEl.innerText = new Date(story.created_at).toLocaleString();
-             if (textEl) textEl.innerText = story.content || '';
-             
-             // Handle Music
-             if (storyViewAudio) storyViewAudio.pause();
-             const musicBadge = document.getElementById('story-view-music-badge');
-             const musicName = document.getElementById('story-view-music-name');
-             
-             if (story.music_info && story.music_info.preview_url) {
-                  if (musicName) musicName.innerText = story.music_info.name;
-                  if (musicBadge) musicBadge.classList.remove('hidden');
-                  storyViewAudio = new Audio(story.music_info.preview_url);
-                  storyViewAudio.currentTime = story.music_info.start_time || 0;
-                  storyViewAudio.play();
-             } else {
-                  if (musicBadge) musicBadge.classList.add('hidden');
-                  storyViewAudio = null;
-             }
-
-             // Refresh sidebar highlighting
-             renderViewerSidebar();
-        };
-
-        const initViewerEvents = () => {
-            const prevBtn = document.getElementById('viewer-prev-btn');
-            if (prevBtn) prevBtn.onclick = () => {
-                 if (currentViewerIndex > 0) showStoryInViewer(currentViewerIndex - 1);
-            };
-            const nextBtn = document.getElementById('viewer-next-btn');
-            if (nextBtn) nextBtn.onclick = () => {
-                 if (currentViewerIndex < allStories.length - 1) showStoryInViewer(currentViewerIndex + 1);
-            };
-        };
-        // Run once on load or ensure el existence
-        setTimeout(initViewerEvents, 1000);
-
-        window.reactToStory = async (type) => {
-             const reactions = {
-                  like: '👍', love: '❤️', care: '🥰', haha: '😆', wow: '😮', sad: '😢', angry: '😡'
-             };
-             // Optional: save to DB
-             alert(`Bạn đã thả ${reactions[type]} cho tin này!`);
-        };
-
-        window.fetchHomeStories = async () => {
-            if (!window.supabaseClient) return;
-            try {
-                const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-                const { data, error } = await window.supabaseClient
-                    .from('stories')
-                    .select('*, profiles(*) ')
-                    .gt('created_at', oneDayAgo)
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-                renderHomeStories(data || []);
-            } catch (e) {
-                console.error("Story fetch error:", e);
-                renderHomeStories([]);
-            }
-        };
-
-        let currentStoryData = {
-            type: 'photo',
-            media_url: '',
-            content: '',
-            music: null, // { name, artist, preview_url, start_time }
-            rotation: 0,
-            zoom: 1
-        };
-
-        window.createHomeStory = () => {
              const modal = document.getElementById('story-creator-modal');
-             if (!modal) return;
-             
-             modal.classList.remove('hidden');
-             document.getElementById('story-creator-user-name').innerText = window.currentUserDisplayName || 'Bạn';
-             document.getElementById('story-creator-user-avatar').src = window.currentUserAvatarUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=guest';
-             
-             resetStoryCreator();
-        };
-
-        window.closeStoryCreator = () => {
-             document.getElementById('story-creator-modal').classList.add('hidden');
+             if (modal) {
+                 modal.classList.add('hidden');
+                 modal.classList.remove('flex');
+             }
              if (window.storyPreviewAudio) {
                  window.storyPreviewAudio.pause();
                  window.storyPreviewAudio = null;
@@ -6249,27 +5908,40 @@ let aiChatHistory = [];
             document.getElementById('story-editor-preview').classList.add('hidden');
             document.getElementById('story-editor-controls').classList.add('hidden');
             document.getElementById('story-creator-footer').classList.add('hidden');
-            document.getElementById('story-preview-img').src = '';
-            document.getElementById('story-preview-img').style.transform = `scale(1) rotate(0deg)`;
-            document.getElementById('story-display-text').innerText = '';
-            document.getElementById('story-music-badge').classList.add('hidden');
-            document.getElementById('story-music-trimmer').classList.add('hidden');
-            document.getElementById('story-preview-bg').style.backgroundImage = '';
+            const pimg = document.getElementById('story-preview-img');
+            if (pimg) {
+                pimg.src = '';
+                pimg.style.transform = `scale(1) rotate(0deg)`;
+            }
+            const dtxt = document.getElementById('story-display-text');
+            if (dtxt) dtxt.innerText = '';
+            document.getElementById('story-music-badge')?.classList.add('hidden');
+            document.getElementById('story-music-trimmer')?.classList.add('hidden');
+            const pbg = document.getElementById('story-preview-bg');
+            if (pbg) pbg.style.backgroundImage = '';
+        }
+
+        function showStoryEditor() {
+            document.getElementById('story-type-picker').classList.add('hidden');
+            document.getElementById('story-editor-preview').classList.remove('hidden');
+            document.getElementById('story-editor-controls').classList.remove('hidden');
+            document.getElementById('story-creator-footer').classList.remove('hidden');
         }
 
         window.handleStoryImageSelect = (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (event) => {
                 currentStoryData.type = 'photo';
                 currentStoryData.media_url = event.target.result;
-                
-                document.getElementById('story-preview-img').src = event.target.result;
-                document.getElementById('story-preview-img').classList.remove('hidden');
-                document.getElementById('story-preview-bg').style.backgroundImage = `url(${event.target.result})`;
-                
+                const img = document.getElementById('story-preview-img');
+                if (img) {
+                    img.src = event.target.result;
+                    img.classList.remove('hidden');
+                }
+                const bg = document.getElementById('story-preview-bg');
+                if (bg) bg.style.backgroundImage = `url(${event.target.result})`;
                 showStoryEditor();
             };
             reader.readAsDataURL(file);
@@ -6278,20 +5950,11 @@ let aiChatHistory = [];
         window.startTextStory = () => {
             currentStoryData.type = 'text';
             currentStoryData.media_url = '';
-            
             document.getElementById('story-preview-img').classList.add('hidden');
             document.getElementById('story-preview-bg').style.backgroundImage = 'linear-gradient(to bottom right, #8a2be2, #ff69b4)';
-            
             showStoryEditor();
             addTextToStory();
         };
-
-        function showStoryEditor() {
-            document.getElementById('story-type-picker').classList.add('hidden');
-            document.getElementById('story-editor-preview').classList.remove('hidden');
-            document.getElementById('story-editor-controls').classList.remove('hidden');
-            document.getElementById('story-creator-footer').classList.remove('hidden');
-        }
 
         window.addTextToStory = () => {
             const txt = prompt("Nhập nội dung văn bản:", currentStoryData.content);
@@ -6320,20 +5983,16 @@ let aiChatHistory = [];
                 resultsContainer.innerHTML = '<div class="py-12 text-center text-slate-600"><span class="material-icons-round text-4xl mb-2">music_note</span><p class="text-xs font-bold uppercase tracking-widest text-slate-500">Bắt đầu tìm nhạc</p></div>';
                 return;
             }
-
             resultsContainer.innerHTML = '<div class="py-12 text-center text-slate-600 animate-pulse"><p class="text-xs font-bold uppercase tracking-widest text-slate-400">Đang tìm kiếm...</p></div>';
-
             try {
                 const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=10`);
                 const data = await res.json();
-
                 if (!data.results || data.results.length === 0) {
                     resultsContainer.innerHTML = '<div class="py-12 text-center text-slate-600"><p class="text-xs font-bold uppercase tracking-widest text-slate-500">Không tìm thấy bài hát</p></div>';
                     return;
                 }
-
                 resultsContainer.innerHTML = data.results.map(song => `
-                    <div class="flex items-center gap-3 p-2 hover:bg-white/10 rounded-xl cursor-pointer group transition-all" onclick="selectMusicForStory(${JSON.stringify(song).replace(/"/g, '&quot;')})">
+                    <div class="flex items-center gap-3 p-2 hover:bg-white/10 rounded-xl cursor-pointer group transition-all" onclick='selectMusicForStory(${JSON.stringify(song).replace(/'/g, "&#39;")})'>
                          <img src="${song.artworkUrl60}" class="w-10 h-10 rounded-lg object-cover border border-white/5 shadow-md">
                          <div class="flex-1 min-w-0">
                             <p class="text-sm font-bold text-white truncate">${song.trackName}</p>
@@ -6357,15 +6016,10 @@ let aiChatHistory = [];
                 preview_url: song.previewUrl,
                 start_time: 0
             };
-
             document.getElementById('story-music-name').innerText = song.trackName;
             document.getElementById('story-music-artist').innerText = song.artistName;
             document.getElementById('story-music-badge').classList.remove('hidden');
-            
-            // Show Trimmer
-            const trimmer = document.getElementById('story-music-trimmer');
-            trimmer.classList.remove('hidden');
-            
+            document.getElementById('story-music-trimmer').classList.remove('hidden');
             closeMusicPicker();
             initMusicTrimmer();
         };
@@ -6374,29 +6028,20 @@ let aiChatHistory = [];
             const slider = document.getElementById('story-music-slider');
             const handle = document.getElementById('trimmer-handle');
             const playBtn = document.getElementById('trimmer-play-btn');
-            
             if (window.storyPreviewAudio) window.storyPreviewAudio.pause();
             const audio = new Audio(currentStoryData.music.preview_url);
             window.storyPreviewAudio = audio;
-
             slider.oninput = (e) => {
                 const percent = e.target.value;
-                handle.style.left = `calc(${percent}% - ${(percent/100) * 60}px)`; // Offset for handle width
-                currentStoryData.music.start_time = (percent / 100) * 15; // Max 30s preview, we allow 15s start range
-                
+                handle.style.left = `calc(${percent}% - ${(percent/100) * 60}px)`;
+                currentStoryData.music.start_time = (percent / 100) * 15;
                 audio.currentTime = currentStoryData.music.start_time;
                 if (audio.paused) audio.play();
                 playBtn.innerHTML = '<span class="material-icons-round">pause</span>';
             };
-
             playBtn.onclick = () => {
-                if (audio.paused) {
-                    audio.play();
-                    playBtn.innerHTML = '<span class="material-icons-round">pause</span>';
-                } else {
-                    audio.pause();
-                    playBtn.innerHTML = '<span class="material-icons-round">play_arrow</span>';
-                }
+                if (audio.paused) { audio.play(); playBtn.innerHTML = '<span class="material-icons-round">pause</span>'; }
+                else { audio.pause(); playBtn.innerHTML = '<span class="material-icons-round">play_arrow</span>'; }
             };
         }
 
@@ -6407,62 +6052,138 @@ let aiChatHistory = [];
 
         window.rotateStoryImage = () => {
             currentStoryData.rotation = (currentStoryData.rotation + 90) % 360;
-            updateStoryPreviewTransform();
-        };
-
-        function updateStoryPreviewTransform() {
             const img = document.getElementById('story-preview-img');
-            img.style.transform = `scale(${currentStoryData.zoom}) rotate(${currentStoryData.rotation}deg)`;
-        }
-
-        // Zoom Slider Listener
-        document.addEventListener('DOMContentLoaded', () => {
-            const slider = document.getElementById('story-zoom-slider');
-            if (slider) {
-                slider.addEventListener('input', (e) => {
-                    currentStoryData.zoom = e.target.value;
-                    updateStoryPreviewTransform();
-                });
-            }
-        });
+            if (img) img.style.transform = `scale(${currentStoryData.zoom}) rotate(${currentStoryData.rotation}deg)`;
+        };
 
         window.submitHomeStory = async () => {
             if (!window.currentUserUid) return alert("Vui lòng đăng nhập!");
-            
             const btn = document.getElementById('share-story-btn');
             btn.innerText = "Đang chia sẻ...";
             btn.disabled = true;
-
             try {
                 const { error } = await window.supabaseClient
                     .from('stories')
                     .insert([{
                         author_id: window.currentUserUid,
                         type: currentStoryData.type,
-                        media_url: currentStoryData.media_url, // Base64 if uploaded, or empty for text
+                        media_url: currentStoryData.media_url,
                         content: currentStoryData.content,
                         music_info: currentStoryData.music,
                         metadata: {
                             rotation: currentStoryData.rotation,
                             zoom: currentStoryData.zoom,
-                            background: currentStoryData.type === 'text' ? 'gradient-pink' : null
+                            background: currentStoryData.type === 'text' ? 'linear-gradient(to bottom right, #8a2be2, #ff69b4)' : null
                         }
                     }]);
-
-                if (error) {
-                    throw error;
-                }
-                
+                if (error) throw error;
                 alert("Tin của bạn đã được đăng thành công!");
                 closeStoryCreator();
                 fetchHomeStories();
             } catch (e) {
                 console.error(e);
-                alert("Lỗi khi đăng tin. Đảm bảo bảng 'stories' đã được cấu hình trong Supabase.");
+                alert("Lỗi khi đăng tin.");
             } finally {
                 btn.innerText = "Chia sẻ lên tin";
                 btn.disabled = false;
             }
+        };
+
+        // STORY VIEWER LOGIC
+        let allStories = [];
+        let currentViewerIndex = 0;
+        let storyViewAudio = null;
+
+        window.openStoryViewer = async (targetId) => {
+             const modal = document.getElementById('story-viewer-modal');
+             if (!modal) return;
+             modal.classList.remove('hidden');
+             modal.classList.add('flex');
+             const { data, error } = await window.supabaseClient
+                 .from('stories')
+                 .select('*, profiles(*) ')
+                 .order('created_at', { ascending: false });
+             if (data) {
+                 allStories = data;
+                 currentViewerIndex = allStories.findIndex(s => s.id === targetId);
+                 if (currentViewerIndex === -1) currentViewerIndex = 0;
+                 renderViewerSidebar();
+                 showStoryInViewer(currentViewerIndex);
+             }
+        };
+
+        window.closeStoryViewer = () => {
+             const modal = document.getElementById('story-viewer-modal');
+             if (modal) {
+                 modal.classList.add('hidden');
+                 modal.classList.remove('flex');
+             }
+             if (storyViewAudio) {
+                 storyViewAudio.pause();
+                 storyViewAudio = null;
+             }
+        };
+
+        function renderViewerSidebar() {
+             const list = document.getElementById('viewer-sidebar-list');
+             if (!list) return;
+             list.innerHTML = allStories.map((s, idx) => {
+                 const author = s.profiles || {};
+                 const isActive = idx === currentViewerIndex;
+                 const avatar = author.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${s.author_id}`;
+                 return `
+                    <div class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}" onclick="showStoryInViewer(${idx})">
+                         <img src="${avatar}" class="w-12 h-12 rounded-full border-2 ${isActive ? 'border-primary' : 'border-slate-700'}">
+                         <div class="flex-1 min-w-0">
+                            <p class="text-white font-bold text-sm truncate">${author.display_name || 'Người dùng'}</p>
+                            <p class="text-slate-500 text-[10px]">${new Date(s.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                         </div>
+                    </div>
+                 `;
+             }).join('');
+        }
+
+        window.showStoryInViewer = (index) => {
+             if (index < 0 || index >= allStories.length) return;
+             currentViewerIndex = index;
+             const story = allStories[index];
+             const author = story.profiles || {};
+             const imgEl = document.getElementById('story-view-img');
+             const avatarEl = document.getElementById('story-view-avatar');
+             const authorEl = document.getElementById('story-view-author');
+             const timeEl = document.getElementById('story-view-time');
+             const textEl = document.getElementById('story-view-display-text');
+             if (imgEl) imgEl.src = story.media_url || avatarEl.src;
+             if (avatarEl) avatarEl.src = author.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${story.author_id}`;
+             if (authorEl) authorEl.innerText = author.display_name || 'Người dùng';
+             if (timeEl) timeEl.innerText = new Date(story.created_at).toLocaleString();
+             if (textEl) textEl.innerText = story.content || '';
+             if (storyViewAudio) storyViewAudio.pause();
+             const musicBadge = document.getElementById('story-view-music-badge');
+             const musicName = document.getElementById('story-view-music-name');
+             if (story.music_info && story.music_info.preview_url) {
+                  if (musicName) musicName.innerText = story.music_info.name;
+                  if (musicBadge) musicBadge.classList.remove('hidden');
+                  storyViewAudio = new Audio(story.music_info.preview_url);
+                  storyViewAudio.currentTime = story.music_info.start_time || 0;
+                  storyViewAudio.play();
+             } else {
+                  if (musicBadge) musicBadge.classList.add('hidden');
+                  storyViewAudio = null;
+             }
+             renderViewerSidebar();
+        };
+
+        function initViewerEvents() {
+            const prev = document.getElementById('viewer-prev-btn');
+            if (prev) prev.onclick = () => { if (currentViewerIndex > 0) showStoryInViewer(currentViewerIndex - 1); };
+            const next = document.getElementById('viewer-next-btn');
+            if (next) next.onclick = () => { if (currentViewerIndex < allStories.length - 1) showStoryInViewer(currentViewerIndex + 1); };
+        }
+        setTimeout(initViewerEvents, 1000);
+
+        window.reactToStory = (type) => {
+             alert(`Bạn đã thả cảm xúc cho tin này!`);
         };
 
         window.likePost = async (id) => {
