@@ -7279,7 +7279,7 @@ let aiChatHistory = [];
                     const formData = new FormData();
                     formData.append('file', blob, 'emotion.jpg');
                     try {
-                        const res = await fetch('/api/emotion', { method: 'POST', body: formData });
+                        const res = await fetch('api/emotion', { method: 'POST', body: formData });
                         const data = await res.json();
                         if (data.status === 'success') {
                             const em = data.emotion;
