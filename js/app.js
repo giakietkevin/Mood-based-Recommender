@@ -1235,9 +1235,9 @@
                     const res = await fetch(url);
                     const data = await res.json();
                     
-                    imgDomain = data.data?.APP_DOMAIN_CDN_IMAGE || 'https://img.ophim.live';
+                    imgDomain = data.data?.APP_DOMAIN_CDN_IMAGE || data.pathImage || 'https://img.ophim.live';
                     let rawItems = data.data?.items || data.items || [];
-                    apiPagination = data.data?.params?.pagination || {};
+                    apiPagination = data.data?.params?.pagination || data.pagination || {};
 
                     // Filtering
                     let filtered = [...rawItems];
@@ -1276,7 +1276,8 @@
                     if (paginationEl) paginationEl.classList.remove('hidden');
                     
                     // Correct total pages for filtered mode is complex, using API total as reference
-                    filmTotalPages = apiPagination.totalPages || 1;
+                    // Calculate total pages if missing
+                    filmTotalPages = apiPagination.totalPages || Math.ceil((apiPagination.totalItems || 0) / (apiPagination.totalItemsPerPage || 24)) || 1;
                     updateFilmPagination();
                     
                     if (window.filmAdvCriteria && pageInfoEl) {

@@ -1,0 +1,100 @@
+﻿
+            const newStory = {
+                author_id: window.currentUserUid,
+                author_name: (window.currentUser && window.currentUser.user_metadata?.full_name) || 'User',
+                author_avatar: (window.currentUser && window.currentUser.user_metadata?.avatar_url) || avatarFromEmail(window.currentUser?.email || 'guest'),
+                content: storyState.image,
+                music_info: storyState.music ? JSON.stringify(storyState.music) : null,
+                created_at: new Date().toISOString()
+            };
+
+            try {
+                // For demo, we save local array, but should be Supabase
+                if (window.supabaseClient) {
+                    await window.supabaseClient.from('stories').insert([newStory]);
+                }
+                setTimeout(() => {
+                    alert('Tin c?a b?n dã du?c chia s?!');
+                    closeStoryCreator();
+                    btn.disabled = false;
+                    btn.textContent = 'Chia s? lên tin';
+                    fetchStories(); // Refresh list
+                }, 1000);
+            } catch (e) {
+                alert("L?i: " + e.message);
+                btn.disabled = false;
+            }
+        };
+
+        // STORY PLAYER LOGIC
+        let storyPlayerTimer = null;
+        window.viewStory = (storyData) => {
+            const modal = document.getElementById('view-story-player');
+            modal.classList.remove('hidden');
+            
+            document.getElementById('story-player-content').src = storyData.content;
+            document.getElementById('story-player-avatar').src = storyData.author_avatar;
+            document.getElementById('story-player-name').textContent = storyData.author_name;
+            
+            if (storyData.music_info) {
+                const m = typeof storyData.music_info === 'string' ? JSON.parse(storyData.music_info) : storyData.music_info;
+                document.getElementById('story-player-music-tag').classList.remove('hidden');
+                document.getElementById('story-player-music-name').textContent = m.title;
+                document.getElementById('story-player-music-artist').textContent = m.artist;
+            } else {
+                document.getElementById('story-player-music-tag').classList.add('hidden');
+            }
+
+            // Progress Bar Animation
+            const fill = document.getElementById('story-player-progress-fill');
+            fill.style.width = '0%';
+            setTimeout(() => fill.style.width = '100%', 10);
+            fill.style.transition = 'width 5s linear';
+
+            storyPlayerTimer = setTimeout(() => closeStoryPlayer(), 5000);
+        };
+
+        window.closeStoryPlayer = () => {
+            document.getElementById('view-story-player').classList.add('hidden');
+            if (storyPlayerTimer) clearTimeout(storyPlayerTimer);
+            document.getElementById('story-player-progress-fill').style.width = '0%';
+            document.getElementById('story-player-progress-fill').style.transition = 'none';
+        };
+
+        async function fetchStories() {
+             // Mock or Supabase fetch
+             // renderStories(data);
+        }
+
+        window.renderStories = (stories) => {
+            const container = document.getElementById('story-bar-list');
+            if (!container) return;
+            const createBtn = container.querySelector('div:first-child');
+            container.innerHTML = '';
+            if (createBtn) container.appendChild(createBtn);
+            
+            stories.forEach(s => {
+                const div = document.createElement('div');
+                div.className = "relative flex-shrink-0 w-[110px] sm:w-[130px] h-[180px] sm:h-[210px] rounded-2xl border border-white/5 overflow-hidden cursor-pointer hover:scale-[1.02] transition-all group shadow-2xl";
+                div.onclick = () => viewStory(s);
+                div.innerHTML = \
+                    <img src="\" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70"></div>
+                    <div class="absolute top-3 left-3 w-9 h-9 rounded-full border-2 border-primary overflow-hidden shadow-lg ring-2 ring-black/50">
+                        <img src="\" class="w-full h-full object-cover bg-white">
+                    </div>
+                    <span class="absolute bottom-3 left-3 right-3 text-white text-[10px] font-black uppercase tracking-tighter truncate drop-shadow-md">\</span>
+                \;
+                container.appendChild(div);
+            });
+        };
+
+        window.fetchStories = async () => {
+             if (!window.supabaseClient) return;
+             try {
+                const { data, error } = await window.supabaseClient.from('stories').select('*').order('created_at', { ascending: false });
+                if (!error && data) renderStories(data);
+             } catch (e) {
+                console.warn('Stories fetch failed:', e);
+             }
+        };
