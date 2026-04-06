@@ -1208,7 +1208,7 @@
             const nameSafe = (m.name || '').replace(/'/g, "&#39;");
             return `
             <div class="film-card group relative bg-white/5 rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-500 cursor-pointer animate-fade-in" 
-                 onclick="openFilmDetail('${m.slug}')">
+                 onclick="streamFilmOphim('${m.slug}')">
                 
                 <button onclick="toggleWatchlist('${m._id}', '${nameSafe}', '${m.thumb_url}', event)" 
                         class="watchlist-btn ${inWatchlist ? 'active' : ''}">
@@ -1554,7 +1554,7 @@
             } else {
                 container.classList.remove('hidden');
                 grid.innerHTML = items.map(item => `
-                    <div class="flex-shrink-0 w-48 group cursor-pointer" onclick="openFilmDetail('${item.slug}')">
+                    <div class="flex-shrink-0 w-48 group cursor-pointer" onclick="streamFilmOphim('${item.slug}')">
                         <div class="relative aspect-video rounded-xl overflow-hidden border border-white/10 group-hover:border-primary/50 transition-all">
                              <img src="${item.thumb || ''}" class="w-full h-full object-cover">
                              <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -7001,11 +7001,13 @@ let aiChatHistory = [];
 
         let peers = {}; // id -> Peer instance
         let localStream = null;
+        let myPartyUid = null;
 
         async function initPartyChannel(id) {
             if (activePartyChannel) activePartyChannel.unsubscribe();
 
-            const myUid = window.currentUserUid || 'guest-' + Math.random().toString(36).substring(2, 6);
+            myPartyUid = window.currentUserUid || 'guest-' + Math.random().toString(36).substring(2, 6);
+            const myUid = myPartyUid;
 
             // Prepare Webcam for Party
             try {
@@ -7150,7 +7152,7 @@ let aiChatHistory = [];
                 activePartyChannel.send({
                     type: 'broadcast',
                     event: 'webrtc-signal',
-                    payload: { from: window.currentUserUid || 'me', target: targetUid, signal: data }
+                    payload: { from: myPartyUid || window.currentUserUid || 'me', target: targetUid, signal: data }
                 });
             });
 
