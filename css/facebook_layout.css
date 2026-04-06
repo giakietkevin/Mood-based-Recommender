@@ -1,0 +1,309 @@
+
+/* ============================================================
+   FACEBOOK-STYLE SOCIAL HOME OVERHAUL
+   ============================================================ */
+
+/* 1. Layout Container */
+.fb-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr 340px;
+    gap: 32px;
+    padding: 24px 0;
+    align-items: start;
+}
+
+@media (max-width: 1280px) {
+    .fb-layout {
+        grid-template-columns: 240px 1fr 300px;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .fb-layout {
+        grid-template-columns: 1fr;
+    }
+    .fb-sidebar {
+        display: none;
+    }
+}
+
+/* 2. Sidebar General */
+.fb-sidebar {
+    position: sticky;
+    top: 100px;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.fb-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.fb-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+/* 3. Navigation Links (Left) */
+.fb-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.fb-nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--primary);
+}
+
+.fb-nav-item.active {
+    background: var(--primary-glow);
+    color: var(--primary);
+}
+
+.fb-nav-item .icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* 4. Stories Section */
+.fb-stories-container {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+}
+
+.fb-stories-container::-webkit-scrollbar {
+    display: none;
+}
+
+.fb-story-card {
+    min-width: 120px;
+    height: 190px;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fb-story-card:hover {
+    transform: scale(1.02);
+}
+
+.fb-story-card:hover img {
+    transform: scale(1.1);
+}
+
+.fb-story-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s;
+}
+
+.fb-story-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.7) 100%);
+}
+
+.fb-story-avatar {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    border: 3px solid var(--primary);
+    padding: 2px;
+    background: #000;
+}
+
+.fb-story-name {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* 5. Post Creator Overhaul */
+.fb-post-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 16px;
+}
+
+.fb-post-trigger {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 24px;
+    padding: 10px 16px;
+    color: #94a3b8;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+}
+
+.fb-post-trigger:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.fb-post-actions {
+    display: flex;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 12px;
+    padding-top: 8px;
+}
+
+.fb-action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 10px;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.fb-action-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+/* 6. Post Card Overhaul */
+.fb-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    margin-bottom: 16px;
+    transition: transform 0.2s;
+}
+
+.fb-card-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.fb-card-body {
+    padding: 0 16px 14px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #e2e8f0;
+}
+
+.fb-card-media {
+    width: 100%;
+    max-height: 500px;
+    object-fit: contain;
+    background: #000;
+}
+
+.fb-card-footer {
+    padding: 8px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.fb-stats {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 4px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.fb-interaction-row {
+    display: flex;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 4px 0;
+}
+
+/* 7. Friend Contacts (Right) */
+.fb-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.fb-contact-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.contact-avatar-box {
+    position: relative;
+    width: 36px;
+    height: 36px;
+}
+
+.contact-avatar-box img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.status-indicator {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #22c55e;
+    border: 2px solid #0a0a0a;
+}
+
+/* 8. Utilities */
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.fb-post-trigger.text-slate-400 {
+    color: #94a3b8 !important;
+}

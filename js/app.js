@@ -211,6 +211,7 @@
             if (viewName !== 'game' && typeof stopSnake === 'function') stopSnake();
 
             // Refresh Data
+            if (viewName === 'home' && typeof window.fetchHomeStories === 'function') window.fetchHomeStories();
             if (viewName === 'studio') loadMySongs();
             if (viewName === 'library') {
                 if (!window.currentUserUid) {
@@ -1120,43 +1121,129 @@
         let filmCurrentEndpoint = 'https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat';
         let filmIsSearchMode = false;
         let filmCurrentYearFilter = null;
-        window.filmAdvCriteria = null; // Stored as { genre, country, year }
+        window.filmAdvCriteria = null; 
+
+        // --- DYNAMIC THEME SYSTEM ---
+        window.filmThemes = {
+            'hanh-dong': { primary: '#FF4D00', glow: 'rgba(255, 77, 0, 0.3)', bg: '#080504' },
+            'tinh-cam': { primary: '#FF2D55', glow: 'rgba(255, 45, 85, 0.3)', bg: '#080406' },
+            'hai-huoc': { primary: '#FFD600', glow: 'rgba(255, 214, 0, 0.3)', bg: '#080804' },
+            'co-trang': { primary: '#C6A87C', glow: 'rgba(198, 168, 124, 0.3)', bg: '#080705' },
+            'tam-ly': { primary: '#6A5ACD', glow: 'rgba(106, 90, 205, 0.3)', bg: '#050408' },
+            'hinh-su': { primary: '#4682B4', glow: 'rgba(70, 130, 180, 0.3)', bg: '#040508' },
+            'chien-tranh': { primary: '#556B2F', glow: 'rgba(85, 107, 47, 0.3)', bg: '#050604' },
+            'the-thao': { primary: '#32CD32', glow: 'rgba(50, 205, 50, 0.3)', bg: '#040804' },
+            'vo-thuat': { primary: '#B22222', glow: 'rgba(178, 34, 34, 0.3)', bg: '#080202' },
+            'hoat-hinh': { primary: '#9D00FF', glow: 'rgba(157, 0, 255, 0.3)', bg: '#060408' },
+            'vien-tuong': { primary: '#00E5FF', glow: 'rgba(0, 229, 255, 0.3)', bg: '#040708' },
+            'phieu-luu': { primary: '#DAA520', glow: 'rgba(218, 165, 32, 0.3)', bg: '#080704' },
+            'khoa-hoc': { primary: '#7FFFD4', glow: 'rgba(127, 255, 212, 0.3)', bg: '#040807' },
+            'kinh-di': { primary: '#8B0000', glow: 'rgba(139, 0, 0, 0.3)', bg: '#080202' },
+            'am-nhac': { primary: '#FF00FF', glow: 'rgba(255, 0, 255, 0.3)', bg: '#080408' },
+            'than-thoai': { primary: '#4169E1', glow: 'rgba(65, 105, 225, 0.3)', bg: '#040508' },
+            'gia-dinh': { primary: '#FFA07A', glow: 'rgba(255, 160, 122, 0.3)', bg: '#080605' },
+            'hoc-duong': { primary: '#F08080', glow: 'rgba(240, 128, 128, 0.3)', bg: '#080505' },
+            'tai-lieu': { primary: '#2E8B57', glow: 'rgba(46, 139, 87, 0.3)', bg: '#040605' },
+            'lich-su': { primary: '#CD853F', glow: 'rgba(205, 133, 63, 0.3)', bg: '#080604' },
+            'gay-can': { primary: '#FF8C00', glow: 'rgba(255, 140, 0, 0.3)', bg: '#080504' },
+            'kinh-dien': { primary: '#FFD700', glow: 'rgba(255, 215, 0, 0.3)', bg: '#080804' },
+            'mac-dinh': { primary: '#C6A87C', glow: 'rgba(198, 168, 124, 0.3)', bg: '#050608' }
+        };
+
+        function updateCineTheme(genreSlug) {
+            const theme = window.filmThemes[genreSlug] || window.filmThemes['mac-dinh'];
+            const root = document.documentElement;
+            root.style.setProperty('--primary', theme.primary);
+            root.style.setProperty('--primary-glow', theme.glow);
+            root.style.setProperty('--bg-darker', theme.bg);
+        }
+
+        // --- WATCHLIST & PROGRESS SYSTEM ---
+        window.filmWatchlist = JSON.parse(localStorage.getItem('kietfilm_watchlist') || '[]');
+        window.filmProgress = JSON.parse(localStorage.getItem('kietfilm_progress') || '{}');
+
+        function toggleWatchlist(id, name, thumb, e) {
+            if (e) e.stopPropagation();
+            const index = window.filmWatchlist.findIndex(f => f.id === id);
+            if (index > -1) {
+                window.filmWatchlist.splice(index, 1);
+            } else {
+                window.filmWatchlist.unshift({ id, name, thumb });
+            }
+            localStorage.setItem('kietfilm_watchlist', JSON.stringify(window.filmWatchlist));
+            loadFilmGrid(filmCurrentPage); 
+        }
+
+        function updateVideoProgress(slug, percent) {
+            if (!slug) return;
+            if (!window.filmProgress[slug]) window.filmProgress[slug] = { percent: 0, completed: false };
+            if (percent > 95 && !window.filmProgress[slug].completed) {
+                window.filmProgress[slug].completed = true;
+                if (typeof addXP === 'function') addXP(100, "XEM HẾT PHIM");
+            }
+            window.filmProgress[slug].percent = Math.max(window.filmProgress[slug].percent, percent);
+            localStorage.setItem('kietfilm_progress', JSON.stringify(window.filmProgress));
+        }
 
         // Build a film card HTML snippet
         function buildFilmCard(m, imgDomain) {
             const thumbSrc = m.thumb_url
                 ? (m.thumb_url.startsWith('http') ? m.thumb_url : `${imgDomain}/uploads/movies/${m.thumb_url}`)
                 : 'https://via.placeholder.com/300x450/111/fff?text=No+Image';
+            
             const typeBadge = m.type === 'series'
                 ? '<span class="absolute top-1.5 left-1.5 bg-blue-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">BỘ</span>'
                 : m.type === 'hoathinh'
                     ? '<span class="absolute top-1.5 left-1.5 bg-purple-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">HH</span>'
                     : '<span class="absolute top-1.5 left-1.5 bg-green-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">LẺ</span>';
             
-            // Thêm tag Trailer nếu chưa có bản full
             const isTrailer = (m.episode_current && m.episode_current.toLowerCase().includes('trailer')) || (m.status === 'trailer');
             const trailerBadge = isTrailer
                 ? '<span class="absolute top-1.5 right-1.5 bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider z-10 shadow-lg shadow-red-600/50">TRAILER</span>'
                 : '';
 
+            const progress = window.filmProgress[m.slug] || { percent: 0 };
+            const inWatchlist = window.filmWatchlist.some(f => f.id === m._id);
+
             const nameSafe = (m.name || '').replace(/'/g, "&#39;");
             return `
-            <div class="glass-card rounded-xl overflow-hidden cursor-pointer hover:border-primary/50 border border-white/5 transition-all hover:scale-[1.02] shadow-sm group"
-                 onclick="streamFilmOphim('${m.slug}', '${nameSafe}')">
-                <div class="aspect-[2/3] relative bg-black/50">
-                    <img src="${thumbSrc}" onerror="this.src='https://via.placeholder.com/300x450/111/333?text=Film'"
-                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+            <div class="film-card group relative bg-white/5 rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-500 cursor-pointer animate-fade-in" 
+                 onclick="openFilmDetail('${m.slug}')">
+                
+                <button onclick="toggleWatchlist('${m._id}', '${nameSafe}', '${m.thumb_url}', event)" 
+                        class="watchlist-btn ${inWatchlist ? 'active' : ''}">
+                    <span class="material-icons-round text-sm">${inWatchlist ? 'bookmark' : 'bookmark_border'}</span>
+                </button>
+
+                <div class="aspect-[2/3] relative overflow-hidden">
+                    <img src="${thumbSrc}" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                    
                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <span class="material-icons-round text-white text-4xl drop-shadow-lg">${isTrailer ? 'videocam' : 'play_circle'}</span>
                     </div>
-                    ${typeBadge}
-                    ${trailerBadge}
-                    ${m.year ? `<span class="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md">${m.year}</span>` : ''}
+
+                    ${progress.percent > 0 ? `
+                        <div class="progress-overlay">
+                            <div class="progress-fill" style="width: ${progress.percent}%"></div>
+                        </div>
+                    ` : ''}
+
+                    <div class="absolute top-2 left-2 flex flex-col gap-1 max-w-[calc(100%-40px)]">
+                        <div class="flex gap-1 overflow-visible">
+                            ${typeBadge}
+                            ${trailerBadge}
+                        </div>
+                        ${m.chieurap ? '<span class="bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase shadow-lg animate-pulse w-fit">Chiếu Rạp</span>' : ''}
+                    </div>
+
+                    ${m.year ? `<span class="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md">${m.year}</span>` : ''}
                 </div>
-                <div class="p-2">
-                    <p class="text-[10px] text-white font-bold truncate leading-tight">${m.name || ''}</p>
-                    <p class="text-[9px] text-slate-500 truncate mt-0.5">${m.origin_name || ''}</p>
+                <div class="p-3">
+                    <h3 class="text-white font-bold text-[11px] line-clamp-1 group-hover:text-primary transition-colors">${m.name || ''}</h3>
+                    <p class="text-slate-500 text-[10px] mt-0.5 line-clamp-1">${m.origin_name || ''}</p>
                 </div>
             </div>`;
         }
@@ -1166,7 +1253,11 @@
             const grid = document.getElementById('film-main-grid');
             if (!grid) return;
             if (!items || items.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500 text-sm">Không có phim nào trong danh mục này.</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-20 animate-fade-in">
+                    <span class="material-icons-round text-6xl text-slate-700 mb-4">search_off</span>
+                    <h3 class="text-white font-bold text-lg">Không tìm thấy phim</h3>
+                    <p class="text-slate-500 text-sm mt-1">Thử thay đổi bộ lọc khác bạn nhé!</p>
+                </div>`;
                 return;
             }
             grid.innerHTML = items.map(m => buildFilmCard(m, imgDomain)).join('');
@@ -1191,7 +1282,7 @@
                 let html = '';
                 for (let i = start; i <= end; i++) {
                     html += `<button onclick="filmGoToPage(${i})"
-                        class="w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${i === filmCurrentPage ? 'bg-primary text-[#0a0a0a]' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'}">${i}</button>`;
+                        class="w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${i === filmCurrentPage ? 'bg-primary text-black' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'}">${i}</button>`;
                 }
                 dots.innerHTML = html;
             }
@@ -1206,7 +1297,8 @@
             if (searchResults) searchResults.classList.add('hidden');
             if (grid) {
                 grid.classList.remove('hidden');
-                grid.innerHTML = `<div class="col-span-full text-center py-10 text-primary text-sm flex items-center justify-center gap-2"><span class="material-icons-round animate-spin">sync</span> Đang tải phim...</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-primary text-sm flex items-center justify-center gap-2">
+                    <span class="material-icons-round animate-spin">sync</span> Đang tải phim...</div>`;
             }
 
             // Pagination management
@@ -1239,7 +1331,7 @@
                     let rawItems = data.data?.items || data.items || [];
                     apiPagination = data.data?.params?.pagination || data.pagination || {};
 
-                    // Filtering
+                    // Filtering logic
                     let filtered = [...rawItems];
                     if (window.filmAdvCriteria) {
                         const { genre, country, year } = window.filmAdvCriteria;
@@ -1253,12 +1345,9 @@
                     items = [...items, ...filtered];
                     attempts++;
                     currentApiPage++;
-                    
-                    // Stop if no more API pages
                     if (currentApiPage > (apiPagination.totalPages || 999)) break;
                 }
 
-                // Slice to exact page size for UI consistency
                 const displayItems = items.slice(0, FILM_PAGE_SIZE);
 
                 if (displayItems.length === 0) {
@@ -1305,7 +1394,8 @@
             filmCurrentCategory = cat;
             filmCurrentYearFilter = null;
             window.filmAdvCriteria = null;
-            // Update tab styles
+            updateCineTheme('mac-dinh'); // Reset theme when switching main category
+
             document.querySelectorAll('.film-cat-tab').forEach(b => {
                 b.classList.remove('bg-white/10', 'text-white', 'shadow-inner', 'border-white/20');
                 b.classList.add('bg-transparent', 'text-slate-400', 'border-transparent');
@@ -1330,11 +1420,11 @@
             const subEl = document.getElementById('film-grid-subtitle');
             if (titleEl) titleEl.innerHTML = `<span class="material-icons-round text-primary text-lg">local_fire_department</span> ${info.label}`;
             if (subEl) subEl.textContent = info.sub;
-            // Clear search
             const si = document.getElementById('film-search-input');
             if (si) si.value = '';
             loadFilmGrid(1);
         };
+
 
         // Switch subtitle filter (vietsub/thuyet-minh)
         window.switchFilmSubCat = (sub) => {
@@ -1446,7 +1536,39 @@
                 genreTab.classList.remove('bg-transparent', 'text-slate-400', 'border-transparent');
             }
 
+            updateCineTheme(genre); // Trigger Cine-Theme
             loadFilmGrid(1);
+        };
+
+        window.updateContinueWatching = () => {
+            const container = document.getElementById('continue-watching-section');
+            const grid = document.getElementById('continue-watching-grid');
+            if (!container || !grid) return;
+
+            const items = Object.entries(window.filmProgress || {})
+                .filter(([slug, p]) => p.percent > 0 && p.percent < 95)
+                .map(([slug, p]) => ({ slug, ...p }));
+            
+            if (items.length === 0) {
+                container.classList.add('hidden');
+            } else {
+                container.classList.remove('hidden');
+                grid.innerHTML = items.map(item => `
+                    <div class="flex-shrink-0 w-48 group cursor-pointer" onclick="openFilmDetail('${item.slug}')">
+                        <div class="relative aspect-video rounded-xl overflow-hidden border border-white/10 group-hover:border-primary/50 transition-all">
+                             <img src="${item.thumb || ''}" class="w-full h-full object-cover">
+                             <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="material-icons-round text-white text-3xl">play_circle</span>
+                             </div>
+                             <div class="progress-overlay absolute bottom-0 left-0 right-0 h-1 bg-black/50">
+                                <div class="progress-fill h-full bg-primary" style="width: ${item.percent}%"></div>
+                             </div>
+                        </div>
+                        <p class="text-[10px] font-bold text-white mt-2 truncate opacity-80 group-hover:opacity-100">${item.slug.replace(/-/g, ' ')}</p>
+                        <p class="text-[9px] text-primary font-black uppercase tracking-tighter">${item.percent.toFixed(0)}% hoàn thành</p>
+                    </div>
+                `).join('');
+            }
         };
 
         // ===== COUNTRY FILTER =====
@@ -1522,6 +1644,8 @@
                 countryTab.classList.remove('bg-transparent', 'text-slate-400', 'border-transparent');
             }
 
+            const genreSlug = country === 'viet-nam' ? 'mac-dinh' : (country === 'au-my' ? 'vien-tuong' : 'mac-dinh');
+            updateCineTheme(genreSlug);
             loadFilmGrid(1);
         };
 
@@ -5054,43 +5178,16 @@ let aiChatHistory = [];
             `).join('');
         }
 
-        window.removeHomePostSelectedImage = (idx) => {
-            const i = Number(idx);
-            if (Number.isNaN(i)) return;
-            homePostSelectedMediaList = (homePostSelectedMediaList || []).filter((_, k) => k !== i);
-            const mediaInput = document.getElementById('home-post-media-url');
-            if (mediaInput) {
-                mediaInput.value = homePostSelectedMediaList.length > 0
-                    ? `[Đã chọn ${homePostSelectedMediaList.length} ảnh từ máy]`
-                    : '';
-            }
-            if (homePostSelectedMediaList.length === 0) {
-                const fileInput = document.getElementById('home-post-media-file');
-                if (fileInput) fileInput.value = '';
-                const mediaContainer = document.getElementById('home-post-media-container');
-                if (mediaContainer) mediaContainer.classList.add('hidden');
-            }
-            renderHomePostMediaPreview();
-        };
-
-        function getLocalPostComments(postId) {
-            return JSON.parse(localStorage.getItem(`post_comments_${postId}`) || '[]');
-        }
-
-        function saveLocalPostComments(postId, comments) {
-            localStorage.setItem(`post_comments_${postId}`, JSON.stringify(comments || []));
-        }
-
         function renderPostComments(postId) {
             const commentsList = document.getElementById(`comments-list-${postId}`);
             if (!commentsList) return;
             const comments = postCommentsMap[postId] || [];
             commentsList.innerHTML = comments.map(c => `
                 <div class="flex gap-2 items-start animate-fade-in">
-                    <img src="${c.author_avatar || 'https://i.pravatar.cc/150?img=1'}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0">
+                    <img src="${c.author_avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=guest'}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0 object-cover">
                     <div class="bg-white/5 rounded-xl px-3 py-2 flex-1">
                         <p class="text-[10px] font-bold text-primary">${c.author_name || 'User'}</p>
-                        <p class="text-[11px] text-slate-300">${c.content || ''}</p>
+                        <p class="text-[11px] text-slate-300 leading-tight">${c.content || ''}</p>
                     </div>
                 </div>
             `).join('');
@@ -5108,7 +5205,6 @@ let aiChatHistory = [];
                     .order('created_at', { ascending: true });
 
                 if (error) throw error;
-
                 const byPost = {};
                 (data || []).forEach(c => {
                     if (!byPost[c.post_id]) byPost[c.post_id] = [];
@@ -5119,7 +5215,7 @@ let aiChatHistory = [];
                 });
             } catch (e) {
                 ids.forEach(id => {
-                    postCommentsMap[id] = getLocalPostComments(id);
+                    postCommentsMap[id] = [];
                 });
             }
 
@@ -5135,27 +5231,12 @@ let aiChatHistory = [];
             }
         }
 
-        function syncLocalInteractionStates() {
-            // Only sync shares from localStorage (likes are now fully DB-driven via liked_by)
-            homePosts = homePosts.map(p => ({
-                ...p,
-                shares: Math.max(Number(p.shares || 0), Number(localStorage.getItem(`post_shares_${p.id}`) || 0)),
-                commentsCount: (postCommentsMap[p.id] || []).length
-            }));
-            if (window.profileFeedPosts && window.profileFeedPosts.length) {
-                window.profileFeedPosts = window.profileFeedPosts.map(p => ({
-                    ...p,
-                    shares: Math.max(Number(p.shares || 0), Number(localStorage.getItem(`post_shares_${p.id}`) || 0)),
-                    commentsCount: (postCommentsMap[p.id] || []).length
-                }));
-            }
-        }
-
         function buildPostMediaHtml(media, postId) {
             if (!media) return '';
             const raw = String(media);
             const mediaValue = raw.toLowerCase();
-            if (raw.trim().startsWith('[')) {
+
+            if (mediaValue.startsWith('[') && (mediaValue.includes('.jpg') || mediaValue.includes('.png') || mediaValue.includes('.webp'))) {
                 try {
                     const arr = JSON.parse(raw);
                     const imgs = Array.isArray(arr) ? arr.filter(Boolean) : [];
@@ -5170,6 +5251,7 @@ let aiChatHistory = [];
                         const dots = imgs.map((_, i) => `
                             <button type="button" onclick="postMediaGo('${postId}',${i})" class="w-2 h-2 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/30'}" id="post-media-dot-${postId}-${i}"></button>
                         `).join('');
+                        
                         return `
                             <div class="mt-3 border-t border-b border-white/5 bg-black/40 relative">
                                 <button type="button" onclick="postMediaPrev('${postId}')" class="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all">
@@ -5197,6 +5279,7 @@ let aiChatHistory = [];
                 } catch (e) { /* fall through */ }
                 return `<img onclick="openMediaViewer('${postId}',0)" src="${raw}" class="w-full mt-3 border-t border-b border-white/5 object-cover max-h-[500px] cursor-pointer hover:opacity-90 transition-opacity">`;
             }
+            
             if (mediaValue.endsWith('.mp4') || mediaValue.endsWith('.webm')) {
                 return `<video src="${raw}" controls class="w-full mt-3 border-t border-b border-white/5 bg-black/50 max-h-[500px]"></video>`;
             }
@@ -5224,7 +5307,6 @@ let aiChatHistory = [];
                         </div>
                     `;
                 } catch (e) {
-                    // Fallback for old shared posts format
                     const rawNameWithColon = headerLine.replace('🔁 Chia sẻ từ ', '').replace(':', '');
                     authorHtml = `<span>${rawNameWithColon}</span>`;
                 }
@@ -5237,15 +5319,11 @@ let aiChatHistory = [];
             let privIcon = 'public';
             if (post.privacy === 'friends') privIcon = 'people';
             if (post.privacy === 'private') privIcon = 'lock';
+            
             const authorClick = post.authorId ? `onclick="openUserProfile('${post.authorId}')" ` : '';
             const safeContent = displayContent.replace(/\n/g, '<br>');
 
-            let postBodyHtml = `
-                <div class="px-4 pb-3 text-[14px] text-slate-100 leading-relaxed">
-                    ${safeContent}
-                </div>
-                ${mediaHtml}
-            `;
+            let postBodyHtml = `<div class="text-[14px] text-slate-100 leading-relaxed mb-3 px-4">${safeContent}</div>${mediaHtml}`;
 
             if (isSharedPost) {
                 const parts = displayContent.split('\n\n');
@@ -5253,86 +5331,132 @@ let aiChatHistory = [];
                 const originalContent = parts.length > 1 ? parts.slice(1).join('\n\n') : parts[0];
 
                 postBodyHtml = `
-                    <div class="px-4 pb-3 space-y-3">
-                        ${userStatus ? `<div class="text-[14px] text-slate-100 leading-relaxed translate-y-1">${userStatus.replace(/\n/g, '<br>')}</div>` : ''}
-                        <div class="p-4 border border-white/10 rounded-[1.5rem] bg-white/5 hover:border-white/20 transition-all space-y-3">
+                    <div class="space-y-3 px-4">
+                        ${userStatus ? `<div class="text-[14px] text-slate-100 leading-relaxed">${userStatus.replace(/\n/g, '<br>')}</div>` : ''}
+                        <div class="p-4 border border-white/10 rounded-2xl bg-white/5 hover:border-white/20 transition-all space-y-3">
                             <div class="flex items-center justify-between border-b border-white/5 pb-2">
                                 ${sharedHeaderHtml}
-                                <span class="bg-primary/20 text-primary text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">Shared Content</span>
+                                <span class="bg-primary/20 text-primary text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">Shared</span>
                             </div>
                             <div class="text-[13px] text-slate-200 leading-relaxed italic">
-                                ${originalContent.replace(/\n/g, '<br>') || '<span class="opacity-40 italic">Không có nội dung văn bản</span>'}
+                                ${originalContent.replace(/\n/g, '<br>') || '<span class="opacity-40 italic">Không có nội dung</span>'}
                             </div>
-                            <div class="mt-2 scale-95 origin-top-left">${mediaHtml}</div>
+                            <div class="mt-2 scale-95 origin-top-left overflow-hidden rounded-xl">${mediaHtml}</div>
                         </div>
                     </div>
                 `;
             }
 
             return `
-                <div class="glass-card rounded-2xl border border-white/10 shadow-lg hover:border-white/20 transition-all overflow-hidden" id="post-${post.id}">
-                    <div class="flex items-center gap-3 p-4 pb-2">
-                        <img ${authorClick} data-author-id="${post.authorId || ''}" src="${post.author.avatar}" class="w-10 h-10 rounded-full border-2 border-white/10 object-cover flex-shrink-0 cursor-pointer hover:border-primary/50 transition-colors">
+                <div class="fb-card animate-fade-in group/card" id="post-${post.id}">
+                    <!-- Card Header -->
+                    <div class="fb-card-header">
+                        <div class="relative">
+                            <img ${authorClick} src="${post.author.avatar}" class="w-10 h-10 rounded-full border border-white/10 object-cover cursor-pointer hover:brightness-110 transition-all">
+                            <div class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-[2.5px] border-[#1a1a1a] rounded-full"></div>
+                        </div>
                         <div class="flex-1 min-w-0">
-                            <h4 ${authorClick} class="text-[13px] font-bold text-white hover:underline cursor-pointer">${post.author.name}</h4>
-                            <div class="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                            <div class="flex items-center gap-1.5">
+                                <h4 ${authorClick} class="text-[14px] font-bold text-white hover:underline cursor-pointer truncate">${post.author.name}</h4>
+                                ${post.authorId === '66666666-6666-6666-6666-666666666666' ? '<span class="material-icons-round text-primary text-[14px]">verified</span>' : ''}
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
                                 <span>${post.time}</span>
-                                <span class="w-1 h-1 rounded-full bg-slate-600"></span>
-                                <span class="material-icons-round text-[11px]">${privIcon}</span>
+                                <span>·</span>
+                                <span class="material-icons-round text-[12px]">${privIcon}</span>
                             </div>
                         </div>
                         <div class="relative">
-                        <button onclick="togglePostMenu('${post.id}')" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all">
-                            <span class="material-icons-round text-lg">more_horiz</span>
-                        </button>
-                        <div id="post-menu-${post.id}" class="hidden absolute right-0 mt-2 w-44 rounded-2xl border border-white/10 bg-black/80 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
-                            <button onclick="editPost('${post.id}')" class="w-full px-3 py-2.5 text-left text-xs font-bold text-slate-200 hover:bg-white/10 flex items-center gap-2 ${String(post.authorId) !== String(window.currentUserUid) ? 'hidden' : ''}">
-                                <span class="material-icons-round text-sm text-primary">edit</span> Chỉnh sửa bài viết
+                            <button onclick="togglePostMenu('${post.id}')" class="w-8 h-8 rounded-full hover:bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all">
+                                <span class="material-icons-round">more_horiz</span>
                             </button>
-                            <button onclick="deletePost('${post.id}')" class="w-full px-3 py-2.5 text-left text-xs font-bold text-red-300 hover:bg-red-500/10 flex items-center gap-2 ${String(post.authorId) !== String(window.currentUserUid) ? 'hidden' : ''}">
-                                <span class="material-icons-round text-sm">delete</span> Xóa bài viết
-                            </button>
-                            <button onclick="copyPostLink('${post.id}')" class="w-full px-3 py-2.5 text-left text-xs font-bold text-slate-200 hover:bg-white/10 flex items-center gap-2">
-                                <span class="material-icons-round text-sm text-slate-300">content_copy</span> Sao chép ID
-                            </button>
-                        </div>
-                        </div>
-                    </div>
-                    ${postBodyHtml}
-                    <div class="flex items-center justify-between px-4 py-2 text-[11px] text-slate-500">
-                        <div class="flex items-center gap-1">
-                            <span class="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center text-[10px]">❤</span>
-                            <span id="like-count-${post.id}">${post.likes}</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span id="comment-count-${post.id}">${post.commentsCount || 0} bình luận</span>
-                            <span id="share-count-${post.id}">${post.shares || 0} chia sẻ</span>
+                            <div id="post-menu-${post.id}" class="hidden absolute right-0 mt-1 w-52 rounded-xl border border-white/10 bg-[#1a1a1a] shadow-2xl overflow-hidden z-[100] backdrop-blur-xl">
+                                <div class="p-1.5 space-y-0.5">
+                                    <button onclick="editPost('${post.id}')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-300 hover:bg-white/10 rounded-lg flex items-center gap-2.5 ${String(post.authorId) !== String(window.currentUserUid) ? 'hidden' : ''}">
+                                        <span class="material-icons-round text-sm text-blue-400">edit</span> Chỉnh sửa bài viết
+                                    </button>
+                                    <button onclick="copyPostLink('${post.id}')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-300 hover:bg-white/10 rounded-lg flex items-center gap-2.5">
+                                        <span class="material-icons-round text-sm text-primary">link</span> Sao chép liên kết
+                                    </button>
+                                    <button onclick="deletePost('${post.id}')" class="w-full px-3 py-2 text-left text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-lg flex items-center gap-2.5 ${String(post.authorId) !== String(window.currentUserUid) ? 'hidden' : ''}">
+                                        <span class="material-icons-round text-sm">delete_outline</span> Xóa bài viết
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex items-center border-t border-white/5 mx-4 mb-1">
-                        <button onclick="likePost('${post.id}')" id="like-btn-${post.id}" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold ${post.hasLiked ? 'text-red-400' : 'text-slate-400'} hover:bg-white/5 rounded-lg transition-all cursor-pointer group">
-                            <span class="material-icons-round text-lg group-active:scale-125 transition-transform">${post.hasLiked ? 'favorite' : 'favorite_border'}</span> Yêu thích
-                        </button>
-                        <button onclick="toggleComment('${post.id}')" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-slate-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer">
-                            <span class="material-icons-round text-lg">chat_bubble_outline</span> Bình luận (<span id="comment-btn-count-${post.id}">${post.commentsCount || 0}</span>)
-                        </button>
-                        <button onclick="sharePost('${post.id}')" class="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-slate-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer">
-                            <span class="material-icons-round text-lg">share</span> Chia sẻ (<span id="share-btn-count-${post.id}">${post.shares || 0}</span>)
-                        </button>
+
+                    <!-- Card Body -->
+                    <div class="fb-card-body">
+                         ${postBodyHtml}
                     </div>
-                    <div id="comment-section-${post.id}" class="hidden border-t border-white/5 p-4 space-y-3 bg-black/20">
-                        <div id="comments-list-${post.id}" class="space-y-3 max-h-60 overflow-y-auto custom-scrollbar"></div>
-                        <div class="flex gap-2 items-center">
-                            <input type="text" id="comment-input-${post.id}" placeholder="Viết bình luận..."
-                                class="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs text-white placeholder-slate-500 focus:border-primary/50 outline-none"
-                                onkeydown="if(event.key==='Enter')submitComment('${post.id}')">
-                            <button onclick="submitComment('${post.id}')" class="w-8 h-8 rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-black flex items-center justify-center transition-all hover:scale-105 active:scale-95 flex-shrink-0">
-                                <span class="material-icons-round text-sm">send</span>
+
+                    <!-- Card Footer -->
+                    <div class="fb-card-footer">
+                        <div class="fb-stats border-b border-white/5 mx-1 mb-1">
+                            <div class="flex items-center gap-1.5 group/likes cursor-pointer">
+                                <div class="flex -space-x-1.5">
+                                    <div class="w-4.5 h-4.5 rounded-full bg-blue-500 flex items-center justify-center border border-[#1a1a1a] z-10">
+                                        <span class="material-icons-round text-[9px] text-white">thumb_up</span>
+                                    </div>
+                                    <div class="w-4.5 h-4.5 rounded-full bg-red-500 flex items-center justify-center border border-[#1a1a1a] z-20">
+                                        <span class="material-icons-round text-[9px] text-white">favorite</span>
+                                    </div>
+                                </div>
+                                <span id="like-count-${post.id}" class="text-slate-400 font-medium group-hover/likes:underline">${post.likes}</span>
+                            </div>
+                            <div class="flex items-center gap-3 font-medium">
+                                <span id="comment-count-${post.id}" onclick="toggleComment('${post.id}')" class="hover:underline cursor-pointer">${post.commentsCount || 0} bình luận</span>
+                                <span id="share-count-${post.id}" class="hover:underline cursor-pointer">${post.shares || 0} chia sẻ</span>
+                            </div>
+                        </div>
+
+                        <div class="fb-interaction-row">
+                            <button onclick="likePost('${post.id}')" id="like-btn-${post.id}" class="fb-action-btn ${post.hasLiked ? 'text-blue-400' : ''}">
+                                <span class="material-icons-round ${post.hasLiked ? 'scale-110' : ''} transition-transform">${post.hasLiked ? 'thumb_up' : 'thumb_up_off_alt'}</span> Thích
                             </button>
+                            <button onclick="toggleComment('${post.id}')" class="fb-action-btn">
+                                <span class="material-icons-round">chat_bubble_outline</span> Bình luận
+                            </button>
+                            <button onclick="sharePost('${post.id}')" class="fb-action-btn">
+                                <span class="material-icons-round">reply</span> Chia sẻ
+                            </button>
+                        </div>
+
+                        <!-- Comment Section -->
+                        <div id="comment-section-${post.id}" class="hidden py-3 space-y-4 border-t border-white/5 mt-1">
+                            <div id="comments-list-${post.id}" class="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar px-1"></div>
+                            
+                            <div class="flex gap-2 items-start mt-2">
+                                <img src="${window.currentUserAvatarUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=guest'}" class="w-8 h-8 rounded-full border border-white/10 object-cover flex-shrink-0">
+                                <div class="flex-1 relative">
+                                    <textarea id="comment-input-${post.id}" 
+                                              rows="1"
+                                              placeholder="Viết bình luận..."
+                                              class="w-full bg-white/5 border-none rounded-2xl px-4 py-2 pr-10 text-[13px] text-white placeholder-slate-500 focus:ring-1 focus:ring-primary/30 resize-none overflow-hidden" 
+                                              oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                              onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); submitComment('${post.id}'); }"></textarea>
+                                    <button onclick="submitComment('${post.id}')" class="absolute right-2 top-1.5 text-primary/60 hover:text-primary transition-colors">
+                                        <span class="material-icons-round text-lg">send</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                `;
+            `;
+        }
+
+        // STORY TEMPLATE
+        function storyCardHtml(story) {
+            return `
+                <div class="fb-story-card" onclick="viewStory('${story.id}')">
+                    <img src="${story.media_url}" class="w-full h-full object-cover">
+                    <div class="fb-story-overlay"></div>
+                    <img class="fb-story-avatar" src="${story.author_avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + story.author_id}">
+                    <p class="fb-story-name">${story.author_name}</p>
+                </div>
+            `;
         }
 
         // RENDER LOGIC
@@ -5430,31 +5554,27 @@ let aiChatHistory = [];
                 }
 
                 const friendList = document.getElementById('home-friends-list');
-                document.getElementById('home-friend-count').innerText = friends.length;
+                const friendCount = document.getElementById('home-friend-count');
+                if (friendCount) friendCount.innerText = friends.length;
 
-                if (friends.length > 0) {
-                    friendList.innerHTML = friends.map(f => `
-                        <div onclick="openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || avatarFromEmail(f.email || f.id)).replace(/'/g, "\\'")}')" class="flex items-center gap-3 p-2.5 hover:bg-white/5 rounded-xl border border-transparent hover:border-white/5 transition-all cursor-pointer group">
-                            <div class="relative flex-shrink-0">
-                                <img data-profile-id="${f.id}" onclick="event.stopPropagation();openUserProfile('${f.id}')" src="${f.avatar_url || avatarFromEmail(f.email || f.id)}" class="w-10 h-10 rounded-full border border-white/5 object-cover cursor-pointer hover:border-primary/40">
-                                <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-bg-dark rounded-full shadow-sm"></span>
+                if (friendList && friends.length > 0) {
+                    friendList.innerHTML = friends.map(f => {
+                        const avatar = f.avatar_url || avatarFromEmail(f.email || f.id);
+                        return `
+                            <div onclick="openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${avatar.replace(/'/g, "\\'")}')" 
+                                 class="flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl cursor-pointer group transition-all">
+                                <div class="relative flex-shrink-0">
+                                    <img src="${avatar}" class="w-9 h-9 rounded-full border border-white/5 object-cover">
+                                    <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full shadow-sm"></div>
+                                </div>
+                                <span class="text-[13px] font-bold text-slate-200 group-hover:text-white transition-colors">${f.full_name}</span>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p onclick="event.stopPropagation();openUserProfile('${f.id}')" class="text-[13px] text-white font-bold group-hover:text-primary transition-colors truncate cursor-pointer hover:underline">${f.full_name}</p>
-                                <p class="text-[10px] text-slate-500 truncate font-medium">${f.email}</p>
-                            </div>
-                            <button onclick="event.stopPropagation(); openFriendChat('${f.id}','${(f.full_name || 'Bạn').replace(/'/g, "\\'")}','${(f.avatar_url || avatarFromEmail(f.email || f.id)).replace(/'/g, "\\'")}')" class="relative w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-black flex-shrink-0">
-                                <span class="material-icons-round text-[15px]">chat</span>
-                                <span id="friend-unread-${f.id}" class="hidden absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none flex items-center justify-center">0</span>
-                            </button>
-                        </div>
-                    `).join('');
-                    friends.forEach(f => updateFriendUnreadBadge(f.id));
-                } else {
+                        `;
+                    }).join('');
+                } else if (friendList) {
                     friendList.innerHTML = `
-                        <div class="py-8 text-center text-slate-500 opacity-60">
-                            <span class="material-icons-round mb-2 text-3xl">sentiment_dissatisfied</span>
-                            <p class="text-[10px] font-bold uppercase tracking-wider">Chưa có bạn bè nào.<br>Hãy tìm kiếm bằng Email nhé!</p>
+                        <div class="py-4 text-center text-slate-600">
+                             <p class="text-[10px] font-bold uppercase tracking-wider">Chưa có liên hệ</p>
                         </div>`;
                 }
             } catch (e) {
@@ -5469,6 +5589,7 @@ let aiChatHistory = [];
                 if (origShowView) origShowView(viewName);
                 if (viewName === 'home') {
                     fetchHomePosts(); // Initial fetch
+                    fetchHomeStories();
                     renderBuddySystem();
                 }
                 if (viewName === 'guide') {
@@ -5563,26 +5684,30 @@ let aiChatHistory = [];
             if (!window.supabaseClient || realtimeSetup) return;
             realtimeSetup = true;
 
-            // Posts: smart patch — UPDATE only touches DOM directly, INSERT/DELETE refetch
+            // Posts: smart patch
             window.supabaseClient
                 .channel('home-posts-changes')
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, payload => {
                     const updated = payload.new;
                     if (!updated) return;
-                    // Patch in-memory post
                     const post = findFeedPost(updated.id);
                     if (post) {
                         const likedBy = updated.liked_by || [];
                         post.likes = updated.likes || 0;
                         post.liked_by = likedBy;
                         post.hasLiked = likedBy.includes(window.currentUserUid);
-                        // Patch DOM directly — no full re-render
+                        
                         const countEl = document.getElementById(`like-count-${updated.id}`);
                         if (countEl) countEl.textContent = post.likes;
+                        
                         const likeBtn = document.getElementById(`like-btn-${updated.id}`);
                         if (likeBtn) {
-                            likeBtn.className = `flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold ${post.hasLiked ? 'text-red-400' : 'text-slate-400'} hover:bg-white/5 rounded-lg transition-all cursor-pointer group`;
-                            likeBtn.querySelector('.material-icons-round').textContent = post.hasLiked ? 'favorite' : 'favorite_border';
+                            likeBtn.classList.toggle('text-blue-400', post.hasLiked);
+                            const icon = likeBtn.querySelector('.material-icons-round');
+                            if (icon) {
+                                icon.textContent = post.hasLiked ? 'thumb_up' : 'thumb_up_off_alt';
+                                icon.classList.toggle('scale-110', post.hasLiked);
+                            }
                         }
                     }
                 })
@@ -5595,14 +5720,13 @@ let aiChatHistory = [];
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => renderBuddySystem())
                 .subscribe();
 
-            if (!commentsRealtimeSetup) {
-                commentsRealtimeSetup = true;
+            if (!window.commentsRealtimeSetup) {
+                window.commentsRealtimeSetup = true;
                 window.supabaseClient
                     .channel('home-comments-changes')
                     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_comments' }, payload => {
                         const c = payload.new;
                         if (!c || !c.post_id) return;
-                        // Optimistic insert into DOM without refetch
                         if (!postCommentsMap[c.post_id]) postCommentsMap[c.post_id] = [];
                         const alreadyExists = postCommentsMap[c.post_id].some(x => x.created_at === c.created_at && x.user_id === c.user_id);
                         if (!alreadyExists) {
@@ -5611,10 +5735,10 @@ let aiChatHistory = [];
                             if (commentsList) {
                                 commentsList.insertAdjacentHTML('beforeend', `
                                     <div class="flex gap-2 items-start animate-fade-in">
-                                        <img src="${c.author_avatar || 'https://i.pravatar.cc/150?img=1'}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0">
+                                        <img src="${c.author_avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=guest'}" class="w-7 h-7 rounded-full border border-white/10 flex-shrink-0 object-cover">
                                         <div class="bg-white/5 rounded-xl px-3 py-2 flex-1">
                                             <p class="text-[10px] font-bold text-primary">${c.author_name || 'User'}</p>
-                                            <p class="text-[11px] text-slate-300">${c.content || ''}</p>
+                                            <p class="text-[11px] text-slate-300 leading-tight">${c.content || ''}</p>
                                         </div>
                                     </div>`);
                             }
@@ -5682,15 +5806,388 @@ let aiChatHistory = [];
                 document.getElementById('home-post-media-container').classList.add('hidden');
                 renderHomePostMediaPreview();
 
+
                 // Track Stat
                 trackActivity('posts_created');
                 refreshMyPostIds();
 
                 // Real-time listener will handle the update
             } catch (e) {
-                alert("Lỗi khi đăng bài: " + e.message);
+                console.error("Error creating post:", e);
+            }
+        };
+
+        // Social Stories Logic
+        let currentStoryData = {
+            type: 'photo',
+            media_url: '',
+            content: '',
+            music: null,
+            rotation: 0,
+            zoom: 1
+        };
+
+        window.fetchHomeStories = async () => {
+            if (!window.supabaseClient) return;
+            try {
+                const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const { data, error } = await window.supabaseClient
+                    .from('stories')
+                    .select('*, profiles(*) ')
+                    .gt('created_at', oneDayAgo)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                renderHomeStories(data || []);
+            } catch (e) {
+                console.error("Story fetch error:", e);
+                renderHomeStories([]);
+            }
+        };
+
+        function renderHomeStories(stories) {
+            const container = document.getElementById('home-stories-list');
+            if (!container) return;
+
+            const storyCardHtml = (story) => {
+                const author = story.profiles || {};
+                const isMyStory = story.author_id === window.currentUserUid;
+                const authorName = isMyStory ? "Tin của bạn" : (author.display_name || "Người dùng");
+                const avatar = author.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${story.author_id}`;
+                
+                return `
+                    <div class="fb-story-card group border border-white/5" onclick="openStoryViewer('${story.id}')">
+                        <img src="${story.media_url || avatar}" class="transform group-hover:scale-110 transition-all duration-700">
+                        <div class="fb-story-overlay"></div>
+                        <img src="${avatar}" class="fb-story-avatar border-2 border-primary">
+                        <p class="fb-story-name text-[10px] drop-shadow-lg font-bold">${authorName}</p>
+                    </div>
+                `;
+            };
+
+            const createStoryCard = `
+                <div class="fb-story-card group border-primary/20 bg-primary/5 cursor-pointer" onclick="createHomeStory()">
+                    <div class="h-3/4 overflow-hidden relative">
+                         <img src="${window.currentUserAvatarUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=guest'}" class="w-full h-full object-cover group-hover:scale-110 transition-all duration-700">
+                         <div class="absolute inset-0 bg-black/20"></div>
+                    </div>
+                    <div class="h-1/4 bg-[#242526] flex flex-col items-center justify-center relative">
+                        <div class="absolute -top-4 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center border-4 border-[#242526] text-white">
+                            <span class="material-icons-round text-sm">add</span>
+                        </div>
+                        <p class="text-[10px] font-bold text-white mt-3">Tạo tin</p>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = createStoryCard + stories.map(storyCardHtml).join('');
+        }
+
+        window.createHomeStory = () => {
+             const modal = document.getElementById('story-creator-modal');
+             if (!modal) return;
+             modal.classList.remove('hidden');
+             modal.classList.add('flex');
+             document.getElementById('story-creator-user-name').innerText = window.currentUserDisplayName || 'Bạn';
+             document.getElementById('story-creator-user-avatar').src = window.currentUserAvatarUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=guest';
+             resetStoryCreator();
+        };
+
+        window.closeStoryCreator = () => {
+             const modal = document.getElementById('story-creator-modal');
+             if (modal) {
+                 modal.classList.add('hidden');
+                 modal.classList.remove('flex');
+             }
+             if (window.storyPreviewAudio) {
+                 window.storyPreviewAudio.pause();
+                 window.storyPreviewAudio = null;
+             }
+        };
+
+        function resetStoryCreator() {
+            currentStoryData = { type: 'photo', media_url: '', content: '', music: null, rotation: 0, zoom: 1 };
+            document.getElementById('story-type-picker').classList.remove('hidden');
+            document.getElementById('story-editor-preview').classList.add('hidden');
+            document.getElementById('story-editor-controls').classList.add('hidden');
+            document.getElementById('story-creator-footer').classList.add('hidden');
+            const pimg = document.getElementById('story-preview-img');
+            if (pimg) {
+                pimg.src = '';
+                pimg.style.transform = `scale(1) rotate(0deg)`;
+            }
+            const dtxt = document.getElementById('story-display-text');
+            if (dtxt) dtxt.innerText = '';
+            document.getElementById('story-music-badge')?.classList.add('hidden');
+            document.getElementById('story-music-trimmer')?.classList.add('hidden');
+            const pbg = document.getElementById('story-preview-bg');
+            if (pbg) pbg.style.backgroundImage = '';
+        }
+
+        function showStoryEditor() {
+            document.getElementById('story-type-picker').classList.add('hidden');
+            document.getElementById('story-editor-preview').classList.remove('hidden');
+            document.getElementById('story-editor-controls').classList.remove('hidden');
+            document.getElementById('story-creator-footer').classList.remove('hidden');
+        }
+
+        window.handleStoryImageSelect = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                currentStoryData.type = 'photo';
+                currentStoryData.media_url = event.target.result;
+                const img = document.getElementById('story-preview-img');
+                if (img) {
+                    img.src = event.target.result;
+                    img.classList.remove('hidden');
+                }
+                const bg = document.getElementById('story-preview-bg');
+                if (bg) bg.style.backgroundImage = `url(${event.target.result})`;
+                showStoryEditor();
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.startTextStory = () => {
+            currentStoryData.type = 'text';
+            currentStoryData.media_url = '';
+            document.getElementById('story-preview-img').classList.add('hidden');
+            document.getElementById('story-preview-bg').style.backgroundImage = 'linear-gradient(to bottom right, #8a2be2, #ff69b4)';
+            showStoryEditor();
+            addTextToStory();
+        };
+
+        window.addTextToStory = () => {
+            const txt = prompt("Nhập nội dung văn bản:", currentStoryData.content);
+            if (txt === null) return;
+            currentStoryData.content = txt;
+            document.getElementById('story-display-text').innerText = txt;
+        };
+
+        window.addMusicToStory = () => {
+             document.getElementById('music-picker-modal').classList.remove('hidden');
+        };
+
+        window.closeMusicPicker = () => {
+             document.getElementById('music-picker-modal').classList.add('hidden');
+        };
+
+        let musicSearchTimer;
+        window.debounceSearchMusic = (q) => {
+            clearTimeout(musicSearchTimer);
+            musicSearchTimer = setTimeout(() => searchMusic(q), 500);
+        };
+
+        async function searchMusic(query) {
+            const resultsContainer = document.getElementById('music-results');
+            if (!query) {
+                resultsContainer.innerHTML = '<div class="py-12 text-center text-slate-600"><span class="material-icons-round text-4xl mb-2">music_note</span><p class="text-xs font-bold uppercase tracking-widest text-slate-500">Bắt đầu tìm nhạc</p></div>';
+                return;
+            }
+            resultsContainer.innerHTML = '<div class="py-12 text-center text-slate-600 animate-pulse"><p class="text-xs font-bold uppercase tracking-widest text-slate-400">Đang tìm kiếm...</p></div>';
+            try {
+                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=10`);
+                const data = await res.json();
+                if (!data.results || data.results.length === 0) {
+                    resultsContainer.innerHTML = '<div class="py-12 text-center text-slate-600"><p class="text-xs font-bold uppercase tracking-widest text-slate-500">Không tìm thấy bài hát</p></div>';
+                    return;
+                }
+                resultsContainer.innerHTML = data.results.map(song => `
+                    <div class="flex items-center gap-3 p-2 hover:bg-white/10 rounded-xl cursor-pointer group transition-all" onclick='selectMusicForStory(${JSON.stringify(song).replace(/'/g, "&#39;")})'>
+                         <img src="${song.artworkUrl60}" class="w-10 h-10 rounded-lg object-cover border border-white/5 shadow-md">
+                         <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-white truncate">${song.trackName}</p>
+                            <p class="text-[10px] text-slate-500 font-bold truncate">${song.artistName}</p>
+                         </div>
+                         <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-black transition-all">
+                             <span class="material-icons-round text-sm">play_arrow</span>
+                         </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+                resultsContainer.innerHTML = '<div class="py-12 text-center text-red-500/50"><p class="text-[10px] font-black uppercase tracking-widest">Lỗi tìm kiếm âm nhạc</p></div>';
             }
         }
+
+        window.selectMusicForStory = (song) => {
+            currentStoryData.music = {
+                name: song.trackName,
+                artist: song.artistName,
+                preview_url: song.previewUrl,
+                start_time: 0
+            };
+            document.getElementById('story-music-name').innerText = song.trackName;
+            document.getElementById('story-music-artist').innerText = song.artistName;
+            document.getElementById('story-music-badge').classList.remove('hidden');
+            document.getElementById('story-music-trimmer').classList.remove('hidden');
+            closeMusicPicker();
+            initMusicTrimmer();
+        };
+
+        function initMusicTrimmer() {
+            const slider = document.getElementById('story-music-slider');
+            const handle = document.getElementById('trimmer-handle');
+            const playBtn = document.getElementById('trimmer-play-btn');
+            if (window.storyPreviewAudio) window.storyPreviewAudio.pause();
+            const audio = new Audio(currentStoryData.music.preview_url);
+            window.storyPreviewAudio = audio;
+            slider.oninput = (e) => {
+                const percent = e.target.value;
+                handle.style.left = `calc(${percent}% - ${(percent/100) * 60}px)`;
+                currentStoryData.music.start_time = (percent / 100) * 15;
+                audio.currentTime = currentStoryData.music.start_time;
+                if (audio.paused) audio.play();
+                playBtn.innerHTML = '<span class="material-icons-round">pause</span>';
+            };
+            playBtn.onclick = () => {
+                if (audio.paused) { audio.play(); playBtn.innerHTML = '<span class="material-icons-round">pause</span>'; }
+                else { audio.pause(); playBtn.innerHTML = '<span class="material-icons-round">play_arrow</span>'; }
+            };
+        }
+
+        window.confirmMusicTrim = () => {
+             document.getElementById('story-music-trimmer').classList.add('hidden');
+             if (window.storyPreviewAudio) window.storyPreviewAudio.pause();
+        };
+
+        window.rotateStoryImage = () => {
+            currentStoryData.rotation = (currentStoryData.rotation + 90) % 360;
+            const img = document.getElementById('story-preview-img');
+            if (img) img.style.transform = `scale(${currentStoryData.zoom}) rotate(${currentStoryData.rotation}deg)`;
+        };
+
+        window.submitHomeStory = async () => {
+            if (!window.currentUserUid) return alert("Vui lòng đăng nhập!");
+            const btn = document.getElementById('share-story-btn');
+            btn.innerText = "Đang chia sẻ...";
+            btn.disabled = true;
+            try {
+                const { error } = await window.supabaseClient
+                    .from('stories')
+                    .insert([{
+                        author_id: window.currentUserUid,
+                        type: currentStoryData.type,
+                        media_url: currentStoryData.media_url,
+                        content: currentStoryData.content,
+                        music_info: currentStoryData.music,
+                        metadata: {
+                            rotation: currentStoryData.rotation,
+                            zoom: currentStoryData.zoom,
+                            background: currentStoryData.type === 'text' ? 'linear-gradient(to bottom right, #8a2be2, #ff69b4)' : null
+                        }
+                    }]);
+                if (error) throw error;
+                alert("Tin của bạn đã được đăng thành công!");
+                closeStoryCreator();
+                fetchHomeStories();
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi khi đăng tin.");
+            } finally {
+                btn.innerText = "Chia sẻ lên tin";
+                btn.disabled = false;
+            }
+        };
+
+        // STORY VIEWER LOGIC
+        let allStories = [];
+        let currentViewerIndex = 0;
+        let storyViewAudio = null;
+
+        window.openStoryViewer = async (targetId) => {
+             const modal = document.getElementById('story-viewer-modal');
+             if (!modal) return;
+             modal.classList.remove('hidden');
+             modal.classList.add('flex');
+             const { data, error } = await window.supabaseClient
+                 .from('stories')
+                 .select('*, profiles(*) ')
+                 .order('created_at', { ascending: false });
+             if (data) {
+                 allStories = data;
+                 currentViewerIndex = allStories.findIndex(s => s.id === targetId);
+                 if (currentViewerIndex === -1) currentViewerIndex = 0;
+                 renderViewerSidebar();
+                 showStoryInViewer(currentViewerIndex);
+             }
+        };
+
+        window.closeStoryViewer = () => {
+             const modal = document.getElementById('story-viewer-modal');
+             if (modal) {
+                 modal.classList.add('hidden');
+                 modal.classList.remove('flex');
+             }
+             if (storyViewAudio) {
+                 storyViewAudio.pause();
+                 storyViewAudio = null;
+             }
+        };
+
+        function renderViewerSidebar() {
+             const list = document.getElementById('viewer-sidebar-list');
+             if (!list) return;
+             list.innerHTML = allStories.map((s, idx) => {
+                 const author = s.profiles || {};
+                 const isActive = idx === currentViewerIndex;
+                 const avatar = author.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${s.author_id}`;
+                 return `
+                    <div class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}" onclick="showStoryInViewer(${idx})">
+                         <img src="${avatar}" class="w-12 h-12 rounded-full border-2 ${isActive ? 'border-primary' : 'border-slate-700'}">
+                         <div class="flex-1 min-w-0">
+                            <p class="text-white font-bold text-sm truncate">${author.display_name || 'Người dùng'}</p>
+                            <p class="text-slate-500 text-[10px]">${new Date(s.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                         </div>
+                    </div>
+                 `;
+             }).join('');
+        }
+
+        window.showStoryInViewer = (index) => {
+             if (index < 0 || index >= allStories.length) return;
+             currentViewerIndex = index;
+             const story = allStories[index];
+             const author = story.profiles || {};
+             const imgEl = document.getElementById('story-view-img');
+             const avatarEl = document.getElementById('story-view-avatar');
+             const authorEl = document.getElementById('story-view-author');
+             const timeEl = document.getElementById('story-view-time');
+             const textEl = document.getElementById('story-view-display-text');
+             if (imgEl) imgEl.src = story.media_url || avatarEl.src;
+             if (avatarEl) avatarEl.src = author.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${story.author_id}`;
+             if (authorEl) authorEl.innerText = author.display_name || 'Người dùng';
+             if (timeEl) timeEl.innerText = new Date(story.created_at).toLocaleString();
+             if (textEl) textEl.innerText = story.content || '';
+             if (storyViewAudio) storyViewAudio.pause();
+             const musicBadge = document.getElementById('story-view-music-badge');
+             const musicName = document.getElementById('story-view-music-name');
+             if (story.music_info && story.music_info.preview_url) {
+                  if (musicName) musicName.innerText = story.music_info.name;
+                  if (musicBadge) musicBadge.classList.remove('hidden');
+                  storyViewAudio = new Audio(story.music_info.preview_url);
+                  storyViewAudio.currentTime = story.music_info.start_time || 0;
+                  storyViewAudio.play();
+             } else {
+                  if (musicBadge) musicBadge.classList.add('hidden');
+                  storyViewAudio = null;
+             }
+             renderViewerSidebar();
+        };
+
+        function initViewerEvents() {
+            const prev = document.getElementById('viewer-prev-btn');
+            if (prev) prev.onclick = () => { if (currentViewerIndex > 0) showStoryInViewer(currentViewerIndex - 1); };
+            const next = document.getElementById('viewer-next-btn');
+            if (next) next.onclick = () => { if (currentViewerIndex < allStories.length - 1) showStoryInViewer(currentViewerIndex + 1); };
+        }
+        setTimeout(initViewerEvents, 1000);
+
+        window.reactToStory = (type) => {
+             alert(`Bạn đã thả cảm xúc cho tin này!`);
+        };
 
         window.likePost = async (id) => {
             if (!window.currentUserUid) return alert("Vui lòng đăng nhập để tương tác!");
@@ -6785,7 +7282,7 @@ let aiChatHistory = [];
                     const formData = new FormData();
                     formData.append('file', blob, 'emotion.jpg');
                     try {
-                        const res = await fetch('/api/emotion', { method: 'POST', body: formData });
+                        const res = await fetch('api/emotion', { method: 'POST', body: formData });
                         const data = await res.json();
                         if (data.status === 'success') {
                             const em = data.emotion;

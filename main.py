@@ -116,6 +116,11 @@ async def get_index():
     return FileResponse(os.path.join(BASE_DIR, "index.html"))
 
 
+@app.get("/site.webmanifest")
+async def serve_webmanifest():
+    return FileResponse("site.webmanifest", media_type="application/manifest+json")
+
+
 SONGS_DB_FILE = "user_songs.json"
 FAVORITES_DB_FILE = "user_favorites.json"
 PLAYLISTS_DB_FILE = "user_playlists.json"
