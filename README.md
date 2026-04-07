@@ -1,70 +1,90 @@
 ---
-title: KietSound Pro - AI Music & Film Studio
+title: KietStation - Mood-Based AI Recommender & Streaming Platform
 emoji: 🎵🎬
-short_description: AI Music Studio with Mood Detection & Film Streaming
+short_description: AI Music Studio, WebRTC Watch Party, Mood Detection & Film Streaming
 sdk: docker
 ---
 
-# 🎵 KietSound Pro - AI Music & Film Studio
+# KietStation (Mood-based-Recommender) 🎵🎬
 
-Hệ thống giải trí cao cấp tích hợp AI nhận diện khuôn mặt để đề xuất nhạc và xem phim chất lượng cao.
+Hệ thống giải trí trực tuyến đa chức năng tích hợp trí tuệ nhân tạo (AI) nhận diện khuôn mặt để đề xuất nội dung (nhạc & phim), hỗ trợ Studio sản xuất nhạc AI, và tính năng Watch Party chia sẻ qua WebRTC.
 
-## ✨ Tính năng nổi bật
+## ✨ Tính năng cốt lõi
 
-### 🎬 KietFilm Player
-- **Stream Tốc Độ Cao**: Tích hợp OPhim API, hỗ trợ định dạng HLS (.m3u8) truyền tải mượt mà.
-- **Không Quảng Cáo**: Trải nghiệm xem phim sạch, không popup khó chịu.
-- **Phụ Đề Tiếng Việt**: Tự động đồng bộ sub cho mọi đại lộ phim.
-- **Lịch Sử Xem**: Ghi nhớ phim đang xem dở để tiếp tục bất cứ lúc nào.
+### 🎬 KietFilm Player & Streaming
+- **Stream Tốc Độ Cao**: Tích hợp OPhim API & TMDB API, hỗ trợ định dạng HLS (.m3u8).
+- **Trải nghiệm Premium**: Giao diện không quảng cáo, tự động đồng bộ phụ đề.
+- **Lưu trữ Cục bộ**: Quản lý lịch sử xem phim và danh sách phát cá nhân.
 
-### 🎭 Đề xuất theo cảm xúc (Mood-Based)
-- **Face AI**: Sử dụng thư viện DeepFace phân tích biểu cảm từ Webcam.
-- **Smart Mapping**: Tự động chuyển đổi cảm xúc (Vui, Buồn, Giận dữ...) thành từ khóa tìm kiếm nhạc/phim phù hợp.
-- **Đa nền tảng**: Tìm kiếm trực tiếp trên YouTube và Podcast.
+### 🎭 Mood-Based Recommendation (Đề xuất theo cảm xúc)
+- **Công nghệ Face AI**: Tích hợp module DeepFace theo dõi biểu cảm thông qua Webcam.
+- **Dynamic Search**: Tự động ánh xạ cảm xúc (Vui, Buồn, Ngạc nhiên...) thành ngữ cảnh, truy vấn song song YouTube Music và Podcast.
 
-### 🎹 Trình tạo nhạc AI (Text-to-Music)
-- **Vocal chuyên nghiệp**: Sử dụng Edge-TTS tạo giọng hát tự nhiên với nhiều tùy chọn vùng miền.
-- **Xử lý âm thanh Studio**: Tự động Mix & Master, thêm hiệu ứng Reverb, Delay, và Compression theo Style.
-- **Cấu trúc bài hát**: Auto-generate Intro, Verse, Chorus, Outro.
+### 🎹 KietSound Pro - AI Music Studio
+- **Sinh Nhạc AI (Text-To-Music)**: Tích hợp Hugging Face MusicGen tạo beat thủ công.
+- **Tổng hợp giọng hát**: Tích hợp Edge-TTS tạo vocals, có hỗ trợ RVC Engine để biến đổi giọng thật/AI.
+- **Xử lý âm thanh (Mix & Master)**: Auto-mix với delay, reverb, compression (pydub/ffmpeg). Hỗ trợ chia Intro, Verse, Chorus.
 
----
-
-## 🛠️ Yêu cầu hệ thống
-- **OS**: Windows 10/11, Linux hoặc macOS.
-- **Python**: 3.10 trở lên.
-- **RAM**: Tối thiểu 4GB (Khuyên dùng 8GB để chạy AI mượt hơn).
-- **Phần cứng**: Webcam (để dùng tính năng nhận diện cảm xúc).
+### 🎉 Watch Party (WebRTC)
+- **Đồng bộ thời gian thực**: Sử dụng WebRTC và WebTorrent để stream âm thanh/video cho nhiều người cùng lúc.
+- **Tương tác nhóm**: Toggle Microphone, chia sẻ camera, thả biểu cảm thời gian thực trên màn hình chung.
+- **Peer-to-Peer**: Tối ưu hóa băng thông bằng truyền tải P2P và Node.js tracker.
 
 ---
 
-## 🚀 Hướng dẫn cài đặt
+## 🏗️ Kiến trúc Công nghệ
 
-### 1. Cài đặt các công cụ bổ trợ
-Bạn cần cài đặt **FFmpeg** để xử lý âm thanh và video:
-- **Windows**: Tải tại [ffmpeg.org](https://ffmpeg.org/download.html) và thêm vào PATH.
-- **Linux**: `sudo apt install ffmpeg`
+- **Backend / Core REST API**: Python, `FastAPI`, `Uvicorn`.
+- **AI & Data Analysis**: `deepface` (Emotion), Transformers (Hugging Face CLI), Edge-TTS, `RVC`.
+- **Media Processing**: `ffmpeg-python`, `pydub`, `librosa`.
+- **Frontend**: HTML5, CSS3 (Styling hiện đại), JS (Vanilla/ES6 Module).
+- **Video Player**: `hls.js`.
+- **Real-time Media & Torrent**: `WebTorrent`, Node.js `Express`, `cors`.
 
-### 2. Cài đặt Python Dependencies
-Mở Terminal/Command Prompt tại thư mục dự án và chạy:
+**Cấu trúc thư mục tham khảo**:
+- `main.py`: Core FastAPI Server.
+- `hf_music_gen.py` / `rvc_engine.py`: Các file quản lý pipeline Audio & AI Generation.
+- `torrent_server.js`: Tracker và Bridge cho WebTorrent / Watch Party.
+- `index.html`: Giao diện ứng dụng Client-Side.
+
+---
+
+## 🚀 Hướng dẫn Cài đặt & Khởi chạy
+
+### 1. Cài đặt Hệ thống & Yêu cầu Bắt buộc
+- **OS**: Windows 10/11, Linux, macOS.
+- **Python**: `3.10+`.
+- **Node.js**: `v18+` (cho torrent server).
+- **Phần mềm bên thứ 3**: Cài đặt **FFmpeg** và đưa vào môi trường hệ thống (PATH).
+
+### 2. Cài đặt Dependencies
+
+**Môi trường Python:**
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Khởi chạy ứng dụng
-Chạy lệnh sau để bắt đầu:
+**Môi trường Node.js (WebTorrent & Express):**
+```bash
+npm install
+```
+
+### 3. Vận hành dịch vụ
+
+Chạy **Torrent/WebRTC Backend** (Khởi chạy trên Port khác/quy định):
+```bash
+node torrent_server.js
+```
+
+Khởi động **FastAPI Main Service**:
 ```bash
 python main.py
 ```
-Sau đó truy cập địa chỉ: `http://localhost:8000` trên trình duyệt.
+
+Sau khi Terminal báo thành công, mở truy cập vào: [http://localhost:8000](http://localhost:8000)
 
 ---
 
-## 🏗️ Kiến trúc kỹ thuật
-- **Backend**: FastAPI (Python) - Xử lý logic AI và API.
-- **Frontend**: Vanilla JS, HTML5, CSS3 (Tailwind-style) - Giao diện hiện đại, responsive.
-- **AI Models**: DeepFace (Emotion Detection).
-- **Streaming**: HLS.js cho trình phát video.
-- **Database/Auth**: Firebase Integration.
-
-## 📝 Lưu ý bản quyền
-Dự án được xây dựng phục vụ mục đích học tập và nghiên cứu công nghệ AI. Chúng tôi không lưu trữ bất kỳ tệp video nào trên máy chủ. Mọi dữ liệu phim được lấy từ các API công cộng.
+## 🔒 Vấn đề Pháp lý & Giới hạn
+- Dự án mã nguồn mở phục vụ R&D các mảng công nghệ WebRTC, TTS, Video Streaming, Computer Vision.
+- Tất cả nội dung phim được cung cấp từ Endpoint Public, ứng dụng không lưu trữ file Media MP4 hoặc m3u8 vào ổ cứng Server tĩnh. Vui lòng tuân thủ bản quyền của nền tảng sở hữu (TMDB/OPhim).
