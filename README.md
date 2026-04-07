@@ -1,7 +1,7 @@
 ---
 title: KietStation - Mood-Based AI Recommender & Streaming Platform
 emoji: 🎵🎬
-short_description: AI Music Studio, WebRTC Watch Party, Mood Detection & Film Streaming
+short_description: AI Music Studio, Stream, Watch Party & Mood Detection
 sdk: docker
 ---
 
