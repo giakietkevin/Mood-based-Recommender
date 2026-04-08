@@ -5348,9 +5348,9 @@ let aiChatHistory = [];
             }
 
             return `
-                <div class="fb-card animate-fade-in group/card" id="post-${post.id}">
+                <div class="glass-post animate-fade-in group/card post-gradient-header" id="post-${post.id}">
                     <!-- Card Header -->
-                    <div class="fb-card-header">
+                    <div class="fb-card-header relative z-10">
                         <div class="relative">
                             <img ${authorClick} src="${post.author.avatar}" class="w-10 h-10 rounded-full border border-white/10 object-cover cursor-pointer hover:brightness-110 transition-all">
                             <div class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-[2.5px] border-[#1a1a1a] rounded-full"></div>
@@ -5411,32 +5411,35 @@ let aiChatHistory = [];
                             </div>
                         </div>
 
-                        <div class="fb-interaction-row">
-                            <button onclick="likePost('${post.id}')" id="like-btn-${post.id}" class="fb-action-btn ${post.hasLiked ? 'text-blue-400' : ''}">
-                                <span class="material-icons-round ${post.hasLiked ? 'scale-110' : ''} transition-transform">${post.hasLiked ? 'thumb_up' : 'thumb_up_off_alt'}</span> Thích
+                        <div class="flex justify-between items-center px-1 pt-2 border-t border-white/5">
+                            <button onclick="likePost('${post.id}')" id="like-btn-${post.id}" class="glass-btn flex-1 py-2.5 mx-1 rounded-xl gap-2 ${post.hasLiked ? 'text-blue-400 bg-blue-500/10' : 'text-slate-300 hover:text-white'}">
+                                <span class="material-icons-round text-[18px] transition-transform ${post.hasLiked ? 'scale-110' : ''}">${post.hasLiked ? 'thumb_up' : 'thumb_up_off_alt'}</span>
+                                <span class="text-[13px] font-bold">Thích</span>
                             </button>
-                            <button onclick="toggleComment('${post.id}')" class="fb-action-btn">
-                                <span class="material-icons-round">chat_bubble_outline</span> Bình luận
+                            <button onclick="toggleComment('${post.id}')" class="glass-btn flex-1 py-2.5 mx-1 rounded-xl gap-2 text-slate-300 hover:text-white">
+                                <span class="material-icons-round text-[18px]">chat_bubble_outline</span>
+                                <span class="text-[13px] font-bold">Bình luận</span>
                             </button>
-                            <button onclick="sharePost('${post.id}')" class="fb-action-btn">
-                                <span class="material-icons-round">reply</span> Chia sẻ
+                            <button onclick="sharePost('${post.id}')" class="glass-btn flex-1 py-2.5 mx-1 rounded-xl gap-2 text-slate-300 hover:text-white">
+                                <span class="material-icons-round text-[18px]">reply</span>
+                                <span class="text-[13px] font-bold">Chia sẻ</span>
                             </button>
                         </div>
 
                         <!-- Comment Section -->
-                        <div id="comment-section-${post.id}" class="hidden py-3 space-y-4 border-t border-white/5 mt-1">
-                            <div id="comments-list-${post.id}" class="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar px-1"></div>
-                            
-                            <div class="flex gap-2 items-start mt-2">
-                                <img src="${window.currentUserAvatarUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=guest'}" class="w-8 h-8 rounded-full border border-white/10 object-cover flex-shrink-0">
+                        <div id="comment-section-${post.id}" class="hidden py-4 space-y-4 border-t border-white/5 mt-2">
+                            <div id="comments-list-${post.id}" class="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar px-2"></div>
+
+                            <div class="flex gap-3 items-start mt-3 px-2">
+                                <img src="${window.currentUserAvatarUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=guest'}" class="w-9 h-9 rounded-full border border-white/10 object-cover flex-shrink-0 shadow-lg">
                                 <div class="flex-1 relative">
-                                    <textarea id="comment-input-${post.id}" 
+                                    <textarea id="comment-input-${post.id}"
                                               rows="1"
-                                              placeholder="Viết bình luận..."
-                                              class="w-full bg-white/5 border-none rounded-2xl px-4 py-2 pr-10 text-[13px] text-white placeholder-slate-500 focus:ring-1 focus:ring-primary/30 resize-none overflow-hidden" 
+                                              placeholder="💬 Viết bình luận..."
+                                              class="glass-input w-full px-4 py-2.5 pr-12 text-[13px] text-white placeholder-slate-500 resize-none overflow-hidden"
                                               oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
                                               onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); submitComment('${post.id}'); }"></textarea>
-                                    <button onclick="submitComment('${post.id}')" class="absolute right-2 top-1.5 text-primary/60 hover:text-primary transition-colors">
+                                    <button onclick="submitComment('${post.id}')" class="absolute right-3 top-2.5 text-primary/60 hover:text-primary transition-colors hover:scale-110">
                                         <span class="material-icons-round text-lg">send</span>
                                     </button>
                                 </div>
@@ -5450,11 +5453,11 @@ let aiChatHistory = [];
         // STORY TEMPLATE
         function storyCardHtml(story) {
             return `
-                <div class="fb-story-card" onclick="viewStory('${story.id}')">
-                    <img src="${story.media_url}" class="w-full h-full object-cover">
-                    <div class="fb-story-overlay"></div>
-                    <img class="fb-story-avatar" src="${story.author_avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + story.author_id}">
-                    <p class="fb-story-name">${story.author_name}</p>
+                <div class="fb-story-card border border-white/10 shadow-lg relative rounded-2xl overflow-hidden cursor-pointer group" onclick="viewStory('${story.id}')">
+                    <img src="${story.media_url}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80"></div>
+                    <img class="absolute top-3 left-3 w-10 h-10 rounded-xl border-2 border-primary shadow-lg shadow-primary/30 object-cover" src="${story.author_avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + story.author_id}">
+                    <p class="absolute bottom-3 left-3 right-3 text-white text-xs font-bold drop-shadow-md truncate">${story.author_name}</p>
                 </div>
             `;
         }
