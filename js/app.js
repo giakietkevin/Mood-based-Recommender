@@ -157,11 +157,7 @@
         });
 
         window.showView = (viewName) => {
-            if (viewName === 'film' && !window.currentUserUid) {
-                showAuthModal();
-                showAuthError("Vui lòng đăng nhập để sử dụng tính năng Phim!");
-                return;
-            }
+            // Removed auth check for film view - allow guest access
             const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'guide', 'about'];
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
@@ -214,9 +210,7 @@
             if (viewName === 'home' && typeof window.fetchHomeStories === 'function') window.fetchHomeStories();
             if (viewName === 'studio') loadMySongs();
             if (viewName === 'library') {
-                if (!window.currentUserUid) {
-                    alert("Vui lòng LOGIN để xem Thư viện cá nhân nhé! ❤️");
-                }
+                // Removed auth alert - allow guest browsing
                 loadFavorites();
                 loadPlaylists();
             }
@@ -237,22 +231,10 @@
                 // Photobooth extra init if needed
             }
 
-            // VIP Access Check
+            // VIP check disabled - allow guest access
             if (viewName === 'film') {
-                const checkVip = async () => {
-                    const modal = document.getElementById('film-vip-modal');
-                    if (!modal) return;
-                    
-                    if (window.currentUserUid && window.supabaseClient) {
-                        const { data: profile } = await window.supabaseClient.from('profiles').select('type').eq('id', window.currentUserUid).single();
-                        if (profile && profile.type === 'vip') {
-                            modal.classList.add('hidden');
-                            return;
-                        }
-                    }
-                    modal.classList.remove('hidden');
-                };
-                checkVip();
+                const modal = document.getElementById('film-vip-modal');
+                if (modal) modal.classList.add('hidden');
             }
 
             // History Management
@@ -920,7 +902,7 @@
         window.toggleFavorite = async (e, songStr) => {
             e.stopPropagation();
             if (!window.currentUserUid) {
-                alert("Vui lòng đăng nhập để sử dụng tính năng Yêu thích!");
+                // Favorites require login - skip silently for guests
                 return;
             }
             try {
@@ -1026,7 +1008,7 @@
         window.openPlaylistModal = (e, songStr) => {
             e.stopPropagation();
             if (!window.currentUserUid) {
-                alert("Vui lòng đăng nhập để thêm vào Playlist!");
+                // Playlist requires login - skip silently for guests
                 return;
             }
             songToPlaylist = decodeURIComponent(songStr);
@@ -1128,7 +1110,7 @@
             'hanh-dong': { primary: '#FF4D00', glow: 'rgba(255, 77, 0, 0.3)', bg: '#080504' },
             'tinh-cam': { primary: '#FF2D55', glow: 'rgba(255, 45, 85, 0.3)', bg: '#080406' },
             'hai-huoc': { primary: '#FFD600', glow: 'rgba(255, 214, 0, 0.3)', bg: '#080804' },
-            'co-trang': { primary: '#C6A87C', glow: 'rgba(198, 168, 124, 0.3)', bg: '#080705' },
+            'co-trang': { primary: '#C6A87C', glow: 'rgba(198, 168, 124, 0.3)', bg: '#0e0e0e' },
             'tam-ly': { primary: '#6A5ACD', glow: 'rgba(106, 90, 205, 0.3)', bg: '#050408' },
             'hinh-su': { primary: '#4682B4', glow: 'rgba(70, 130, 180, 0.3)', bg: '#040508' },
             'chien-tranh': { primary: '#556B2F', glow: 'rgba(85, 107, 47, 0.3)', bg: '#050604' },
@@ -1147,7 +1129,7 @@
             'lich-su': { primary: '#CD853F', glow: 'rgba(205, 133, 63, 0.3)', bg: '#080604' },
             'gay-can': { primary: '#FF8C00', glow: 'rgba(255, 140, 0, 0.3)', bg: '#080504' },
             'kinh-dien': { primary: '#FFD700', glow: 'rgba(255, 215, 0, 0.3)', bg: '#080804' },
-            'mac-dinh': { primary: '#C6A87C', glow: 'rgba(198, 168, 124, 0.3)', bg: '#050608' }
+            'mac-dinh': { primary: '#e9ffb9', glow: 'rgba(233, 255, 185, 0.15)', bg: '#0e0e0e' }
         };
 
         function updateCineTheme(genreSlug) {
@@ -2556,7 +2538,7 @@
             document.addEventListener('keydown', handleTetrisInput);
         };
         const tetrisPieces = 'ILJOTSZ';
-        const tetrisColors = [null, '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#C6A87C'];
+        const tetrisColors = [null, '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#e9ffb9'];
         const createTetrisPiece = () => {
             const type = tetrisPieces[Math.floor(Math.random() * tetrisPieces.length)];
             let matrix;
@@ -2699,7 +2681,7 @@
             flappyCtx.fillRect(0, 0, flappyCanvas.width, flappyCanvas.height);
 
             // Bird
-            flappyCtx.fillStyle = '#C6A87C';
+            flappyCtx.fillStyle = '#e9ffb9';
             flappyCtx.beginPath();
             flappyCtx.roundRect(bird.x, bird.y, bird.w, bird.h, 8);
             flappyCtx.fill();

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm install:*)",
+      "Bash(grep -B 5 -A 40 \"fetch\\(\\\\`https://ophim1.com/phim/\\\\${slug}\\\\`\\);\")",
+      "Bash(uvicorn main:app --port 8000)",
+      "Bash(curl -s http://localhost:8000)",
+      "Bash(python main.py)",
+      "Bash(curl -s http://127.0.0.1:8000/js/app.js)",
+      "Bash(curl:*)",
+      "Bash(python -c \"from duckduckgo_search import DDGS; list\\(DDGS\\(\\).videos\\('naruto', max_results=2\\)\\)\")",
+      "Bash(python:*)",
+      "Bash(git reset:*)",
+      "Bash(git clean:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}
