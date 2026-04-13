@@ -6873,7 +6873,6 @@ let aiChatHistory = [];
         let partyId = null;
 
         window.startWatchParty = () => {
-            if (!window.currentUserUid) return alert("Vui lòng đăng nhập để bắt đầu Watch Party!");
             partyId = Math.random().toString(36).substring(2, 8).toUpperCase();
             isPartyHost = true;
             initPartyChannel(partyId);
