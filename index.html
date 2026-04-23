@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport" />
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" name="viewport" />
     <title>KietStation </title>
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
@@ -3329,6 +3329,31 @@
 
     <!-- HOME (SOCIAL STATION) LOGIC -->
 
+
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="mobile-bottom-nav sm:hidden">
+        <button type="button" onclick="showView('home')" id="mob-nav-home" class="active">
+            <span class="material-icons-round">home</span>
+            <span class="label">Home</span>
+        </button>
+        <button type="button" onclick="showView('dashboard')" id="mob-nav-dashboard">
+            <span class="material-icons-round">music_note</span>
+            <span class="label">Music</span>
+        </button>
+        <button type="button" onclick="showView('film')" id="mob-nav-film">
+            <span class="material-icons-round">movie</span>
+            <span class="label">Film</span>
+        </button>
+        <button type="button" onclick="showView('game')" id="mob-nav-game">
+            <span class="material-icons-round">sports_esports</span>
+            <span class="label">Game</span>
+        </button>
+        <button type="button" onclick="showView('photobooth')" id="mob-nav-photobooth">
+            <span class="material-icons-round">camera_alt</span>
+            <span class="label">Photo</span>
+        </button>
+    </div>
 
     <script src="js/social.js"></script>
     <script src="js/app.js"></script>

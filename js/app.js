@@ -162,21 +162,25 @@
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
                 const nav = document.getElementById(`nav-${v}`);
+                const mobNav = document.getElementById(`mob-nav-${v}`);
                 if (el) el.classList.add('hidden');
                 if (nav) {
                     nav.classList.remove('bg-white/10', 'text-white', 'shadow-sm', 'shadow-primary/20');
                     nav.classList.add('text-slate-400');
                 }
+                if (mobNav) mobNav.classList.remove('active');
             });
 
             const activeView = document.getElementById(`view-${viewName}`);
             const activeNav = document.getElementById(`nav-${viewName}`);
+            const activeMobNav = document.getElementById(`mob-nav-${viewName}`);
 
             if (activeView) activeView.classList.remove('hidden');
             if (activeNav) {
                 activeNav.classList.add('bg-white/10', 'text-white', 'shadow-sm');
                 activeNav.classList.remove('text-slate-400');
             }
+            if (activeMobNav) activeMobNav.classList.add('active');
 
             // Smart PiP Management for Internal Navigation
             if (viewName !== 'film') {

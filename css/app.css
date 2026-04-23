@@ -527,12 +527,17 @@ input[type=range]::-webkit-slider-runnable-track {
     }
 
     /* Hide horizontal scroll nav on mobile since we use bottom nav */
-    .glass-panel.overflow-x-auto {
+    nav .glass-panel {
         display: none !important;
     }
 
     /* Adjust main padding for bottom nav */
     body {
         padding-bottom: calc(70px + env(safe-area-inset-bottom)) !important;
+    }
+
+    /* Show mobile bottom nav only on mobile */
+    .mobile-bottom-nav {
+        display: flex !important;
     }
 }
