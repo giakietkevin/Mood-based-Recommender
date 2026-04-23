@@ -1,6 +1,6 @@
 :root {
-    --primary: #e9ffb9;
-    --primary-container: #bbfd00;
+    --primary: #c20606;
+    --primary-container: #ffee00;
     --on-primary: #4a6600;
     --secondary: #c97cff;
     --tertiary: #8ff5ff;
@@ -12,7 +12,7 @@
     --surface-highest: #262626;
     --on-surface: #ffffff;
     --on-surface-variant: #adaaaa;
-    --outline-variant: #484847;
+    --outline-variantW: #484847;
     --primary-glow: rgba(233, 255, 185, 0.15);
     --bg-darker: #0e0e0e;
 }
@@ -120,7 +120,7 @@ select:focus option {
 
 .chip-option.active {
     background-color: var(--primary);
-    color: #4a6600;
+    color: #ffffff;
     border-color: var(--primary);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }

@@ -158,7 +158,7 @@
 
         window.showView = (viewName) => {
             // Removed auth check for film view - allow guest access
-            const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'guide', 'about'];
+            const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'discover', 'guide', 'about'];
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
                 const nav = document.getElementById(`nav-${v}`);
