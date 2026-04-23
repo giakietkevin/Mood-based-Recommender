@@ -217,6 +217,7 @@
                 // Removed auth alert - allow guest browsing
                 loadFavorites();
                 loadPlaylists();
+                if (window.loadWatchlist) window.loadWatchlist();
             }
             if (viewName === 'film') {
                 loadFilmHistory();
@@ -553,17 +554,35 @@
 
                 // Setup UI
                 pTitle.innerText = data.title;
-                pDesc.innerText = "Youtube Music";
-                pThumb.src = data.thumbnail;
+                pDesc.innerText = data.artist || "Youtube Music";
+                pThumb.src = data.thumbnail || "https://cdn-icons-png.flaticon.com/512/12204/12204300.png";
                 dlBtn.classList.add('hidden');
                 document.getElementById('yt-video-btn').classList.remove('hidden');
 
                 // Play Youtube
                 if (isYtReady) {
-                    const videoId = extractVideoId(data.link);
-                    ytPlayer.loadVideoById(videoId);
-                    ytPlayer.playVideo();
-                    playIcon.innerText = "pause";
+                    let videoId = data.link;
+
+                    // If link is a full URL, extract video ID
+                    if (data.link && data.link.includes('youtube.com')) {
+                        videoId = extractVideoId(data.link);
+                    }
+
+                    if (videoId && videoId.length === 11) {
+                        ytPlayer.loadVideoById(videoId);
+                        ytPlayer.playVideo();
+                        playIcon.innerText = "pause";
+                    } else {
+                        // Fallback: search for the song if video ID is invalid
+                        console.warn("Invalid video ID, attempting search:", data.title);
+                        if (window.performSearch) {
+                            const searchInput = document.getElementById('search-input');
+                            if (searchInput) {
+                                searchInput.value = data.title + (data.artist ? ' ' + data.artist : '');
+                                window.performSearch();
+                            }
+                        }
+                    }
                 }
             }
 
@@ -708,8 +727,29 @@
 
         // Youtube Helpers
         function extractVideoId(url) {
-            const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
-            return (match && match[2].length == 11) ? match[2] : null;
+            if (!url) return null;
+            if (url.length === 11 && !url.includes('/')) return url;
+
+            var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
+            var match = url.match(regExp);
+            if (match && match[7] && match[7].length == 11) {
+                return match[7];
+            }
+
+            var shortsMatch = url.match(/shorts\/([a-zA-Z0-9_-]{11})/);
+            if (shortsMatch) {
+                return shortsMatch[1];
+            }
+
+            if (url.includes('v=')) {
+                var vParts = url.split('v=')[1];
+                if (vParts) {
+                    var vid = vParts.split('&')[0];
+                    if (vid.length === 11) return vid;
+                }
+            }
+
+            return null;
         }
 
         // Load Youtube API
@@ -885,13 +925,37 @@
         };
 
         window.loadFavorites = async () => {
-            if (!window.currentUserUid) return;
+            let tempFavs = [];
+            // Load backend favorites if logged in
+            if (window.currentUserUid) {
+                try {
+                    const res = await fetch(`/favorites?uid=${window.currentUserUid}`);
+                    const dbFavs = await res.json();
+                    tempFavs = [...dbFavs];
+                } catch (e) { }
+            }
+            
+            // Load local favorites from Tinder Music feature
             try {
-                const res = await fetch(`/favorites?uid=${window.currentUserUid}`);
-                myFavorites = await res.json();
-                renderLibraryFavorites();
-                updateAllFavIcons();
-            } catch (e) { }
+                const localFavs = JSON.parse(localStorage.getItem('kiet_music_favorites') || '[]');
+                const mappedLocal = localFavs.map(f => ({
+                    title: f.title,
+                    thumbnail: f.image,
+                    link: f.id.includes('youtube.com') ? f.id : 'https://www.youtube.com/watch?v=' + f.id,
+                    type: 'youtube',
+                    source: 'tinder'
+                }));
+                
+                // Merge avoiding duplicates
+                mappedLocal.forEach(local => {
+                    const exists = tempFavs.find(t => (t.link || t.file_url) === local.link);
+                    if (!exists) tempFavs.push(local);
+                });
+            } catch(e) {}
+            
+            myFavorites = tempFavs;
+            renderLibraryFavorites();
+            if(typeof updateAllFavIcons === 'function') updateAllFavIcons();
         };
 
         window.loadPlaylists = async () => {
@@ -905,8 +969,37 @@
 
         window.toggleFavorite = async (e, songStr) => {
             e.stopPropagation();
+
+            // Try to parse song data
+            let song;
+            try {
+                song = JSON.parse(decodeURIComponent(songStr));
+            } catch(err) {
+                return;
+            }
+
+            // If it's a Tinder music favorite (has source: 'tinder'), handle locally
+            if (song.source === 'tinder') {
+                const songId = song.link || song.file_url;
+                const favIndex = myFavorites.findIndex(f => (f.link || f.file_url) === songId);
+                if (favIndex >= 0) {
+                    myFavorites.splice(favIndex, 1);
+                    // Remove from localStorage
+                    try {
+                        let localFavs = JSON.parse(localStorage.getItem('kiet_music_favorites') || '[]');
+                        localFavs = localFavs.filter(f => f.id !== song.link.split('v=')[1]);
+                        localStorage.setItem('kiet_music_favorites', JSON.stringify(localFavs));
+                    } catch(e) {}
+                } else {
+                    myFavorites.unshift(song);
+                }
+                renderLibraryFavorites();
+                updateAllFavIcons();
+                return;
+            }
+
+            // Original backend logic for logged-in users
             if (!window.currentUserUid) {
-                // Favorites require login - skip silently for guests
                 return;
             }
             try {
@@ -915,7 +1008,6 @@
                 formData.append('song', decodeURIComponent(songStr));
 
                 // Optimistic Update UI
-                const song = JSON.parse(decodeURIComponent(songStr));
                 const songId = song.link || song.file_url;
                 const favIndex = myFavorites.findIndex(f => (f.link || f.file_url) === songId);
                 if (favIndex >= 0) {

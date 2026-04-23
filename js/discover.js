@@ -106,6 +106,38 @@ discoverStyles.textContent = `
         transform: rotate(15deg);
     }
 
+    
+    .discover-mode-btn {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.1);
+        color: var(--on-surface-variant);
+    }
+    .discover-mode-btn.active {
+        background: rgba(233,255,185,0.15);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+    .discover-card-audio-visualizer {
+        position: absolute;
+        bottom: 24px;
+        right: 24px;
+        display: flex;
+        align-items: flex-end;
+        gap: 4px;
+        height: 30px;
+        z-index: 20;
+    }
+    .visualizer-bar {
+        width: 4px;
+        background: var(--primary);
+        border-radius: 2px;
+        animation: pulse-height 0.5s ease-in-out infinite alternate;
+    }
+    @keyframes pulse-height {
+        0% { height: 4px; }
+        100% { height: 100%; }
+    }
+
     .stamp-like {
         left: 40px;
         color: var(--primary);
@@ -114,6 +146,29 @@ discoverStyles.textContent = `
     }
 `;
 document.head.appendChild(discoverStyles);
+
+
+let currentDiscoverMode = 'film'; // 'film' or 'music'
+let audioPreview = new Audio();
+let ytPlayerDiscover = null;
+
+window.switchDiscoverMode = function(mode) {
+    if (currentDiscoverMode === mode) return;
+    currentDiscoverMode = mode;
+    
+    // Update UI
+    document.getElementById('discover-mode-film').classList.remove('active');
+    document.getElementById('discover-mode-music').classList.remove('active');
+    document.getElementById(`discover-mode-${mode}`).classList.add('active');
+    
+    // Stop audio if playing
+    if (audioPreview) audioPreview.pause();
+    
+    // Reload content
+    loadDiscoverContent(1);
+}
+
+// Intercept fetch based on mode
 
 async function loadDiscoverContent(page = 1) {
     if (isDiscoverLoading) return;
@@ -137,27 +192,91 @@ async function loadDiscoverContent(page = 1) {
     }
 
     try {
-        const randomPage = page > 1 ? page : Math.floor(Math.random() * 20) + 1;
-        const res = await fetch(`https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat?page=${randomPage}`);
-        const data = await res.json();
+        let formattedCards = [];
+        
+        if (currentDiscoverMode === 'film') {
+            const randomPage = page > 1 ? page : Math.floor(Math.random() * 20) + 1;
+            const res = await fetch(`https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat?page=${randomPage}`);
+            const data = await res.json();
 
-        if (data.status === 'success' && data.data.items.length > 0) {
-            const newItems = data.data.items;
-            const imgDomain = data.data.APP_DOMAIN_CDN_IMAGE || data.pathImage || 'https://img.ophim.live';
+            if (data.status === 'success' && data.data.items.length > 0) {
+                const imgDomain = data.data.APP_DOMAIN_CDN_IMAGE || data.pathImage || 'https://img.ophim.live';
+                formattedCards = data.data.items.map(item => ({
+                    id: item._id,
+                    slug: item.slug,
+                    title: item.name,
+                    originalTitle: item.origin_name,
+                    image: `${imgDomain}/uploads/movies/${item.poster_url}`,
+                    thumb: `${imgDomain}/uploads/movies/${item.thumb_url}`,
+                    year: item.year,
+                    type: item.type === 'series' ? 'Phim Bộ' : 'Phim Lẻ',
+                    quality: item.quality || 'HD',
+                    lang: item.lang || 'Vietsub'
+                }));
+            }
+                } else {
+            // Music Discovery (Fetching from existing local backend /search)
+            const searchTerms = ['lofi chill viet nam', 'vietnamese pop 2024 hit', 'tiktok viral vn', 'rap viet trending', 'indie vn chill', 'nhac acoustic hay', 'remix hot tiktok'];
+            const randomTerm = searchTerms[Math.floor(Math.random() * searchTerms.length)];
+            
+            try {
+                // Try backend YouTube search
+                const res = await fetch(`/search?q=${encodeURIComponent(randomTerm)}&type=music`);
+                const data = await res.json();
+                
+                if (data.recommendations && data.recommendations.length > 0) {
+                    formattedCards = data.recommendations.map(item => {
+                        const vidId = item.link.includes('v=') ? item.link.split('v=')[1].split('&')[0] : Math.random().toString(36).substr(2, 9);
+                        return {
+                            id: vidId + Math.random().toString(36).substr(2, 5), // Ensure unique
+                            slug: item.link,
+                            title: item.title.replace(' - YouTube', '').substring(0, 40),
+                            originalTitle: randomTerm,
+                            image: item.thumbnail || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500',
+                            thumb: item.thumbnail,
+                            year: 'Audio',
+                            type: 'Music',
+                            quality: 'YT',
+                            lang: 'Music'
+                        };
+                    });
+                } else {
+                    throw new Error("No recommendations from backend");
+                }
+            } catch(e) {
+                console.warn("Backend search failed, using extensive fallback:", e);
+                // Large fallback list to prevent "out of cards" when backend is down
+                const fallbackDB = [
+                    {title: 'Midnight City', artist: 'M83', img: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500'},
+                    {title: 'Lofi Hip Hop Mix', artist: 'Chill Beats', img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=500'},
+                    {title: 'Blinding Lights', artist: 'The Weeknd', img: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5f929?q=80&w=500'},
+                    {title: 'Sunset Lover', artist: 'Petit Biscuit', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=500'},
+                    {title: 'Shape of You', artist: 'Ed Sheeran', img: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=500'},
+                    {title: 'Bohemian Rhapsody', artist: 'Queen', img: 'https://images.unsplash.com/photo-1487180144351-b8472da7d491?q=80&w=500'},
+                    {title: 'Imagine', artist: 'John Lennon', img: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?q=80&w=500'},
+                    {title: 'Nơi Này Có Anh', artist: 'Sơn Tùng', img: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500'}
+                ];
+                
+                const shuffled = fallbackDB.sort(() => Math.random() - 0.5);
+                formattedCards = shuffled.map(item => {
+                    const seed = Math.random().toString(36).substr(2, 5);
+                    return {
+                        id: 'demo-' + seed, 
+                        slug: 'demo', 
+                        title: item.title, 
+                        originalTitle: item.artist, 
+                        image: item.img, 
+                        thumb: item.img, 
+                        year: 'Audio', 
+                        type: 'Music', 
+                        quality: 'HD', 
+                        lang: 'Pop'
+                    };
+                });
+            }
+        }
 
-            const formattedCards = newItems.map(item => ({
-                id: item._id,
-                slug: item.slug,
-                title: item.name,
-                originalTitle: item.origin_name,
-                image: `${imgDomain}/uploads/movies/${item.poster_url}`,
-                thumb: `${imgDomain}/uploads/movies/${item.thumb_url}`,
-                year: item.year,
-                type: item.type === 'series' ? 'Phim Bộ' : 'Phim Lẻ',
-                quality: item.quality || 'HD',
-                lang: item.lang || 'Vietsub'
-            }));
-
+        if (formattedCards.length > 0) {
             discoverCards = [...discoverCards, ...formattedCards];
             renderDiscoverCards();
         } else if (discoverCards.length === 0) {
@@ -299,15 +418,27 @@ window.handleSwipeAction = function(action) {
     if (cardEl) {
         if (action === 'right') {
             cardEl.classList.add('swipe-right');
-            saveToWatchlist(currentData);
-            showToast('Đã thêm vào Watchlist! ❤️');
+            if (currentDiscoverMode === 'film') {
+                saveToWatchlist(currentData);
+                showToast('Đã thêm vào Watchlist! ❤️');
+            } else {
+                saveMusicFavorite(currentData);
+                showToast('Đã thêm vào Nhạc Yêu Thích! 🎵');
+            }
         } else if (action === 'left') {
             cardEl.classList.add('swipe-left');
         } else if (action === 'up') {
-            // Xem phim ngay
-            showView('film');
-            if (window.streamFilmOphim) {
-                window.streamFilmOphim(currentData.slug, currentData.title);
+            if (currentDiscoverMode === 'film') {
+                showView('film');
+                if (window.streamFilmOphim) window.streamFilmOphim(currentData.slug, currentData.title);
+            } else {
+                // Play / search music on YouTube
+                showView('dashboard');
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = currentData.title + ' ' + currentData.originalTitle;
+                    if (window.performSearch) window.performSearch();
+                }
             }
             return;
         }
@@ -318,25 +449,36 @@ window.handleSwipeAction = function(action) {
     }
 
     currentCardIndex++;
+
+    if (audioPreview) {
+        audioPreview.pause();
+        audioPreview.currentTime = 0;
+    }
+
     renderDiscoverCards();
 };
 
 function saveToWatchlist(filmData) {
     try {
-        let history = JSON.parse(localStorage.getItem('kiet_film_history') || '[]');
-        const exists = history.find(h => h.slug === filmData.slug);
+        let watchlist = JSON.parse(localStorage.getItem('kiet_film_watchlist') || '[]');
+        const exists = watchlist.find(h => h.slug === filmData.slug);
         if (!exists) {
-            history.unshift({
+            watchlist.unshift({
                 slug: filmData.slug,
                 name: filmData.title,
-                time: 0,
-                duration: 1,
+                originalTitle: filmData.originalTitle,
+                image: filmData.image,
+                thumb: filmData.thumb,
+                year: filmData.year,
+                type: filmData.type,
+                quality: filmData.quality,
+                lang: filmData.lang,
                 date: new Date().toISOString()
             });
-            if (history.length > 50) history = history.slice(0, 50);
-            localStorage.setItem('kiet_film_history', JSON.stringify(history));
+            if (watchlist.length > 100) watchlist = watchlist.slice(0, 100);
+            localStorage.setItem('kiet_film_watchlist', JSON.stringify(watchlist));
 
-            if (window.loadFilmHistory) window.loadFilmHistory();
+            if (window.loadWatchlist) window.loadWatchlist();
         }
     } catch(e) {
         console.error("Watchlist save error:", e);
@@ -380,3 +522,77 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 });
+
+// Load Watchlist into Library view
+window.loadWatchlist = function() {
+    try {
+        const watchlist = JSON.parse(localStorage.getItem('kiet_film_watchlist') || '[]');
+        const container = document.getElementById('library-watchlist-list');
+
+        if (!container) return;
+
+        if (watchlist.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-2 flex flex-col items-center justify-center h-40 opacity-50">
+                    <span class="material-icons-round text-4xl mb-2">movie</span>
+                    <p class="text-xs">Chưa có phim nào trong Watchlist.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = watchlist.map(film => `
+            <div class="group cursor-pointer relative overflow-hidden rounded-lg border border-white/10 hover:border-primary/50 transition-all" onclick="showView('film'); window.streamFilmOphim && window.streamFilmOphim('${film.slug}', '${film.name}')">
+                <div class="relative w-full aspect-[2/3] overflow-hidden bg-black/40">
+                    <img src="${film.image}" onerror="this.src='${film.thumb}'" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" alt="${film.name}">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
+                        <p class="text-[10px] font-bold text-white truncate">${film.name}</p>
+                        <p class="text-[9px] text-slate-300">${film.year} • ${film.type}</p>
+                    </div>
+                </div>
+                <button onclick="event.stopPropagation(); removeFromWatchlist('${film.slug}')" class="absolute top-1 right-1 w-6 h-6 bg-red-500/80 hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs">
+                    <span class="material-icons-round text-[14px]">close</span>
+                </button>
+            </div>
+        `).join('');
+    } catch(e) {
+        console.error("Load watchlist error:", e);
+    }
+};
+
+// Remove from watchlist
+window.removeFromWatchlist = function(slug) {
+    try {
+        let watchlist = JSON.parse(localStorage.getItem('kiet_film_watchlist') || '[]');
+        watchlist = watchlist.filter(f => f.slug !== slug);
+        localStorage.setItem('kiet_film_watchlist', JSON.stringify(watchlist));
+        window.loadWatchlist();
+        showToast('Đã xóa khỏi Watchlist');
+    } catch(e) {
+        console.error("Remove watchlist error:", e);
+    }
+};
+
+// Save music to favorites
+function saveMusicFavorite(musicData) {
+    try {
+        let favorites = JSON.parse(localStorage.getItem('kiet_music_favorites') || '[]');
+        const exists = favorites.find(f => f.id === musicData.id);
+        if (!exists) {
+            favorites.unshift({
+                id: musicData.id,
+                title: musicData.title,
+                artist: musicData.originalTitle,
+                image: musicData.image,
+                date: new Date().toISOString()
+            });
+            if (favorites.length > 100) favorites = favorites.slice(0, 100);
+            localStorage.setItem('kiet_music_favorites', JSON.stringify(favorites));
+
+            // Reload favorites in library if function exists
+            if (window.loadFavorites) window.loadFavorites();
+        }
+    } catch(e) {
+        console.error("Music favorite save error:", e);
+    }
+}

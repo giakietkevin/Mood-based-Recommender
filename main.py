@@ -1105,22 +1105,29 @@ async def search(q: str, type: str = "music"):
     res = []
     try:
         with DDGS() as ddgs:
-            gen = ddgs.videos(f"site:youtube.com {keyword}", max_results=5)
+            gen = ddgs.videos(f"site:youtube.com {keyword}", max_results=8)
             for r in gen:
-                vid = (
-                    r["content"].split("v=")[1].split("&")[0]
-                    if "v=" in r["content"]
-                    else ""
-                )
-                res.append(
-                    {
-                        "title": r["title"],
-                        "link": r["content"],
-                        "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
-                        if vid
-                        else "",
-                    }
-                )
+                url = r.get("content", "")
+                # Extract video ID from various URL formats
+                vid = ""
+                if "v=" in url:
+                    vid = url.split("v=")[1].split("&")[0].split("#")[0]
+                elif "youtu.be/" in url:
+                    vid = url.split("youtu.be/")[1].split("?")[0].split("#")[0]
+                elif "/shorts/" in url:
+                    vid = url.split("/shorts/")[1].split("?")[0].split("#")[0]
+                elif "/embed/" in url:
+                    vid = url.split("/embed/")[1].split("?")[0].split("#")[0]
+
+                # Validate video ID (must be 11 chars)
+                if vid and len(vid) == 11:
+                    res.append(
+                        {
+                            "title": r.get("title", "Unknown"),
+                            "link": f"https://www.youtube.com/watch?v={vid}",
+                            "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
+                        }
+                    )
     except:
         pass
     return {"mood": "manual", "recommendations": res}
