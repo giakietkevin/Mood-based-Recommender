@@ -579,7 +579,25 @@
                             const searchInput = document.getElementById('search-input');
                             if (searchInput) {
                                 searchInput.value = data.title + (data.artist ? ' ' + data.artist : '');
-                                window.performSearch();
+                                // Auto search and play first result
+                                fetch(`/search?q=${encodeURIComponent(searchInput.value)}&type=music`)
+                                    .then(r => r.json())
+                                    .then(d => {
+                                        if (d.recommendations && d.recommendations.length > 0) {
+                                            const firstRes = d.recommendations[0];
+                                            const newVidId = extractVideoId(firstRes.link);
+                                            if (newVidId && newVidId.length === 11) {
+                                                ytPlayer.loadVideoById(newVidId);
+                                                ytPlayer.playVideo();
+                                                playIcon.innerText = "pause";
+                                                
+                                                // Update UI to match real found video
+                                                document.getElementById('player-thumb').src = firstRes.thumbnail;
+                                                document.getElementById('player-title').innerText = firstRes.title;
+                                            }
+                                        }
+                                    });
+                                window.performSearch(); // Still show results in dashboard
                             }
                         }
                     }
@@ -764,6 +782,15 @@
                 playerVars: { 'autoplay': 0, 'controls': 1, 'rel': 0, 'showinfo': 0 },
                 events: {
                     'onReady': () => { isYtReady = true; },
+                    'onError': (event) => {
+                        console.warn("YouTube Player Error:", event.data);
+                        if (event.data === 101 || event.data === 150 || event.data === 2) {
+                            alert("Video này bị YouTube chặn phát trên trang web khác. Đang mở YouTube trực tiếp...");
+                            if (window.currentTrackData && window.currentTrackData.link) {
+                                window.open(window.currentTrackData.link, '_blank');
+                            }
+                        }
+                    },
                     'onStateChange': (event) => {
                         const playIcon = document.getElementById('play-icon');
                         if (currentMode === 'youtube') {
@@ -940,12 +967,13 @@
                 const localFavs = JSON.parse(localStorage.getItem('kiet_music_favorites') || '[]');
                 const mappedLocal = localFavs.map(f => ({
                     title: f.title,
+                    artist: f.artist,
                     thumbnail: f.image,
-                    link: f.id.includes('youtube.com') ? f.id : 'https://www.youtube.com/watch?v=' + f.id,
+                    link: f.slug || (f.id.includes('youtube.com') ? f.id : 'https://www.youtube.com/watch?v=' + f.id),
                     type: 'youtube',
                     source: 'tinder'
                 }));
-                
+
                 // Merge avoiding duplicates
                 mappedLocal.forEach(local => {
                     const exists = tempFavs.find(t => (t.link || t.file_url) === local.link);

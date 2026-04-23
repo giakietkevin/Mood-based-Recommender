@@ -577,10 +577,11 @@ window.removeFromWatchlist = function(slug) {
 function saveMusicFavorite(musicData) {
     try {
         let favorites = JSON.parse(localStorage.getItem('kiet_music_favorites') || '[]');
-        const exists = favorites.find(f => f.id === musicData.id);
+        const exists = favorites.find(f => f.slug === musicData.slug);
         if (!exists) {
             favorites.unshift({
                 id: musicData.id,
+                slug: musicData.slug,
                 title: musicData.title,
                 artist: musicData.originalTitle,
                 image: musicData.image,
