@@ -21,18 +21,13 @@ load_dotenv()
 # ============================================================
 # CẤU HÌNH
 # ============================================================
-MONGODB_URL = os.getenv("MONGODB_URL")
-if not MONGODB_URL:
-    raise ValueError("❌ MONGODB_URL not found in .env file!")
+# Trên Hugging Face, các biến này sẽ được truyền qua Secrets
+MONGODB_URL = os.getenv("MONGODB_URL", "")
+SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key-for-local-dev-123456")
 
 DATABASE_NAME = "mood_recommender"
 USERS_COLLECTION = "users"
 SESSIONS_COLLECTION = "user_sessions"
-
-# JWT Config
-SECRET_KEY = os.getenv("SECRET_KEY")
-if not SECRET_KEY:
-    raise ValueError("❌ SECRET_KEY not found in .env file!")
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -86,20 +81,27 @@ class MongoDBConnection:
     @classmethod
     async def connect_db(cls):
         """Kết nối tới MongoDB Atlas"""
-        cls.client = AsyncIOMotorClient(MONGODB_URL)
-        cls.db = cls.client[DATABASE_NAME]
+        if not MONGODB_URL:
+            print("⚠️ WARNING: MONGODB_URL is empty! Auth database connection failed.")
+            return
 
-        # Tạo indexes để tối ưu query
-        users_col = cls.db[USERS_COLLECTION]
-        await users_col.create_index("email", unique=True)
-        await users_col.create_index("created_at")
+        try:
+            cls.client = AsyncIOMotorClient(MONGODB_URL)
+            cls.db = cls.client[DATABASE_NAME]
 
-        sessions_col = cls.db[SESSIONS_COLLECTION]
-        await sessions_col.create_index("user_id")
-        await sessions_col.create_index("refresh_token", unique=True)
-        await sessions_col.create_index("expires_at", expireAfterSeconds=0)  # TTL Index
+            # Tạo indexes để tối ưu query
+            users_col = cls.db[USERS_COLLECTION]
+            await users_col.create_index("email", unique=True)
+            await users_col.create_index("created_at")
 
-        print("Connected to MongoDB Atlas")
+            sessions_col = cls.db[SESSIONS_COLLECTION]
+            await sessions_col.create_index("user_id")
+            await sessions_col.create_index("refresh_token", unique=True)
+            await sessions_col.create_index("expires_at", expireAfterSeconds=0)  # TTL Index
+
+            print("Connected to MongoDB Atlas")
+        except Exception as e:
+            print(f"❌ Failed to connect to MongoDB Atlas: {e}")
 
     @classmethod
     async def close_db(cls):
@@ -111,6 +113,11 @@ class MongoDBConnection:
     @classmethod
     def get_db(cls) -> AsyncIOMotorDatabase:
         """Lấy database instance"""
+        if cls.db is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Database connection is not initialized. Check MONGODB_URL."
+            )
         return cls.db
 
 # ============================================================
