@@ -508,21 +508,6 @@ function showToast(msg) {
     }, 2000);
 }
 
-// Intercept showView to load cards on first open
-document.addEventListener('DOMContentLoaded', () => {
-    const origShowView = window.showView;
-    if (origShowView) {
-        window.showView = (viewName) => {
-            origShowView(viewName);
-            if (viewName === 'discover') {
-                if (discoverCards.length === 0) {
-                    loadDiscoverContent(1);
-                }
-            }
-        };
-    }
-});
-
 // Load Watchlist into Library view
 window.loadWatchlist = function() {
     try {

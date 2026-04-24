@@ -140,7 +140,7 @@
         // Listen for Browser Tab Switching (External)
         document.addEventListener('visibilitychange', () => {
             const filmVideo = document.getElementById('film-video-player');
-            const legacyVideo = document.getElementById('video-player');
+             
             const activeVideo = (filmVideo && !filmVideo.paused) ? filmVideo : (legacyVideo && !legacyVideo.paused ? legacyVideo : null);
 
             if (document.visibilityState === 'hidden') {
@@ -182,10 +182,28 @@
             }
             if (activeMobNav) activeMobNav.classList.add('active');
 
+            // Trigger view-specific functions
+            if (viewName === 'home') {
+                if (typeof fetchHomePosts === 'function') fetchHomePosts();
+                if (typeof fetchHomeStories === 'function') fetchHomeStories();
+                if (typeof renderBuddySystem === 'function') renderBuddySystem();
+            }
+            if (viewName === 'guide') {
+                if (typeof hydrateProfileView === 'function') hydrateProfileView();
+            }
+            if (viewName === 'dashboard' && typeof initCamera === 'function') {
+                initCamera();
+            }
+            if (viewName === 'discover') {
+                if (typeof discoverCards !== 'undefined' && discoverCards.length === 0 && typeof loadDiscoverContent === 'function') {
+                    loadDiscoverContent(1);
+                }
+            }
+
             // Smart PiP Management for Internal Navigation
             if (viewName !== 'film') {
                 const filmVideo = document.getElementById('film-video-player');
-                const legacyVideo = document.getElementById('video-player');
+                 
                 if (filmVideo && !filmVideo.paused) window.attemptSmartPiP(filmVideo);
                 else if (legacyVideo && !legacyVideo.paused) window.attemptSmartPiP(legacyVideo);
             } else {
@@ -992,9 +1010,13 @@
             if (!window.currentUserUid) return;
             try {
                 const res = await fetch(`/playlists?uid=${window.currentUserUid}`);
-                myPlaylists = await res.json();
+                const data = await res.json();
+                myPlaylists = Array.isArray(data) ? data : [];
                 renderLibraryPlaylists();
-            } catch (e) { }
+            } catch (e) {
+                myPlaylists = [];
+                console.warn('Could not load playlists:', e);
+            }
         };
 
         window.toggleFavorite = async (e, songStr) => {
@@ -4820,68 +4842,8 @@ let aiChatHistory = [];
 
 /* ---- extracted from index.html L7119 ---- */
 
-// Supabase Setup
-        const SUPABASE_URL = 'https://kdvhawbcduqdidkysvcq.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtkdmhhd2JjZHVxZGlka3lzdmNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwOTkyMDMsImV4cCI6MjA5MDY3NTIwM30.LdL-5L_z3Phs6rDtmCkPtIJMw1tp9U2ny0rsUm412cw';
+// Supabase Setup - MOCK (To prevent JS crashes while migrating to MongoDB)
         window.supabaseClient = null;
-        let selectedVideoDeviceId = localStorage.getItem('kiet-camera-id') || null;
-        let cameraDevices = [];
-
-        async function refreshCameraDevices() {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                cameraDevices = devices.filter(d => d.kind === 'videoinput');
-                
-                // Auto-detect if selected camera was unplugged
-                if (selectedVideoDeviceId && !cameraDevices.find(d => d.deviceId === selectedVideoDeviceId)) {
-                    console.log("Selected camera unplugged, falling back...");
-                    selectedVideoDeviceId = cameraDevices.length > 0 ? cameraDevices[0].deviceId : null;
-                    if (selectedVideoDeviceId) handleCameraChange(selectedVideoDeviceId);
-                }
-
-                syncAllCameraSelectors();
-            } catch (e) { console.error("Enumerate Error", e); }
-        }
-        
-        // Auto-detect new cameras
-        if (navigator.mediaDevices) {
-            navigator.mediaDevices.ondevicechange = refreshCameraDevices;
-        }
-
-        function syncAllCameraSelectors() {
-            const selectors = document.querySelectorAll('.camera-select-dropdown');
-            selectors.forEach(select => {
-                const currentVal = select.value || selectedVideoDeviceId;
-                select.innerHTML = cameraDevices.map(d => `<option value="${d.deviceId}" ${d.deviceId === currentVal ? 'selected' : ''}>${d.label || 'Camera ' + (cameraDevices.indexOf(d)+1)}</option>`).join('');
-                if (cameraDevices.length > 0 && !selectedVideoDeviceId) {
-                    // Default to first if none saved
-                    // selectedVideoDeviceId = cameraDevices[0].deviceId;
-                }
-            });
-        }
-
-        async function handleCameraChange(deviceId) {
-            selectedVideoDeviceId = deviceId;
-            localStorage.setItem('kiet-camera-id', deviceId);
-            syncAllCameraSelectors();
-            
-            // Hot-switch if active
-            if (activeView === 'home') initCamera();
-            if (activeView === 'photobooth') initPhotoboothCamera();
-            // Watch Party hot-switch
-            if (activeView === 'film' && partyId) {
-                // Re-init with same ID to refresh stream
-                initPartyChannel(partyId);
-            }
-        }
-
-        try {
-            if (window.supabase) {
-                window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            }
-        } catch (e) {
-            console.error("Supabase init failed", e);
-        }
 
         // --- SUPABASE AUTHENTICATION LOGIC ---
         let isLoginMode = true;
@@ -5064,8 +5026,6 @@ let aiChatHistory = [];
             } catch (e) {
                 console.warn("Profile load error:", e);
             }
-        };
-            window.currentUserAvatarUrl = avatar;
         };
 
         window.saveUserProfile = async (event) => {
@@ -5659,19 +5619,6 @@ let aiChatHistory = [];
 
         // INIT HOME
         document.addEventListener('DOMContentLoaded', () => {
-            const origShowView = window.showView;
-            window.showView = (viewName) => {
-                if (origShowView) origShowView(viewName);
-                if (viewName === 'home') {
-                    fetchHomePosts(); // Initial fetch
-                    fetchHomeStories();
-                    renderBuddySystem();
-                }
-                if (viewName === 'guide') {
-                    if (typeof hydrateProfileView !== 'undefined') hydrateProfileView();
-                }
-            };
-
             // Setup Real-time listener if client exists
             if (window.supabaseClient) {
                 setupRealtimeNewsfeed();

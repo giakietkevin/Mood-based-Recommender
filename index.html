@@ -1185,44 +1185,6 @@
             </div>
         </div>
             </div>
-
-            <div class="lg:col-span-6 space-y-4">
-                <div class="glass-card rounded-[2rem] p-4 sm:p-6 min-h-[400px] lg:h-[85vh] flex flex-col relative">
-                    <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
-                        <h3 class="font-bold text-white flex items-center gap-2 text-xl">
-                            <span class="material-icons-round text-blue-400">queue_music</span> Playlists
-                        </h3>
-                        <button
-                            onclick="document.getElementById('playlist-modal').classList.remove('opacity-0', 'pointer-events-none')"
-                            class="p-2 bg-primary/20 text-primary hover:bg-primary hover:text-[#0a0a0a] rounded-full transition-all flex items-center justify-center">
-                            <span class="material-icons-round text-sm">add</span>
-                        </button>
-                    </div>
-                    <div id="library-playlists-list" class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                        <div class="flex flex-col items-center justify-center h-40 opacity-50">
-                            <span class="material-icons-round text-4xl mb-2">library_music</span>
-                            <p class="text-xs">Chưa có playlist nào.</p>
-                        </div>
-                    </div>
-                    <!-- Playlist details overlay -->
-                    <div id="playlist-details-overlay"
-                        class="absolute inset-0 z-10 bg-bg-dark rounded-[2rem] p-4 sm:p-6 flex flex-col transition-transform transform translate-x-full duration-300">
-                        <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
-                            <button
-                                onclick="document.getElementById('playlist-details-overlay').classList.add('translate-x-full')"
-                                class="p-2 text-slate-400 hover:text-white rounded-full flex items-center justify-center">
-                                <span class="material-icons-round">arrow_back</span>
-                            </button>
-                            <h3 id="playlist-details-title" class="font-bold text-white text-lg truncate flex-1 ml-2">
-                                Playlist Name</h3>
-                        </div>
-                        <div id="playlist-details-list" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- FILM STATION VIEW -->
         <div id="view-film" class="hidden animate-fade-in space-y-6">
             <!-- VIP ACCESS MODAL -->
