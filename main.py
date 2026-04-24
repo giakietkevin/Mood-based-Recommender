@@ -85,6 +85,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Import Auth Router
+from routers.auth_router import router as auth_router
+from routers.favorites_router import router as favorites_router
+from auth import MongoDBConnection
+
+# Include Auth Router
+app.include_router(auth_router)
+app.include_router(favorites_router)
+
+# Startup & Shutdown Events
+@app.on_event("startup")
+async def startup_event():
+    """Kết nối MongoDB khi app khởi động"""
+    await MongoDBConnection.connect_db()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Đóng kết nối MongoDB khi app tắt"""
+    await MongoDBConnection.close_db()
+
 # --- 2. THIẾT LẬP THƯ MỤC ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 os.makedirs(os.path.join(BASE_DIR, "generated_music"), exist_ok=True)

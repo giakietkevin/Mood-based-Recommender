@@ -22,3 +22,8 @@ pedalboard
 scipy
 tqdm
 supabase
+# Database Auth
+motor
+pydantic[email]
+passlib[bcrypt]
+python-jose[cryptography]

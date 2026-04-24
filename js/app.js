@@ -954,15 +954,17 @@
         window.loadFavorites = async () => {
             let tempFavs = [];
             // Load backend favorites if logged in
-            if (window.currentUserUid) {
+            if (window.currentUserUid && window.MongoAuth.getToken()) {
                 try {
-                    const res = await fetch(`/favorites?uid=${window.currentUserUid}`);
+                    const res = await window.MongoAuth.authenticatedFetch('/favorites/music');
                     const dbFavs = await res.json();
                     tempFavs = [...dbFavs];
-                } catch (e) { }
+                } catch (e) {
+                    console.warn('Failed to load favorites from MongoDB:', e);
+                }
             }
-            
-            // Load local favorites from Tinder Music feature
+
+            // Load local favorites from Tinder Music feature (fallback for guests)
             try {
                 const localFavs = JSON.parse(localStorage.getItem('kiet_music_favorites') || '[]');
                 const mappedLocal = localFavs.map(f => ({
@@ -980,7 +982,7 @@
                     if (!exists) tempFavs.push(local);
                 });
             } catch(e) {}
-            
+
             myFavorites = tempFavs;
             renderLibraryFavorites();
             if(typeof updateAllFavIcons === 'function') updateAllFavIcons();
@@ -1032,7 +1034,6 @@
             }
             try {
                 const formData = new FormData();
-                formData.append('uid', window.currentUserUid);
                 formData.append('song', decodeURIComponent(songStr));
 
                 // Optimistic Update UI
@@ -1046,8 +1047,15 @@
                 renderLibraryFavorites();
                 updateAllFavIcons();
 
-                await fetch('/favorites/toggle', { method: 'POST', body: formData });
-            } catch (e) { }
+                await window.MongoAuth.authenticatedFetch('/favorites/music/toggle', {
+                    method: 'POST',
+                    body: formData
+                });
+            } catch (e) {
+                console.warn('Failed to toggle favorite in MongoDB:', e);
+                // Nếu lỗi, load lại từ server để sync UI
+                loadFavorites();
+            }
         };
 
         window.updateAllFavIcons = () => {
@@ -3704,7 +3712,7 @@
         window.handleLogout = async () => {
             try {
                 window.currentUserUid = null;
-                if (window.supabaseClient) await window.supabaseClient.auth.signOut();
+                await window.MongoAuth.logout();
 
                 document.getElementById('user-display').textContent = "Guest";
                 document.getElementById('login-btn').classList.remove('hidden');
@@ -4920,10 +4928,6 @@ let aiChatHistory = [];
         };
 
         window.handleAuthAction = async () => {
-            if (!window.supabaseClient) {
-                return showAuthError("Mã API KEY không hợp lệ. Hãy kiểm tra lại SUPABASE_ANON_KEY.");
-            }
-
             const emailEl = document.getElementById('auth-email');
             const passEl = document.getElementById('auth-password');
             const nameEl = document.getElementById('auth-fullname');
@@ -4942,36 +4946,20 @@ let aiChatHistory = [];
 
             try {
                 if (isLoginMode) {
-                    const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
-                    if (error) throw error;
+                    // LOGIN - Gọi MongoDB API
+                    const data = await window.MongoAuth.login(email, password);
                     handleLoginSuccess(data.user);
                 } else {
+                    // REGISTER - Gọi MongoDB API
                     if (!fullName) throw new Error("Vui lòng điền Họ và Tên của bạn!");
-                    // Register
-                    const { data, error } = await window.supabaseClient.auth.signUp({
-                        email, password,
-                        options: { data: { full_name: fullName } }
-                    });
-                    if (error) throw error;
-
-                    // Automatically create profile on DB
-                    if (data.user) {
-                        const { error: profileErr } = await window.supabaseClient.from('profiles').insert([{
-                            id: data.user.id,
-                            username: email.split('@')[0] + Math.floor(Math.random() * 1000), // unique username
-                            full_name: fullName,
-                            email: email,
-                            avatar_url: avatarFromEmail(email)
-                        }]);
-                        if (profileErr) console.warn("Profile creation warn:", profileErr);
-                        handleLoginSuccess(data.user);
-                    } else {
-                        showAuthError("Đăng ký thành công! Hãy kiểm tra hòm thư Email để xác nhận.");
-                    }
+                    await window.MongoAuth.register(email, password, fullName);
+                    // Tự động đăng nhập sau khi đăng ký
+                    const data = await window.MongoAuth.login(email, password);
+                    handleLoginSuccess(data.user);
                 }
             } catch (err) {
                 let msg = err.message;
-                if (msg.includes('Invalid login credentials')) msg = "Tài khoản hoặc Mật khẩu không đúng.";
+                if (msg.includes('Invalid email or password')) msg = "Tài khoản hoặc Mật khẩu không đúng.";
                 if (msg.includes('already registered')) msg = "Email này đã được đăng ký, vui lòng Đăng nhập.";
                 showAuthError(msg);
             } finally {
@@ -4992,27 +4980,14 @@ let aiChatHistory = [];
             window.currentUserUid = user.id;
             hideAuthModal();
 
-            const dispName = user.user_metadata?.full_name || user.email.split('@')[0];
+            // Lấy thông tin từ MongoDB User Object
+            const dispName = user.full_name || user.email.split('@')[0];
             const avatar = avatarFromEmail(user.email || user.id);
 
             // Sync UI Display globals
             document.querySelectorAll('#user-display').forEach(el => el.innerText = dispName);
             document.querySelectorAll('#user-avatar, #home-create-avatar').forEach(img => img.src = avatar);
             window.currentUserAvatarUrl = avatar;
-
-            // Sync email to profiles table for searchability (UPSERT - create if missing)
-            if (window.supabaseClient) {
-                // Do not force avatar_url here: default avatar is derived from email.
-                window.supabaseClient.from('profiles').upsert({
-                    id: user.id,
-                    email: user.email,
-                    full_name: dispName,
-                    username: user.email.split('@')[0] + Math.floor(Math.random() * 100)
-                }, { onConflict: 'id' }).then(res => {
-                    if (res.error) console.warn('Profile sync error:', res.error);
-                    else console.log('Profile synced OK for:', user.email);
-                });
-            }
 
             // Update Auth Button State
             const loginBtn = document.getElementById('login-btn');
@@ -5044,62 +5019,52 @@ let aiChatHistory = [];
         // --- PROFILE VIEW LOGIC ---
         window.loadUserProfile = async () => {
             const uid = window.currentUserUid;
-            if (!uid || !window.supabaseClient) return;
-
-            const { data: { user } } = await window.supabaseClient.auth.getUser();
-            if (!user) return;
-
-            let name = user.user_metadata?.full_name || user.email.split('@')[0];
-            let email = user.email;
-            let avatar = avatarFromEmail(email || user.id);
-            let dob = "";
+            if (!uid) return;
 
             try {
-                const { data: profile } = await window.supabaseClient.from('profiles').select('*').eq('id', uid).single();
-                if (profile) {
-                    name = profile.full_name || name;
-                    if (profile.avatar_url && profile.avatar_url !== "") avatar = profile.avatar_url;
-                }
-                // SYNC: Ensure email is in profiles for search
-                if (email) {
-                    await window.supabaseClient.from('profiles').update({ email: email }).eq('id', uid);
-                }
+                const profile = await window.MongoAuth.getProfile();
+
+                let name = profile.full_name || profile.email.split('@')[0];
+                let email = profile.email;
+                let avatar = avatarFromEmail(email || uid);
+                let dob = "";
+
+                // Check localStorage for offline data/overrides
+                const savedData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
+                if (savedData.dob) dob = savedData.dob;
+                if (savedData.avatar) avatar = savedData.avatar;
+
+                // Profile Card elements
+                const nameEl = document.getElementById('profile-view-name');
+                const emailEl = document.getElementById('profile-view-email');
+                const avatarEl = document.getElementById('profile-view-avatar');
+
+                // Setting Inputs
+                const inName = document.getElementById('profile-input-name');
+                const inEmail = document.getElementById('profile-input-email');
+                const inDob = document.getElementById('profile-input-dob');
+
+                if (nameEl) nameEl.textContent = name;
+                if (emailEl) emailEl.textContent = email;
+                if (avatarEl) avatarEl.src = avatar;
+
+                if (inName) inName.value = name;
+                if (inEmail) inEmail.value = email;
+                if (inDob) inDob.value = dob;
+
+                // Global UI Sync
+                const userEmailDisp = document.getElementById('user-email-display');
+                if (userEmailDisp) userEmailDisp.textContent = email;
+
+                const userTopName = document.getElementById('user-display');
+                if (userTopName) userTopName.textContent = name;
+
+                const userTopAvatar = document.querySelectorAll('#user-avatar, #home-create-avatar');
+                userTopAvatar.forEach(img => img.src = avatar);
             } catch (e) {
-                console.warn("Profile sync error:", e);
+                console.warn("Profile load error:", e);
             }
-
-            // Check localStorage for offline data/overrides
-            const savedData = JSON.parse(localStorage.getItem(`profile_${uid}`)) || {};
-            if (savedData.dob) dob = savedData.dob;
-            if (savedData.avatar) avatar = savedData.avatar;
-
-            // Profile Card elements
-            const nameEl = document.getElementById('profile-view-name');
-            const emailEl = document.getElementById('profile-view-email');
-            const avatarEl = document.getElementById('profile-view-avatar');
-
-            // Setting Inputs
-            const inName = document.getElementById('profile-input-name');
-            const inEmail = document.getElementById('profile-input-email');
-            const inDob = document.getElementById('profile-input-dob');
-
-            if (nameEl) nameEl.textContent = name;
-            if (emailEl) emailEl.textContent = email;
-            if (avatarEl) avatarEl.src = avatar;
-
-            if (inName) inName.value = name;
-            if (inEmail) inEmail.value = email;
-            if (inDob) inDob.value = dob;
-
-            // Global UI Sync
-            const userEmailDisp = document.getElementById('user-email-display');
-            if (userEmailDisp) userEmailDisp.textContent = email;
-
-            const userTopName = document.getElementById('user-display');
-            if (userTopName) userTopName.textContent = name;
-
-            const userTopAvatar = document.querySelectorAll('#user-avatar, #home-create-avatar');
-            userTopAvatar.forEach(img => img.src = avatar);
+        };
             window.currentUserAvatarUrl = avatar;
         };
 
@@ -5161,15 +5126,16 @@ let aiChatHistory = [];
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
-            if (window.supabaseClient) {
-                const { data: { session } } = await window.supabaseClient.auth.getSession();
-                if (session && session.user) {
-                    handleLoginSuccess(session.user);
-                } else {
+            if (window.MongoAuth && window.MongoAuth.getAuthToken()) {
+                try {
+                    const profile = await window.MongoAuth.getProfile();
+                    handleLoginSuccess(profile);
+                } catch (e) {
+                    console.warn("Session restore failed", e);
                     setTimeout(showAuthModal, 1000);
                 }
             } else {
-                setTimeout(showAuthModal, 1000); // Wait for boot
+                setTimeout(showAuthModal, 1000);
             }
         });
 

@@ -15,7 +15,10 @@
       "Bash(git reset:*)",
       "Bash(git clean:*)",
       "Bash(git push:*)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(pip install *)",
+      "Bash(taskkill /F /IM python.exe /T)",
+      "Bash(taskkill //F //IM python.exe //T)"
     ]
   }
 }
