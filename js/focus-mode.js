@@ -54,12 +54,28 @@ window.initFocusCamera = async () => {
             await window.refreshCameraDevices();
         }
 
-        // Wait for video to load
-        video.onloadedmetadata = () => {
-            video.play().catch(e => console.error("Play error:", e));
+        // Wait for video to load and play
+        await new Promise((resolve) => {
+            if (video.videoWidth > 0) {
+                resolve();
+            } else {
+                video.onloadedmetadata = resolve;
+                setTimeout(resolve, 2000); // Fallback after 2s
+            }
+        });
+
+        // Play video
+        try {
+            await video.play();
             document.getElementById('focus-webcam-overlay').classList.add('hidden');
             console.log("Focus camera started successfully");
-        };
+        } catch (e) {
+            console.error("Video play error:", e);
+            // Try to hide overlay anyway if stream is active
+            if (video.srcObject && video.srcObject.active) {
+                document.getElementById('focus-webcam-overlay').classList.add('hidden');
+            }
+        }
 
     } catch (e) {
         console.error("Lỗi truy cập camera (Focus Mode):", e);
@@ -68,17 +84,15 @@ window.initFocusCamera = async () => {
 };
 
 window.stopFocusCamera = () => {
-    if (typeof window.stopAllCameras === 'function') {
-        window.stopAllCameras();
-    } else {
-        const video = document.getElementById('focus-video');
-        if (video && video.srcObject) {
-            video.srcObject.getTracks().forEach(track => track.stop());
-            video.srcObject = null;
-        }
+    const video = document.getElementById('focus-video');
+    if (video && video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
     }
 
-    document.getElementById('focus-webcam-overlay').classList.remove('hidden');
+    const overlay = document.getElementById('focus-webcam-overlay');
+    if (overlay) overlay.classList.remove('hidden');
+
     if (focusCameraInterval) {
         clearInterval(focusCameraInterval);
         focusCameraInterval = null;
@@ -89,11 +103,8 @@ window.startFocusTimer = () => {
     document.getElementById('btn-focus-start').classList.add('hidden');
     document.getElementById('btn-focus-pause').classList.remove('hidden');
 
-    // Auto play Lofi if nothing playing
-    const playerState = window.youtubePlayer ? window.youtubePlayer.getPlayerState() : -1;
-    if (playerState !== 1) { // Not playing
-        searchAndPlayLofi();
-    }
+    // Auto play Lofi - always search and play
+    searchAndPlayLofi();
 
     // Start emotion monitoring if not started
     if (!focusCameraInterval) {
@@ -202,23 +213,41 @@ function updateFocusStats() {
 }
 
 async function searchAndPlayLofi() {
+    console.log('[Focus] Searching for lo-fi music...');
     try {
-        const res = await fetch(`http://127.0.0.1:7860/api/search?q=lofi+hip+hop+radio+beats+to+relax+study+to`);
+        const res = await fetch(`http://127.0.0.1:7860/search?q=lofi+hip+hop+radio+beats+to+relax+study+to`);
+        console.log('[Focus] Search response status:', res.status);
         if (!res.ok) throw new Error('Search failed');
         const data = await res.json();
+        console.log('[Focus] Search results:', data);
 
         if (data && data.length > 0) {
             const track = data[0];
-            playTrack(track.id, track.title, track.thumbnail);
+            console.log('[Focus] Playing track:', track);
+
+            // Call playTrack with correct signature: (data, mode)
+            if (typeof window.playTrack === 'function') {
+                console.log('[Focus] Calling window.playTrack...');
+                window.playTrack({
+                    title: track.title,
+                    artist: 'Lo-fi',
+                    thumbnail: track.thumbnail,
+                    link: track.id
+                }, 'youtube');
+            } else {
+                console.error('[Focus] window.playTrack is not a function!');
+            }
 
             document.getElementById('focus-now-playing').innerHTML = `
                 <img src="${track.thumbnail}" class="w-16 h-16 rounded-xl mx-auto mb-3 object-cover shadow-lg border border-white/10">
                 <p class="text-sm font-bold text-white line-clamp-1">${track.title}</p>
                 <p class="text-xs text-slate-400">Playing Lo-fi</p>
             `;
+        } else {
+            console.warn('[Focus] No search results found');
         }
     } catch (e) {
-        console.error("Lỗi auto play Lofi:", e);
+        console.error("[Focus] Lỗi auto play Lofi:", e);
     }
 }
 
@@ -233,10 +262,10 @@ async function analyzeFocusEmotion() {
 
     canvas.toBlob(async (blob) => {
         const formData = new FormData();
-        formData.append('image', blob, 'capture.jpg');
+        formData.append('file', blob, 'capture.jpg');
 
         try {
-            const res = await fetch('http://127.0.0.1:7860/api/detect_emotion', {
+            const res = await fetch('http://127.0.0.1:7860/api/emotion', {
                 method: 'POST',
                 body: formData
             });
@@ -297,13 +326,20 @@ function handleStressDetection(emotion) {
 
 async function playCalmingMusic() {
     try {
-        const res = await fetch(`http://127.0.0.1:7860/api/search?q=deep+focus+ambient+calming+music+stress+relief`);
+        const res = await fetch(`http://127.0.0.1:7860/search?q=deep+focus+ambient+calming+music+stress+relief`);
         if (!res.ok) throw new Error('Search failed');
         const data = await res.json();
 
         if (data && data.length > 0) {
             const track = data[0];
-            playTrack(track.id, track.title, track.thumbnail);
+            if (typeof window.playTrack === 'function') {
+                window.playTrack({
+                    title: track.title,
+                    artist: 'Calming Music',
+                    thumbnail: track.thumbnail,
+                    link: track.id
+                }, 'youtube');
+            }
 
             document.getElementById('focus-now-playing').innerHTML = `
                 <div class="relative inline-block mb-3">

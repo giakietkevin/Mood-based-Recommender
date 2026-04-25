@@ -30,7 +30,7 @@
         let genState = { style: 'Pop', mood: 'Joy', voice: 'Female', tempo: 'Medium' };
         let currentMode = 'local'; // 'local' | 'youtube'
         let currentType = 'music'; // 'music' | 'podcast'
-        let ytPlayer;
+        window.window.ytPlayer = null;
         let isYtReady = false;
         let localAudio = document.getElementById('local-audio');
         let searchEnterBound = false;
@@ -611,7 +611,7 @@
         // 5. PLAYER LOGIC (Unified Local + Youtube)
         // ==========================================
         window.currentTrackData = null;
-        function playTrack(data, mode) {
+        window.playTrack = function(data, mode) {
             window.currentTrackData = data;
             if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
                 activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'change_track', payload: { data, mode } }));
@@ -630,7 +630,7 @@
 
             if (mode === 'local') {
                 // STOP Youtube
-                if (isYtReady && ytPlayer.stopVideo) ytPlayer.stopVideo();
+                if (isYtReady && window.ytPlayer.stopVideo) window.ytPlayer.stopVideo();
 
                 // Setup UI
                 pTitle.innerText = data.title;
@@ -663,15 +663,15 @@
                     let attempts = 0;
                     const waitInterval = setInterval(() => {
                         attempts++;
-                        if (isYtReady && ytPlayer) {
+                        if (isYtReady && window.ytPlayer) {
                             clearInterval(waitInterval);
                             let videoId = data.link;
                             if (data.link && data.link.includes('youtube.com')) {
                                 videoId = extractVideoId(data.link);
                             }
                             if (videoId && videoId.length === 11) {
-                                ytPlayer.loadVideoById(videoId);
-                                ytPlayer.playVideo();
+                                window.ytPlayer.loadVideoById(videoId);
+                                window.ytPlayer.playVideo();
                                 playIcon.innerText = "pause";
                             }
                         } else if (attempts > 10) {
@@ -693,8 +693,8 @@
                     }
 
                     if (videoId && videoId.length === 11) {
-                        ytPlayer.loadVideoById(videoId);
-                        ytPlayer.playVideo();
+                        window.ytPlayer.loadVideoById(videoId);
+                        window.ytPlayer.playVideo();
                         playIcon.innerText = "pause";
                     } else {
                         // Fallback: search for the song if video ID is invalid
@@ -711,8 +711,8 @@
                                             const firstRes = d.recommendations[0];
                                             const newVidId = extractVideoId(firstRes.link);
                                             if (newVidId && newVidId.length === 11) {
-                                                ytPlayer.loadVideoById(newVidId);
-                                                ytPlayer.playVideo();
+                                                window.ytPlayer.loadVideoById(newVidId);
+                                                window.ytPlayer.playVideo();
                                                 playIcon.innerText = "pause";
                                                 
                                                 // Update UI to match real found video
@@ -838,12 +838,12 @@
                 }
             } else {
                 if (isYtReady) {
-                    const state = ytPlayer.getPlayerState();
+                    const state = window.ytPlayer.getPlayerState();
                     if (state === 1) { // Playing
-                        ytPlayer.pauseVideo();
+                        window.ytPlayer.pauseVideo();
                         playIcon.innerText = "play_arrow";
                     } else {
-                        ytPlayer.playVideo();
+                        window.ytPlayer.playVideo();
                         playIcon.innerText = "pause";
                     }
                 }
@@ -864,7 +864,7 @@
 
         function setVolume(val) {
             localAudio.volume = val / 100;
-            if (isYtReady) ytPlayer.setVolume(val);
+            if (isYtReady) window.ytPlayer.setVolume(val);
         }
 
         // Youtube Helpers
@@ -901,7 +901,7 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         function onYouTubeIframeAPIReady() {
-            ytPlayer = new YT.Player('yt-player', {
+            window.ytPlayer = new YT.Player('yt-player', {
                 height: '100%', width: '100%',
                 playerVars: { 'autoplay': 0, 'controls': 1, 'rel': 0, 'showinfo': 0 },
                 events: {
@@ -921,13 +921,13 @@
                             if (event.data === YT.PlayerState.PLAYING) {
                                 playIcon.innerText = "pause";
                                 if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
-                                    activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'sync_play', payload: { time: ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0 } }));
+                                    activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'sync_play', payload: { time: window.ytPlayer.getCurrentTime ? window.ytPlayer.getCurrentTime() : 0 } }));
                                 }
                             }
                             else {
                                 playIcon.innerText = "play_arrow";
                                 if (event.data === YT.PlayerState.PAUSED && typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
-                                    activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'sync_pause', payload: { time: ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0 }}));
+                                    activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'sync_pause', payload: { time: window.ytPlayer.getCurrentTime ? window.ytPlayer.getCurrentTime() : 0 }}));
                                 }
                             }
                             if (event.data === YT.PlayerState.ENDED) {
@@ -7175,7 +7175,7 @@ let aiChatHistory = [];
             currentTrackId = nextTrack.id;
 
             if (typeof playTrack === 'function') {
-                playTrack({ title: nextTrack.title, link: nextTrack.link, thumbnail: nextTrack.thumbnail }, 'youtube');
+                window.playTrack({ title: nextTrack.title, link: nextTrack.link, thumbnail: nextTrack.thumbnail }, 'youtube');
             }
 
             renderPartyQueue();
@@ -7521,9 +7521,9 @@ let aiChatHistory = [];
                             const media = (video && !video.paused) ? video : ((audio && !audio.paused) ? audio : (video || audio));
 
                             let yTime = 0, yPaused = true;
-                            if (typeof isYtReady !== 'undefined' && isYtReady && typeof ytPlayer !== 'undefined' && typeof currentMode !== 'undefined' && currentMode === 'youtube') {
-                                yTime = (typeof ytPlayer.getCurrentTime === 'function') ? ytPlayer.getCurrentTime() : 0;
-                                yPaused = (typeof ytPlayer.getPlayerState === 'function') ? (ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) : true;
+                            if (typeof isYtReady !== 'undefined' && isYtReady && typeof window.ytPlayer !== 'undefined' && typeof currentMode !== 'undefined' && currentMode === 'youtube') {
+                                yTime = (typeof window.ytPlayer.getCurrentTime === 'function') ? window.ytPlayer.getCurrentTime() : 0;
+                                yPaused = (typeof window.ytPlayer.getPlayerState === 'function') ? (window.ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) : true;
                             }
 
                             activePartyChannel.send(JSON.stringify({
@@ -7719,15 +7719,15 @@ let aiChatHistory = [];
                 }, 500);
             });
 
-            if (typeof currentMode !== 'undefined' && currentMode === 'youtube' && typeof isYtReady !== 'undefined' && isYtReady && typeof ytPlayer !== 'undefined' && ytPlayer.playVideo) {
+            if (typeof currentMode !== 'undefined' && currentMode === 'youtube' && typeof isYtReady !== 'undefined' && isYtReady && typeof window.ytPlayer !== 'undefined' && window.ytPlayer.playVideo) {
                 if (action === 'play') {
-                    if (data && ytPlayer.getCurrentTime && Math.abs(ytPlayer.getCurrentTime() - data.time) > 1.5) ytPlayer.seekTo(data.time, true);
-                    ytPlayer.playVideo();
+                    if (data && window.ytPlayer.getCurrentTime && Math.abs(window.ytPlayer.getCurrentTime() - data.time) > 1.5) window.ytPlayer.seekTo(data.time, true);
+                    window.ytPlayer.playVideo();
                 } else if (action === 'pause') {
-                    ytPlayer.pauseVideo();
-                    if (data && ytPlayer.seekTo) ytPlayer.seekTo(data.time, true);
+                    window.ytPlayer.pauseVideo();
+                    if (data && window.ytPlayer.seekTo) window.ytPlayer.seekTo(data.time, true);
                 } else if (action === 'seek') {
-                    if (data && ytPlayer.seekTo) ytPlayer.seekTo(data.time, true);
+                    if (data && window.ytPlayer.seekTo) window.ytPlayer.seekTo(data.time, true);
                 }
             }
         }
@@ -8148,10 +8148,17 @@ window.startDJRadio = async () => {
         fd.append('emotion', emotion);
         fd.append('dj_voice', voice);
 
-        const res = await fetch('/api/dj-radio', { method: 'POST', body: fd });
-        const data = await res.json();
+        introText.innerText = "Dang goi DJ API...";
+        const res = await fetch('http://127.0.0.1:7860/api/dj-radio', { method: 'POST', body: fd });
 
-        if (data.status === 'success') {
+        if (!res.ok) {
+            throw new Error(`API error: ${res.status} ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        console.log('[DJ Radio] API Response:', data);
+
+        if (data.status === 'success' && data.playlist && data.dj_intro_url) {
             djQueue = data.playlist;
             djCurrentIndex = 0;
             renderDJQueue();
@@ -8175,16 +8182,28 @@ window.startDJRadio = async () => {
                 }
             };
 
-            audio.play();
+            audio.onerror = (e) => {
+                console.error('[DJ Radio] Audio error:', e);
+                introText.innerText = 'Loi phat intro audio';
+                stopDJRadio();
+            };
+
+            audio.play().catch(e => {
+                console.error('[DJ Radio] Play error:', e);
+                introText.innerText = 'Loi phat intro: ' + e.message;
+                stopDJRadio();
+            });
+
             btn.innerHTML = '<span class="material-icons-round text-red-500">stop</span> Dung Radio';
             btn.onclick = stopDJRadio;
             btn.classList.remove('btn-primary');
             btn.classList.add('bg-white/10');
 
         } else {
-            throw new Error(data.message);
+            throw new Error(data.message || 'Invalid API response: ' + JSON.stringify(data));
         }
     } catch (e) {
+        console.error('[DJ Radio] Error:', e);
         introText.innerText = 'Loi: ' + e.message;
         stopDJRadio();
     }
@@ -8318,7 +8337,7 @@ function startDJEmotionLoop() {
                     const introText = document.getElementById('dj-intro-text');
                     audio.src = d2.dj_intro_url;
 
-                    if (isYtReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+                    if (isYtReady && window.ytPlayer.pauseVideo) window.ytPlayer.pauseVideo();
 
                     introText.innerText = "Cam xuc thay doi! DJ dang noi...";
                     document.getElementById('dj-speaking-indicator').classList.remove('hidden');
