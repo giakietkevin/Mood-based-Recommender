@@ -19,7 +19,7 @@ except ImportError:
     print("WARNING: pyrubberband not available, using librosa fallback for pitch/tempo")
 
 from pedalboard import Pedalboard, Reverb, Compressor, Gain, Chorus, HighpassFilter
-from fastapi import FastAPI, UploadFile, File, Query, Form
+from fastapi import FastAPI, UploadFile, File, Query, Form, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -1797,6 +1797,119 @@ async def dj_radio(
         return {"status": "error", "message": str(e)}
 
 
+
+
+
+
+
+
+# ==========================================
+# WATCH PARTY WEBSOCKET SIGNALING SERVER
+# ==========================================
+
+class PartyConnectionManager:
+    """
+    Manages WebSocket connections per party room for Watch Party signaling.
+    room_id -> { uid: WebSocket }
+    """
+    def __init__(self):
+        self.rooms: Dict[str, Dict[str, WebSocket]] = {}
+
+    async def connect(self, websocket: WebSocket, room_id: str, uid: str):
+        await websocket.accept()
+        if room_id not in self.rooms:
+            self.rooms[room_id] = {}
+        self.rooms[room_id][uid] = websocket
+
+    def disconnect(self, room_id: str, uid: str):
+        if room_id in self.rooms:
+            self.rooms[room_id].pop(uid, None)
+            if not self.rooms[room_id]:
+                del self.rooms[room_id]
+
+    def get_members(self, room_id: str, exclude_uid: str = None) -> List[str]:
+        if room_id not in self.rooms:
+            return []
+        return [uid for uid in self.rooms[room_id] if uid != exclude_uid]
+
+    async def send_to(self, room_id: str, uid: str, message: dict):
+        if room_id in self.rooms and uid in self.rooms[room_id]:
+            try:
+                await self.rooms[room_id][uid].send_json(message)
+            except Exception:
+                pass
+
+    async def broadcast(self, room_id: str, message: dict, exclude_uid: str = None):
+        if room_id not in self.rooms:
+            return
+        dead = []
+        for uid, ws in self.rooms[room_id].items():
+            if uid == exclude_uid:
+                continue
+            try:
+                await ws.send_json(message)
+            except Exception:
+                dead.append(uid)
+        for uid in dead:
+            self.rooms[room_id].pop(uid, None)
+
+
+party_manager = PartyConnectionManager()
+
+
+@app.websocket("/ws/party/{room_id}/{uid}")
+async def party_websocket(websocket: WebSocket, room_id: str, uid: str):
+    """
+    WebSocket endpoint for Watch Party real-time signaling.
+    Handles: WebRTC signaling, presence, media sync events.
+    """
+    await party_manager.connect(websocket, room_id, uid)
+
+    # Tell the new user who is already in the room
+    existing = party_manager.get_members(room_id, exclude_uid=uid)
+    await websocket.send_json({
+        "type": "presence_state",
+        "members": existing
+    })
+
+    # Notify everyone else that this user joined
+    await party_manager.broadcast(room_id, {
+        "type": "presence_join",
+        "uid": uid
+    }, exclude_uid=uid)
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+            msg_type = data.get("type")
+
+            if msg_type == "broadcast":
+                event = data.get("event")
+                payload = data.get("payload", {})
+                target = payload.get("target") if isinstance(payload, dict) else None
+
+                if target:
+                    # Targeted signal (e.g. WebRTC SDP/ICE to a specific peer)
+                    await party_manager.send_to(room_id, target, {
+                        "type": "broadcast",
+                        "event": event,
+                        "payload": payload
+                    })
+                else:
+                    # Broadcast to the whole room
+                    await party_manager.broadcast(room_id, {
+                        "type": "broadcast",
+                        "event": event,
+                        "payload": payload
+                    }, exclude_uid=uid)
+
+    except WebSocketDisconnect:
+        party_manager.disconnect(room_id, uid)
+        # Notify room that this user left
+        await party_manager.broadcast(room_id, {
+            "type": "presence_leave",
+            "uid": uid
+        })
 
 
 if __name__ == "__main__":

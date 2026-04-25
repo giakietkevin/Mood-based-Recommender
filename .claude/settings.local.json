@@ -20,7 +20,8 @@
       "Bash(taskkill /F /IM python.exe /T)",
       "Bash(taskkill //F //IM python.exe //T)",
       "Bash(python3 *)",
-      "Bash(npm start *)"
+      "Bash(npm start *)",
+      "Bash(pkill -f \"python main.py\")"
     ]
   }
 }

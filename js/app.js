@@ -568,8 +568,8 @@
         window.currentTrackData = null;
         function playTrack(data, mode) {
             window.currentTrackData = data;
-            if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel) {
-                activePartyChannel.send({ type: 'broadcast', event: 'change_track', payload: { data, mode } });
+            if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
+                activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'change_track', payload: { data, mode } }));
             }
             const playerBar = document.getElementById('player-bar');
             const pTitle = document.getElementById('player-title');
@@ -848,14 +848,14 @@
                         if (currentMode === 'youtube') {
                             if (event.data === YT.PlayerState.PLAYING) {
                                 playIcon.innerText = "pause";
-                                if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel) {
-                                    activePartyChannel.send({ type: 'broadcast', event: 'sync_play', payload: { time: ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0 } });
+                                if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
+                                    activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'sync_play', payload: { time: ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0 } }));
                                 }
                             }
                             else {
                                 playIcon.innerText = "play_arrow";
-                                if (event.data === YT.PlayerState.PAUSED && typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel) {
-                                    activePartyChannel.send({ type: 'broadcast', event: 'sync_pause', payload: { time: ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0 }});
+                                if (event.data === YT.PlayerState.PAUSED && typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
+                                    activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'sync_pause', payload: { time: ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0 }}));
                                 }
                             }
                         }
@@ -2220,12 +2220,12 @@
                         }
 
                         // Sync Party
-                        if (activePartyChannel && isPartyHost) {
-                            activePartyChannel.send({
+                        if (activePartyChannel && isPartyHost && activePartyChannel.readyState === WebSocket.OPEN) {
+                            activePartyChannel.send(JSON.stringify({
                                 type: 'broadcast',
                                 event: 'change_film',
                                 payload: { slug, title: filmName, epIndex: actualEpIndex }
-                            });
+                            }));
                         }
 
                         // Reset quality container text/visibility (will be updated when HLS parses manifest)
@@ -6985,7 +6985,7 @@ let aiChatHistory = [];
 
         window.leaveParty = () => {
             if (activePartyChannel) {
-                activePartyChannel.unsubscribe();
+                if (activePartyChannel.close) activePartyChannel.close();
                 activePartyChannel = null;
             }
             // Cleanup WebRTC
@@ -7059,16 +7059,19 @@ let aiChatHistory = [];
         let myPartyUid = null;
 
         async function initPartyChannel(id) {
-            if (activePartyChannel) activePartyChannel.unsubscribe();
+            if (activePartyChannel) {
+                if (activePartyChannel.close) activePartyChannel.close();
+                activePartyChannel = null;
+            }
 
             myPartyUid = window.currentUserUid || 'guest-' + Math.random().toString(36).substring(2, 6);
             const myUid = myPartyUid;
 
             // Prepare Webcam for Party
             try {
-                const constraints = { 
-                    video: selectedVideoDeviceId ? { deviceId: { exact: selectedVideoDeviceId } } : true, 
-                    audio: true 
+                const constraints = {
+                    video: selectedVideoDeviceId ? { deviceId: { exact: selectedVideoDeviceId } } : true,
+                    audio: true
                 };
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
                 renderWebcam('local', localStream, 'Bạn (Tôi)', true);
@@ -7081,117 +7084,151 @@ let aiChatHistory = [];
                 alert("Không thể mở Webcam. Bạn vẫn có thể xem nhưng không hiện mặt.");
             }
 
-            activePartyChannel = window.supabaseClient.channel(`party:${id}`, {
-                config: { broadcast: { self: false }, presence: { key: myUid } }
-            });
+            // Connect to WebSocket signaling server
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${location.host}/ws/party/${id}/${myUid}`;
 
-            activePartyChannel
-                .on('presence', { event: 'sync' }, () => {
-                    const state = activePartyChannel.presenceState();
-                    Object.keys(state).forEach(uid => {
+            console.log('[Watch Party] Connecting to:', wsUrl);
+            activePartyChannel = new WebSocket(wsUrl);
+
+            activePartyChannel.onopen = () => {
+                console.log('[Watch Party] WebSocket connected! Room:', id, 'UID:', myUid);
+                if (!isPartyHost) {
+                    activePartyChannel.send(JSON.stringify({
+                        type: 'broadcast',
+                        event: 'request_sync'
+                    }));
+                }
+                if (localStream) startEmotionTracking();
+            };
+
+            activePartyChannel.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                const msgType = msg.type;
+                console.log('[Watch Party] Received:', msgType, msg);
+
+                if (msgType === 'presence_state') {
+                    // Initial list of members already in room
+                    const members = msg.members || [];
+                    console.log('[Watch Party] Room members:', members);
+                    members.forEach(uid => {
                         if (uid !== myUid && !peers[uid]) {
-                            // As a new joiner, we initiate to everyone already there
+                            console.log('[Watch Party] Creating peer (initiator) for:', uid);
                             createPeer(uid, true);
                         }
                     });
-                })
-                .on('broadcast', { event: 'webrtc-signal' }, (payload) => {
-                    const { from, target, signal } = payload.payload;
-                    if (target === myUid) {
-                         if (!peers[from]) createPeer(from, false);
-                         peers[from].signal(signal);
+                } else if (msgType === 'presence_join') {
+                    // New user joined
+                    const uid = msg.uid;
+                    console.log('[Watch Party] User joined:', uid);
+                    if (uid !== myUid && !peers[uid]) {
+                        console.log('[Watch Party] Creating peer (initiator) for new user:', uid);
+                        createPeer(uid, true);
                     }
-                })
-                .on('broadcast', { event: 'peer-emotion' }, (payload) => {
-                    const { from, emotion } = payload.payload;
-                    showRemoteEmotion(from, emotion);
-                })
-                .on('broadcast', { event: 'sync_play' }, (payload) => {
-                    if (isPartyHost) return;
-                    syncPlayer('play', payload.payload);
-                })
-                .on('broadcast', { event: 'sync_pause' }, () => {
-                    if (isPartyHost) return;
-                    syncPlayer('pause');
-                })
-                .on('broadcast', { event: 'sync_seek' }, (payload) => {
-                    if (isPartyHost) return;
-                    syncPlayer('seek', payload.payload);
-                })
-                .on('broadcast', { event: 'change_film' }, (payload) => {
-                    if (isPartyHost) return;
-                    const { slug, epIndex } = payload.payload;
-                    if (currentFilmSlug !== slug) {
-                        if (window.streamFilmOphim) window.streamFilmOphim(slug, "", epIndex);
+                } else if (msgType === 'presence_leave') {
+                    // User left
+                    const uid = msg.uid;
+                    if (peers[uid]) {
+                        peers[uid].destroy();
+                        delete peers[uid];
                     }
-                })
-                .on('broadcast', { event: 'request_sync' }, () => {
-                    if (isPartyHost) {
-                        const video = document.getElementById('film-video-player');
-                        const audio = document.getElementById('local-audio');
-                        const media = (video && !video.paused) ? video : ((audio && !audio.paused) ? audio : (video || audio));
-                        
-                        let yTime = 0, yPaused = true;
-                        if (typeof isYtReady !== 'undefined' && isYtReady && typeof ytPlayer !== 'undefined' && typeof currentMode !== 'undefined' && currentMode === 'youtube') {
-                            yTime = (typeof ytPlayer.getCurrentTime === 'function') ? ytPlayer.getCurrentTime() : 0;
-                            yPaused = (typeof ytPlayer.getPlayerState === 'function') ? (ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) : true;
-                        }
+                    ['party-mesh-grid', 'dashboard-party-mesh-grid'].forEach(gridId => {
+                        document.getElementById(`video-${gridId}-peer-${uid}`)?.parentElement?.remove();
+                    });
+                } else if (msgType === 'broadcast') {
+                    const event = msg.event;
+                    const payload = msg.payload || {};
 
-                        activePartyChannel.send({
-                            type: 'broadcast',
-                            event: 'respond_sync',
-                            payload: {
-                                slug: typeof currentFilmSlug !== 'undefined' ? currentFilmSlug : null,
-                                epIndex: 0,
-                                time: typeof currentMode !== 'undefined' && currentMode === 'youtube' ? yTime : (media ? media.currentTime : 0),
-                                paused: typeof currentMode !== 'undefined' && currentMode === 'youtube' ? yPaused : (media ? media.paused : true),
-                                audioSrc: audio ? audio.src : null,
-                                currentMode: typeof currentMode !== 'undefined' ? currentMode : null,
-                                trackData: typeof window.currentTrackData !== 'undefined' ? window.currentTrackData : null
+                    if (event === 'webrtc-signal') {
+                        const { from, target, signal } = payload;
+                        if (target === myUid) {
+                            if (!peers[from]) createPeer(from, false);
+                            peers[from].signal(signal);
+                        }
+                    } else if (event === 'peer-emotion') {
+                        const { from, emotion } = payload;
+                        showRemoteEmotion(from, emotion);
+                    } else if (event === 'sync_play') {
+                        if (isPartyHost) return;
+                        syncPlayer('play', payload);
+                    } else if (event === 'sync_pause') {
+                        if (isPartyHost) return;
+                        syncPlayer('pause');
+                    } else if (event === 'sync_seek') {
+                        if (isPartyHost) return;
+                        syncPlayer('seek', payload);
+                    } else if (event === 'change_film') {
+                        if (isPartyHost) return;
+                        const { slug, epIndex } = payload;
+                        if (currentFilmSlug !== slug) {
+                            if (window.streamFilmOphim) window.streamFilmOphim(slug, "", epIndex);
+                        }
+                    } else if (event === 'request_sync') {
+                        if (isPartyHost) {
+                            const video = document.getElementById('film-video-player');
+                            const audio = document.getElementById('local-audio');
+                            const media = (video && !video.paused) ? video : ((audio && !audio.paused) ? audio : (video || audio));
+
+                            let yTime = 0, yPaused = true;
+                            if (typeof isYtReady !== 'undefined' && isYtReady && typeof ytPlayer !== 'undefined' && typeof currentMode !== 'undefined' && currentMode === 'youtube') {
+                                yTime = (typeof ytPlayer.getCurrentTime === 'function') ? ytPlayer.getCurrentTime() : 0;
+                                yPaused = (typeof ytPlayer.getPlayerState === 'function') ? (ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) : true;
                             }
-                        });
-                    }
-                })
-                .on('broadcast', { event: 'respond_sync' }, (payload) => {
-                    if (isPartyHost) return;
-                    const { slug, epIndex, time, paused, audioSrc, currentMode: cMode, trackData } = payload.payload;
-                    if (slug && typeof currentFilmSlug !== 'undefined' && currentFilmSlug !== slug && typeof window.streamFilmOphim === 'function') {
-                        window.streamFilmOphim(slug, "", epIndex).then(() => {
-                            setTimeout(() => syncPlayer(paused ? 'pause' : 'play', { time }), 1000);
-                        });
-                    } else if (cMode && trackData && typeof playTrack === 'function') {
-                        let shouldPlay = false;
-                        if (typeof currentMode === 'undefined' || currentMode !== cMode) shouldPlay = true;
-                        if (!window.currentTrackData || window.currentTrackData.link !== trackData.link) shouldPlay = true;
-                        
-                        if (shouldPlay) {
-                            playTrack(trackData, cMode);
+
+                            activePartyChannel.send(JSON.stringify({
+                                type: 'broadcast',
+                                event: 'respond_sync',
+                                payload: {
+                                    slug: typeof currentFilmSlug !== 'undefined' ? currentFilmSlug : null,
+                                    epIndex: 0,
+                                    time: typeof currentMode !== 'undefined' && currentMode === 'youtube' ? yTime : (media ? media.currentTime : 0),
+                                    paused: typeof currentMode !== 'undefined' && currentMode === 'youtube' ? yPaused : (media ? media.paused : true),
+                                    audioSrc: audio ? audio.src : null,
+                                    currentMode: typeof currentMode !== 'undefined' ? currentMode : null,
+                                    trackData: typeof window.currentTrackData !== 'undefined' ? window.currentTrackData : null
+                                }
+                            }));
                         }
-                        setTimeout(() => syncPlayer(paused ? 'pause' : 'play', { time }), 1500);
-                    } else if (audioSrc && document.getElementById('local-audio') && (!document.getElementById('local-audio').src || !document.getElementById('local-audio').src.includes(audioSrc))) {
-                        document.getElementById('local-audio').src = audioSrc;
-                        document.getElementById('local-audio').load();
-                        setTimeout(() => syncPlayer(paused ? 'pause' : 'play', { time }), 500);
-                    } else {
-                        syncPlayer(paused ? 'pause' : 'play', { time });
-                    }
-                })
-                .on('broadcast', { event: 'change_track' }, (payload) => {
-                    if (isPartyHost) return;
-                    const { data, mode } = payload.payload;
-                    if (typeof playTrack === 'function') {
-                        playTrack(data, mode);
-                    }
-                })
-                .subscribe(async (status) => {
-                    if (status === 'SUBSCRIBED') {
-                        await activePartyChannel.track({ online_at: new Date().toISOString(), user_id: window.currentUserUid });
-                        if (!isPartyHost) {
-                            activePartyChannel.send({ type: 'broadcast', event: 'request_sync' });
+                    } else if (event === 'respond_sync') {
+                        if (isPartyHost) return;
+                        const { slug, epIndex, time, paused, audioSrc, currentMode: cMode, trackData } = payload;
+                        if (slug && typeof currentFilmSlug !== 'undefined' && currentFilmSlug !== slug && typeof window.streamFilmOphim === 'function') {
+                            window.streamFilmOphim(slug, "", epIndex).then(() => {
+                                setTimeout(() => syncPlayer(paused ? 'pause' : 'play', { time }), 1000);
+                            });
+                        } else if (cMode && trackData && typeof playTrack === 'function') {
+                            let shouldPlay = false;
+                            if (typeof currentMode === 'undefined' || currentMode !== cMode) shouldPlay = true;
+                            if (!window.currentTrackData || window.currentTrackData.link !== trackData.link) shouldPlay = true;
+
+                            if (shouldPlay) {
+                                playTrack(trackData, cMode);
+                            }
+                            setTimeout(() => syncPlayer(paused ? 'pause' : 'play', { time }), 1500);
+                        } else if (audioSrc && document.getElementById('local-audio') && (!document.getElementById('local-audio').src || !document.getElementById('local-audio').src.includes(audioSrc))) {
+                            document.getElementById('local-audio').src = audioSrc;
+                            document.getElementById('local-audio').load();
+                            setTimeout(() => syncPlayer(paused ? 'pause' : 'play', { time }), 500);
+                        } else {
+                            syncPlayer(paused ? 'pause' : 'play', { time });
                         }
-                        if (localStream) startEmotionTracking();
+                    } else if (event === 'change_track') {
+                        if (isPartyHost) return;
+                        const { data, mode } = payload;
+                        if (typeof playTrack === 'function') {
+                            playTrack(data, mode);
+                        }
                     }
-                });
+                }
+            };
+
+            activePartyChannel.onerror = (err) => {
+                console.error("WebSocket error:", err);
+            };
+
+            activePartyChannel.onclose = () => {
+                console.log("Party WebSocket closed");
+            };
 
             setupHostListeners();
         }
@@ -7204,11 +7241,13 @@ let aiChatHistory = [];
             });
 
             peer.on('signal', data => {
-                activePartyChannel.send({
-                    type: 'broadcast',
-                    event: 'webrtc-signal',
-                    payload: { from: myPartyUid || window.currentUserUid || 'me', target: targetUid, signal: data }
-                });
+                if (activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
+                    activePartyChannel.send(JSON.stringify({
+                        type: 'broadcast',
+                        event: 'webrtc-signal',
+                        payload: { from: myPartyUid || 'me', target: targetUid, signal: data }
+                    }));
+                }
             });
 
             peer.on('stream', stream => {
@@ -7260,18 +7299,18 @@ let aiChatHistory = [];
                 if (!media) return;
 
                 media.onplay = () => {
-                    if (isPartyHost && activePartyChannel) {
-                        activePartyChannel.send({ type: 'broadcast', event: 'sync_play', payload: { time: media.currentTime } });
+                    if (isPartyHost && activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
+                        activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'sync_play', payload: { time: media.currentTime } }));
                     }
                 };
                 media.onpause = () => {
-                    if (isPartyHost && activePartyChannel) {
-                        activePartyChannel.send({ type: 'broadcast', event: 'sync_pause' });
+                    if (isPartyHost && activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
+                        activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'sync_pause' }));
                     }
                 };
                 media.onseeked = () => {
-                    if (isPartyHost && activePartyChannel) {
-                        activePartyChannel.send({ type: 'broadcast', event: 'sync_seek', payload: { time: media.currentTime } });
+                    if (isPartyHost && activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
+                        activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'sync_seek', payload: { time: media.currentTime } }));
                     }
                 };
             });
@@ -7344,11 +7383,13 @@ let aiChatHistory = [];
                         if (data.status === 'success') {
                             const em = data.emotion;
                             showRemoteEmotion('local', em);
-                            activePartyChannel.send({
-                                type: 'broadcast',
-                                event: 'peer-emotion',
-                                payload: { from: window.currentUserUid || 'me', emotion: em }
-                            });
+                            if (activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
+                                activePartyChannel.send(JSON.stringify({
+                                    type: 'broadcast',
+                                    event: 'peer-emotion',
+                                    payload: { from: window.currentUserUid || 'me', emotion: em }
+                                }));
+                            }
                         }
                     } catch (e) {}
                 }, 'image/jpeg', 0.5);
