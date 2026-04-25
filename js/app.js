@@ -47,7 +47,7 @@
 
         // Camera States
         let cameraEnabled = true;
-        let mainStream = null;
+        window.mainStream = null;
         window.selectedVideoDeviceId = null;
 
         window.toggleYtVideo = () => {
@@ -83,6 +83,12 @@
             }
 
             const initialView = new URLSearchParams(window.location.search).get('view');
+
+            // Refresh camera devices early so dropdowns are populated
+            if (typeof window.refreshCameraDevices === 'function') {
+                window.refreshCameraDevices();
+            }
+
             if (initialView === 'studio' || initialView === 'guide' || initialView === 'home' || initialView === 'dashboard' || initialView === 'about') {
                 showView(initialView);
             } else {
@@ -142,7 +148,7 @@
         document.addEventListener('visibilitychange', () => {
             const filmVideo = document.getElementById('film-video-player');
              
-            const activeVideo = (filmVideo && !filmVideo.paused) ? filmVideo : (legacyVideo && !legacyVideo.paused ? legacyVideo : null);
+            const activeVideo = (filmVideo && !filmVideo.paused) ? filmVideo : null;
 
             if (document.visibilityState === 'hidden') {
                 // User left the browser tab entirely
@@ -159,8 +165,8 @@
 
         window.showView = (viewName) => {
             // Removed auth check for film view - allow guest access
-            const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'discover', 'guide', 'about', 'djradio'];
-            const moreMenuItems = ['library', 'photobooth', 'studio', 'about', 'discover', 'djradio'];
+            const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'discover', 'guide', 'about', 'djradio', 'focus'];
+            const moreMenuItems = ['library', 'photobooth', 'studio', 'about', 'discover', 'djradio', 'focus'];
 
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
@@ -221,33 +227,33 @@
             // Smart PiP Management for Internal Navigation
             if (viewName !== 'film') {
                 const filmVideo = document.getElementById('film-video-player');
-                 
+
                 if (filmVideo && !filmVideo.paused) window.attemptSmartPiP(filmVideo);
-                else if (legacyVideo && !legacyVideo.paused) window.attemptSmartPiP(legacyVideo);
             } else {
                 window.exitSmartPiP();
             }
 
-            // Camera Management
+            // Camera Management - Stop cameras for views we're leaving, init for current view
             if (viewName === 'dashboard') {
-                if (cameraEnabled) initCamera();
-                stopPhotoboothCamera();
-                stopDJWebcam();
+                window.stopAllCameras('dashboard');
+                if (cameraEnabled) {
+                    setTimeout(() => initCamera(), 100);
+                }
             } else if (viewName === 'photobooth') {
-                // Layout selection first, don't start camera yet
-                stopMainCamera();
-                stopDJWebcam();
+                window.stopAllCameras('photobooth');
                 document.getElementById('pb-layout-zone').classList.remove('hidden');
                 document.getElementById('pb-capture-zone').classList.add('hidden');
                 document.getElementById('pb-design-zone').classList.add('hidden');
             } else if (viewName === 'djradio') {
-                stopMainCamera();
-                stopPhotoboothCamera();
-                // We don't auto start camera here, we let startDJRadio do it.
+                window.stopAllCameras('djradio');
+                // Camera started manually via startDJRadio() button
+            } else if (viewName === 'focus') {
+                window.stopAllCameras('focus');
+                setTimeout(() => {
+                    if (typeof initFocusCamera === 'function') initFocusCamera();
+                }, 100);
             } else {
-                stopMainCamera();
-                stopPhotoboothCamera();
-                stopDJWebcam();
+                window.stopAllCameras();
             }
 
             // Game Cleanup
@@ -319,19 +325,58 @@
         };
 
         
-        window.stopDJWebcam = () => {
-            const v = document.getElementById('dj-video');
-            if (v && v.srcObject) {
-                v.srcObject.getTracks().forEach(t => t.stop());
-                v.srcObject = null;
+        window.stopAllCameras = (except) => {
+            // Stop main dashboard camera
+            if (except !== 'dashboard') {
+                if (window.mainStream) {
+                    window.mainStream.getTracks().forEach(track => track.stop());
+                    window.mainStream = null;
+                }
+                const mainV = document.getElementById('video');
+                if (mainV && mainV.srcObject) {
+                    mainV.srcObject.getTracks().forEach(t => t.stop());
+                    mainV.srcObject = null;
+                }
+            }
+
+            // Stop DJ camera
+            if (except !== 'djradio') {
+                const djV = document.getElementById('dj-video');
+                if (djV && djV.srcObject) {
+                    djV.srcObject.getTracks().forEach(t => t.stop());
+                    djV.srcObject = null;
+                }
+            }
+
+            // Stop Focus camera
+            if (except !== 'focus') {
+                const focusV = document.getElementById('focus-video');
+                if (focusV && focusV.srcObject) {
+                    focusV.srcObject.getTracks().forEach(t => t.stop());
+                    focusV.srcObject = null;
+                }
+            }
+
+            // Stop Photobooth camera
+            if (except !== 'photobooth') {
+                if (window.pbStream) {
+                    window.pbStream.getTracks().forEach(t => t.stop());
+                    window.pbStream = null;
+                }
+                const pbV = document.getElementById('pb-video');
+                if (pbV && pbV.srcObject) {
+                    pbV.srcObject.getTracks().forEach(t => t.stop());
+                    pbV.srcObject = null;
+                }
             }
         };
 
+        window.stopDJWebcam = () => {
+            window.stopAllCameras();
+        };
+
         function stopMainCamera() {
-            if (mainStream) {
-                mainStream.getTracks().forEach(track => track.stop());
-                mainStream = null;
-            }
+            window.stopAllCameras();
         }
 
         window.switchType = (type) => {
@@ -939,20 +984,23 @@
             const video = document.getElementById('video');
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 try {
-                    stopMainCamera();
-                    const constraints = { 
+                    window.stopAllCameras('dashboard'); // Stop all except dashboard
+                    const constraints = {
                         video: selectedVideoDeviceId ? { deviceId: { exact: selectedVideoDeviceId } } : { facingMode: "user" }
                     };
-                    mainStream = await navigator.mediaDevices.getUserMedia(constraints);
-                    if (video) video.srcObject = mainStream;
+                    window.mainStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    if (video) video.srcObject = window.mainStream;
                     // Refresh labels after permission granted
-                    refreshCameraDevices();
+                    await refreshCameraDevices();
                 } catch (err) {
                     console.error("Dashboard Camera Error", err);
                     // Fallback to any camera if exact fails
                     if (selectedVideoDeviceId) {
-                        mainStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                        if (video) video.srcObject = mainStream;
+                        try {
+                            window.mainStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                            if (video) video.srcObject = window.mainStream;
+                            await refreshCameraDevices();
+                        } catch(e) { console.error(e) }
                     }
                 }
             }
@@ -3345,7 +3393,7 @@
             { id: 'sunset', url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=640&auto=format&fit=crop' }
         ];
         let selfieSegmentation = null;
-        let pbStream = null;
+        window.pbStream = null;
         let pbHeldSticker = null;
 
         const pbColors = ['#FFFFFF', '#000000', '#FFDBE9', '#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#D4A5A5', '#97C1A9', '#55CBCD', '#ECC19C', '#F6EAC2', '#A0E7E5', '#B28DFF', '#6EB5FF', '#FFABAB', '#FFC3A0'];
@@ -3360,8 +3408,8 @@
                         { deviceId: { exact: selectedVideoDeviceId }, width: 1280, height: 720 } : 
                         { width: 1280, height: 720 } 
                 };
-                pbStream = await navigator.mediaDevices.getUserMedia(constraints);
-                video.srcObject = pbStream;
+                window.pbStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = window.pbStream;
                 initSelfieSegmentation();
                 refreshCameraDevices();
             } catch (e) {
@@ -3369,12 +3417,17 @@
             }
         }
 
-        function stopPhotoboothCamera() {
-            if (pbStream) {
-                pbStream.getTracks().forEach(t => t.stop());
-                pbStream = null;
+        window.stopPhotoboothCamera = () => {
+            if (window.pbStream) {
+                window.pbStream.getTracks().forEach(t => t.stop());
+                window.pbStream = null;
             }
-        }
+            const video = document.getElementById('pb-video');
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+            }
+        };
 
         function initSelfieSegmentation() {
             if (selfieSegmentation) return;
@@ -3386,7 +3439,7 @@
 
             const video = document.getElementById('pb-video');
             const step = async () => {
-                if (pbStream && pbVirtualBG) {
+                if (window.pbStream && pbVirtualBG) {
                     await selfieSegmentation.send({ image: video });
                 }
                 requestAnimationFrame(step);
@@ -8032,11 +8085,21 @@ window.startDJRadio = async () => {
 
             // Request camera if not active
             if (!video.srcObject) {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: window.selectedVideoDeviceId ? { deviceId: { exact: window.selectedVideoDeviceId } } : { facingMode: 'user' }
-                });
+                window.stopAllCameras('djradio'); // Stop all EXCEPT djradio
+
+                let stream;
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: window.selectedVideoDeviceId ? { deviceId: { exact: window.selectedVideoDeviceId } } : { facingMode: 'user' }
+                    });
+                } catch (err) {
+                    console.warn("Failed to get exact device, falling back to default camera", err);
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                }
+
                 video.srcObject = stream;
                 document.getElementById('dj-webcam-overlay').classList.add('opacity-0');
+                await window.refreshCameraDevices(); // Populate dropdowns after permission granted
             }
 
             // Wait until video metadata is ready (dimensions available)
@@ -8319,15 +8382,27 @@ function startDJEmotionLoop() {
                         opt2.text = device.label || 'Camera ' + (idx + 1);
                         djSelector.appendChild(opt2);
                     }
+
+                    const focusSelector = document.getElementById('focus-camera-device-select');
+                    if (focusSelector) {
+                        const opt3 = document.createElement('option');
+                        opt3.value = device.deviceId;
+                        opt3.text = device.label || 'Camera ' + (idx + 1);
+                        focusSelector.appendChild(opt3);
+                    }
                 });
 
                 if (videoDevices.length > 0 && !window.selectedVideoDeviceId) {
                     window.selectedVideoDeviceId = videoDevices[0].deviceId;
                     selector.value = window.selectedVideoDeviceId;
                     if (djSelector) djSelector.value = window.selectedVideoDeviceId;
+                    const focusSelector = document.getElementById('focus-camera-device-select');
+                    if (focusSelector) focusSelector.value = window.selectedVideoDeviceId;
                 } else if (window.selectedVideoDeviceId) {
                     selector.value = window.selectedVideoDeviceId;
                     if (djSelector) djSelector.value = window.selectedVideoDeviceId;
+                    const focusSelector = document.getElementById('focus-camera-device-select');
+                    if (focusSelector) focusSelector.value = window.selectedVideoDeviceId;
                 }
             } catch (e) {
                 console.error("Error enumerating devices:", e);
