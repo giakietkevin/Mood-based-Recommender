@@ -887,7 +887,7 @@
                     class="glass-card rounded-2xl p-4 space-y-3 border border-white/10 bg-white/5 backdrop-blur-md mb-4">
                     <!-- CAMERA SELECTOR -->
                     <div class="relative group/cam">
-                        <select onchange="handleCameraChange(this.value)"
+                        <select id="camera-device-select" onchange="window.onCameraDeviceChange(this)"
                             class="camera-select-dropdown w-full bg-white/5 hover:bg-white/10 text-white/80 py-3 px-4 pl-10 rounded-2xl font-bold text-[10px] uppercase tracking-widest appearance-none transition-all border border-white/10 cursor-pointer">
                             <option value="">Đang tải camera...</option>
                         </select>
@@ -3410,13 +3410,21 @@
                 </h1>
                 <p class="text-slate-400 text-sm">AI DJ tự động nhận diện cảm xúc & mix nhạc chữa lành</p>
             </div>
-            <div class="flex items-center gap-4">
-                <select id="dj-voice-select" class="glass-input rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary transition-all">
-                    <option value="vi-VN-HoaiMyNeural">👩 Giọng Nữ (Hoài My - Ấm áp)</option>
-                    <option value="vi-VN-NamMinhNeural">👨 Giọng Nam (Nam Minh - Trầm ấm)</option>
+            <div class="flex items-center gap-4 flex-wrap sm:flex-nowrap justify-center sm:justify-end">
+                <select id="dj-manual-emotion" class="glass-input rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary transition-all bg-[#1a1a1a]">
+                    <option value="">📸 Dùng Webcam</option>
+                    <option value="joy">Vui vẻ</option>
+                    <option value="sadness">Buồn bã</option>
+                    <option value="calmness">Bình yên</option>
+                    <option value="anger">Bực tức</option>
+                    <option value="romantic">Lãng mạn</option>
                 </select>
-                <button id="btn-start-dj" onclick="startDJRadio()" class="btn-primary px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/30 flex items-center gap-2 transition-all">
-                    <span class="material-icons-round">radio</span> Bắt Đầu Radio
+                <select id="dj-voice-select" class="glass-input rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary transition-all bg-[#1a1a1a]">
+                    <option value="vi-VN-HoaiMyNeural">👩 Nữ (Hoài My)</option>
+                    <option value="vi-VN-NamMinhNeural">👨 Nam (Nam Minh)</option>
+                </select>
+                <button id="btn-start-dj" onclick="startDJRadio()" class="btn-primary px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/30 flex items-center gap-2 transition-all w-full sm:w-auto justify-center">
+                    <span class="material-icons-round">radio</span> Bắt Đầu
                 </button>
             </div>
         </div>

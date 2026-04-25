@@ -48,6 +48,7 @@
         // Camera States
         let cameraEnabled = true;
         let mainStream = null;
+        window.selectedVideoDeviceId = null;
 
         window.toggleYtVideo = () => {
             const modal = document.getElementById('yt-video-modal');
@@ -229,9 +230,11 @@
             if (viewName === 'dashboard') {
                 if (cameraEnabled) initCamera();
                 stopPhotoboothCamera();
+                stopDJWebcam();
             } else if (viewName === 'photobooth') {
                 // Layout selection first, don't start camera yet
                 stopMainCamera();
+                stopDJWebcam();
                 document.getElementById('pb-layout-zone').classList.remove('hidden');
                 document.getElementById('pb-capture-zone').classList.add('hidden');
                 document.getElementById('pb-design-zone').classList.add('hidden');
@@ -242,6 +245,7 @@
             } else {
                 stopMainCamera();
                 stopPhotoboothCamera();
+                stopDJWebcam();
             }
 
             // Game Cleanup
@@ -309,6 +313,15 @@
                 btn.classList.add('bg-red-500/20', 'text-red-400');
                 stopMainCamera();
                 if (video) video.srcObject = null;
+            }
+        };
+
+        
+        window.stopDJWebcam = () => {
+            const v = document.getElementById('dj-video');
+            if (v && v.srcObject) {
+                v.srcObject.getTracks().forEach(t => t.stop());
+                v.srcObject = null;
             }
         };
 
@@ -7601,36 +7614,63 @@ window.startDJRadio = async () => {
 
     djActive = true;
     btn.innerHTML = '<span class="material-icons-round animate-spin">sync</span> Dang khoi dong...';
-    introText.innerText = "Dang quet cam xuc cua ban qua webcam...";
 
-    // 1. Capture webcam and get emotion
+    // 1. Get emotion: Manual selection or Webcam
     let emotion = 'neutral';
-    try {
-        const video = document.getElementById('dj-video');
-        if (!video.srcObject) {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
-            document.getElementById('dj-webcam-overlay').classList.add('opacity-0');
-            await new Promise(r => setTimeout(r, 1000));
+    const manualSelect = document.getElementById('dj-manual-emotion');
+    const useManual = manualSelect && manualSelect.value;
+
+    if (useManual) {
+        // User picked manual emotion — skip webcam
+        emotion = manualSelect.value;
+        djLastEmotion = emotion;
+        introText.innerText = "Ban da chon cam xuc: " + emotion + ". Dang tao DJ intro...";
+    } else {
+        // Use webcam
+        introText.innerText = "Dang quet cam xuc cua ban qua webcam...";
+        try {
+            const video = document.getElementById('dj-video');
+
+            // Request camera if not active
+            if (!video.srcObject) {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                video.srcObject = stream;
+                document.getElementById('dj-webcam-overlay').classList.add('opacity-0');
+            }
+
+            // Wait until video metadata is ready (dimensions available)
+            await new Promise((resolve) => {
+                if (video.videoWidth > 0) { resolve(); return; }
+                video.onloadedmetadata = resolve;
+                setTimeout(resolve, 3000); // max 3s fallback
+            });
+            // Extra frame settle time
+            await new Promise(r => setTimeout(r, 500));
+
+            const w = video.videoWidth || 640;
+            const h = video.videoHeight || 480;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+            if (!blob) throw new Error('canvas toBlob returned null');
+
+            const fd = new FormData();
+            fd.append('file', blob, 'webcam.jpg');
+
+            const res = await fetch('/api/emotion', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.status === 'success') {
+                emotion = data.emotion;
+                djLastEmotion = emotion;
+            }
+        } catch (e) {
+            console.warn("Could not get emotion from webcam:", e);
+            emotion = 'calmness'; // safe fallback
         }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
-        const fd = new FormData();
-        fd.append('file', blob, 'webcam.jpg');
-
-        const res = await fetch('/api/emotion', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.status === 'success') {
-            emotion = data.emotion;
-            djLastEmotion = emotion;
-        }
-    } catch (e) {
-        console.warn("Could not get emotion from webcam, using neutral", e);
     }
 
     badge.innerText = 'Cam xuc: ' + emotion.toUpperCase();
@@ -7845,3 +7885,39 @@ function startDJEmotionLoop() {
         }
     });
 })();
+
+        // Camera Device Management
+        window.refreshCameraDevices = async () => {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(d => d.kind === 'videoinput');
+
+                const selector = document.getElementById('camera-device-select');
+                if (!selector) return;
+
+                selector.innerHTML = '';
+                videoDevices.forEach((device, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = device.deviceId;
+                    opt.text = device.label || 'Camera ' + (idx + 1);
+                    selector.appendChild(opt);
+                });
+
+                if (videoDevices.length > 0 && !window.selectedVideoDeviceId) {
+                    window.selectedVideoDeviceId = videoDevices[0].deviceId;
+                    selector.value = window.selectedVideoDeviceId;
+                } else if (window.selectedVideoDeviceId) {
+                    selector.value = window.selectedVideoDeviceId;
+                }
+            } catch (e) {
+                console.error("Error enumerating devices:", e);
+            }
+        };
+
+        window.onCameraDeviceChange = (select) => {
+            window.selectedVideoDeviceId = select.value;
+            if (cameraEnabled) {
+                stopMainCamera();
+                initCamera();
+            }
+        };
