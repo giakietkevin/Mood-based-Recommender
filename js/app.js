@@ -159,6 +159,8 @@
         window.showView = (viewName) => {
             // Removed auth check for film view - allow guest access
             const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'discover', 'guide', 'about'];
+            const moreMenuItems = ['library', 'photobooth', 'studio', 'about', 'discover'];
+
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
                 const nav = document.getElementById(`nav-${v}`);
@@ -174,6 +176,7 @@
             const activeView = document.getElementById(`view-${viewName}`);
             const activeNav = document.getElementById(`nav-${viewName}`);
             const activeMobNav = document.getElementById(`mob-nav-${viewName}`);
+            const moreBtn = document.getElementById('mob-nav-more');
 
             if (activeView) activeView.classList.remove('hidden');
             if (activeNav) {
@@ -181,6 +184,18 @@
                 activeNav.classList.remove('text-slate-400');
             }
             if (activeMobNav) activeMobNav.classList.add('active');
+
+            // Highlight "More" button if viewing a more-menu item
+            if (moreBtn) {
+                if (moreMenuItems.includes(viewName)) {
+                    moreBtn.classList.add('active');
+                } else {
+                    moreBtn.classList.remove('active');
+                }
+            }
+
+            // Close more menu when navigating
+            if (typeof window.closeMobileMoreMenu === 'function') window.closeMobileMoreMenu();
 
             // Trigger view-specific functions
             if (viewName === 'home') {
@@ -7541,3 +7556,23 @@ let aiChatHistory = [];
             if (qrImg && qrB64) qrImg.src = qrB64.startsWith('data:') ? qrB64 : 'data:image/jpeg;base64,' + qrB64;
         };
         loadAboutImages();
+
+        // Mobile More Menu Handling
+        window.toggleMobileMoreMenu = () => {
+            const menu = document.getElementById('mobile-more-menu');
+            if (menu) {
+                if (menu.classList.contains('show')) {
+                    window.closeMobileMoreMenu();
+                } else {
+                    menu.classList.add('show');
+                }
+            }
+        };
+
+        window.closeMobileMoreMenu = (e) => {
+            if (e && e.target !== e.currentTarget && !e.target.classList.contains('mobile-more-overlay')) return;
+            const menu = document.getElementById('mobile-more-menu');
+            if (menu) {
+                menu.classList.remove('show');
+            }
+        };
