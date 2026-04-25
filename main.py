@@ -1735,3 +1735,69 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=7860)
+
+@app.post("/api/dj-radio")
+async def dj_radio(
+    emotion: str = Form(...),
+    dj_voice: str = Form("vi-VN-HoaiMyNeural")
+):
+    try:
+        # 1. Map emotion to intro
+        emotion_map = {
+            "joy": "khá là vui vẻ, rạng rỡ",
+            "sadness": "hơi tâm trạng một chút",
+            "anger": "đang có chút bực dọc",
+            "fear": "hơi lo âu, bất an",
+            "surprise": "đang rất bất ngờ",
+            "anticipation": "đang đầy mong đợi",
+            "calmness": "đang rất bình yên",
+            "romantic": "đang có tâm trạng lãng mạn",
+            "nostalgia": "đang nhớ về những kỷ niệm cũ",
+            "triumph": "đầy tự hào và chiến thắng",
+            "neutral": "khá bình thản"
+        }
+        
+        emo_lower = emotion.lower()
+        emo_desc = emotion_map.get(emo_lower, "bình yên")
+        
+        intro_text = f"Xin chào, đây là Kiet Station Radio. Qua ánh mắt, DJ thấy có vẻ bạn đang {emo_desc}. Hãy thư giãn và để những giai điệu sau đây ôm lấy tâm hồn bạn nhé."
+        
+        # 2. Generate TTS
+        final_id = str(uuid.uuid4())
+        intro_path = os.path.join("generated_music", f"dj_intro_{final_id}.wav")
+        
+        import edge_tts
+        comm = edge_tts.Communicate(intro_text, dj_voice)
+        await comm.save(intro_path)
+        
+        # 3. Fetch Playlist (using DDGS like /recommend)
+        keyword = f"nhạc {emo_lower} mood chill"
+        if emo_lower in ["joy", "triumph"]:
+            keyword = f"nhạc {emo_lower} remix sôi động"
+            
+        recommendations = []
+        try:
+            from duckduckgo_search import DDGS
+            with DDGS() as ddgs:
+                gen = ddgs.videos(f"site:youtube.com {keyword}", max_results=10)
+                for r in gen:
+                    vid = r["content"].split("v=")[1].split("&")[0] if "v=" in r["content"] else ""
+                    if vid:
+                        recommendations.append({
+                            "title": r["title"],
+                            "link": r["content"],
+                            "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+                        })
+        except Exception as e:
+            print(f"DJ Search Error: {e}")
+            
+        return {
+            "status": "success",
+            "dj_intro_url": f"/{intro_path}",
+            "playlist": recommendations
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "message": str(e)}
+

@@ -158,8 +158,8 @@
 
         window.showView = (viewName) => {
             // Removed auth check for film view - allow guest access
-            const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'discover', 'guide', 'about'];
-            const moreMenuItems = ['library', 'photobooth', 'studio', 'about', 'discover'];
+            const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'discover', 'guide', 'about', 'djradio'];
+            const moreMenuItems = ['library', 'photobooth', 'studio', 'about', 'discover', 'djradio'];
 
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
@@ -235,6 +235,10 @@
                 document.getElementById('pb-layout-zone').classList.remove('hidden');
                 document.getElementById('pb-capture-zone').classList.add('hidden');
                 document.getElementById('pb-design-zone').classList.add('hidden');
+            } else if (viewName === 'djradio') {
+                stopMainCamera();
+                stopPhotoboothCamera();
+                // We don't auto start camera here, we let startDJRadio do it.
             } else {
                 stopMainCamera();
                 stopPhotoboothCamera();
@@ -7576,3 +7580,268 @@ let aiChatHistory = [];
                 menu.classList.remove('show');
             }
         };
+
+
+// ==========================================
+// DJ RADIO (ENDLESS RADIO) LOGIC
+// ==========================================
+let djActive = false;
+let djQueue = [];
+let djCurrentIndex = 0;
+let djEmotionLoop = null;
+let djLastEmotion = null;
+
+window.startDJRadio = async () => {
+    if (djActive) return;
+
+    const btn = document.getElementById('btn-start-dj');
+    const introText = document.getElementById('dj-intro-text');
+    const badge = document.getElementById('dj-emotion-badge');
+    const voice = document.getElementById('dj-voice-select').value;
+
+    djActive = true;
+    btn.innerHTML = '<span class="material-icons-round animate-spin">sync</span> Dang khoi dong...';
+    introText.innerText = "Dang quet cam xuc cua ban qua webcam...";
+
+    // 1. Capture webcam and get emotion
+    let emotion = 'neutral';
+    try {
+        const video = document.getElementById('dj-video');
+        if (!video.srcObject) {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            document.getElementById('dj-webcam-overlay').classList.add('opacity-0');
+            await new Promise(r => setTimeout(r, 1000));
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+        const fd = new FormData();
+        fd.append('file', blob, 'webcam.jpg');
+
+        const res = await fetch('/api/emotion', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.status === 'success') {
+            emotion = data.emotion;
+            djLastEmotion = emotion;
+        }
+    } catch (e) {
+        console.warn("Could not get emotion from webcam, using neutral", e);
+    }
+
+    badge.innerText = 'Cam xuc: ' + emotion.toUpperCase();
+    badge.className = "px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-widest border border-white/5 bg-primary/20 text-primary";
+
+    introText.innerText = 'Da nhan dien: ' + emotion + '. Dang tao loi dan DJ va chon nhac...';
+
+    // 2. Call DJ API
+    try {
+        const fd = new FormData();
+        fd.append('emotion', emotion);
+        fd.append('dj_voice', voice);
+
+        const res = await fetch('/api/dj-radio', { method: 'POST', body: fd });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+            djQueue = data.playlist;
+            djCurrentIndex = 0;
+            renderDJQueue();
+
+            // 3. Play DJ Intro
+            introText.innerText = "DJ dang noi...";
+            const audio = document.getElementById('dj-intro-audio');
+            const indicator = document.getElementById('dj-speaking-indicator');
+
+            audio.src = data.dj_intro_url;
+            indicator.classList.remove('hidden');
+
+            audio.onended = () => {
+                indicator.classList.add('hidden');
+                introText.innerText = "Dang phat nhac...";
+                hookYoutubeForDJ();
+                playDJTrack(0);
+
+                if (document.getElementById('dj-continuous-toggle').checked) {
+                    startDJEmotionLoop();
+                }
+            };
+
+            audio.play();
+            btn.innerHTML = '<span class="material-icons-round text-red-500">stop</span> Dung Radio';
+            btn.onclick = stopDJRadio;
+            btn.classList.remove('btn-primary');
+            btn.classList.add('bg-white/10');
+
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (e) {
+        introText.innerText = 'Loi: ' + e.message;
+        stopDJRadio();
+    }
+};
+
+window.stopDJRadio = () => {
+    djActive = false;
+    if (djEmotionLoop) clearInterval(djEmotionLoop);
+
+    const audio = document.getElementById('dj-intro-audio');
+    audio.pause();
+    document.getElementById('dj-speaking-indicator').classList.add('hidden');
+
+    const btn = document.getElementById('btn-start-dj');
+    btn.innerHTML = '<span class="material-icons-round">radio</span> Bat Dau Radio';
+    btn.onclick = startDJRadio;
+    btn.classList.remove('bg-white/10');
+    btn.classList.add('btn-primary');
+
+    document.getElementById('dj-intro-text').innerText = "Radio da dung.";
+
+    // Stop webcam
+    const v = document.getElementById('dj-video');
+    if (v && v.srcObject) {
+        v.srcObject.getTracks().forEach(t => t.stop());
+        v.srcObject = null;
+    }
+    document.getElementById('dj-webcam-overlay').classList.remove('opacity-0');
+
+    unhookYoutubeForDJ();
+};
+
+window.playDJTrack = (index) => {
+    if (!djQueue || index >= djQueue.length) {
+        stopDJRadio();
+        return;
+    }
+
+    djCurrentIndex = index;
+    const track = djQueue[index];
+
+    playTrack(track, 'youtube');
+    renderDJQueue();
+};
+
+window.nextDJTrack = () => {
+    if (djActive) {
+        playDJTrack(djCurrentIndex + 1);
+    }
+};
+
+window.renderDJQueue = () => {
+    const q = document.getElementById('dj-playlist-queue');
+    if (!djQueue || djQueue.length === 0) {
+        q.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-slate-500 space-y-3 opacity-50"><span class="material-icons-round text-4xl">album</span><p class="text-xs font-bold uppercase tracking-widest">Hang doi trong</p></div>';
+        return;
+    }
+
+    q.innerHTML = djQueue.map((t, i) => {
+        const isPlaying = (i === djCurrentIndex);
+        return '<div class="flex items-center gap-3 p-2 rounded-xl transition-all ' + (isPlaying ? 'bg-primary/20 border border-primary/30' : 'hover:bg-white/5') + ' cursor-pointer" onclick="if(djActive) playDJTrack(' + i + ')">' +
+            '<img src="' + t.thumbnail + '" class="w-12 h-12 rounded-lg object-cover shadow-md" />' +
+            '<div class="flex-1 min-w-0">' +
+            '<p class="text-xs font-bold text-white truncate">' + t.title + '</p>' +
+            '<p class="text-[10px] text-slate-400 truncate">YouTube Music</p>' +
+            '</div>' +
+            (isPlaying ? '<span class="material-icons-round text-primary text-sm animate-pulse">volume_up</span>' : '') +
+            '</div>';
+    }).join('');
+};
+
+// Hook/Unhook Youtube Player State Change for auto-next
+let _origOnPlayerStateChangeDJ = null;
+function hookYoutubeForDJ() {
+    if (!window.onPlayerStateChange) return;
+    _origOnPlayerStateChangeDJ = window.onPlayerStateChange;
+    window.onPlayerStateChange = (event) => {
+        _origOnPlayerStateChangeDJ(event);
+        if (event.data === 0 && djActive) {
+            nextDJTrack();
+        }
+    };
+}
+function unhookYoutubeForDJ() {
+    if (_origOnPlayerStateChangeDJ) {
+        window.onPlayerStateChange = _origOnPlayerStateChangeDJ;
+        _origOnPlayerStateChangeDJ = null;
+    }
+}
+
+// Continuous check emotion
+function startDJEmotionLoop() {
+    if (djEmotionLoop) clearInterval(djEmotionLoop);
+    djEmotionLoop = setInterval(async () => {
+        if (!djActive) return;
+        try {
+            const video = document.getElementById('dj-video');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+            const fd = new FormData();
+            fd.append('file', blob, 'webcam.jpg');
+
+            const res = await fetch('/api/emotion', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.status === 'success' && data.emotion !== djLastEmotion) {
+                djLastEmotion = data.emotion;
+                document.getElementById('dj-emotion-badge').innerText = 'Cam xuc: ' + djLastEmotion.toUpperCase();
+
+                const fd2 = new FormData();
+                fd2.append('emotion', djLastEmotion);
+                fd2.append('dj_voice', document.getElementById('dj-voice-select').value);
+                const res2 = await fetch('/api/dj-radio', { method: 'POST', body: fd2 });
+                const d2 = await res2.json();
+
+                if (d2.status === 'success') {
+                    djQueue = d2.playlist;
+                    djCurrentIndex = -1;
+
+                    const audio = document.getElementById('dj-intro-audio');
+                    const introText = document.getElementById('dj-intro-text');
+                    audio.src = d2.dj_intro_url;
+
+                    if (isYtReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+
+                    introText.innerText = "Cam xuc thay doi! DJ dang noi...";
+                    document.getElementById('dj-speaking-indicator').classList.remove('hidden');
+
+                    audio.onended = () => {
+                        document.getElementById('dj-speaking-indicator').classList.add('hidden');
+                        introText.innerText = "Dang phat nhac...";
+                        nextDJTrack();
+                    };
+                    audio.play();
+                }
+            }
+        } catch (e) {
+            console.error("DJ loop error:", e);
+        }
+    }, 30000);
+}
+
+// Checkbox toggle logic
+(function() {
+    var toggle = document.getElementById('dj-continuous-toggle');
+    if (toggle) toggle.addEventListener('change', function(e) {
+        var dot = document.getElementById('dj-toggle-dot');
+        var bg = document.getElementById('dj-toggle-bg');
+        if (e.target.checked) {
+            dot.classList.add('translate-x-4');
+            bg.classList.remove('bg-white/10');
+            bg.classList.add('bg-primary');
+            if (djActive) startDJEmotionLoop();
+        } else {
+            dot.classList.remove('translate-x-4');
+            bg.classList.remove('bg-primary');
+            bg.classList.add('bg-white/10');
+            if (djEmotionLoop) clearInterval(djEmotionLoop);
+        }
+    });
+})();
