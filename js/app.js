@@ -186,6 +186,8 @@
             }
             if (activeMobNav) activeMobNav.classList.add('active');
 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             // Highlight "More" button if viewing a more-menu item
             if (moreBtn) {
                 if (moreMenuItems.includes(viewName)) {
@@ -7633,7 +7635,9 @@ window.startDJRadio = async () => {
 
             // Request camera if not active
             if (!video.srcObject) {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: window.selectedVideoDeviceId ? { deviceId: { exact: window.selectedVideoDeviceId } } : { facingMode: 'user' }
+                });
                 video.srcObject = stream;
                 document.getElementById('dj-webcam-overlay').classList.add('opacity-0');
             }
@@ -7762,6 +7766,13 @@ window.playDJTrack = (index) => {
     djCurrentIndex = index;
     const track = djQueue[index];
 
+    // If YouTube player not ready, open in new tab
+    if (!isYtReady) {
+        window.open(track.link, '_blank');
+        renderDJQueue();
+        return;
+    }
+
     playTrack(track, 'youtube');
     renderDJQueue();
 };
@@ -7781,7 +7792,7 @@ window.renderDJQueue = () => {
 
     q.innerHTML = djQueue.map((t, i) => {
         const isPlaying = (i === djCurrentIndex);
-        return '<div class="flex items-center gap-3 p-2 rounded-xl transition-all ' + (isPlaying ? 'bg-primary/20 border border-primary/30' : 'hover:bg-white/5') + ' cursor-pointer" onclick="if(djActive) playDJTrack(' + i + ')">' +
+        return '<div class="flex items-center gap-3 p-2 rounded-xl transition-all ' + (isPlaying ? 'bg-primary/20 border border-primary/30' : 'hover:bg-white/5') + ' cursor-pointer" onclick="window.playDJTrack(' + i + ')">' +
             '<img src="' + t.thumbnail + '" class="w-12 h-12 rounded-lg object-cover shadow-md" />' +
             '<div class="flex-1 min-w-0">' +
             '<p class="text-xs font-bold text-white truncate">' + t.title + '</p>' +
@@ -7896,18 +7907,30 @@ function startDJEmotionLoop() {
                 if (!selector) return;
 
                 selector.innerHTML = '';
+                const djSelector = document.getElementById('dj-camera-device-select');
+                if (djSelector) djSelector.innerHTML = '';
+
                 videoDevices.forEach((device, idx) => {
                     const opt = document.createElement('option');
                     opt.value = device.deviceId;
                     opt.text = device.label || 'Camera ' + (idx + 1);
                     selector.appendChild(opt);
+
+                    if (djSelector) {
+                        const opt2 = document.createElement('option');
+                        opt2.value = device.deviceId;
+                        opt2.text = device.label || 'Camera ' + (idx + 1);
+                        djSelector.appendChild(opt2);
+                    }
                 });
 
                 if (videoDevices.length > 0 && !window.selectedVideoDeviceId) {
                     window.selectedVideoDeviceId = videoDevices[0].deviceId;
                     selector.value = window.selectedVideoDeviceId;
+                    if (djSelector) djSelector.value = window.selectedVideoDeviceId;
                 } else if (window.selectedVideoDeviceId) {
                     selector.value = window.selectedVideoDeviceId;
+                    if (djSelector) djSelector.value = window.selectedVideoDeviceId;
                 }
             } catch (e) {
                 console.error("Error enumerating devices:", e);
@@ -7921,3 +7944,25 @@ function startDJEmotionLoop() {
                 initCamera();
             }
         };
+
+        window.onDJCameraDeviceChange = async (select) => {
+            window.selectedVideoDeviceId = select.value;
+            // Sync with main selector
+            const mainSelector = document.getElementById('camera-device-select');
+            if (mainSelector) mainSelector.value = window.selectedVideoDeviceId;
+
+            // Restart DJ webcam with new device if active
+            const video = document.getElementById('dj-video');
+            if (video && video.srcObject) {
+                stopDJWebcam();
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { deviceId: { exact: window.selectedVideoDeviceId } } 
+                    });
+                    video.srcObject = stream;
+                } catch (e) {
+                    console.error("Error switching DJ camera:", e);
+                }
+            }
+        };
+

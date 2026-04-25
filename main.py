@@ -1731,11 +1731,6 @@ async def chat_film_consultant(request: ChatRequest):
         }
 
 
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=7860)
-
 @app.post("/api/dj-radio")
 async def dj_radio(
     emotion: str = Form(...),
@@ -1800,4 +1795,12 @@ async def dj_radio(
         import traceback
         traceback.print_exc()
         return {"status": "error", "message": str(e)}
+
+
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=7860)
 

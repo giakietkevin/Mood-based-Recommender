@@ -328,475 +328,6 @@
                         <div class="h-48 bg-white/5 rounded-xl mb-4 border border-white/5"></div>
                     </div>
                 </div>
-            </main>
-
-            <!-- RIGHT SIDEBAR: Friends & Activity -->
-            <aside class="fb-sidebar">
-                <!-- Birthdays -->
-                <div class="glass-panel p-4 mb-4">
-                    <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <span class="material-icons-round text-primary text-sm">cake</span>
-                        Sinh nhật
-                    </h4>
-                    <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
-                        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                            <span class="material-icons-round text-primary text-xl">celebration</span>
-                        </div>
-                        <p class="text-xs text-slate-300 leading-relaxed">Hôm nay là sinh nhật của <span class="text-white font-bold">Kevin</span> và những người bạn.</p>
-                    </div>
-                </div>
-
-                <!-- Friend List Redesign -->
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between px-2">
-                        <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Người liên hệ</h4>
-                        <div class="flex gap-2 text-slate-400">
-                            <span class="material-icons-round text-sm cursor-pointer hover:text-white">videocam</span>
-                            <span class="material-icons-round text-sm cursor-pointer hover:text-white">search</span>
-                            <span class="material-icons-round text-sm cursor-pointer hover:text-white">more_horiz</span>
-                        </div>
-                    </div>
-
-                    <!-- Search / Add Friend Mini -->
-                    <div class="relative px-2">
-                        <input type="text" id="home-add-friend-email"
-                            class="glass-input w-full px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-1 focus:ring-primary/50"
-                            placeholder="🔍 Tìm kiếm bạn bè...">
-                    </div>
-
-                    <div id="home-friends-list" class="space-y-2">
-                        <!-- Contacts go here -->
-                        <div class="fb-contact-item glass-btn px-3 py-2.5 rounded-xl hover:bg-white/10">
-                            <div class="contact-avatar-box relative w-9 h-9">
-                                <img src="https://i.pravatar.cc/150?u=4" class="w-full h-full rounded-full object-cover">
-                                <div class="status-indicator w-3 h-3 bg-green-500 border-2 border-[#0a0a0a] absolute -bottom-0.5 -right-0.5 rounded-full"></div>
-                            </div>
-                            <span class="text-xs font-bold text-slate-300">Trung Hiếu</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Requests -->
-                <div id="home-friend-requests-container" class="mt-8 hidden px-2">
-                    <div class="flex items-center justify-between mb-3 border-t border-white/5 pt-4">
-                        <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Lời mời kết bạn</h4>
-                        <span id="home-req-count"
-                            class="bg-primary text-black text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-primary/30">0</span>
-                    </div>
-                    <div id="home-friend-requests" class="space-y-2"></div>
-                </div>
-            </aside>
-        </div>
-
-        <!-- STORY CREATOR MODAL (Facebook Style) -->
-        <div id="story-creator-modal" class="fixed inset-0 z-[1000] bg-[#0a0a0a] hidden animate-fade-in">
-            <!-- Sidebar Controls -->
-            <aside class="w-[360px] h-full bg-[#1c1e21] border-r border-white/5 flex flex-col shadow-2xl">
-                <div class="p-4 flex items-center justify-between border-b border-white/5">
-                    <div class="flex items-center gap-2">
-                        <button onclick="closeStoryCreator()"
-                            class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-400 transtion-all">
-                            <span class="material-icons-round">close</span>
-                        </button>
-                        <img src="https://static.xx.fbcdn.net/rsrc.php/v3/y2/r/y99vry8q99v.png" class="w-9 h-9">
-                    </div>
-                </div>
-
-                <div class="px-4 py-6 flex-1 overflow-y-auto no-scrollbar">
-                    <h2 class="text-2xl font-black text-white mb-6">Tin của bạn</h2>
-
-                    <div class="flex items-center gap-3 p-2 mb-8">
-                        <img id="story-creator-user-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest"
-                            class="w-12 h-12 rounded-full border border-white/10 object-cover">
-                        <span id="story-creator-user-name" class="font-bold text-white text-lg">Bạn</span>
-                    </div>
-
-                    <!-- Editor Controls (Hidden initially) -->
-                    <div id="story-editor-controls" class="hidden space-y-2">
-                        <button
-                            class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
-                            onclick="addTextToStory()">
-                            <div
-                                class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10">
-                                <span class="material-icons-round text-xl">type_specimen</span>
-                            </div>
-                            <span class="font-bold">Thêm văn bản</span>
-                        </button>
-                        <button
-                            class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
-                            onclick="addMusicToStory()">
-                            <div
-                                class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10">
-                                <span class="material-icons-round text-xl">music_note</span>
-                            </div>
-                            <span class="font-bold">Thêm nhạc</span>
-                        </button>
-                        <button
-                            class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group">
-                            <div
-                                class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10">
-                                <span class="material-icons-round text-xl">sticky_note_2</span>
-                            </div>
-                            <span class="font-bold">Văn bản thay thế</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Bottom Actions -->
-                <div id="story-creator-footer" class="p-4 border-t border-white/5 bg-[#1c1e21] hidden">
-                    <div class="flex gap-2">
-                        <button onclick="closeStoryCreator()"
-                            class="flex-1 py-2.5 rounded-xl bg-white/5 text-white font-bold hover:bg-white/10 active:scale-95 transition-all">Bỏ</button>
-                        <button id="share-story-btn" onclick="submitHomeStory()"
-                            class="flex-[2] py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 active:scale-95 transition-all shadow-lg shadow-blue-500/20">Chia
-                            sẻ lên tin</button>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Main Preview Area -->
-            <main class="flex-1 h-full bg-[#0a0a0a] relative flex items-center justify-center p-8 overflow-hidden">
-                <!-- Initial State: Pick Type -->
-                <div id="story-type-picker" class="flex gap-4 animate-fade-in">
-                    <div onclick="document.getElementById('story-image-input').click()"
-                        class="w-[220px] h-[330px] rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-400 flex flex-col items-center justify-center gap-3 cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-2xl group">
-                        <div
-                            class="w-12 h-12 rounded-full bg-black/80 flex items-center justify-center text-white group-hover:bg-black transition-colors">
-                            <span class="material-icons-round">photo_library</span>
-                        </div>
-                        <p class="text-white font-bold text-sm">Tạo tin dạng ảnh</p>
-                    </div>
-                    <div onclick="startTextStory()"
-                        class="w-[220px] h-[330px] rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex flex-col items-center justify-center gap-3 cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-2xl group">
-                        <div
-                            class="w-12 h-12 rounded-full bg-black/80 flex items-center justify-center text-white group-hover:bg-black transition-colors">
-                            <span class="material-icons-round">type_specimen</span>
-                        </div>
-                        <p class="text-white font-bold text-sm">Tạo tin dạng văn bản</p>
-                    </div>
-                </div>
-
-                <!-- Editor State: Image Preview -->
-                <div id="story-editor-preview"
-                    class="hidden w-full h-full flex flex-col items-center justify-center animate-fade-in relative">
-                    <div class="relative max-w-[400px] h-full max-h-[700px] aspect-[9/16] bg-[#18191a] rounded-2xl overflow-hidden shadow-2xl border border-white/5 flex items-center justify-center bg-cover bg-center"
-                        id="story-preview-bg">
-                        <img id="story-preview-img"
-                            class="max-w-full max-h-full object-contain transition-transform duration-300" src="">
-
-                        <!-- Text Overlay Container -->
-                        <div id="story-text-container"
-                            class="absolute inset-0 pointer-events-none flex items-center justify-center p-8">
-                            <p id="story-display-text"
-                                class="text-white font-black text-3xl text-center drop-shadow-2xl break-words"></p>
-                        </div>
-
-                        <!-- Music Badge (Floating) -->
-                        <div id="story-music-badge"
-                            class="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl hidden flex items-center gap-3 border border-white/20 animate-bounce cursor-move shadow-2xl">
-                            <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center">
-                                <span class="material-icons-round text-white text-sm">music_note</span>
-                            </div>
-                            <div>
-                                <p id="story-music-name" class="text-white text-xs font-black truncate max-w-[120px]">
-                                    Tên bài hát</p>
-                                <p id="story-music-artist"
-                                    class="text-white/60 text-[9px] font-bold truncate max-w-[120px]">Nghệ sĩ</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Editor Tools (Zoom/Rotate/Music Trimmer) -->
-                    <div class="mt-6 flex flex-col items-center gap-4">
-                        <!-- Music Trimmer (Visible when music selected) -->
-                        <div id="story-music-trimmer"
-                            class="hidden flex items-center gap-4 bg-black/80 backdrop-blur-2xl p-3 px-5 rounded-2xl border border-white/10 shadow-2xl animate-fade-in">
-                            <button id="trimmer-play-btn"
-                                class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg active:scale-90 transition-all">
-                                <span class="material-icons-round">play_arrow</span>
-                            </button>
-                            <div
-                                class="relative w-[300px] h-12 bg-white/5 rounded-lg overflow-hidden flex items-center">
-                                <!-- Simple Waveform Mock -->
-                                <div
-                                    class="absolute inset-y-0 left-0 w-full flex items-center gap-[2px] px-2 opacity-30 pointer-events-none">
-                                    <div class="w-[2px] h-3 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-3 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
-                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
-                                </div>
-                                <!-- Draggable Handle -->
-                                <input type="range" id="story-music-slider" min="0" max="100" value="0"
-                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                                <div id="trimmer-handle"
-                                    class="absolute top-0 bottom-0 left-0 w-[60px] bg-primary/20 border-x-2 border-primary rounded-md pointer-events-none flex items-center justify-center">
-                                    <div class="text-[8px] font-black text-primary">15s</div>
-                                </div>
-                            </div>
-                            <button onclick="confirmMusicTrim()"
-                                class="w-10 h-10 rounded-xl bg-primary text-black flex items-center justify-center shadow-lg hover:scale-105 transition-all">
-                                <span class="material-icons-round">check</span>
-                            </button>
-                        </div>
-
-                        <div
-                            class="flex items-center gap-6 bg-black/80 backdrop-blur-xl px-6 py-3 rounded-full border border-white/10 shadow-2xl">
-                            <div class="flex items-center gap-3 min-w-[200px]">
-                                <span class="material-icons-round text-slate-500 text-sm">remove</span>
-                                <input type="range" id="story-zoom-slider" min="0.5" max="3" step="0.1" value="1"
-                                    class="flex-1 accent-primary h-1 bg-white/10 rounded-full appearance-none">
-                                <span class="material-icons-round text-slate-500 text-sm">add</span>
-                            </div>
-                            <div class="w-px h-6 bg-white/10"></div>
-                            <button
-                                class="flex items-center gap-2 text-white hover:text-primary transition-colors font-bold text-sm"
-                                onclick="rotateStoryImage()">
-                                <span class="material-icons-round text-lg">rotate_right</span> Xoay
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <input type="file" id="story-image-input" class="hidden" accept="image/*"
-                    onchange="handleStoryImageSelect(event)">
-            </main>
-        </div>
-
-        <!-- MUSIC PICKER MODAL (Inside Story Modal context but absolute) -->
-        <div id="music-picker-modal"
-            class="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden">
-            <div
-                class="w-[380px] bg-[#242526] rounded-2xl shadow-2xl overflow-hidden border border-white/10 animate-fade-in">
-                <div class="p-4 border-b border-white/5 flex items-center justify-between bg-[#242526]">
-                    <h3 class="text-white font-black text-lg">Chọn nhạc</h3>
-                    <button onclick="closeMusicPicker()"
-                        class="w-8 h-8 rounded-full hover:bg-white/5 text-slate-400 flex items-center justify-center"><span
-                            class="material-icons-round">close</span></button>
-                </div>
-                <div class="p-4">
-                    <div class="relative mb-4">
-                        <span
-                            class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">search</span>
-                        <input type="text" id="music-search-input" oninput="debounceSearchMusic(this.value)"
-                            placeholder="Tìm kiếm bài hát, nghệ sĩ..."
-                            class="w-full bg-[#3a3b3c] border-none rounded-full py-2.5 pl-10 pr-4 text-white placeholder-slate-500 focus:ring-1 focus:ring-primary/40 text-sm">
-                    </div>
-
-                    <div id="music-results" class="space-y-1 max-h-[400px] overflow-y-auto pr-1 no-scrollbar">
-                        <!-- Music Results Placeholder -->
-                        <div class="py-12 text-center text-slate-600">
-                            <span class="material-icons-round text-4xl mb-2">music_note</span>
-                            <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Bắt đầu tìm nhạc</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- STORY VIEWER MODAL (Facebook Style Fullscreen) -->
-        <div id="story-viewer-modal" class="fixed inset-0 z-[2000] bg-black hidden animate-fade-in">
-            <!-- Left Sidebar: Story List -->
-            <aside class="w-[360px] h-full bg-[#1c1e21] border-r border-white/5 flex flex-col hidden md:flex">
-                <div class="p-4 flex items-center justify-between border-b border-white/5">
-                    <button onclick="closeStoryViewer()"
-                        class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all">
-                        <span class="material-icons-round">close</span>
-                    </button>
-                    <img src="https://static.xx.fbcdn.net/rsrc.php/v3/y2/r/y99vry8q99v.png" class="w-10 h-10">
-                </div>
-                <div class="p-4 overflow-y-auto no-scrollbar flex-1">
-                    <h2 class="text-2xl font-black text-white mb-4">Tin</h2>
-                    <div id="viewer-sidebar-list" class="space-y-1">
-                        <!-- Story items will be injected here -->
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Main Content Area -->
-            <main class="flex-1 h-full bg-[#0a0a0a] relative flex items-center justify-center overflow-hidden">
-                <!-- Close button for mobile -->
-                <button onclick="closeStoryViewer()"
-                    class="absolute top-4 left-4 z-50 md:hidden w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center">
-                    <span class="material-icons-round">close</span>
-                </button>
-
-                <!-- Navigation Arrows -->
-                <button id="viewer-prev-btn"
-                    class="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all z-20">
-                    <span class="material-icons-round">chevron_left</span>
-                </button>
-                <button id="viewer-next-btn"
-                    class="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all z-20">
-                    <span class="material-icons-round">chevron_right</span>
-                </button>
-
-                <!-- Image Container -->
-                <div
-                    class="relative h-full max-h-[90vh] aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/5 flex items-center justify-center">
-                    <img id="story-view-img" class="max-w-full max-h-full object-contain" src="">
-
-                    <!-- User Info Header (Inside image area) -->
-                    <div
-                        class="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/60 to-transparent flex items-center gap-3">
-                        <img id="story-view-avatar" src="" class="w-10 h-10 rounded-full border-2 border-primary">
-                        <div>
-                            <p id="story-view-author" class="text-white font-bold text-sm"></p>
-                            <p id="story-view-time" class="text-white/60 text-[10px]"></p>
-                        </div>
-                    </div>
-
-                    <!-- Overlay Text -->
-                    <div id="story-view-text-container"
-                        class="absolute inset-0 flex items-center justify-center p-8 pointer-events-none">
-                        <p id="story-view-display-text"
-                            class="text-white font-black text-3xl text-center drop-shadow-2xl"></p>
-                    </div>
-
-                    <!-- Music Badge -->
-                    <div id="story-view-music-badge"
-                        class="absolute bottom-20 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl hidden flex items-center gap-3 border border-white/20 animate-bounce">
-                        <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center text-white">
-                            <span class="material-icons-round text-sm">music_note</span>
-                        </div>
-                        <p id="story-view-music-name" class="text-white text-xs font-black truncate max-w-[150px]">Tên
-                            bài hát</p>
-                    </div>
-                </div>
-
-                <!-- Reactions & Message Bar -->
-                <div
-                    class="absolute bottom-0 left-0 right-0 p-6 flex items-center justify-center gap-4 bg-gradient-to-t from-black/80 to-transparent">
-                    <div class="flex-1 max-w-[500px] relative">
-                        <input type="text" placeholder="Gửi tin nhắn..."
-                            class="w-full bg-white/10 border border-white/10 rounded-full py-3 px-6 text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('like')"><img
-                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yv/r/S069_X2fS98.png"
-                                class="w-full h-full"></button>
-                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('love')"><img
-                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yO/r/v2pD7Y6YvY8.png"
-                                class="w-full h-full"></button>
-                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('care')"><img
-                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yT/r/H_LOfR67pXm.png"
-                                class="w-full h-full"></button>
-                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('haha')"><img
-                                src="https://static.xx.fbcdn.net/rsrc.php/v3/y6/r/59MAnB5F54H.png"
-                                class="w-full h-full"></button>
-                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('wow')"><img
-                                src="https://static.xx.fbcdn.net/rsrc.php/v3/y9/r/W7g7M84z0M7.png"
-                                class="w-full h-full"></button>
-                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('sad')"><img
-                                src="https://static.xx.fbcdn.net/rsrc.php/v3/y0/r/c38r-Wf_K5m.png"
-                                class="w-full h-full"></button>
-                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all"
-                            onclick="reactToStory('angry')"><img
-                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yt/r/86jU-H5_hV-.png"
-                                class="w-full h-full"></button>
-                    </div>
-                </div>
-            </main>
-        </div>
-
-        <!-- NEW: HOME POST MODAL (Like FB) -->
-        <div id="home-post-modal"
-            class="fixed inset-0 z-[1000] bg-[#0a0a0a]/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
-            <div class="glass-card w-full max-w-lg rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
-                <div class="p-4 border-b border-white/5 flex items-center justify-between">
-                    <div class="w-8"></div>
-                    <h3 class="text-lg font-bold text-white">Tạo bài viết</h3>
-                    <button onclick="document.getElementById('home-post-modal').classList.add('hidden')"
-                        class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white">
-                        <span class="material-icons-round">close</span>
-                    </button>
-                </div>
-
-                <div class="p-4 space-y-4">
-                    <div class="flex items-center gap-3">
-                        <img id="modal-user-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest"
-                            class="w-10 h-10 rounded-full border border-white/10">
-                        <div>
-                            <p class="text-sm font-bold text-white">Bạn</p>
-                            <select id="home-post-privacy"
-                                class="bg-white/5 border border-white/10 rounded-lg px-2 py-0.5 text-[10px] font-bold text-slate-400 outline-none">
-                                <option value="public">🌍 Công khai</option>
-                                <option value="friends">👥 Bạn bè</option>
-                                <option value="private">🔒 Chỉ mình tôi</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <textarea id="home-post-content"
-                        class="w-full bg-transparent border-none text-xl text-white placeholder-slate-600 focus:ring-0 resize-none h-40"
-                        placeholder="Bạn đang nghĩ gì thế?"></textarea>
-
-                    <div id="home-post-media-container"
-                        class="hidden relative p-4 bg-white/5 rounded-xl border border-dashed border-white/10">
-                        <div id="home-post-media-preview-grid" class="grid grid-cols-2 gap-2 mb-3"></div>
-                        <input type="text" id="home-post-media-url" placeholder="Dán link ảnh hoặc video vào đây..."
-                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:border-primary">
-                        <button onclick="clearHomePostMedia()"
-                            class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"><span
-                                class="material-icons-round text-sm">close</span></button>
-                    </div>
-
-                    <input type="file" id="home-post-media-file" accept="image/*" multiple class="hidden"
-                        onchange="handleHomePostImageUpload(event)">
-
-                    <div class="p-3 border border-white/10 rounded-xl flex items-center justify-between">
-                        <span class="text-sm font-bold text-slate-300 ml-2">Thêm vào bài viết của bạn</span>
-                        <div class="flex gap-1">
-                            <button onclick="document.getElementById('home-post-media-file').click()"
-                                class="w-8 h-8 rounded-full hover:bg-white/5 text-green-500 flex items-center justify-center tooltip"
-                                title="Ảnh/Video"><span class="material-icons-round">photo_library</span></button>
-                            <button
-                                class="w-8 h-8 rounded-full hover:bg-white/5 text-blue-500 flex items-center justify-center"><span
-                                    class="material-icons-round">person_add</span></button>
-                            <button
-                                class="w-8 h-8 rounded-full hover:bg-white/5 text-yellow-500 flex items-center justify-center"><span
-                                    class="material-icons-round">sentiment_very_satisfied</span></button>
-                            <button
-                                class="w-8 h-8 rounded-full hover:bg-white/5 text-red-500 flex items-center justify-center"><span
-                                    class="material-icons-round">place</span></button>
-                        </div>
-                    </div>
-
-                    <button
-                        onclick="createHomePost().then(() => document.getElementById('home-post-modal').classList.add('hidden'))"
-                        class="w-full bg-primary text-black font-black py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20">
-                        ĐĂNG
-                    </button>
-                </div>
-            </div>
-        </div>
         </div>
 
         <div id="view-dashboard" class="hidden grid lg:grid-cols-12 gap-6 animate-fade-in">
@@ -3043,6 +2574,591 @@
             </div>
     </main>
     </div>
+
+        <!-- DJ RADIO VIEW -->
+        <div id="view-djradio" class="hidden max-w-6xl mx-auto animate-fade-in py-6 sm:py-8 px-4 sm:px-6">
+            <div class="mb-8 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                    <h1 class="text-3xl sm:text-4xl font-display font-bold text-white uppercase tracking-tight mb-2">
+                        Endless <span class="text-primary">Radio</span>
+                    </h1>
+                    <p class="text-slate-400 text-sm">AI DJ tự động nhận diện cảm xúc & mix nhạc chữa lành</p>
+                </div>
+                <div class="flex items-center gap-4 flex-wrap sm:flex-nowrap justify-center sm:justify-end">
+                    <select id="dj-manual-emotion" class="glass-input rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary transition-all bg-[#1a1a1a]">
+                        <option value="">📸 Dùng Webcam</option>
+                        <option value="joy">Vui vẻ</option>
+                        <option value="sadness">Buồn bã</option>
+                        <option value="calmness">Bình yên</option>
+                        <option value="anger">Bực tức</option>
+                        <option value="romantic">Lãng mạn</option>
+                    </select>
+                    <select id="dj-voice-select" class="glass-input rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary transition-all bg-[#1a1a1a]">
+                        <option value="vi-VN-HoaiMyNeural">👩 Nữ (Hoài My)</option>
+                        <option value="vi-VN-NamMinhNeural">👨 Nam (Nam Minh)</option>
+                    </select>
+                    <button id="btn-start-dj" onclick="startDJRadio()" class="btn-primary px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/30 flex items-center gap-2 transition-all w-full sm:w-auto justify-center">
+                        <span class="material-icons-round">radio</span> Bắt Đầu
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+                <!-- Left: Webcam & Info -->
+                <div class="lg:col-span-5 space-y-6">
+                    <!-- Webcam Card -->
+                    <div class="glass-card rounded-[2rem] p-4 sm:p-6 relative overflow-hidden group border border-white/5 shadow-2xl">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                                <span class="material-icons-round text-primary text-sm">visibility</span> Cảm Xúc Của Bạn
+                            </h2>
+                            <div id="dj-emotion-badge" class="px-3 py-1 rounded-full bg-white/10 text-[10px] font-bold text-white uppercase tracking-widest border border-white/5">
+                                Chờ quét...
+                            </div>
+                        </div>
+                        <div class="relative rounded-2xl overflow-hidden aspect-video bg-black/50 border border-white/10 shadow-inner flex items-center justify-center">
+                            <video id="dj-video" class="w-full h-full object-cover opacity-80" autoplay playsinline muted></video>
+                            <div id="dj-webcam-overlay" class="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-10 transition-opacity">
+                                <span class="material-icons-round text-white/50 text-4xl animate-pulse">videocam_off</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="relative group/cam flex-1">
+                                <select id="dj-camera-device-select" onchange="window.onDJCameraDeviceChange(this)"
+                                    class="camera-select-dropdown w-full bg-white/5 hover:bg-white/10 text-white/80 py-2 px-3 pl-8 rounded-xl font-bold text-[10px] uppercase tracking-widest appearance-none transition-all border border-white/10 cursor-pointer">
+                                    <option value="">Đang tải camera...</option>
+                                </select>
+                                <span class="material-icons-round absolute left-2 top-1/2 -translate-y-1/2 text-primary text-[14px]">videocam</span>
+                            </div>
+                            <label class="flex items-center gap-2 cursor-pointer flex-shrink-0">
+                                <div class="relative">
+                                    <input type="checkbox" id="dj-continuous-toggle" class="sr-only">
+                                    <div class="w-10 h-6 bg-white/10 rounded-full shadow-inner transition-colors border border-white/5" id="dj-toggle-bg"></div>
+                                    <div class="absolute left-1 top-1 w-4 h-4 bg-slate-400 rounded-full transition-transform" id="dj-toggle-dot"></div>
+                                </div>
+                                <span class="text-xs font-bold text-slate-300 uppercase tracking-wide">Quét liên tục (30s)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- DJ Status Card -->
+                    <div class="glass-card rounded-[2rem] p-4 sm:p-6 border border-white/5 shadow-2xl relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-green-400 flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0 relative">
+                                <span class="material-icons-round text-bg-dark text-2xl">graphic_eq</span>
+                                <div id="dj-speaking-indicator" class="absolute -bottom-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#111] hidden animate-pulse"></div>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-white mb-1">AI DJ Station</h3>
+                                <p id="dj-intro-text" class="text-xs text-slate-400 leading-relaxed italic">"Bấm bắt đầu để AI DJ chọn nhạc dành riêng cho bạn..."</p>
+                            </div>
+                        </div>
+                        <audio id="dj-intro-audio" class="hidden"></audio>
+                    </div>
+                </div>
+
+                <!-- Right: Playlist Queue -->
+                <div class="lg:col-span-7">
+                    <div class="glass-card rounded-[2rem] p-4 sm:p-6 border border-white/5 shadow-2xl h-full flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                                <span class="material-icons-round text-primary text-sm">queue_music</span> Radio Queue
+                            </h2>
+                            <button onclick="nextDJTrack()" class="text-[10px] bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg text-slate-300 transition-all font-bold uppercase tracking-widest flex items-center gap-1">
+                                Bỏ qua <span class="material-icons-round text-[12px]">skip_next</span>
+                            </button>
+                        </div>
+                        
+                        <div id="dj-playlist-queue" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 min-h-[300px]">
+                            <div class="flex flex-col items-center justify-center h-full text-slate-500 space-y-3 opacity-50">
+                                <span class="material-icons-round text-4xl">album</span>
+                                <p class="text-xs font-bold uppercase tracking-widest">Hàng đợi trống</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- HOME (SOCIAL STATION) LOGIC -->
+
+
+
+        
+
+            </main>
+
+            <!-- RIGHT SIDEBAR: Friends & Activity -->
+            <aside class="fb-sidebar">
+                <!-- Birthdays -->
+                <div class="glass-panel p-4 mb-4">
+                    <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span class="material-icons-round text-primary text-sm">cake</span>
+                        Sinh nhật
+                    </h4>
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                            <span class="material-icons-round text-primary text-xl">celebration</span>
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed">Hôm nay là sinh nhật của <span class="text-white font-bold">Kevin</span> và những người bạn.</p>
+                    </div>
+                </div>
+
+                <!-- Friend List Redesign -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between px-2">
+                        <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Người liên hệ</h4>
+                        <div class="flex gap-2 text-slate-400">
+                            <span class="material-icons-round text-sm cursor-pointer hover:text-white">videocam</span>
+                            <span class="material-icons-round text-sm cursor-pointer hover:text-white">search</span>
+                            <span class="material-icons-round text-sm cursor-pointer hover:text-white">more_horiz</span>
+                        </div>
+                    </div>
+
+                    <!-- Search / Add Friend Mini -->
+                    <div class="relative px-2">
+                        <input type="text" id="home-add-friend-email"
+                            class="glass-input w-full px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-1 focus:ring-primary/50"
+                            placeholder="🔍 Tìm kiếm bạn bè...">
+                    </div>
+
+                    <div id="home-friends-list" class="space-y-2">
+                        <!-- Contacts go here -->
+                        <div class="fb-contact-item glass-btn px-3 py-2.5 rounded-xl hover:bg-white/10">
+                            <div class="contact-avatar-box relative w-9 h-9">
+                                <img src="https://i.pravatar.cc/150?u=4" class="w-full h-full rounded-full object-cover">
+                                <div class="status-indicator w-3 h-3 bg-green-500 border-2 border-[#0a0a0a] absolute -bottom-0.5 -right-0.5 rounded-full"></div>
+                            </div>
+                            <span class="text-xs font-bold text-slate-300">Trung Hiếu</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Requests -->
+                <div id="home-friend-requests-container" class="mt-8 hidden px-2">
+                    <div class="flex items-center justify-between mb-3 border-t border-white/5 pt-4">
+                        <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Lời mời kết bạn</h4>
+                        <span id="home-req-count"
+                            class="bg-primary text-black text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-primary/30">0</span>
+                    </div>
+                    <div id="home-friend-requests" class="space-y-2"></div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- STORY CREATOR MODAL (Facebook Style) -->
+        <div id="story-creator-modal" class="fixed inset-0 z-[1000] bg-[#0a0a0a] hidden animate-fade-in">
+            <!-- Sidebar Controls -->
+            <aside class="w-[360px] h-full bg-[#1c1e21] border-r border-white/5 flex flex-col shadow-2xl">
+                <div class="p-4 flex items-center justify-between border-b border-white/5">
+                    <div class="flex items-center gap-2">
+                        <button onclick="closeStoryCreator()"
+                            class="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-400 transtion-all">
+                            <span class="material-icons-round">close</span>
+                        </button>
+                        <img src="https://static.xx.fbcdn.net/rsrc.php/v3/y2/r/y99vry8q99v.png" class="w-9 h-9">
+                    </div>
+                </div>
+
+                <div class="px-4 py-6 flex-1 overflow-y-auto no-scrollbar">
+                    <h2 class="text-2xl font-black text-white mb-6">Tin của bạn</h2>
+
+                    <div class="flex items-center gap-3 p-2 mb-8">
+                        <img id="story-creator-user-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest"
+                            class="w-12 h-12 rounded-full border border-white/10 object-cover">
+                        <span id="story-creator-user-name" class="font-bold text-white text-lg">Bạn</span>
+                    </div>
+
+                    <!-- Editor Controls (Hidden initially) -->
+                    <div id="story-editor-controls" class="hidden space-y-2">
+                        <button
+                            class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
+                            onclick="addTextToStory()">
+                            <div
+                                class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10">
+                                <span class="material-icons-round text-xl">type_specimen</span>
+                            </div>
+                            <span class="font-bold">Thêm văn bản</span>
+                        </button>
+                        <button
+                            class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
+                            onclick="addMusicToStory()">
+                            <div
+                                class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10">
+                                <span class="material-icons-round text-xl">music_note</span>
+                            </div>
+                            <span class="font-bold">Thêm nhạc</span>
+                        </button>
+                        <button
+                            class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group">
+                            <div
+                                class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10">
+                                <span class="material-icons-round text-xl">sticky_note_2</span>
+                            </div>
+                            <span class="font-bold">Văn bản thay thế</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bottom Actions -->
+                <div id="story-creator-footer" class="p-4 border-t border-white/5 bg-[#1c1e21] hidden">
+                    <div class="flex gap-2">
+                        <button onclick="closeStoryCreator()"
+                            class="flex-1 py-2.5 rounded-xl bg-white/5 text-white font-bold hover:bg-white/10 active:scale-95 transition-all">Bỏ</button>
+                        <button id="share-story-btn" onclick="submitHomeStory()"
+                            class="flex-[2] py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 active:scale-95 transition-all shadow-lg shadow-blue-500/20">Chia
+                            sẻ lên tin</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Preview Area -->
+            <main class="flex-1 h-full bg-[#0a0a0a] relative flex items-center justify-center p-8 overflow-hidden">
+                <!-- Initial State: Pick Type -->
+                <div id="story-type-picker" class="flex gap-4 animate-fade-in">
+                    <div onclick="document.getElementById('story-image-input').click()"
+                        class="w-[220px] h-[330px] rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-400 flex flex-col items-center justify-center gap-3 cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-2xl group">
+                        <div
+                            class="w-12 h-12 rounded-full bg-black/80 flex items-center justify-center text-white group-hover:bg-black transition-colors">
+                            <span class="material-icons-round">photo_library</span>
+                        </div>
+                        <p class="text-white font-bold text-sm">Tạo tin dạng ảnh</p>
+                    </div>
+                    <div onclick="startTextStory()"
+                        class="w-[220px] h-[330px] rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex flex-col items-center justify-center gap-3 cursor-pointer hover:scale-105 active:scale-95 transition-all shadow-2xl group">
+                        <div
+                            class="w-12 h-12 rounded-full bg-black/80 flex items-center justify-center text-white group-hover:bg-black transition-colors">
+                            <span class="material-icons-round">type_specimen</span>
+                        </div>
+                        <p class="text-white font-bold text-sm">Tạo tin dạng văn bản</p>
+                    </div>
+                </div>
+
+                <!-- Editor State: Image Preview -->
+                <div id="story-editor-preview"
+                    class="hidden w-full h-full flex flex-col items-center justify-center animate-fade-in relative">
+                    <div class="relative max-w-[400px] h-full max-h-[700px] aspect-[9/16] bg-[#18191a] rounded-2xl overflow-hidden shadow-2xl border border-white/5 flex items-center justify-center bg-cover bg-center"
+                        id="story-preview-bg">
+                        <img id="story-preview-img"
+                            class="max-w-full max-h-full object-contain transition-transform duration-300" src="">
+
+                        <!-- Text Overlay Container -->
+                        <div id="story-text-container"
+                            class="absolute inset-0 pointer-events-none flex items-center justify-center p-8">
+                            <p id="story-display-text"
+                                class="text-white font-black text-3xl text-center drop-shadow-2xl break-words"></p>
+                        </div>
+
+                        <!-- Music Badge (Floating) -->
+                        <div id="story-music-badge"
+                            class="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl hidden flex items-center gap-3 border border-white/20 animate-bounce cursor-move shadow-2xl">
+                            <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center">
+                                <span class="material-icons-round text-white text-sm">music_note</span>
+                            </div>
+                            <div>
+                                <p id="story-music-name" class="text-white text-xs font-black truncate max-w-[120px]">
+                                    Tên bài hát</p>
+                                <p id="story-music-artist"
+                                    class="text-white/60 text-[9px] font-bold truncate max-w-[120px]">Nghệ sĩ</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Editor Tools (Zoom/Rotate/Music Trimmer) -->
+                    <div class="mt-6 flex flex-col items-center gap-4">
+                        <!-- Music Trimmer (Visible when music selected) -->
+                        <div id="story-music-trimmer"
+                            class="hidden flex items-center gap-4 bg-black/80 backdrop-blur-2xl p-3 px-5 rounded-2xl border border-white/10 shadow-2xl animate-fade-in">
+                            <button id="trimmer-play-btn"
+                                class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg active:scale-90 transition-all">
+                                <span class="material-icons-round">play_arrow</span>
+                            </button>
+                            <div
+                                class="relative w-[300px] h-12 bg-white/5 rounded-lg overflow-hidden flex items-center">
+                                <!-- Simple Waveform Mock -->
+                                <div
+                                    class="absolute inset-y-0 left-0 w-full flex items-center gap-[2px] px-2 opacity-30 pointer-events-none">
+                                    <div class="w-[2px] h-3 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-3 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-6 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-4 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-9 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-7 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-5 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-8 bg-white rounded-full"></div>
+                                    <div class="w-[2px] h-10 bg-white rounded-full"></div>
+                                </div>
+                                <!-- Draggable Handle -->
+                                <input type="range" id="story-music-slider" min="0" max="100" value="0"
+                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                <div id="trimmer-handle"
+                                    class="absolute top-0 bottom-0 left-0 w-[60px] bg-primary/20 border-x-2 border-primary rounded-md pointer-events-none flex items-center justify-center">
+                                    <div class="text-[8px] font-black text-primary">15s</div>
+                                </div>
+                            </div>
+                            <button onclick="confirmMusicTrim()"
+                                class="w-10 h-10 rounded-xl bg-primary text-black flex items-center justify-center shadow-lg hover:scale-105 transition-all">
+                                <span class="material-icons-round">check</span>
+                            </button>
+                        </div>
+
+                        <div
+                            class="flex items-center gap-6 bg-black/80 backdrop-blur-xl px-6 py-3 rounded-full border border-white/10 shadow-2xl">
+                            <div class="flex items-center gap-3 min-w-[200px]">
+                                <span class="material-icons-round text-slate-500 text-sm">remove</span>
+                                <input type="range" id="story-zoom-slider" min="0.5" max="3" step="0.1" value="1"
+                                    class="flex-1 accent-primary h-1 bg-white/10 rounded-full appearance-none">
+                                <span class="material-icons-round text-slate-500 text-sm">add</span>
+                            </div>
+                            <div class="w-px h-6 bg-white/10"></div>
+                            <button
+                                class="flex items-center gap-2 text-white hover:text-primary transition-colors font-bold text-sm"
+                                onclick="rotateStoryImage()">
+                                <span class="material-icons-round text-lg">rotate_right</span> Xoay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="file" id="story-image-input" class="hidden" accept="image/*"
+                    onchange="handleStoryImageSelect(event)">
+            </main>
+        </div>
+
+        <!-- MUSIC PICKER MODAL (Inside Story Modal context but absolute) -->
+        <div id="music-picker-modal"
+            class="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden">
+            <div
+                class="w-[380px] bg-[#242526] rounded-2xl shadow-2xl overflow-hidden border border-white/10 animate-fade-in">
+                <div class="p-4 border-b border-white/5 flex items-center justify-between bg-[#242526]">
+                    <h3 class="text-white font-black text-lg">Chọn nhạc</h3>
+                    <button onclick="closeMusicPicker()"
+                        class="w-8 h-8 rounded-full hover:bg-white/5 text-slate-400 flex items-center justify-center"><span
+                            class="material-icons-round">close</span></button>
+                </div>
+                <div class="p-4">
+                    <div class="relative mb-4">
+                        <span
+                            class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">search</span>
+                        <input type="text" id="music-search-input" oninput="debounceSearchMusic(this.value)"
+                            placeholder="Tìm kiếm bài hát, nghệ sĩ..."
+                            class="w-full bg-[#3a3b3c] border-none rounded-full py-2.5 pl-10 pr-4 text-white placeholder-slate-500 focus:ring-1 focus:ring-primary/40 text-sm">
+                    </div>
+
+                    <div id="music-results" class="space-y-1 max-h-[400px] overflow-y-auto pr-1 no-scrollbar">
+                        <!-- Music Results Placeholder -->
+                        <div class="py-12 text-center text-slate-600">
+                            <span class="material-icons-round text-4xl mb-2">music_note</span>
+                            <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Bắt đầu tìm nhạc</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STORY VIEWER MODAL (Facebook Style Fullscreen) -->
+        <div id="story-viewer-modal" class="fixed inset-0 z-[2000] bg-black hidden animate-fade-in">
+            <!-- Left Sidebar: Story List -->
+            <aside class="w-[360px] h-full bg-[#1c1e21] border-r border-white/5 flex flex-col hidden md:flex">
+                <div class="p-4 flex items-center justify-between border-b border-white/5">
+                    <button onclick="closeStoryViewer()"
+                        class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                    <img src="https://static.xx.fbcdn.net/rsrc.php/v3/y2/r/y99vry8q99v.png" class="w-10 h-10">
+                </div>
+                <div class="p-4 overflow-y-auto no-scrollbar flex-1">
+                    <h2 class="text-2xl font-black text-white mb-4">Tin</h2>
+                    <div id="viewer-sidebar-list" class="space-y-1">
+                        <!-- Story items will be injected here -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 h-full bg-[#0a0a0a] relative flex items-center justify-center overflow-hidden">
+                <!-- Close button for mobile -->
+                <button onclick="closeStoryViewer()"
+                    class="absolute top-4 left-4 z-50 md:hidden w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center">
+                    <span class="material-icons-round">close</span>
+                </button>
+
+                <!-- Navigation Arrows -->
+                <button id="viewer-prev-btn"
+                    class="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all z-20">
+                    <span class="material-icons-round">chevron_left</span>
+                </button>
+                <button id="viewer-next-btn"
+                    class="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all z-20">
+                    <span class="material-icons-round">chevron_right</span>
+                </button>
+
+                <!-- Image Container -->
+                <div
+                    class="relative h-full max-h-[90vh] aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/5 flex items-center justify-center">
+                    <img id="story-view-img" class="max-w-full max-h-full object-contain" src="">
+
+                    <!-- User Info Header (Inside image area) -->
+                    <div
+                        class="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/60 to-transparent flex items-center gap-3">
+                        <img id="story-view-avatar" src="" class="w-10 h-10 rounded-full border-2 border-primary">
+                        <div>
+                            <p id="story-view-author" class="text-white font-bold text-sm"></p>
+                            <p id="story-view-time" class="text-white/60 text-[10px]"></p>
+                        </div>
+                    </div>
+
+                    <!-- Overlay Text -->
+                    <div id="story-view-text-container"
+                        class="absolute inset-0 flex items-center justify-center p-8 pointer-events-none">
+                        <p id="story-view-display-text"
+                            class="text-white font-black text-3xl text-center drop-shadow-2xl"></p>
+                    </div>
+
+                    <!-- Music Badge -->
+                    <div id="story-view-music-badge"
+                        class="absolute bottom-20 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl hidden flex items-center gap-3 border border-white/20 animate-bounce">
+                        <div class="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center text-white">
+                            <span class="material-icons-round text-sm">music_note</span>
+                        </div>
+                        <p id="story-view-music-name" class="text-white text-xs font-black truncate max-w-[150px]">Tên
+                            bài hát</p>
+                    </div>
+                </div>
+
+                <!-- Reactions & Message Bar -->
+                <div
+                    class="absolute bottom-0 left-0 right-0 p-6 flex items-center justify-center gap-4 bg-gradient-to-t from-black/80 to-transparent">
+                    <div class="flex-1 max-w-[500px] relative">
+                        <input type="text" placeholder="Gửi tin nhắn..."
+                            class="w-full bg-white/10 border border-white/10 rounded-full py-3 px-6 text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/20">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('like')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yv/r/S069_X2fS98.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('love')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yO/r/v2pD7Y6YvY8.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('care')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yT/r/H_LOfR67pXm.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('haha')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/y6/r/59MAnB5F54H.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('wow')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/y9/r/W7g7M84z0M7.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all" onclick="reactToStory('sad')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/y0/r/c38r-Wf_K5m.png"
+                                class="w-full h-full"></button>
+                        <button class="w-10 h-10 p-1 hover:scale-125 transition-all"
+                            onclick="reactToStory('angry')"><img
+                                src="https://static.xx.fbcdn.net/rsrc.php/v3/yt/r/86jU-H5_hV-.png"
+                                class="w-full h-full"></button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- NEW: HOME POST MODAL (Like FB) -->
+        <div id="home-post-modal"
+            class="fixed inset-0 z-[1000] bg-[#0a0a0a]/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+            <div class="glass-card w-full max-w-lg rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+                <div class="p-4 border-b border-white/5 flex items-center justify-between">
+                    <div class="w-8"></div>
+                    <h3 class="text-lg font-bold text-white">Tạo bài viết</h3>
+                    <button onclick="document.getElementById('home-post-modal').classList.add('hidden')"
+                        class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                </div>
+
+                <div class="p-4 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <img id="modal-user-avatar" src="https://api.dicebear.com/7.x/identicon/svg?seed=guest"
+                            class="w-10 h-10 rounded-full border border-white/10">
+                        <div>
+                            <p class="text-sm font-bold text-white">Bạn</p>
+                            <select id="home-post-privacy"
+                                class="bg-white/5 border border-white/10 rounded-lg px-2 py-0.5 text-[10px] font-bold text-slate-400 outline-none">
+                                <option value="public">🌍 Công khai</option>
+                                <option value="friends">👥 Bạn bè</option>
+                                <option value="private">🔒 Chỉ mình tôi</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <textarea id="home-post-content"
+                        class="w-full bg-transparent border-none text-xl text-white placeholder-slate-600 focus:ring-0 resize-none h-40"
+                        placeholder="Bạn đang nghĩ gì thế?"></textarea>
+
+                    <div id="home-post-media-container"
+                        class="hidden relative p-4 bg-white/5 rounded-xl border border-dashed border-white/10">
+                        <div id="home-post-media-preview-grid" class="grid grid-cols-2 gap-2 mb-3"></div>
+                        <input type="text" id="home-post-media-url" placeholder="Dán link ảnh hoặc video vào đây..."
+                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:border-primary">
+                        <button onclick="clearHomePostMedia()"
+                            class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"><span
+                                class="material-icons-round text-sm">close</span></button>
+                    </div>
+
+                    <input type="file" id="home-post-media-file" accept="image/*" multiple class="hidden"
+                        onchange="handleHomePostImageUpload(event)">
+
+                    <div class="p-3 border border-white/10 rounded-xl flex items-center justify-between">
+                        <span class="text-sm font-bold text-slate-300 ml-2">Thêm vào bài viết của bạn</span>
+                        <div class="flex gap-1">
+                            <button onclick="document.getElementById('home-post-media-file').click()"
+                                class="w-8 h-8 rounded-full hover:bg-white/5 text-green-500 flex items-center justify-center tooltip"
+                                title="Ảnh/Video"><span class="material-icons-round">photo_library</span></button>
+                            <button
+                                class="w-8 h-8 rounded-full hover:bg-white/5 text-blue-500 flex items-center justify-center"><span
+                                    class="material-icons-round">person_add</span></button>
+                            <button
+                                class="w-8 h-8 rounded-full hover:bg-white/5 text-yellow-500 flex items-center justify-center"><span
+                                    class="material-icons-round">sentiment_very_satisfied</span></button>
+                            <button
+                                class="w-8 h-8 rounded-full hover:bg-white/5 text-red-500 flex items-center justify-center"><span
+                                    class="material-icons-round">place</span></button>
+                        </div>
+                    </div>
+
+                    <button
+                        onclick="createHomePost().then(() => document.getElementById('home-post-modal').classList.add('hidden'))"
+                        class="w-full bg-primary text-black font-black py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20">
+                        ĐĂNG
+                    </button>
+                </div>
+            </div>
+        </div>
+        </div>
+
+
     </div>
     </main>
 
@@ -3393,110 +3509,6 @@
             <button id="auth-skip-btn" onclick="skipAuthForNow()"
                 class="absolute top-4 right-4 text-slate-500 hover:text-white material-icons-round cursor-pointer transition-colors z-20 tooltip"
                 title="Bỏ qua (Guest)">close</button>
-        </div>
-    </div>
-
-    <!-- HOME (SOCIAL STATION) LOGIC -->
-
-
-
-    
-    <!-- DJ RADIO VIEW -->
-    <div id="view-djradio" class="hidden max-w-6xl mx-auto animate-fade-in py-6 sm:py-8 px-4 sm:px-6">
-        <div class="mb-8 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div>
-                <h1 class="text-3xl sm:text-4xl font-display font-bold text-white uppercase tracking-tight mb-2">
-                    Endless <span class="text-primary">Radio</span>
-                </h1>
-                <p class="text-slate-400 text-sm">AI DJ tự động nhận diện cảm xúc & mix nhạc chữa lành</p>
-            </div>
-            <div class="flex items-center gap-4 flex-wrap sm:flex-nowrap justify-center sm:justify-end">
-                <select id="dj-manual-emotion" class="glass-input rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary transition-all bg-[#1a1a1a]">
-                    <option value="">📸 Dùng Webcam</option>
-                    <option value="joy">Vui vẻ</option>
-                    <option value="sadness">Buồn bã</option>
-                    <option value="calmness">Bình yên</option>
-                    <option value="anger">Bực tức</option>
-                    <option value="romantic">Lãng mạn</option>
-                </select>
-                <select id="dj-voice-select" class="glass-input rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary transition-all bg-[#1a1a1a]">
-                    <option value="vi-VN-HoaiMyNeural">👩 Nữ (Hoài My)</option>
-                    <option value="vi-VN-NamMinhNeural">👨 Nam (Nam Minh)</option>
-                </select>
-                <button id="btn-start-dj" onclick="startDJRadio()" class="btn-primary px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/30 flex items-center gap-2 transition-all w-full sm:w-auto justify-center">
-                    <span class="material-icons-round">radio</span> Bắt Đầu
-                </button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
-            <!-- Left: Webcam & Info -->
-            <div class="lg:col-span-5 space-y-6">
-                <!-- Webcam Card -->
-                <div class="glass-card rounded-[2rem] p-4 sm:p-6 relative overflow-hidden group border border-white/5 shadow-2xl">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
-                            <span class="material-icons-round text-primary text-sm">visibility</span> Cảm Xúc Của Bạn
-                        </h2>
-                        <div id="dj-emotion-badge" class="px-3 py-1 rounded-full bg-white/10 text-[10px] font-bold text-white uppercase tracking-widest border border-white/5">
-                            Chờ quét...
-                        </div>
-                    </div>
-                    <div class="relative rounded-2xl overflow-hidden aspect-video bg-black/50 border border-white/10 shadow-inner flex items-center justify-center">
-                        <video id="dj-video" class="w-full h-full object-cover opacity-80" autoplay playsinline muted></video>
-                        <div id="dj-webcam-overlay" class="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-10 transition-opacity">
-                            <span class="material-icons-round text-white/50 text-4xl animate-pulse">videocam_off</span>
-                        </div>
-                    </div>
-                    <div class="mt-4 flex items-center gap-3">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <div class="relative">
-                                <input type="checkbox" id="dj-continuous-toggle" class="sr-only">
-                                <div class="w-10 h-6 bg-white/10 rounded-full shadow-inner transition-colors border border-white/5" id="dj-toggle-bg"></div>
-                                <div class="absolute left-1 top-1 w-4 h-4 bg-slate-400 rounded-full transition-transform" id="dj-toggle-dot"></div>
-                            </div>
-                            <span class="text-xs font-bold text-slate-300 uppercase tracking-wide">Quét liên tục (30s)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- DJ Status Card -->
-                <div class="glass-card rounded-[2rem] p-4 sm:p-6 border border-white/5 shadow-2xl relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
-                    <div class="flex items-start gap-4">
-                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-green-400 flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0 relative">
-                            <span class="material-icons-round text-bg-dark text-2xl">graphic_eq</span>
-                            <div id="dj-speaking-indicator" class="absolute -bottom-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#111] hidden animate-pulse"></div>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-bold text-white mb-1">AI DJ Station</h3>
-                            <p id="dj-intro-text" class="text-xs text-slate-400 leading-relaxed italic">"Bấm bắt đầu để AI DJ chọn nhạc dành riêng cho bạn..."</p>
-                        </div>
-                    </div>
-                    <audio id="dj-intro-audio" class="hidden"></audio>
-                </div>
-            </div>
-
-            <!-- Right: Playlist Queue -->
-            <div class="lg:col-span-7">
-                <div class="glass-card rounded-[2rem] p-4 sm:p-6 border border-white/5 shadow-2xl h-full flex flex-col">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
-                            <span class="material-icons-round text-primary text-sm">queue_music</span> Radio Queue
-                        </h2>
-                        <button onclick="nextDJTrack()" class="text-[10px] bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg text-slate-300 transition-all font-bold uppercase tracking-widest flex items-center gap-1">
-                            Bỏ qua <span class="material-icons-round text-[12px]">skip_next</span>
-                        </button>
-                    </div>
-                    
-                    <div id="dj-playlist-queue" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 min-h-[300px]">
-                        <div class="flex flex-col items-center justify-center h-full text-slate-500 space-y-3 opacity-50">
-                            <span class="material-icons-round text-4xl">album</span>
-                            <p class="text-xs font-bold uppercase tracking-widest">Hàng đợi trống</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
