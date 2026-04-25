@@ -612,6 +612,33 @@
                 document.getElementById('yt-video-btn').classList.remove('hidden');
 
                 // Play Youtube
+                if (!isYtReady) {
+                    // Wait for YouTube player to initialize
+                    console.log('[playTrack] YouTube player not ready, waiting...');
+                    let attempts = 0;
+                    const waitInterval = setInterval(() => {
+                        attempts++;
+                        if (isYtReady && ytPlayer) {
+                            clearInterval(waitInterval);
+                            let videoId = data.link;
+                            if (data.link && data.link.includes('youtube.com')) {
+                                videoId = extractVideoId(data.link);
+                            }
+                            if (videoId && videoId.length === 11) {
+                                ytPlayer.loadVideoById(videoId);
+                                ytPlayer.playVideo();
+                                playIcon.innerText = "pause";
+                            }
+                        } else if (attempts > 10) {
+                            // After 5 seconds, give up and open in new tab
+                            clearInterval(waitInterval);
+                            console.warn('[playTrack] YouTube player failed to initialize, opening in new tab');
+                            window.open(data.link, '_blank');
+                        }
+                    }, 500);
+                    return;
+                }
+
                 if (isYtReady) {
                     let videoId = data.link;
 
@@ -856,6 +883,12 @@
                                 playIcon.innerText = "play_arrow";
                                 if (event.data === YT.PlayerState.PAUSED && typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
                                     activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'sync_pause', payload: { time: ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0 }}));
+                                }
+                            }
+                            if (event.data === YT.PlayerState.ENDED) {
+                                // Auto-next for Watch Party Queue
+                                if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof playNextInQueue === 'function') {
+                                    playNextInQueue();
                                 }
                             }
                         }
@@ -6943,6 +6976,254 @@ let aiChatHistory = [];
         let isPartyHost = false;
         let partyId = null;
 
+        // --- COLLABORATIVE QUEUE & VOTING ---
+        let partyQueue = []; // Array of { id, title, link, thumbnail, voters: [uid1, uid2], addedBy: uid }
+        let currentTrackId = null;
+
+        window.addToPartyQueue = (track) => {
+            if (!activePartyChannel || activePartyChannel.readyState !== WebSocket.OPEN) return;
+
+            const trackWithId = {
+                id: Math.random().toString(36).substring(2, 9),
+                title: track.title,
+                link: track.link,
+                thumbnail: track.thumbnail,
+                voters: [],
+                addedBy: myPartyUid || 'unknown'
+            };
+
+            // Update locally immediately
+            handleAddToQueue(trackWithId);
+
+            // Broadcast to others
+            activePartyChannel.send(JSON.stringify({
+                type: 'broadcast',
+                event: 'add_to_queue',
+                payload: trackWithId
+            }));
+        };
+
+        window.voteTrack = (trackId) => {
+            if (!activePartyChannel || activePartyChannel.readyState !== WebSocket.OPEN) return;
+
+            const voter = myPartyUid || 'unknown';
+            // Update locally immediately
+            handleVoteTrack(trackId, voter);
+
+            // Broadcast to others
+            activePartyChannel.send(JSON.stringify({
+                type: 'broadcast',
+                event: 'vote_track',
+                payload: { trackId, voter }
+            }));
+        };
+
+        function handleAddToQueue(track) {
+            console.log('[Party Queue] Track added:', track);
+            partyQueue.push(track);
+            renderPartyQueue();
+        }
+
+        function handleVoteTrack(trackId, voter) {
+            console.log('[Party Queue] Vote for:', trackId, 'by', voter);
+            const track = partyQueue.find(t => t.id === trackId);
+            if (track && !track.voters.includes(voter)) {
+                track.voters.push(voter);
+                renderPartyQueue();
+            }
+        }
+
+        window.removeFromPartyQueue = (trackId) => {
+            if (!activePartyChannel || activePartyChannel.readyState !== WebSocket.OPEN) return;
+
+            // Remove locally
+            handleRemoveFromQueue(trackId);
+
+            // Broadcast
+            activePartyChannel.send(JSON.stringify({
+                type: 'broadcast',
+                event: 'remove_from_queue',
+                payload: { trackId }
+            }));
+        };
+
+        window.skipCurrentPartyTrack = () => {
+            if (!activePartyChannel || activePartyChannel.readyState !== WebSocket.OPEN) return;
+
+            if (isPartyHost) {
+                playNextInQueue();
+            } else {
+                activePartyChannel.send(JSON.stringify({
+                    type: 'broadcast',
+                    event: 'request_skip'
+                }));
+            }
+        };
+
+        function handleRemoveFromQueue(trackId) {
+            partyQueue = partyQueue.filter(t => t.id !== trackId);
+            renderPartyQueue();
+        }
+
+        function renderPartyQueue() {
+            const countEl = document.getElementById('party-queue-count');
+            if (countEl) countEl.innerText = partyQueue.length;
+
+            const container = document.getElementById('party-queue-list');
+            if (!container) return;
+
+            if (partyQueue.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-500 text-xs py-8">Chưa có bài hát nào trong hàng đợi</div>';
+                return;
+            }
+
+            // Sort by vote count descending
+            const sorted = [...partyQueue].sort((a, b) => b.voters.length - a.voters.length);
+
+            container.innerHTML = sorted.map(track => {
+                const hasVoted = track.voters.includes(myPartyUid || 'unknown');
+                const isOwnerOrHost = (isPartyHost || track.addedBy === (myPartyUid || 'unknown'));
+
+                return `
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/10 group">
+                        <img src="${track.thumbnail}" class="w-12 h-12 rounded-lg object-cover" />
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-bold text-white truncate">${track.title}</p>
+                            <p class="text-[10px] text-slate-400">Thêm bởi: ${track.addedBy.substring(0, 6)}</p>
+                        </div>
+
+                        <div class="flex items-center gap-1">
+                            ${isOwnerOrHost ? `
+                                <button onclick="removeFromPartyQueue('${track.id}')"
+                                    class="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all hidden group-hover:block" title="Xóa bài">
+                                    <span class="material-icons-round text-sm">delete</span>
+                                </button>
+                            ` : ''}
+
+                            <button onclick="voteTrack('${track.id}')"
+                                class="flex items-center gap-1 px-3 py-1.5 rounded-lg ${hasVoted ? 'bg-primary text-black' : 'bg-white/10 text-slate-300 hover:bg-white/20'} transition-all text-xs font-bold" title="Bình chọn">
+                                <span class="material-icons-round text-sm">thumb_up</span>
+                                <span>${track.voters.length}</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function playNextInQueue() {
+            if (partyQueue.length === 0) return;
+
+            // Sort by votes, pick top
+            partyQueue.sort((a, b) => b.voters.length - a.voters.length);
+            const nextTrack = partyQueue.shift();
+
+            console.log('[Party Queue] Auto-playing next:', nextTrack);
+            currentTrackId = nextTrack.id;
+
+            if (typeof playTrack === 'function') {
+                playTrack({ title: nextTrack.title, link: nextTrack.link, thumbnail: nextTrack.thumbnail }, 'youtube');
+            }
+
+            renderPartyQueue();
+
+            // Broadcast queue update
+            if (activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
+                activePartyChannel.send(JSON.stringify({
+                    type: 'broadcast',
+                    event: 'sync_queue',
+                    payload: { queue: partyQueue }
+                }));
+            }
+        }
+
+        // --- PARTY QUEUE PANEL ---
+        window.togglePartyQueuePanel = () => {
+            const existing = document.getElementById('party-queue-panel');
+            if (existing) {
+                existing.remove();
+                return;
+            }
+
+            const panel = document.createElement('div');
+            panel.id = 'party-queue-panel';
+            panel.className = 'fixed right-4 bottom-28 w-[380px] max-h-[70vh] z-[250] glass-card rounded-2xl border border-primary/20 flex flex-col animate-fade-in overflow-hidden';
+            panel.innerHTML = `
+                <div class="p-4 border-b border-white/10 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="material-icons-round text-primary text-lg">queue_music</span>
+                        <h3 class="text-white font-black text-sm uppercase tracking-tight">Hàng đợi chung</h3>
+                        <span class="bg-primary text-black text-[9px] font-black px-2 py-0.5 rounded-full" id="party-queue-count">${partyQueue.length}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="skipCurrentPartyTrack()"
+                            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 transition-all text-slate-400 hover:text-white text-[10px] font-black" title="Bỏ qua bài hiện tại">
+                            <span class="material-icons-round text-sm">skip_next</span>
+                            <span>Skip</span>
+                        </button>
+                        <button onclick="document.getElementById('party-queue-panel')?.remove()" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-slate-400 hover:text-white">
+                            <span class="material-icons-round text-sm">close</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search & Add Section -->
+                <div class="p-4 border-b border-white/10 space-y-3">
+                    <div class="flex gap-2">
+                        <input type="text" id="party-queue-search"
+                            class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:ring-1 focus:ring-primary/50 outline-none"
+                            placeholder="Tìm bài hát YouTube..." onkeydown="if(event.key==='Enter') searchPartyQueue()" />
+                        <button onclick="searchPartyQueue()"
+                            class="px-4 py-2.5 bg-primary text-black rounded-xl text-xs font-black hover:opacity-90 transition-all">
+                            <span class="material-icons-round text-sm">search</span>
+                        </button>
+                    </div>
+                    <div id="party-search-results" class="max-h-[200px] overflow-y-auto custom-scrollbar space-y-2"></div>
+                </div>
+
+                <!-- Queue List -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2" id="party-queue-list">
+                    <div class="text-center text-slate-500 text-xs py-8">Chưa có bài hát nào trong hàng đợi</div>
+                </div>
+            `;
+
+            document.body.appendChild(panel);
+            renderPartyQueue();
+        };
+
+        window.searchPartyQueue = async () => {
+            const input = document.getElementById('party-queue-search');
+            const container = document.getElementById('party-search-results');
+            const q = input?.value?.trim();
+            if (!q || !container) return;
+
+            container.innerHTML = '<div class="text-center text-primary text-xs animate-pulse py-4">Đang tìm kiếm...</div>';
+
+            try {
+                const res = await fetch(`/search?q=${encodeURIComponent(q)}&type=music`);
+                const data = await res.json();
+
+                if (!data.recommendations || data.recommendations.length === 0) {
+                    container.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">Không tìm thấy kết quả.</div>';
+                    return;
+                }
+
+                container.innerHTML = data.recommendations.slice(0, 5).map(item => `
+                    <div class="flex items-center gap-3 p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer border border-transparent hover:border-white/10"
+                         onclick='addToPartyQueue(${JSON.stringify(item).replace(/'/g, "&#39;")})'>
+                        <img src="${item.thumbnail}" class="w-10 h-10 rounded-lg object-cover" />
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-bold text-white truncate">${item.title}</p>
+                            <p class="text-[10px] text-slate-400">YouTube</p>
+                        </div>
+                        <span class="material-icons-round text-primary text-lg">add_circle</span>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = '<div class="text-center text-red-400 text-xs py-4">Lỗi tìm kiếm.</div>';
+            }
+        };
+
         window.startWatchParty = () => {
             partyId = Math.random().toString(36).substring(2, 8).toUpperCase();
             isPartyHost = true;
@@ -6975,12 +7256,27 @@ let aiChatHistory = [];
                     <p class="text-white font-bold text-xs">${text}</p>
                 </div>
                 ${canCopy ? `<button onclick="navigator.clipboard.writeText('${partyId}'); alert('Đã chép ID!')" class="p-2 bg-white/5 rounded-lg text-slate-400 hover:text-white" title="Copy ID"><span class="material-icons-round text-sm">content_copy</span></button>` : ''}
+                <button onclick="togglePartyQueuePanel()" class="p-2 bg-primary/10 rounded-lg text-primary hover:bg-primary/30" title="Queue"><span class="material-icons-round text-sm">queue_music</span></button>
                 <button id="camera-toggle-btn" onclick="togglePartyCamera()" class="p-2 bg-primary/10 rounded-lg text-primary hover:bg-primary/30" title="Bật/tắt Camera"><span class="material-icons-round text-sm">videocam</span></button>
                 <button id="mic-toggle-btn" onclick="togglePartyMic()" class="p-2 bg-primary/10 rounded-lg text-primary hover:bg-primary/30" title="Bật/tắt Micro"><span class="material-icons-round text-sm">mic</span></button>
                 <button onclick="leaveParty()" class="p-2 bg-red-500/10 rounded-lg text-red-400 hover:bg-red-500 hover:text-white" title="Leave Party"><span class="material-icons-round text-sm">close</span></button>
             `;
             document.getElementById('party-status-overlay')?.remove();
             document.body.appendChild(overlay);
+
+            // Add reaction bar
+            const reactionBar = document.createElement('div');
+            reactionBar.id = 'party-reaction-bar';
+            reactionBar.className = 'fixed bottom-48 left-4 z-[200] glass-card p-2 rounded-2xl flex items-center gap-2 animate-fade-in border-primary/30';
+            reactionBar.innerHTML = `
+                <button onclick="sendPartyReaction('😂')" class="p-2 hover:bg-white/10 rounded-lg transition-all text-2xl">😂</button>
+                <button onclick="sendPartyReaction('❤️')" class="p-2 hover:bg-white/10 rounded-lg transition-all text-2xl">❤️</button>
+                <button onclick="sendPartyReaction('🔥')" class="p-2 hover:bg-white/10 rounded-lg transition-all text-2xl">🔥</button>
+                <button onclick="sendPartyReaction('👏')" class="p-2 hover:bg-white/10 rounded-lg transition-all text-2xl">👏</button>
+                <button onclick="sendPartyReaction('😲')" class="p-2 hover:bg-white/10 rounded-lg transition-all text-2xl">😲</button>
+            `;
+            document.getElementById('party-reaction-bar')?.remove();
+            document.body.appendChild(reactionBar);
         }
 
         window.leaveParty = () => {
@@ -7003,6 +7299,8 @@ let aiChatHistory = [];
             isPartyHost = false;
             partyId = null;
             document.getElementById('party-status-overlay')?.remove();
+            document.getElementById('party-reaction-bar')?.remove();
+            document.getElementById('party-queue-panel')?.remove();
             alert("Đã rời phòng Party.");
         };
 
@@ -7188,6 +7486,12 @@ let aiChatHistory = [];
                                     trackData: typeof window.currentTrackData !== 'undefined' ? window.currentTrackData : null
                                 }
                             }));
+                            // Also send current queue to late joiner
+                            activePartyChannel.send(JSON.stringify({
+                                type: 'broadcast',
+                                event: 'sync_queue',
+                                payload: { queue: partyQueue }
+                            }));
                         }
                     } else if (event === 'respond_sync') {
                         if (isPartyHost) return;
@@ -7218,6 +7522,25 @@ let aiChatHistory = [];
                         if (typeof playTrack === 'function') {
                             playTrack(data, mode);
                         }
+                    } else if (event === 'add_to_queue') {
+                        handleAddToQueue(payload);
+                    } else if (event === 'vote_track') {
+                        const { trackId, voter } = payload;
+                        handleVoteTrack(trackId, voter);
+                    } else if (event === 'remove_from_queue') {
+                        handleRemoveFromQueue(payload.trackId);
+                    } else if (event === 'request_skip') {
+                        if (isPartyHost) {
+                            playNextInQueue();
+                        }
+                    } else if (event === 'sync_queue') {
+                        const { queue } = payload;
+                        partyQueue = queue || [];
+                        console.log('[Party Queue] Synced queue:', partyQueue);
+                        renderPartyQueue();
+                    } else if (event === 'party_reaction') {
+                        const { emoji, from } = payload;
+                        showFloatingReaction(emoji);
                     }
                 }
             };
@@ -7354,6 +7677,39 @@ let aiChatHistory = [];
                     if (data && ytPlayer.seekTo) ytPlayer.seekTo(data.time, true);
                 }
             }
+        }
+
+        // --- FLOATING EMOJI REACTIONS ---
+        window.sendPartyReaction = (emoji) => {
+            if (!activePartyChannel || activePartyChannel.readyState !== WebSocket.OPEN) return;
+
+            activePartyChannel.send(JSON.stringify({
+                type: 'broadcast',
+                event: 'party_reaction',
+                payload: { emoji, from: myPartyUid || 'unknown' }
+            }));
+
+            // Show locally too
+            showFloatingReaction(emoji);
+        };
+
+        function showFloatingReaction(emoji) {
+            const container = document.body;
+            const reaction = document.createElement('div');
+            reaction.className = 'floating-reaction';
+            reaction.style.cssText = `
+                position: fixed;
+                bottom: 20%;
+                left: ${20 + Math.random() * 60}%;
+                font-size: 48px;
+                z-index: 9999;
+                pointer-events: none;
+                animation: floatUp 3s ease-out forwards;
+            `;
+            reaction.innerText = emoji;
+            container.appendChild(reaction);
+
+            setTimeout(() => reaction.remove(), 3000);
         }
 
         // --- EMOTION TRACKING ---
