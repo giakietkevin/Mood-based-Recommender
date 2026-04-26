@@ -2762,7 +2762,30 @@
                 Focus <span class="text-primary">Mode</span>
             </h1>
             <p class="text-slate-400 text-sm">Pomodoro timer + Lo-fi music + Emotion detection</p>
+
+            <!-- Study Room Quick Actions -->
+            <div id="study-room-join-banner" class="mt-4 flex items-center justify-center gap-3 flex-wrap">
+                <button onclick="window.createStudyRoom()" class="btn-primary px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg shadow-primary/20 flex items-center gap-2 transition-all">
+                    <span class="material-icons-round text-sm">add</span> Tạo phòng học chung
+                </button>
+                <button onclick="document.getElementById('join-room-panel').classList.toggle('hidden')" class="bg-white/5 hover:bg-white/10 border border-white/10 px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all flex items-center gap-2">
+                    <span class="material-icons-round text-sm">group_add</span> Tham gia phòng
+                </button>
+            </div>
+
+            <!-- Join Room Input -->
+            <div id="join-room-panel" class="hidden mt-3 max-w-sm mx-auto">
+                <div class="flex gap-2">
+                    <input id="join-room-input" type="text" placeholder="Nhập Room ID..."
+                        class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary/50" />
+                    <button onclick="window.joinStudyRoom(document.getElementById('join-room-input').value.trim())"
+                        class="btn-primary px-4 py-2.5 rounded-xl text-xs font-bold">Join</button>
+                </div>
+            </div>
         </div>
+
+        <!-- Study Room Container (rendered dynamically by JS) -->
+        <div id="study-room-container" class="mb-6"></div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
             <!-- Left: Pomodoro Timer -->
@@ -3744,6 +3767,7 @@
     <script src="js/auth-mongodb.js"></script>
     <script src="js/app.js"></script>
     <script src="js/focus-mode.js"></script>
+    <script src="js/study-room.js"></script>
 </body>
 
 </html>

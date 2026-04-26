@@ -83,14 +83,19 @@
             }
 
             const initialView = new URLSearchParams(window.location.search).get('view');
+            const roomId = new URLSearchParams(window.location.search).get('room');
 
             // Refresh camera devices early so dropdowns are populated
             if (typeof window.refreshCameraDevices === 'function') {
                 window.refreshCameraDevices();
             }
 
-            if (initialView === 'studio' || initialView === 'guide' || initialView === 'home' || initialView === 'dashboard' || initialView === 'about') {
+            if (initialView === 'studio' || initialView === 'guide' || initialView === 'home' || initialView === 'dashboard' || initialView === 'about' || initialView === 'focus') {
                 showView(initialView);
+                // Auto-join study room if room ID in URL
+                if (initialView === 'focus' && roomId && typeof window.joinStudyRoom === 'function') {
+                    setTimeout(() => window.joinStudyRoom(roomId), 500);
+                }
             } else {
                 showView('home');
             }

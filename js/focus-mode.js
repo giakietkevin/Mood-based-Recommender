@@ -124,6 +124,12 @@ window.startFocusTimer = () => {
             handleSessionComplete();
         }
     }, 1000);
+
+    // Study Room: broadcast timer start
+    if (typeof window.broadcastTimerEvent === 'function') {
+        window.broadcastTimerEvent('timer_start');
+        window.broadcastStatusUpdate(isFocusWorking ? 'working' : 'break');
+    }
 };
 
 window.pauseFocusTimer = () => {
@@ -138,6 +144,11 @@ window.pauseFocusTimer = () => {
         clearInterval(focusCameraInterval);
         focusCameraInterval = null;
     }
+
+    // Study Room: broadcast timer pause
+    if (typeof window.broadcastTimerEvent === 'function') {
+        window.broadcastTimerEvent('timer_pause');
+    }
 };
 
 window.resetFocusTimer = () => {
@@ -147,6 +158,12 @@ window.resetFocusTimer = () => {
     updateFocusDisplay();
     document.getElementById('focus-session-type').innerText = 'Work Session';
     document.getElementById('focus-session-type').className = 'inline-block px-4 py-2 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-widest border border-primary/30';
+
+    // Study Room: broadcast reset
+    if (typeof window.broadcastTimerEvent === 'function') {
+        window.broadcastTimerEvent('timer_reset');
+        window.broadcastStatusUpdate('idle');
+    }
 };
 
 function handleSessionComplete() {
@@ -191,6 +208,11 @@ function handleSessionComplete() {
     updateFocusDisplay();
     // Auto-start next phase
     setTimeout(startFocusTimer, 3000);
+
+    // Study Room: broadcast status update
+    if (typeof window.broadcastStatusUpdate === 'function') {
+        window.broadcastStatusUpdate(isFocusWorking ? 'working' : 'break');
+    }
 }
 
 function updateFocusDisplay() {
@@ -345,6 +367,11 @@ function updateFocusEmotionUI(emotion) {
 
     badge.innerText = emojiMap[emotion] || emotion;
     badge.className = `px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all ${colorMap[emotion] || colorMap['neutral']}`;
+
+    // Study Room: broadcast emotion update
+    if (typeof window.broadcastEmotionUpdate === 'function') {
+        window.broadcastEmotionUpdate(emotion);
+    }
 }
 
 let stressCounter = 0;
