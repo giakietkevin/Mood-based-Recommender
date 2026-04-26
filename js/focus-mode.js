@@ -215,15 +215,23 @@ function updateFocusStats() {
 async function searchAndPlayLofi() {
     console.log('[Focus] Searching for lo-fi music...');
     try {
-        const res = await fetch(`http://127.0.0.1:7860/search?q=lofi+hip+hop+radio+beats+to+relax+study+to`);
+        const res = await fetch(`/search?q=lofi+hip+hop+radio+beats+to+relax+study+to&type=music`);
         console.log('[Focus] Search response status:', res.status);
         if (!res.ok) throw new Error('Search failed');
         const data = await res.json();
         console.log('[Focus] Search results:', data);
 
-        if (data && data.length > 0) {
-            const track = data[0];
+        // Backend returns {mood, recommendations: [...]}
+        const tracks = data.recommendations || data;
+        if (tracks && tracks.length > 0) {
+            const track = tracks[0];
             console.log('[Focus] Playing track:', track);
+
+            // Validate track has required fields
+            if (!track.title || !track.link) {
+                console.warn('[Focus] Track missing required fields:', track);
+                throw new Error('Invalid track data');
+            }
 
             // Call playTrack with correct signature: (data, mode)
             if (typeof window.playTrack === 'function') {
@@ -231,23 +239,53 @@ async function searchAndPlayLofi() {
                 window.playTrack({
                     title: track.title,
                     artist: 'Lo-fi',
-                    thumbnail: track.thumbnail,
-                    link: track.id
+                    thumbnail: track.thumbnail || 'https://cdn-icons-png.flaticon.com/512/12204/12204300.png',
+                    link: track.link
                 }, 'youtube');
             } else {
                 console.error('[Focus] window.playTrack is not a function!');
+                throw new Error('playTrack function not available');
             }
 
             document.getElementById('focus-now-playing').innerHTML = `
-                <img src="${track.thumbnail}" class="w-16 h-16 rounded-xl mx-auto mb-3 object-cover shadow-lg border border-white/10">
+                <img src="${track.thumbnail || 'https://cdn-icons-png.flaticon.com/512/12204/12204300.png'}" class="w-16 h-16 rounded-xl mx-auto mb-3 object-cover shadow-lg border border-white/10">
                 <p class="text-sm font-bold text-white line-clamp-1">${track.title}</p>
                 <p class="text-xs text-slate-400">Playing Lo-fi</p>
             `;
         } else {
-            console.warn('[Focus] No search results found');
+            console.warn('[Focus] No search results found, trying fallback search');
+            // Fallback: try simpler search
+            const fallbackRes = await fetch(`/search?q=lofi+beats&type=music`);
+            if (fallbackRes.ok) {
+                const fallbackData = await fallbackRes.json();
+                const fallbackTracks = fallbackData.recommendations || fallbackData;
+                if (fallbackTracks && fallbackTracks.length > 0) {
+                    const track = fallbackTracks[0];
+                    if (typeof window.playTrack === 'function') {
+                        window.playTrack({
+                            title: track.title,
+                            artist: 'Lo-fi',
+                            thumbnail: track.thumbnail || 'https://cdn-icons-png.flaticon.com/512/12204/12204300.png',
+                            link: track.link
+                        }, 'youtube');
+                    }
+                    document.getElementById('focus-now-playing').innerHTML = `
+                        <img src="${track.thumbnail || 'https://cdn-icons-png.flaticon.com/512/12204/12204300.png'}" class="w-16 h-16 rounded-xl mx-auto mb-3 object-cover shadow-lg border border-white/10">
+                        <p class="text-sm font-bold text-white line-clamp-1">${track.title}</p>
+                        <p class="text-xs text-slate-400">Playing Lo-fi (Fallback)</p>
+                    `;
+                    return;
+                }
+            }
+            throw new Error('No search results found');
         }
     } catch (e) {
         console.error("[Focus] Lỗi auto play Lofi:", e);
+        document.getElementById('focus-now-playing').innerHTML = `
+            <span class="material-icons-round text-red-400/50 text-5xl mb-3">error</span>
+            <p class="text-sm text-red-400">Không thể phát nhạc</p>
+            <p class="text-xs text-slate-500">Kiểm tra kết nối backend</p>
+        `;
     }
 }
 
@@ -265,7 +303,7 @@ async function analyzeFocusEmotion() {
         formData.append('file', blob, 'capture.jpg');
 
         try {
-            const res = await fetch('http://127.0.0.1:7860/api/emotion', {
+            const res = await fetch('/api/emotion', {
                 method: 'POST',
                 body: formData
             });
@@ -326,18 +364,20 @@ function handleStressDetection(emotion) {
 
 async function playCalmingMusic() {
     try {
-        const res = await fetch(`http://127.0.0.1:7860/search?q=deep+focus+ambient+calming+music+stress+relief`);
+        const res = await fetch(`/search?q=deep+focus+ambient+calming+music+stress+relief&type=music`);
         if (!res.ok) throw new Error('Search failed');
         const data = await res.json();
 
-        if (data && data.length > 0) {
-            const track = data[0];
+        // Backend returns {mood, recommendations: [...]}
+        const tracks = data.recommendations || data;
+        if (tracks && tracks.length > 0) {
+            const track = tracks[0];
             if (typeof window.playTrack === 'function') {
                 window.playTrack({
                     title: track.title,
                     artist: 'Calming Music',
                     thumbnail: track.thumbnail,
-                    link: track.id
+                    link: track.link
                 }, 'youtube');
             }
 

@@ -1121,7 +1121,11 @@ async def delete_film(uid: str = Query(...), slug: str = Query(...)):
 @app.get("/search")
 async def search(q: str, type: str = "music"):
     # Logic tìm kiếm Youtube qua DuckDuckGo
-    keyword = f"{q} official mv" if type == "music" else f"{q} podcast vietnam full"
+    if "lofi" in q.lower() or "beats" in q.lower() or "ambient" in q.lower() or "focus" in q.lower():
+        keyword = q  # Không thêm "official mv" cho các loại nhạc cụ thể này
+    else:
+        keyword = f"{q} official mv" if type == "music" else f"{q} podcast vietnam full"
+
     res = []
     try:
         with DDGS() as ddgs:
@@ -1776,11 +1780,23 @@ async def dj_radio(
             with DDGS() as ddgs:
                 gen = ddgs.videos(f"site:youtube.com {keyword}", max_results=10)
                 for r in gen:
-                    vid = r["content"].split("v=")[1].split("&")[0] if "v=" in r["content"] else ""
-                    if vid:
+                    url = r.get("content", "")
+                    # Extract video ID from various URL formats (same logic as /search)
+                    vid = ""
+                    if "v=" in url:
+                        vid = url.split("v=")[1].split("&")[0].split("#")[0]
+                    elif "youtu.be/" in url:
+                        vid = url.split("youtu.be/")[1].split("?")[0].split("#")[0]
+                    elif "/shorts/" in url:
+                        vid = url.split("/shorts/")[1].split("?")[0].split("#")[0]
+                    elif "/embed/" in url:
+                        vid = url.split("/embed/")[1].split("?")[0].split("#")[0]
+
+                    # Validate video ID (must be 11 chars)
+                    if vid and len(vid) == 11:
                         recommendations.append({
-                            "title": r["title"],
-                            "link": r["content"],
+                            "title": r.get("title", "Unknown"),
+                            "link": f"https://www.youtube.com/watch?v={vid}",
                             "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
                         })
         except Exception as e:

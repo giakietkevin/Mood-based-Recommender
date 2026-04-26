@@ -8214,16 +8214,23 @@ window.stopDJRadio = () => {
     if (djEmotionLoop) clearInterval(djEmotionLoop);
 
     const audio = document.getElementById('dj-intro-audio');
-    audio.pause();
-    document.getElementById('dj-speaking-indicator').classList.add('hidden');
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+    }
+    const indicator = document.getElementById('dj-speaking-indicator');
+    if (indicator) indicator.classList.add('hidden');
 
     const btn = document.getElementById('btn-start-dj');
-    btn.innerHTML = '<span class="material-icons-round">radio</span> Bat Dau Radio';
-    btn.onclick = startDJRadio;
-    btn.classList.remove('bg-white/10');
-    btn.classList.add('btn-primary');
+    if (btn) {
+        btn.innerHTML = '<span class="material-icons-round">radio</span> Bat Dau Radio';
+        btn.onclick = startDJRadio;
+        btn.classList.remove('bg-white/10');
+        btn.classList.add('btn-primary');
+    }
 
-    document.getElementById('dj-intro-text').innerText = "Radio da dung.";
+    const introText = document.getElementById('dj-intro-text');
+    if (introText) introText.innerText = "Radio da dung.";
 
     // Stop webcam
     const v = document.getElementById('dj-video');
@@ -8231,9 +8238,19 @@ window.stopDJRadio = () => {
         v.srcObject.getTracks().forEach(t => t.stop());
         v.srcObject = null;
     }
-    document.getElementById('dj-webcam-overlay').classList.remove('opacity-0');
+    const overlay = document.getElementById('dj-webcam-overlay');
+    if (overlay) overlay.classList.remove('opacity-0');
 
     unhookYoutubeForDJ();
+
+    // STOP YOUTUBE MUSIC AS WELL
+    if (isYtReady && window.ytPlayer && window.ytPlayer.stopVideo) {
+        window.ytPlayer.stopVideo();
+    }
+
+    // Hide player bar if it's showing
+    const playerBar = document.getElementById('player-bar');
+    if (playerBar) playerBar.classList.add('hidden', 'translate-y-full');
 };
 
 window.playDJTrack = (index) => {
