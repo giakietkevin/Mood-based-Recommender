@@ -216,6 +216,7 @@
                 if (typeof fetchHomePosts === 'function') fetchHomePosts();
                 if (typeof fetchHomeStories === 'function') fetchHomeStories();
                 if (typeof renderBuddySystem === 'function') renderBuddySystem();
+                if (typeof window.initHomeSidebar === 'function') window.initHomeSidebar();
             }
             if (viewName === 'guide') {
                 if (typeof hydrateProfileView === 'function') hydrateProfileView();
@@ -618,6 +619,17 @@
         window.currentTrackData = null;
         window.playTrack = function(data, mode) {
             window.currentTrackData = data;
+
+            // Track play count for trending
+            if (data.title && data.link) {
+                const fd = new FormData();
+                fd.append('title', data.title);
+                fd.append('artist', data.artist || '');
+                fd.append('thumbnail', data.thumbnail || '');
+                fd.append('link', data.link || data.file_url || '');
+                fetch('/track-play', { method: 'POST', body: fd }).catch(e => console.log('Track play error:', e));
+            }
+
             if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof activePartyChannel !== 'undefined' && activePartyChannel && activePartyChannel.readyState === WebSocket.OPEN) {
                 activePartyChannel.send(JSON.stringify({ type: 'broadcast', event: 'change_track', payload: { data, mode } }));
             }
@@ -6915,10 +6927,13 @@ let aiChatHistory = [];
             if (title === 'Select a song' || !title) return alert('Chưa có nội dung nào đang phát!');
 
             let mediaUrl = null;
-            if (typeof currentMode !== 'undefined') {
+            if (window.currentTrackData && window.currentTrackData.link) {
+                mediaUrl = window.currentTrackData.link;
+            } else if (typeof currentMode !== 'undefined') {
                 if (currentMode === 'local') {
                     mediaUrl = document.getElementById('local-audio')?.src;
                 } else if (currentMode === 'youtube') {
+                    // Try to get original link if possible, otherwise use thumb
                     mediaUrl = document.getElementById('player-thumb')?.src;
                 }
             } else {
@@ -8479,3 +8494,168 @@ function startDJEmotionLoop() {
             }
         };
 
+
+// --- SIDEBAR DATA LOGIC ---
+let refreshSidebarInterval = null;
+
+window.initHomeSidebar = () => {
+    fetchSidebarData();
+    if (refreshSidebarInterval) clearInterval(refreshSidebarInterval);
+    refreshSidebarInterval = setInterval(fetchSidebarData, 30000); // 30s
+};
+
+async function fetchSidebarData() {
+    try {
+        await Promise.all([
+            fetchTrendingSongs(),
+            fetchCollaborativePlaylists(),
+            fetchActiveStudyRooms()
+        ]);
+    } catch(e) {
+        console.error("Error fetching sidebar data:", e);
+    }
+}
+
+async function fetchTrendingSongs() {
+    try {
+        const res = await fetch('/trending-songs?limit=5');
+        const data = await res.json();
+        const container = document.getElementById('sidebar-trending');
+        if (!container) return;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">No trending songs yet</p>`;
+            return;
+        }
+
+        container.innerHTML = data.map((s, idx) => {
+            const mode = (s.link && s.link.includes('youtube')) ? 'youtube' : 'local';
+            const safeData = JSON.stringify(s).replace(/"/g, '&quot;');
+            return `
+            <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-all group cursor-pointer" onclick="window.playTrack(JSON.parse(this.dataset.track), '${mode}')" data-track="${safeData}">
+                <div class="text-slate-500 font-black text-sm w-4 text-center">${idx + 1}</div>
+                <div class="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+                    <img src="${s.thumbnail || 'https://cdn-icons-png.flaticon.com/512/12204/12204300.png'}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center">
+                        <span class="material-icons-round text-white text-sm">play_arrow</span>
+                    </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-white text-sm font-bold truncate">${s.title}</h4>
+                    <p class="text-slate-400 text-[10px] truncate">${s.artist || 'Unknown'}</p>
+                </div>
+                <div class="text-xs text-slate-500 font-bold flex items-center gap-1">
+                    <span class="material-icons-round text-[10px]">play_arrow</span> ${s.plays}
+                </div>
+            </div>
+        `}).join('');
+    } catch (e) {}
+}
+
+async function fetchCollaborativePlaylists() {
+    try {
+        const res = await fetch('/playlists/public?limit=5');
+        const data = await res.json();
+        const container = document.getElementById('sidebar-collab-playlists');
+        if (!container) return;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">No public playlists found</p>`;
+            return;
+        }
+
+        container.innerHTML = data.map(pl => {
+            const isMember = pl.members && pl.members.includes(window.currentUserUid);
+            const isOwner = pl.owner === window.currentUserUid;
+
+            return `
+            <div class="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-all group cursor-pointer" onclick="showCollabPlaylist('${pl.id}', '${pl.owner}')">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-pink-500/20 text-pink-400 flex items-center justify-center border border-pink-500/30">
+                        <span class="material-icons-round">queue_music</span>
+                    </div>
+                    <div>
+                        <h4 class="text-white text-sm font-bold truncate">${pl.name}</h4>
+                        <p class="text-slate-400 text-[10px]">${(pl.songs || []).length} songs &bull; ${(pl.members || []).length} members</p>
+                    </div>
+                </div>
+                ${!isOwner ? `
+                <button onclick="event.stopPropagation(); toggleCollabJoin('${pl.id}', ${isMember})" class="w-8 h-8 rounded-full ${isMember ? 'bg-white/10 text-slate-300' : 'bg-pink-500 text-white'} flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-lg">
+                    <span class="material-icons-round text-sm">${isMember ? 'done' : 'person_add'}</span>
+                </button>
+                ` : `<span class="text-[10px] text-pink-400 font-bold border border-pink-400/30 px-2 py-0.5 rounded-full">Owner</span>`}
+            </div>
+        `}).join('');
+    } catch (e) {}
+}
+
+async function fetchActiveStudyRooms() {
+    try {
+        const res = await fetch('/study-rooms/active');
+        const data = await res.json();
+        const container = document.getElementById('sidebar-study-rooms');
+        if (!container) return;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">No active rooms right now</p>`;
+            return;
+        }
+
+        container.innerHTML = data.map(room => `
+            <div class="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-all group cursor-pointer" onclick="window.showView('focus'); if(typeof window.joinStudyRoom==='function') window.joinStudyRoom('${room.room_id}')">
+                <div class="flex items-center gap-3">
+                    <div class="relative w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center border border-green-500/30 text-green-400">
+                        <span class="material-icons-round">meeting_room</span>
+                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#1c1e21] rounded-full animate-pulse"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-white text-sm font-bold truncate">${room.room_id.replace('study_', 'Room ')}</h4>
+                        <p class="text-slate-400 text-[10px]">${room.members} members learning</p>
+                    </div>
+                </div>
+                <button class="px-3 py-1 text-[10px] font-bold bg-white/10 text-white rounded-full hover:bg-green-500 hover:text-white transition-all shadow-lg group-hover:scale-105 active:scale-95">
+                    Join
+                </button>
+            </div>
+        `).join('');
+    } catch (e) {}
+}
+
+window.toggleCollabJoin = async (playlistId, isMember) => {
+    if (!window.currentUserUid) return alert("Vui long dang nhap!");
+    const action = isMember ? 'leave' : 'join';
+
+    const fd = new FormData();
+    fd.append('uid', window.currentUserUid);
+
+    try {
+        const res = await fetch(`/playlists/${playlistId}/${action}`, { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.status === action || data.status === 'joined' || data.status === 'left') {
+            fetchCollaborativePlaylists();
+        }
+    } catch (e) {
+        console.error("Error joining/leaving playlist", e);
+    }
+};
+
+window.showCollabPlaylist = (playlistId, ownerUid) => {
+    alert('Collaborative Playlist: ' + playlistId);
+};
+
+window.showCreateCollabPlaylistModal = () => {
+    const name = prompt("Ten playlist chung:");
+    if (!name) return;
+
+    const fd = new FormData();
+    fd.append('uid', window.currentUserUid || 'guest');
+    fd.append('name', name);
+    fd.append('is_public', 'true');
+    fd.append('collaborative', 'true');
+
+    fetch('/playlists', { method: 'POST', body: fd })
+    .then(r=>r.json())
+    .then(data => {
+        if(data.status === 'success') fetchCollaborativePlaylists();
+    });
+};

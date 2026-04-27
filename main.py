@@ -145,6 +145,7 @@ SONGS_DB_FILE = "user_songs.json"
 FAVORITES_DB_FILE = "user_favorites.json"
 PLAYLISTS_DB_FILE = "user_playlists.json"
 FILMS_DB_FILE = "user_films.json"
+TRENDING_DB_FILE = "trending_songs.json"
 
 
 def load_json_db(file_path, default=dict):
@@ -1021,13 +1022,20 @@ async def get_playlists(uid: str = Query(...)):
 
 
 @app.post("/playlists")
-async def create_playlist(uid: str = Form(...), name: str = Form(...)):
+async def create_playlist(uid: str = Form(...), name: str = Form(...), is_public: bool = Form(False), collaborative: bool = Form(False)):
     if not uid or not name:
         return {"status": "error"}
     db = load_json_db(PLAYLISTS_DB_FILE, dict)
     user_playlists = db.get(uid, [])
 
-    new_pl = {"id": f"pl_{str(uuid.uuid4())[:8]}", "name": name, "songs": []}
+    new_pl = {
+        "id": f"pl_{str(uuid.uuid4())[:8]}",
+        "name": name,
+        "songs": [],
+        "is_public": is_public,
+        "collaborative": collaborative,
+        "members": [uid] if collaborative else []
+    }
     user_playlists.append(new_pl)
     db[uid] = user_playlists
     save_json_db(PLAYLISTS_DB_FILE, db)
@@ -1041,35 +1049,46 @@ async def toggle_playlist_song(
     if not uid or not playlist_id:
         return {"status": "error"}
     db = load_json_db(PLAYLISTS_DB_FILE, dict)
-    user_playlists = db.get(uid, [])
 
     song_dict = json.loads(song)
     song_id_to_check = song_dict.get("link") or song_dict.get("file_url")
 
     action = "error"
-    for pl in user_playlists:
-        if pl["id"] == playlist_id:
-            exists_idx = -1
-            for i, s in enumerate(pl["songs"]):
-                s_id = s.get("link") or s.get("file_url")
-                if s_id == song_id_to_check:
-                    exists_idx = i
-                    break
+    target_pl = None
+    target_owner = None
 
-            if exists_idx >= 0:
-                pl["songs"].pop(exists_idx)
-                action = "removed"
-            else:
-                if "link" in song_dict:
-                    song_dict["type"] = "youtube"
-                else:
-                    song_dict["type"] = "local"
-                pl["songs"].append(song_dict)
-                action = "added"
+    # Find the playlist across all users if it's collaborative and the user is a member
+    for owner, playlists in db.items():
+        for pl in playlists:
+            if pl["id"] == playlist_id:
+                if owner == uid or (pl.get("collaborative") and uid in pl.get("members", [])):
+                    target_pl = pl
+                    target_owner = owner
+                    break
+        if target_pl:
             break
 
-    db[uid] = user_playlists
-    save_json_db(PLAYLISTS_DB_FILE, db)
+    if target_pl:
+        exists_idx = -1
+        for i, s in enumerate(target_pl["songs"]):
+            s_id = s.get("link") or s.get("file_url")
+            if s_id == song_id_to_check:
+                exists_idx = i
+                break
+
+        if exists_idx >= 0:
+            target_pl["songs"].pop(exists_idx)
+            action = "removed"
+        else:
+            if "link" in song_dict:
+                song_dict["type"] = "youtube"
+            else:
+                song_dict["type"] = "local"
+            target_pl["songs"].append(song_dict)
+            action = "added"
+
+        save_json_db(PLAYLISTS_DB_FILE, db)
+
     return {"status": "success", "action": action}
 
 
@@ -1116,6 +1135,96 @@ async def delete_film(uid: str = Query(...), slug: str = Query(...)):
     db[uid] = user_films
     save_json_db(FILMS_DB_FILE, db)
     return {"status": "success", "action": "deleted", "films": user_films}
+
+
+# --- TRENDING SONGS API ---
+@app.post("/track-play")
+async def track_play(
+    title: str = Form(...),
+    artist: str = Form(""),
+    thumbnail: str = Form(""),
+    link: str = Form(""),
+):
+    if not title or not link:
+        return {"status": "error", "msg": "Missing title or link"}
+    db = load_json_db(TRENDING_DB_FILE, list)
+    # find by link
+    found = False
+    for s in db:
+        if s.get("link") == link:
+            s["plays"] = s.get("plays", 0) + 1
+            found = True
+            break
+    if not found:
+        db.append({"title": title, "artist": artist, "thumbnail": thumbnail, "link": link, "plays": 1})
+    save_json_db(TRENDING_DB_FILE, db)
+    return {"status": "ok"}
+
+
+@app.get("/trending-songs")
+async def trending_songs(limit: int = 5):
+    db = load_json_db(TRENDING_DB_FILE, list)
+    sorted_songs = sorted(db, key=lambda x: x.get("plays", 0), reverse=True)
+    return sorted_songs[:limit]
+
+
+# --- PUBLIC/COLLABORATIVE PLAYLISTS ---
+@app.get("/playlists/public")
+async def get_public_playlists(limit: int = 6):
+    db = load_json_db(PLAYLISTS_DB_FILE, dict)
+    public = []
+    for uid, playlists in db.items():
+        for pl in playlists:
+            if pl.get("is_public") or pl.get("collaborative"):
+                public.append({**pl, "owner": uid})
+    # Sort by number of songs (richest first)
+    public.sort(key=lambda x: len(x.get("songs", [])), reverse=True)
+    return public[:limit]
+
+
+@app.post("/playlists/{playlist_id}/join")
+async def join_playlist(playlist_id: str, uid: str = Form(...)):
+    if not uid or not playlist_id:
+        return {"status": "error"}
+    db = load_json_db(PLAYLISTS_DB_FILE, dict)
+    for owner_uid, playlists in db.items():
+        for pl in playlists:
+            if pl.get("id") == playlist_id and (pl.get("is_public") or pl.get("collaborative")):
+                members = pl.get("members", [])
+                if uid not in members:
+                    members.append(uid)
+                    pl["members"] = members
+                save_json_db(PLAYLISTS_DB_FILE, db)
+                return {"status": "joined", "playlist": pl}
+    return {"status": "not_found"}
+
+
+@app.post("/playlists/{playlist_id}/leave")
+async def leave_playlist(playlist_id: str, uid: str = Form(...)):
+    if not uid or not playlist_id:
+        return {"status": "error"}
+    db = load_json_db(PLAYLISTS_DB_FILE, dict)
+    for owner_uid, playlists in db.items():
+        for pl in playlists:
+            if pl.get("id") == playlist_id:
+                members = pl.get("members", [])
+                if uid in members:
+                    members.remove(uid)
+                    pl["members"] = members
+                save_json_db(PLAYLISTS_DB_FILE, db)
+                return {"status": "left", "playlist": pl}
+    return {"status": "not_found"}
+
+
+# --- ACTIVE STUDY ROOMS API ---
+@app.get("/study-rooms/active")
+async def get_active_study_rooms():
+    rooms = []
+    for room_id, members in party_manager.rooms.items():
+        if room_id.startswith("study_"):
+            rooms.append({"room_id": room_id, "members": len(members)})
+    return rooms
+
 
 
 @app.get("/search")

@@ -2920,6 +2920,48 @@
 
     <!-- RIGHT SIDEBAR: Friends & Activity -->
     <aside class="fb-sidebar">
+        <div class="space-y-5">
+
+            <!-- Trending Songs -->
+            <div class="glass-card rounded-2xl p-5 border border-white/5">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <span class="material-icons-round text-primary text-sm">trending_up</span> Trending Songs
+                </h3>
+                <div id="sidebar-trending" class="space-y-2">
+                    <div class="flex items-center justify-center py-6">
+                        <span class="material-icons-round text-white/20 text-4xl animate-spin">autorenew</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collaborative Playlists -->
+            <div class="glass-card rounded-2xl p-5 border border-white/5">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                        <span class="material-icons-round text-pink-400 text-sm">playlist_add</span> Collaborative Playlists
+                    </h3>
+                    <button onclick="showCreateCollabPlaylistModal()" class="text-primary text-xs font-bold hover:underline">+ New</button>
+                </div>
+                <div id="sidebar-collab-playlists" class="space-y-2">
+                    <div class="flex items-center justify-center py-6">
+                        <span class="material-icons-round text-white/20 text-4xl animate-spin">autorenew</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Study Rooms -->
+            <div class="glass-card rounded-2xl p-5 border border-white/5">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <span class="material-icons-round text-green-400 text-sm">groups</span> Active Study Rooms
+                </h3>
+                <div id="sidebar-study-rooms" class="space-y-2">
+                    <div class="flex items-center justify-center py-6">
+                        <span class="material-icons-round text-white/20 text-4xl animate-spin">autorenew</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </aside>
     </div>
 

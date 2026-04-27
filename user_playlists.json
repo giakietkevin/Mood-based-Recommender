@@ -16,7 +16,10 @@
           "thumbnail": "https://i.ytimg.com/vi/vTd_j85fGFE/hqdefault.jpg",
           "type": "youtube"
         }
-      ]
+      ],
+      "is_public": false,
+      "collaborative": false,
+      "members": []
     }
   ]
 }
