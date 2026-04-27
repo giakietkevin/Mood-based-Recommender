@@ -21,7 +21,9 @@
       "Bash(taskkill //F //IM python.exe //T)",
       "Bash(python3 *)",
       "Bash(npm start *)",
-      "Bash(pkill -f \"python main.py\")"
+      "Bash(pkill -f \"python main.py\")",
+      "Bash(git restore *)",
+      "Bash(git checkout *)"
     ]
   }
 }
