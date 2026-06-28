@@ -96,8 +96,13 @@
                 if (initialView === 'focus' && roomId && typeof window.joinStudyRoom === 'function') {
                     setTimeout(() => window.joinStudyRoom(roomId), 500);
                 }
+            } else if (initialView === 'film' || initialView === 'movie') {
+                // Show VIP modal for direct film/movie access via URL
+                const modal = document.getElementById('film-vip-modal');
+                if (modal) modal.classList.remove('hidden');
+                showView('dashboard');
             } else {
-                showView('home');
+                showView('dashboard');
             }
         }
 
@@ -169,7 +174,17 @@
         });
 
         window.showView = (viewName) => {
-            // Removed auth check for film view - allow guest access
+            // Require password for film/movie views
+            if (viewName === 'film' || viewName === 'movie') {
+                const modal = document.getElementById('film-vip-modal');
+                if (sessionStorage.getItem('filmVerified') !== 'true') {
+                    if (modal) modal.classList.remove('hidden');
+                    const targetView = document.getElementById(`view-${viewName}`);
+                    if (targetView) targetView.classList.add('hidden');
+                    return;
+                }
+            }
+            
             const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'discover', 'guide', 'about', 'djradio', 'focus'];
             const moreMenuItems = ['library', 'photobooth', 'studio', 'about', 'discover', 'djradio', 'focus'];
 
@@ -289,12 +304,6 @@
 
             if (viewName === 'photobooth') {
                 // Photobooth extra init if needed
-            }
-
-            // VIP check disabled - allow guest access
-            if (viewName === 'film') {
-                const modal = document.getElementById('film-vip-modal');
-                if (modal) modal.classList.add('hidden');
             }
 
             // History Management
@@ -2460,13 +2469,23 @@
             fetch(`/films?uid=${window.currentUserUid}&slug=${encodeURIComponent(slug)}`, { method: 'DELETE' }).catch(console.error);
         };
 
-        window.verifyFilmVipCode = () => {
+window.verifyFilmVipCode = () => {
             const input = document.getElementById('film-vip-code');
             const code = input.value.trim();
-            if (code === '100705') {
+            if (code === '101020') {
+                sessionStorage.setItem('filmVerified', 'true');
                 document.getElementById('film-vip-modal').classList.add('hidden');
+                document.getElementById('view-film').classList.remove('hidden');
+                const filmNav = document.getElementById('nav-film');
+                if (filmNav) {
+                    filmNav.classList.add('bg-white/10', 'text-white', 'shadow-sm');
+                    filmNav.classList.remove('text-slate-400');
+                }
+                alert('Mở khóa thành công! Chào mừng bạn đến với KietFilm Station.');
             } else {
-                alert('Mã truy cập không chính xác. Vui lòng kiểm tra lại!');
+                alert('Sai mật khẩu! Vui lòng nhập lại.');
+                input.value = '';
+                input.focus();
             }
         };
 
@@ -3846,7 +3865,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             initUI();
-            showView('home');
+            showView('dashboard');
         });
 
 /* ---- extracted from index.html L5824 ---- */
@@ -4404,14 +4423,14 @@ let aiChatHistory = [];
 
             if (notif.type === 'friend_request') {
                 // Show Buddy System and pending requests
-                showView('home');
+                showView('dashboard');
                 setTimeout(() => renderBuddySystem(), 150);
                 return;
             }
 
             if (notif.type === 'post_like' || notif.type === 'post_share' || notif.type === 'post_comment') {
                 if (!notif.postId) return;
-                showView('home');
+                showView('dashboard');
                 // Ensure feed rendered then scroll into view
                 setTimeout(() => {
                     const el = document.getElementById(`post-${notif.postId}`);
@@ -6940,7 +6959,7 @@ let aiChatHistory = [];
                 mediaUrl = document.getElementById('player-thumb')?.src;
             }
 
-            if (window.showView) window.showView('home');
+            if (window.showView) window.showView('dashboard');
 
             const contentInput = document.getElementById('home-post-content');
             if (contentInput) contentInput.value = `Mình đang thưởng thức: ${title} 🎵\nCùng trải nghiệm nhé!`;

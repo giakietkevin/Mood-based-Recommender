@@ -152,7 +152,7 @@
             </div>
 
             <div class="flex w-full overflow-x-auto no-scrollbar gap-2 p-1.5 glass-panel">
-                <button type="button" onclick="showView('home')" id="nav-home"
+                <button type="button" onclick="showView('home')" id="nav-home" style="display: none;"
                     class="nav-pill flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all bg-white/10 text-white shadow-sm whitespace-nowrap active">HOME</button>
                 <button type="button" onclick="showView('dashboard')" id="nav-dashboard"
                     class="nav-pill flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all text-slate-400 hover:text-white whitespace-nowrap">MUSIC</button>
@@ -768,12 +768,13 @@
                         cấp quyền. Vui lòng nhập mã truy cập của bạn.</p>
 
                     <div class="w-full space-y-4">
-                        <input type="text" id="film-vip-code" placeholder="******" maxlength="6"
-                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-700">
+<input type="text" id="film-vip-code" placeholder="******" maxlength="8"
+                             class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-700"
+                             onkeydown="if(event.key==='Enter') verifyFilmVipCode()">
                         <button onclick="verifyFilmVipCode()"
-                            class="w-full bg-primary text-[#0a0a0a] font-black py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 uppercase tracking-widest text-sm">
-                            XÁC NHẬN TRUY CẬP
-                        </button>
+                             class="w-full bg-primary text-[#0a0a0a] font-black py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 uppercase tracking-widest text-sm">
+                             XÁC NHẬN TRUY CẬP
+                         </button>
                         <button onclick="requestVipAccess()"
                             class="w-full bg-white/5 text-slate-300 font-bold py-3 rounded-xl hover:bg-white/10 transition-all border border-white/10 uppercase tracking-widest text-[10px]">
                             Yêu cầu cấp quyền VIP
@@ -3730,7 +3731,7 @@
 
     <!-- Mobile Bottom Navigation -->
     <div class="mobile-bottom-nav sm:hidden">
-        <button type="button" onclick="showView('home')" id="mob-nav-home" class="active">
+        <button type="button" onclick="showView('home')" id="mob-nav-home" class="active hidden" style="display: none;">
             <span class="material-icons-round">home</span>
             <span class="label">Home</span>
         </button>
