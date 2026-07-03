@@ -1,90 +1,90 @@
 ---
-title: KietSound Pro - AI Music & Film Studio
+title: KietStation - Mood-Based AI Recommender & Streaming Platform
 emoji: 🎵🎬
-colorFrom: pink
-colorTo: blue
+short_description: AI Music Studio, Stream, Watch Party & Mood Detection
 sdk: docker
-pinned: false
-short_description: AI Music Studio with Mood Detection & Film Streaming
 ---
 
-# 🎵 KietSound Pro - AI Music & Film Studio
+# KietStation (Mood-based-Recommender) 🎵🎬
 
-An all-in-one entertainment platform featuring AI-powered music generation, facial mood-based music recommendations, and high-speed Vietnamese movie streaming.
+Hệ thống giải trí trực tuyến đa chức năng tích hợp trí tuệ nhân tạo (AI) nhận diện khuôn mặt để đề xuất nội dung (nhạc & phim), hỗ trợ Studio sản xuất nhạc AI, và tính năng Watch Party chia sẻ qua WebRTC.
 
-## ✨ Key Features
+## ✨ Tính năng cốt lõi
 
-### 🎬 KietFilm Player (New!)
-- **Seamless Movie Streaming**: Integrated with the Open OPhim API for lightning-fast, ad-free movie streaming.
-- **HLS Architecture**: Uses `HLS.js` to deliver native, high-performance video streaming without heavy backend proxies.
-- **Auto-Subtitles**: All movies are pre-equipped with high-quality Vietnamese subtitles perfectly synced.
-- **Smart History**: Automatically tracks your recently watched movies for easy resume/replay.
+### 🎬 KietFilm Player & Streaming
+- **Stream Tốc Độ Cao**: Tích hợp OPhim API & TMDB API, hỗ trợ định dạng HLS (.m3u8).
+- **Trải nghiệm Premium**: Giao diện không quảng cáo, tự động đồng bộ phụ đề.
+- **Lưu trữ Cục bộ**: Quản lý lịch sử xem phim và danh sách phát cá nhân.
 
-### 🎭 Mood-Based Recommendation
-- **Facial Recognition**: Analyze facial emotions using DeepFace.
-- **Smart Search**: DuckDuckGo-powered YouTube search based on detected mood.
-- **Music & Podcast**: Support for both music and podcast recommendations.
+### 🎭 Mood-Based Recommendation (Đề xuất theo cảm xúc)
+- **Công nghệ Face AI**: Tích hợp module DeepFace theo dõi biểu cảm thông qua Webcam.
+- **Dynamic Search**: Tự động ánh xạ cảm xúc (Vui, Buồn, Ngạc nhiên...) thành ngữ cảnh, truy vấn song song YouTube Music và Podcast.
 
-### 🎹 AI Music Generator (Text-to-Music)
-Professional-grade music generation from lyrics with:
+### 🎹 KietSound Pro - AI Music Studio
+- **Sinh Nhạc AI (Text-To-Music)**: Tích hợp Hugging Face MusicGen tạo beat thủ công.
+- **Tổng hợp giọng hát**: Tích hợp Edge-TTS tạo vocals, có hỗ trợ RVC Engine để biến đổi giọng thật/AI.
+- **Xử lý âm thanh (Mix & Master)**: Auto-mix với delay, reverb, compression (pydub/ffmpeg). Hỗ trợ chia Intro, Verse, Chorus.
 
-#### 🎤 Advanced Vocal Processing
-- **Multi-TTS Support**: Edge-TTS (primary) with gTTS fallback.
-- **Intelligent Pitch Contouring**: Custom melodic patterns tailored for Rap, Ballad, EDM, Rock, and more.
-- **Vibrato Effects**: Natural vibrato for Ballad, Soul, Jazz styles.
-- **12+ Voice Profiles**: Wide range of Male/Female regional variations.
+### 🎉 Watch Party (WebRTC)
+- **Đồng bộ thời gian thực**: Sử dụng WebRTC và WebTorrent để stream âm thanh/video cho nhiều người cùng lúc.
+- **Tương tác nhóm**: Toggle Microphone, chia sẻ camera, thả biểu cảm thời gian thực trên màn hình chung.
+- **Peer-to-Peer**: Tối ưu hóa băng thông bằng truyền tải P2P và Node.js tracker.
 
-#### 🎵 Studio-Grade Audio Processing
-- **Time Stretching**: Rubberband-powered tempo matching.
-- **Multi-Band Compression**: Adaptive compression per style.
-- **Style-Specific EQ**: Optimized frequency curves.
-- **Adaptive Reverb & Delay**: Context-aware spatial effects.
+---
 
-#### 🎼 Intelligent Music Structure
-- **Auto Song Structure**: Intro → Verse → Chorus → Bridge → Outro.
-- **Hook Detection**: Automatic chorus identification.
-- **Adaptive Spacing**: Style-specific breathing room.
+## 🏗️ Kiến trúc Công nghệ
 
-#### 🎚️ Professional Mixing
-- **Auto-Ducking**: Beat volume reduction during vocals.
-- **Gain Staging**: Style & mood-aware volume balance.
-- **Mastering Chain**: Peak normalization, soft clipping, final limiting.
-- **320kbps MP3 Export**: High-quality audio output.
+- **Backend / Core REST API**: Python, `FastAPI`, `Uvicorn`.
+- **AI & Data Analysis**: `deepface` (Emotion), Transformers (Hugging Face CLI), Edge-TTS, `RVC`.
+- **Media Processing**: `ffmpeg-python`, `pydub`, `librosa`.
+- **Frontend**: HTML5, CSS3 (Styling hiện đại), JS (Vanilla/ES6 Module).
+- **Video Player**: `hls.js`.
+- **Real-time Media & Torrent**: `WebTorrent`, Node.js `Express`, `cors`.
 
-### 🎨 70+ Music Styles Supported
-- Chill, Urban, Electronic, Rock, Pop & More
+**Cấu trúc thư mục tham khảo**:
+- `main.py`: Core FastAPI Server.
+- `hf_music_gen.py` / `rvc_engine.py`: Các file quản lý pipeline Audio & AI Generation.
+- `torrent_server.js`: Tracker và Bridge cho WebTorrent / Watch Party.
+- `index.html`: Giao diện ứng dụng Client-Side.
 
-### 🎭 10+ Mood Profiles
-Joy, Sadness, Anger, Fear, Surprise, Anticipation, Calmness, Romantic, Nostalgia, Triumph.
+---
 
-## 🛠️ Technical Stack
+## 🚀 Hướng dẫn Cài đặt & Khởi chạy
 
-### Backend
-- **FastAPI**: High-performance async web framework
-- **DeepFace**: Facial emotion detection
-- **OPhim API**: Comprehensive Vietnamese movie streaming
-- **librosa & pydub**: Audio analysis and manipulation
-- **pyrubberband & pedalboard**: Pitch shifting, time stretching, effects
-- **edge-tts**: High-quality text-to-speech
+### 1. Cài đặt Hệ thống & Yêu cầu Bắt buộc
+- **OS**: Windows 10/11, Linux, macOS.
+- **Python**: `3.10+`.
+- **Node.js**: `v18+` (cho torrent server).
+- **Phần mềm bên thứ 3**: Cài đặt **FFmpeg** và đưa vào môi trường hệ thống (PATH).
 
-### Frontend
-- **TailwindCSS**: Modern UI framework
-- **Vanilla JS**: Lightweight, zero-dependency components
-- **HLS.js**: Lightning-fast `.m3u8` video streaming
-- **YouTube IFrame API**: Embedded playback
-- **Firebase Auth**: Google OAuth integration
+### 2. Cài đặt Dependencies
 
-## 🚀 Installation
-
-### Requirements
-- Python 3.10+
-- FFmpeg (included in repo)
-- 4GB RAM minimum (8GB recommended)
-
-### Setup
+**Môi trường Python:**
 ```bash
-# Install dependencies
 pip install -r requirements.txt
+```
 
-# Run server
+**Môi trường Node.js (WebTorrent & Express):**
+```bash
+npm install
+```
+
+### 3. Vận hành dịch vụ
+
+Chạy **Torrent/WebRTC Backend** (Khởi chạy trên Port khác/quy định):
+```bash
+node torrent_server.js
+```
+
+Khởi động **FastAPI Main Service**:
+```bash
 python main.py
+```
+
+Sau khi Terminal báo thành công, mở truy cập vào: [http://localhost:8000](http://localhost:8000)
+
+---
+
+## 🔒 Vấn đề Pháp lý & Giới hạn
+- Dự án mã nguồn mở phục vụ R&D các mảng công nghệ WebRTC, TTS, Video Streaming, Computer Vision.
+- Tất cả nội dung phim được cung cấp từ Endpoint Public, ứng dụng không lưu trữ file Media MP4 hoặc m3u8 vào ổ cứng Server tĩnh. Vui lòng tuân thủ bản quyền của nền tảng sở hữu (TMDB/OPhim).

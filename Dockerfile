@@ -2,7 +2,7 @@
 FROM python:3.9
 
 # Cài đặt thư viện hệ thống (OpenCV, FFmpeg, Audio Processing)
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y ffmpeg \
     libgl1 \
     libglib2.0-0 \
     ffmpeg \
@@ -26,6 +26,7 @@ COPY . /code
 # Tạo thư mục cache cho DeepFace để tránh lỗi permission
 RUN mkdir -p /.deepface && chmod -R 777 /.deepface
 ENV DEEPFACE_HOME="/.deepface"
+ENV PYTHONUNBUFFERED=1
 
 # Chạy server
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
