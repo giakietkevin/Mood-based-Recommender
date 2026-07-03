@@ -124,6 +124,15 @@
         .game-hud { font-family: 'Outfit', sans-serif; font-weight: 900; letter-spacing: 2px; }
         .btn-game-control { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; color: white; transition: all 0.2s; }
         .btn-game-control:active { transform: scale(0.9); background: #C6A87C; color: #0a0a0a; }
+
+        /* Film Passcode Numpad */
+        .numpad-btn {
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem; font-weight: 700; color: white;
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1rem; transition: all 0.15s; user-select: none;
+        }
+        .numpad-btn:active { transform: scale(0.9); background: rgba(198,168,124,0.3); }
     </style>
 </head>
 
@@ -138,7 +147,7 @@
                 <div class="flex items-center gap-2 min-w-0 flex-shrink">
                     <div class="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/20 flex-shrink-0"><span
                             class="material-icons-round text-white text-xl">equalizer</span></div>
-                    <a href="/" class="hover:opacity-90 transition-opacity">
+                    <a href="/?view=studio" class="hover:opacity-90 transition-opacity">
                         <span
                             class="text-lg sm:text-xl font-display font-bold text-white uppercase tracking-tight truncate">
                             Kiet<span class="text-primary">Station</span>
@@ -204,8 +213,7 @@
             <!-- ROW 2: Navigation Tabs (Full Width) -->
             <div
                 class="flex w-full overflow-x-auto no-scrollbar gap-1 p-1 bg-white/10 sm:bg-white/5 rounded-2xl border border-white/5 sm:border-none">
-                <button type="button" onclick="showView('dashboard')" id="nav-dashboard"
-                    class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all bg-white/10 text-white shadow-sm whitespace-nowrap">MUSIC-RECOMMENDER</button>
+                <!-- HIDDEN: nav-dashboard button removed -->
                 <button type="button" onclick="showView('studio')" id="nav-studio"
                     class="flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">STUDIO</button>
                 <button type="button" onclick="showView('library')" id="nav-library"
@@ -222,7 +230,7 @@
 
     <main class="max-w-7xl mx-auto px-4">
 
-        <div id="view-dashboard" class="grid lg:grid-cols-12 gap-6 animate-fade-in">
+        <div id="view-dashboard" class="grid lg:grid-cols-12 gap-6 animate-fade-in hidden">
             <!-- Feature Introduction Banner -->
             <div
                 class="lg:col-span-12 glass-card rounded-[2.5rem] p-8 border border-white/10 overflow-hidden relative group">
@@ -1846,6 +1854,50 @@
         </div>
     </main>
 
+    <!-- FILM PASSCODE MODAL -->
+    <div id="film-passcode-modal" class="fixed inset-0 z-[999] flex items-center justify-center hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeFilmPasscode()"></div>
+        <!-- Modal box -->
+        <div class="relative glass-card rounded-3xl p-8 w-80 border border-white/10 shadow-2xl flex flex-col items-center gap-5 animate-fade-in">
+            <!-- Icon -->
+            <div class="w-14 h-14 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/20">
+                <span class="material-icons-round text-primary text-3xl">lock</span>
+            </div>
+            <!-- Title -->
+            <div class="text-center">
+                <h2 class="text-white font-bold text-lg tracking-wide">Khu vực riêng tư</h2>
+                <p class="text-slate-400 text-xs mt-1">Nhập mã để vào trang FILM</p>
+            </div>
+            <!-- PIN dots display -->
+            <div class="flex gap-3" id="film-pin-dots">
+                <span class="w-3 h-3 rounded-full bg-white/20 border border-white/30 transition-all" id="dot-0"></span>
+                <span class="w-3 h-3 rounded-full bg-white/20 border border-white/30 transition-all" id="dot-1"></span>
+                <span class="w-3 h-3 rounded-full bg-white/20 border border-white/30 transition-all" id="dot-2"></span>
+                <span class="w-3 h-3 rounded-full bg-white/20 border border-white/30 transition-all" id="dot-3"></span>
+                <span class="w-3 h-3 rounded-full bg-white/20 border border-white/30 transition-all" id="dot-4"></span>
+                <span class="w-3 h-3 rounded-full bg-white/20 border border-white/30 transition-all" id="dot-5"></span>
+            </div>
+            <!-- Error message -->
+            <p id="film-passcode-error" class="text-red-400 text-xs hidden">❌ Mã không đúng, thử lại!</p>
+            <!-- Numpad -->
+            <div class="grid grid-cols-3 gap-3 w-full">
+                <button onclick="filmPadInput('1')" class="numpad-btn">1</button>
+                <button onclick="filmPadInput('2')" class="numpad-btn">2</button>
+                <button onclick="filmPadInput('3')" class="numpad-btn">3</button>
+                <button onclick="filmPadInput('4')" class="numpad-btn">4</button>
+                <button onclick="filmPadInput('5')" class="numpad-btn">5</button>
+                <button onclick="filmPadInput('6')" class="numpad-btn">6</button>
+                <button onclick="filmPadInput('7')" class="numpad-btn">7</button>
+                <button onclick="filmPadInput('8')" class="numpad-btn">8</button>
+                <button onclick="filmPadInput('9')" class="numpad-btn">9</button>
+                <button onclick="filmPadClear()" class="numpad-btn text-slate-400 text-sm">Xóa</button>
+                <button onclick="filmPadInput('0')" class="numpad-btn">0</button>
+                <button onclick="filmPadDelete()" class="numpad-btn text-slate-400">⌫</button>
+            </div>
+        </div>
+    </div>
+
     <!-- PHOTO PREVIEW MODAL (NEW) -->
     <div id="pb-preview-modal"
         class="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
@@ -2055,7 +2107,7 @@
             if (initialView === 'studio' || initialView === 'guide') {
                 showView(initialView);
             } else {
-                showView('dashboard');
+                showView('studio');
             }
         }
 
@@ -2085,7 +2137,66 @@
             initUI(); // Re-render
         };
 
+        // --- FILM PASSCODE SYSTEM ---
+        let filmUnlocked = false;
+        let filmPinBuffer = '';
+        const FILM_PASSCODE = '101020';
+
+        function openFilmPasscode() {
+            filmPinBuffer = '';
+            updatePinDots();
+            document.getElementById('film-passcode-error').classList.add('hidden');
+            document.getElementById('film-passcode-modal').classList.remove('hidden');
+        }
+        function closeFilmPasscode() {
+            document.getElementById('film-passcode-modal').classList.add('hidden');
+            filmPinBuffer = '';
+        }
+        function updatePinDots() {
+            for (let i = 0; i < 6; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i < filmPinBuffer.length) {
+                    dot.classList.add('bg-primary', 'scale-125', 'border-primary');
+                    dot.classList.remove('bg-white/20', 'border-white/30');
+                } else {
+                    dot.classList.remove('bg-primary', 'scale-125', 'border-primary');
+                    dot.classList.add('bg-white/20', 'border-white/30');
+                }
+            }
+        }
+        function filmPadInput(num) {
+            if (filmPinBuffer.length >= 6) return;
+            filmPinBuffer += num;
+            updatePinDots();
+            document.getElementById('film-passcode-error').classList.add('hidden');
+            if (filmPinBuffer.length === 6) {
+                if (filmPinBuffer === FILM_PASSCODE) {
+                    filmUnlocked = true;
+                    closeFilmPasscode();
+                    showView('film');
+                } else {
+                    document.getElementById('film-passcode-error').classList.remove('hidden');
+                    setTimeout(() => { filmPinBuffer = ''; updatePinDots(); }, 600);
+                }
+            }
+        }
+        function filmPadClear() {
+            filmPinBuffer = '';
+            updatePinDots();
+            document.getElementById('film-passcode-error').classList.add('hidden');
+        }
+        function filmPadDelete() {
+            filmPinBuffer = filmPinBuffer.slice(0, -1);
+            updatePinDots();
+        }
+
         window.showView = (viewName) => {
+            // --- Film Passcode Gate ---
+            if (viewName === 'film' && !filmUnlocked) {
+                openFilmPasscode();
+                return;
+            }
+
             const views = ['dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'guide'];
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
@@ -4879,7 +4990,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             initUI();
-            showView('dashboard');
+            showView('studio');
         });
 
     </script>
