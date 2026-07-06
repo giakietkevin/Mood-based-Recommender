@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div class="hidden flex w-40 h-40 bg-red-500" id="test">Visible?</div>
+    <script>
+        console.log(window.getComputedStyle(document.getElementById('test')).display);
+    </script>
+</body>
+</html>
