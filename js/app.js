@@ -2344,7 +2344,8 @@
 
                         const videoElem = document.createElement('video');
                         videoElem.id = 'film-video-player';
-                        videoElem.className = 'w-full h-full object-contain bg-black rounded-xl';
+                        videoElem.className = 'w-full h-full object-contain bg-black rounded-xl pointer-events-auto relative z-50';
+                        videoElem.playsInline = true;
                         videoElem.controls = true;
                         videoElem.autoplay = true;
                         output.appendChild(videoElem);
