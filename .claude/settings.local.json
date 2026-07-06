@@ -24,7 +24,8 @@
       "Bash(pkill -f \"python main.py\")",
       "Bash(git restore *)",
       "Bash(git checkout *)",
-      "Bash(pip show *)"
+      "Bash(pip show *)",
+      "Bash(kill %1)"
     ]
   }
 }
