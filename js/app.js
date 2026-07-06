@@ -185,6 +185,11 @@
                 }
             }
             
+            const vipModal = document.getElementById('film-vip-modal');
+            if (vipModal && viewName !== 'film' && viewName !== 'movie') {
+                vipModal.classList.add('hidden');
+            }
+
             const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'discover', 'guide', 'about', 'djradio', 'focus'];
             const moreMenuItems = ['library', 'photobooth', 'studio', 'about', 'discover', 'djradio', 'focus'];
 
