@@ -23,7 +23,8 @@
       "Bash(npm start *)",
       "Bash(pkill -f \"python main.py\")",
       "Bash(git restore *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(pip show *)"
     ]
   }
 }
