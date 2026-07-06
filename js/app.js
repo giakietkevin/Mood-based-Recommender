@@ -98,9 +98,13 @@
                 }
             } else if (initialView === 'film' || initialView === 'movie') {
                 // Show VIP modal for direct film/movie access via URL
-                const modal = document.getElementById('film-vip-modal');
-                if (modal) modal.classList.remove('hidden');
-                showView('dashboard');
+                if (sessionStorage.getItem('filmVerified') === 'true') {
+                    showView('film');
+                } else {
+                    showView('dashboard'); // Render dashboard background
+                    const modal = document.getElementById('film-vip-modal');
+                    if (modal) modal.classList.remove('hidden'); // Show modal AFTER dashboard is rendered
+                }
             } else {
                 showView('dashboard');
             }
@@ -186,8 +190,13 @@
             }
             
             const vipModal = document.getElementById('film-vip-modal');
-            if (vipModal && viewName !== 'film' && viewName !== 'movie') {
-                vipModal.classList.add('hidden');
+            if (vipModal) {
+                // Luôn ẩn modal nếu chuyển sang tab khác, hoặc nếu đã ở tab film mà ĐÃ XÁC THỰC
+                if (viewName !== 'film' && viewName !== 'movie') {
+                    vipModal.classList.add('hidden');
+                } else if (sessionStorage.getItem('filmVerified') === 'true') {
+                    vipModal.classList.add('hidden');
+                }
             }
 
             const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'discover', 'guide', 'about', 'djradio', 'focus'];
@@ -2480,13 +2489,7 @@ window.verifyFilmVipCode = () => {
             const code = input.value.trim();
             if (code === '101020') {
                 sessionStorage.setItem('filmVerified', 'true');
-                document.getElementById('film-vip-modal').classList.add('hidden');
-                document.getElementById('view-film').classList.remove('hidden');
-                const filmNav = document.getElementById('nav-film');
-                if (filmNav) {
-                    filmNav.classList.add('bg-white/10', 'text-white', 'shadow-sm');
-                    filmNav.classList.remove('text-slate-400');
-                }
+                window.showView('film');
                 alert('Mở khóa thành công! Chào mừng bạn đến với KietFilm Station.');
             } else {
                 alert('Sai mật khẩu! Vui lòng nhập lại.');
