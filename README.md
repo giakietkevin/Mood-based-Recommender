@@ -103,7 +103,7 @@ python main.py
 ```
 
 Sau khi Terminal báo khởi động thành công, mở trình duyệt và truy cập vào: 
-👉 **[http://localhost:8000](http://localhost:8000)**
+👉 **[http://localhost:7860](http://localhost:7860)**
 
 ---
 
