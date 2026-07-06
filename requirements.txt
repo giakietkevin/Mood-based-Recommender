@@ -8,7 +8,7 @@ opencv-python-headless
 requests
 python-dotenv
 numpy<2.0.0
-duckduckgo-search
+ytmusicapi
 
 # Audio Processing Libraries (Text-to-Music v2.0 + RVC Singing Voice)
 edge-tts

@@ -37,7 +37,7 @@ except ImportError:
     print("[WARNING] g4f not available, chat feature will be disabled")
 
 from deepface import DeepFace
-from duckduckgo_search import DDGS
+from ytmusicapi import YTMusic
 import edge_tts
 from gtts import gTTS
 from pydub import AudioSegment
@@ -1229,40 +1229,30 @@ async def get_active_study_rooms():
 
 @app.get("/search")
 async def search(q: str, type: str = "music"):
-    # Logic tìm kiếm Youtube qua DuckDuckGo
-    if "lofi" in q.lower() or "beats" in q.lower() or "ambient" in q.lower() or "focus" in q.lower():
-        keyword = q  # Không thêm "official mv" cho các loại nhạc cụ thể này
-    else:
-        keyword = f"{q} official mv" if type == "music" else f"{q} podcast vietnam full"
+    keyword = f"{q} official mv" if type == "music" else f"{q} podcast vietnam full"
+    if "lofi" in q.lower() or "beats" in q.lower() or "ambient" in q.lower() or "focus" in q.lower() or type != "music":
+        keyword = q
 
     res = []
     try:
-        with DDGS() as ddgs:
-            gen = ddgs.videos(f"site:youtube.com {keyword}", max_results=8)
-            for r in gen:
-                url = r.get("content", "")
-                # Extract video ID from various URL formats
-                vid = ""
-                if "v=" in url:
-                    vid = url.split("v=")[1].split("&")[0].split("#")[0]
-                elif "youtu.be/" in url:
-                    vid = url.split("youtu.be/")[1].split("?")[0].split("#")[0]
-                elif "/shorts/" in url:
-                    vid = url.split("/shorts/")[1].split("?")[0].split("#")[0]
-                elif "/embed/" in url:
-                    vid = url.split("/embed/")[1].split("?")[0].split("#")[0]
+        ytmusic = YTMusic()
+        # Đối với type là music, ưu tiên songs và videos. Podcast thì search chung.
+        search_filter = "songs" if type == "music" else "videos"
+        results = ytmusic.search(keyword, filter=search_filter, limit=8)
+        
+        for r in results:
+            vid = r.get('videoId')
+            if vid and len(vid) == 11:
+                # Tránh trùng lặp
+                if not any(item['link'] == f"https://www.youtube.com/watch?v={vid}" for item in res):
+                    res.append({
+                        "title": r.get("title", "Unknown"),
+                        "link": f"https://www.youtube.com/watch?v={vid}",
+                        "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+                    })
+    except Exception as e:
+        print("YTMusic Search Error:", e)
 
-                # Validate video ID (must be 11 chars)
-                if vid and len(vid) == 11:
-                    res.append(
-                        {
-                            "title": r.get("title", "Unknown"),
-                            "link": f"https://www.youtube.com/watch?v={vid}",
-                            "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
-                        }
-                    )
-    except:
-        pass
     return {"mood": "manual", "recommendations": res}
 
 
@@ -1885,29 +1875,16 @@ async def dj_radio(
             
         recommendations = []
         try:
-            from duckduckgo_search import DDGS
-            with DDGS() as ddgs:
-                gen = ddgs.videos(f"site:youtube.com {keyword}", max_results=10)
-                for r in gen:
-                    url = r.get("content", "")
-                    # Extract video ID from various URL formats (same logic as /search)
-                    vid = ""
-                    if "v=" in url:
-                        vid = url.split("v=")[1].split("&")[0].split("#")[0]
-                    elif "youtu.be/" in url:
-                        vid = url.split("youtu.be/")[1].split("?")[0].split("#")[0]
-                    elif "/shorts/" in url:
-                        vid = url.split("/shorts/")[1].split("?")[0].split("#")[0]
-                    elif "/embed/" in url:
-                        vid = url.split("/embed/")[1].split("?")[0].split("#")[0]
-
-                    # Validate video ID (must be 11 chars)
-                    if vid and len(vid) == 11:
-                        recommendations.append({
-                            "title": r.get("title", "Unknown"),
-                            "link": f"https://www.youtube.com/watch?v={vid}",
-                            "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
-                        })
+            ytmusic = YTMusic()
+            results = ytmusic.search(keyword, filter="songs", limit=10)
+            for r in results:
+                vid = r.get('videoId')
+                if vid and len(vid) == 11:
+                    recommendations.append({
+                        "title": r.get("title", "Unknown"),
+                        "link": f"https://www.youtube.com/watch?v={vid}",
+                        "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+                    })
         except Exception as e:
             print(f"DJ Search Error: {e}")
             
