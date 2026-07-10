@@ -25,7 +25,10 @@
       "Bash(git restore *)",
       "Bash(git checkout *)",
       "Bash(pip show *)",
-      "Bash(kill %1)"
+      "Bash(kill %1)",
+      "Bash(jq)",
+      "Bash(set PYTHONIOENCODING=utf-8)",
+      "Bash(grep *)"
     ]
   }
 }
