@@ -1235,7 +1235,7 @@ async def search(q: str, type: str = "music"):
 
     res = []
     try:
-        ytmusic = YTMusic()
+        ytmusic = YTMusic(location="VN")
         # Đối với type là music, ưu tiên songs và videos. Podcast thì search chung.
         search_filter = "songs" if type == "music" else "videos"
         results = ytmusic.search(keyword, filter=search_filter, limit=8)
@@ -1875,7 +1875,7 @@ async def dj_radio(
             
         recommendations = []
         try:
-            ytmusic = YTMusic()
+            ytmusic = YTMusic(location="VN")
             results = ytmusic.search(keyword, filter="songs", limit=10)
             for r in results:
                 vid = r.get('videoId')
