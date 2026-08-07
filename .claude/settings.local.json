@@ -28,7 +28,21 @@
       "Bash(kill %1)",
       "Bash(jq)",
       "Bash(set PYTHONIOENCODING=utf-8)",
-      "Bash(grep *)"
+      "Bash(grep *)",
+      "Bash(awk '/id=\"film-pagination\"/, /<\\\\/div>/')",
+      "Bash(awk 'NR>=1299 && NR<=1320')",
+      "Bash(awk 'NR>=1583 && NR<=1650')",
+      "Bash(awk 'NR>=1651 && NR<=1700')",
+      "Bash(awk 'NR>=1557 && NR<=1581')",
+      "Bash(awk 'NR>=1600 && NR<=1650')",
+      "Bash(awk 'NR>=1701 && NR<=1720')",
+      "Bash(awk '/id=\"film-main-grid\"/, /<\\\\/div>/')",
+      "Bash(awk 'NR>=1650 && NR<=1700')",
+      "Bash(awk 'NR>=1580 && NR<=1650')",
+      "Bash(awk 'NR>=2130 && NR<=2198')",
+      "Bash(awk 'NR>=1605 && NR<=1650')",
+      "Bash(awk 'NR>=2150 && NR<=2197')",
+      "Bash(awk 'NR>=1605 && NR<=1615')"
     ]
   }
 }

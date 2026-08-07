@@ -1404,7 +1404,7 @@
         // ==========================================
         // 8. FILM STATION LOGIC (OPHIM API)
         // ==========================================
-        const FILM_PAGE_SIZE = 12; // 4 cols × 3 rows
+        const FILM_PAGE_SIZE = 24; // 4 cols × 6 rows
         let filmCurrentCategory = 'all';
         let filmCurrentCategoryLabel = 'Phim Mới Cập Nhật';
         let filmCurrentPage = 1;
@@ -1602,8 +1602,8 @@
                 let apiPagination = {};
                 let attempts = 0;
                 let currentApiPage = page;
-                const MAX_ATTEMPTS = window.filmAdvCriteria ? 10 : 1;
-                const API_LIMIT = window.filmAdvCriteria ? 72 : FILM_PAGE_SIZE;
+                const MAX_ATTEMPTS = window.filmAdvCriteria ? 15 : 1;
+                const API_LIMIT = 24; // OPhim max page limit often defaults to 24 or similar, load more movies by default.
 
                 while (items.length < FILM_PAGE_SIZE && attempts < MAX_ATTEMPTS) {
                     if (window.filmAdvCriteria && grid) {
@@ -1639,7 +1639,7 @@
                     if (currentApiPage > (apiPagination.totalPages || 999)) break;
                 }
 
-                const displayItems = items.slice(0, FILM_PAGE_SIZE);
+                const displayItems = items;
 
                 if (displayItems.length === 0) {
                     if (grid) grid.innerHTML = `
@@ -2103,7 +2103,7 @@
             if (pagination) pagination.classList.add('hidden');
 
             try {
-                const res = await fetch(`https://ophim1.com/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&limit=12`);
+                const res = await fetch(`https://ophim1.com/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&limit=24`);
                 const data = await res.json();
 
                 if (data.status === 'success' && data.data && data.data.items.length > 0) {
