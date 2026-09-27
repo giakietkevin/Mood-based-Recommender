@@ -98,9 +98,13 @@
                 }
             } else if (initialView === 'film' || initialView === 'movie') {
                 // Show VIP modal for direct film/movie access via URL
-                const modal = document.getElementById('film-vip-modal');
-                if (modal) modal.classList.remove('hidden');
-                showView('dashboard');
+                if (sessionStorage.getItem('filmVerified') === 'true') {
+                    showView('film');
+                } else {
+                    showView('dashboard'); // Render dashboard background
+                    const modal = document.getElementById('film-vip-modal');
+                    if (modal) modal.classList.remove('hidden'); // Show modal AFTER dashboard is rendered
+                }
             } else {
                 showView('dashboard');
             }
@@ -185,6 +189,16 @@
                 }
             }
             
+            const vipModal = document.getElementById('film-vip-modal');
+            if (vipModal) {
+                // Luôn ẩn modal nếu chuyển sang tab khác, hoặc nếu đã ở tab film mà ĐÃ XÁC THỰC
+                if (viewName !== 'film' && viewName !== 'movie') {
+                    vipModal.classList.add('hidden');
+                } else if (sessionStorage.getItem('filmVerified') === 'true') {
+                    vipModal.classList.add('hidden');
+                }
+            }
+
             const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'discover', 'guide', 'about', 'djradio', 'focus'];
             const moreMenuItems = ['library', 'photobooth', 'studio', 'about', 'discover', 'djradio', 'focus'];
 
@@ -1390,7 +1404,7 @@
         // ==========================================
         // 8. FILM STATION LOGIC (OPHIM API)
         // ==========================================
-        const FILM_PAGE_SIZE = 12; // 4 cols × 3 rows
+        const FILM_PAGE_SIZE = 24; // 4 cols × 6 rows
         let filmCurrentCategory = 'all';
         let filmCurrentCategoryLabel = 'Phim Mới Cập Nhật';
         let filmCurrentPage = 1;
@@ -1588,8 +1602,8 @@
                 let apiPagination = {};
                 let attempts = 0;
                 let currentApiPage = page;
-                const MAX_ATTEMPTS = window.filmAdvCriteria ? 10 : 1;
-                const API_LIMIT = window.filmAdvCriteria ? 72 : FILM_PAGE_SIZE;
+                const MAX_ATTEMPTS = window.filmAdvCriteria ? 15 : 1;
+                const API_LIMIT = 24; // OPhim max page limit often defaults to 24 or similar, load more movies by default.
 
                 while (items.length < FILM_PAGE_SIZE && attempts < MAX_ATTEMPTS) {
                     if (window.filmAdvCriteria && grid) {
@@ -1625,7 +1639,7 @@
                     if (currentApiPage > (apiPagination.totalPages || 999)) break;
                 }
 
-                const displayItems = items.slice(0, FILM_PAGE_SIZE);
+                const displayItems = items;
 
                 if (displayItems.length === 0) {
                     if (grid) grid.innerHTML = `
@@ -2089,7 +2103,7 @@
             if (pagination) pagination.classList.add('hidden');
 
             try {
-                const res = await fetch(`https://ophim1.com/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&limit=12`);
+                const res = await fetch(`https://ophim1.com/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&limit=24`);
                 const data = await res.json();
 
                 if (data.status === 'success' && data.data && data.data.items.length > 0) {
@@ -2344,7 +2358,8 @@
 
                         const videoElem = document.createElement('video');
                         videoElem.id = 'film-video-player';
-                        videoElem.className = 'w-full h-full object-contain bg-black rounded-xl';
+                        videoElem.className = 'w-full h-full object-contain bg-black rounded-xl pointer-events-auto relative z-10';
+                        videoElem.playsInline = true;
                         videoElem.controls = true;
                         videoElem.autoplay = true;
                         output.appendChild(videoElem);
@@ -2474,13 +2489,7 @@ window.verifyFilmVipCode = () => {
             const code = input.value.trim();
             if (code === '101020') {
                 sessionStorage.setItem('filmVerified', 'true');
-                document.getElementById('film-vip-modal').classList.add('hidden');
-                document.getElementById('view-film').classList.remove('hidden');
-                const filmNav = document.getElementById('nav-film');
-                if (filmNav) {
-                    filmNav.classList.add('bg-white/10', 'text-white', 'shadow-sm');
-                    filmNav.classList.remove('text-slate-400');
-                }
+                window.showView('film');
                 alert('Mở khóa thành công! Chào mừng bạn đến với KietFilm Station.');
             } else {
                 alert('Sai mật khẩu! Vui lòng nhập lại.');
