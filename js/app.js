@@ -1409,7 +1409,7 @@
         let filmCurrentCategoryLabel = 'Phim Mới Cập Nhật';
         let filmCurrentPage = 1;
         let filmTotalPages = 1;
-        let filmCurrentEndpoint = 'https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat';
+        let filmCurrentEndpoint = 'https://phimapi.com/v1/api/danh-sach/phim-moi-cap-nhat';
         let filmIsSearchMode = false;
         let filmCurrentYearFilter = null;
         window.filmAdvCriteria = null; 
@@ -1598,7 +1598,7 @@
 
             try {
                 let items = [];
-                let imgDomain = 'https://img.ophim.live';
+                let imgDomain = 'https://phimimg.com';
                 let apiPagination = {};
                 let attempts = 0;
                 let currentApiPage = page;
@@ -1618,7 +1618,7 @@
                     const res = await fetch(url);
                     const data = await res.json();
                     
-                    imgDomain = data.data?.APP_DOMAIN_CDN_IMAGE || data.pathImage || 'https://img.ophim.live';
+                    imgDomain = data.data?.APP_DOMAIN_CDN_IMAGE || data.pathImage || 'https://phimimg.com';
                     let rawItems = data.data?.items || data.items || [];
                     apiPagination = data.data?.params?.pagination || data.pagination || {};
 
@@ -1698,12 +1698,12 @@
             }
 
             const catMap = {
-                'all': { url: 'https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat', label: 'Phim Mới Cập Nhật', sub: 'Tổng hợp phim mới nhất' },
-                'phim-le': { url: 'https://ophim1.com/v1/api/danh-sach/phim-le', label: 'Phim Lẻ 🎥', sub: 'Phim chiếu rạp & phim lẻ' },
-                'phim-bo': { url: 'https://ophim1.com/v1/api/danh-sach/phim-bo', label: 'Phim Bộ 📺', sub: 'Series phim nhiều tập' },
-                'hoat-hinh': { url: 'https://ophim1.com/v1/api/danh-sach/hoat-hinh', label: 'Hoạt Hình 🎨', sub: 'Anime & phim hoạt hình' },
-                'tv-shows': { url: 'https://ophim1.com/v1/api/danh-sach/tv-shows', label: 'TV Shows 📡', sub: 'Chương trình truyền hình' },
-                'chieu-rap': { url: 'https://ophim1.com/v1/api/danh-sach/phim-sap-chieu', label: 'Chiếu Rạp 🎬', sub: 'Phim sắp chiếu & đang chiếu rạp' },
+                'all': { url: 'https://phimapi.com/v1/api/danh-sach/phim-moi-cap-nhat', label: 'Phim Mới Cập Nhật', sub: 'Tổng hợp phim mới nhất' },
+                'phim-le': { url: 'https://phimapi.com/v1/api/danh-sach/phim-le', label: 'Phim Lẻ 🎥', sub: 'Phim chiếu rạp & phim lẻ' },
+                'phim-bo': { url: 'https://phimapi.com/v1/api/danh-sach/phim-bo', label: 'Phim Bộ 📺', sub: 'Series phim nhiều tập' },
+                'hoat-hinh': { url: 'https://phimapi.com/v1/api/danh-sach/hoat-hinh', label: 'Hoạt Hình 🎨', sub: 'Anime & phim hoạt hình' },
+                'tv-shows': { url: 'https://phimapi.com/v1/api/danh-sach/tv-shows', label: 'TV Shows 📡', sub: 'Chương trình truyền hình' },
+                'chieu-rap': { url: 'https://phimapi.com/v1/api/danh-sach/phim-sap-chieu', label: 'Chiếu Rạp 🎬', sub: 'Phim sắp chiếu & đang chiếu rạp' },
             };
             const info = catMap[cat] || catMap['all'];
             filmCurrentEndpoint = info.url;
@@ -1730,8 +1730,8 @@
             }
 
             const subMap = {
-                'vietsub': { url: 'https://ophim1.com/v1/api/danh-sach/phim-vietsub', label: 'Phim Vietsub 🇻🇳', sub: 'Phụ đề Tiếng Việt' },
-                'thuyet-minh': { url: 'https://ophim1.com/v1/api/danh-sach/phim-thuyet-minh', label: 'Phim Thuyết Minh 🎙️', sub: 'Lồng tiếng Tiếng Việt' },
+                'vietsub': { url: 'https://phimapi.com/v1/api/danh-sach/phim-vietsub', label: 'Phim Vietsub 🇻🇳', sub: 'Phụ đề Tiếng Việt' },
+                'thuyet-minh': { url: 'https://phimapi.com/v1/api/danh-sach/phim-thuyet-minh', label: 'Phim Thuyết Minh 🎙️', sub: 'Lồng tiếng Tiếng Việt' },
             };
             const info = subMap[sub] || subMap['vietsub'];
             filmCurrentEndpoint = info.url;
@@ -1812,7 +1812,7 @@
             if (titleEl) titleEl.innerHTML = `<span class="material-icons-round text-primary text-lg">grid_view</span> Thể loại: ${displayLabel}`;
             if (subEl) subEl.textContent = `Khám phá các phim thuộc nhóm ${displayLabel}`;
 
-            filmCurrentEndpoint = `https://ophim1.com/v1/api/the-loai/${genre}`;
+            filmCurrentEndpoint = `https://phimapi.com/v1/api/the-loai/${genre}`;
             filmCurrentYearFilter = null;
             window.filmAdvCriteria = null;
 
@@ -1921,7 +1921,7 @@
             if (titleEl) titleEl.innerHTML = `<span class="material-icons-round text-primary text-lg">public</span> Quốc gia: ${displayLabel}`;
             if (subEl) subEl.textContent = `Phim từ ${displayLabel}`;
 
-            filmCurrentEndpoint = `https://ophim1.com/v1/api/quoc-gia/${country}`;
+            filmCurrentEndpoint = `https://phimapi.com/v1/api/quoc-gia/${country}`;
             filmCurrentYearFilter = null;
             window.filmAdvCriteria = null;
 
@@ -1977,7 +1977,7 @@
             if (subEl) subEl.textContent = `Phim phát hành năm ${year}`;
 
             // OPhim supports year filter via query param
-            filmCurrentEndpoint = `https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat`;
+            filmCurrentEndpoint = `https://phimapi.com/v1/api/danh-sach/phim-moi-cap-nhat`;
             filmCurrentYearFilter = year;
             window.filmAdvCriteria = null;
 
@@ -2039,7 +2039,7 @@
                 // Tăng độ phủ bằng cách lấy ngẫu nhiên trong 400 trang đầu (an toàn hơn 500)
                 const fetchPromises = Array.from({ length: count }, () => {
                     const randomPage = Math.floor(Math.random() * 400) + 1;
-                    return fetch(`https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat?page=${randomPage}`).then(r => r.json());
+                    return fetch(`https://phimapi.com/v1/api/danh-sach/phim-moi-cap-nhat?page=${randomPage}`).then(r => r.json());
                 });
 
                 const results = await Promise.all(fetchPromises);
@@ -2049,7 +2049,7 @@
                     const items = apiData.items || [];
                     if (items.length > 0) {
                         const randomIdx = Math.floor(Math.random() * items.length);
-                        const imgDomain = apiData.APP_DOMAIN_CDN_IMAGE || apiData.pathImage || 'https://img.ophim.live';
+                        const imgDomain = apiData.APP_DOMAIN_CDN_IMAGE || apiData.pathImage || 'https://phimimg.com';
                         rolledMovies.push({ ...items[randomIdx], imgDomain: imgDomain });
                     }
                 });
@@ -2103,11 +2103,11 @@
             if (pagination) pagination.classList.add('hidden');
 
             try {
-                const res = await fetch(`https://ophim1.com/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&limit=24`);
+                const res = await fetch(`https://phimapi.com/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&limit=24`);
                 const data = await res.json();
 
                 if (data.status === 'success' && data.data && data.data.items.length > 0) {
-                    const imgDomain = data.data.APP_DOMAIN_CDN_IMAGE || 'https://img.ophim.live';
+                    const imgDomain = data.data.APP_DOMAIN_CDN_IMAGE || 'https://phimimg.com';
                     searchResults.innerHTML = data.data.items.map(m => buildFilmCard(m, imgDomain)).join('');
                 } else {
                     searchResults.innerHTML = '<div class="col-span-full text-center text-slate-500 py-8 text-sm">Không tìm thấy phim. Hãy thử tên khác!</div>';
@@ -2166,20 +2166,20 @@
             // Optimization: Start from the most specific endpoint
             // Usually Country or Genre are more specific than a general Category (Type)
             if (country) {
-                filmCurrentEndpoint = `https://ophim1.com/v1/api/quoc-gia/${country}`;
+                filmCurrentEndpoint = `https://phimapi.com/v1/api/quoc-gia/${country}`;
             } else if (genre) {
-                filmCurrentEndpoint = `https://ophim1.com/v1/api/the-loai/${genre}`;
+                filmCurrentEndpoint = `https://phimapi.com/v1/api/the-loai/${genre}`;
             } else if (type !== 'all') {
                 const catMap = {
-                    'phim-le': 'https://ophim1.com/v1/api/danh-sach/phim-le',
-                    'phim-bo': 'https://ophim1.com/v1/api/danh-sach/phim-bo',
-                    'hoat-hinh': 'https://ophim1.com/v1/api/danh-sach/hoat-hinh',
-                    'tv-shows': 'https://ophim1.com/v1/api/danh-sach/tv-shows',
-                    'chieu-rap': 'https://ophim1.com/v1/api/danh-sach/phim-sap-chieu'
+                    'phim-le': 'https://phimapi.com/v1/api/danh-sach/phim-le',
+                    'phim-bo': 'https://phimapi.com/v1/api/danh-sach/phim-bo',
+                    'hoat-hinh': 'https://phimapi.com/v1/api/danh-sach/hoat-hinh',
+                    'tv-shows': 'https://phimapi.com/v1/api/danh-sach/tv-shows',
+                    'chieu-rap': 'https://phimapi.com/v1/api/danh-sach/phim-sap-chieu'
                 };
-                filmCurrentEndpoint = catMap[type] || 'https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat';
+                filmCurrentEndpoint = catMap[type] || 'https://phimapi.com/v1/api/danh-sach/phim-moi-cap-nhat';
             } else {
-                filmCurrentEndpoint = 'https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat';
+                filmCurrentEndpoint = 'https://phimapi.com/v1/api/danh-sach/phim-moi-cap-nhat';
             }
 
             const titleEl = document.getElementById('film-grid-title');
@@ -2281,7 +2281,7 @@
                     // Keep output visible since we are just changing episode
                     output.innerHTML = '';
                 } else {
-                    const res = await fetch(`https://ophim1.com/phim/${slug}`);
+                    const res = await fetch(`https://phimapi.com/phim/${slug}`);
                     data = await res.json();
                     currentFilmData = data;
                     currentFilmSlug = slug;
@@ -4912,11 +4912,11 @@ let aiChatHistory = [];
                             const el = document.getElementById(film.id);
                             if (!el) return;
                             try {
-                                const res = await fetch(`https://ophim1.com/v1/api/tim-kiem?keyword=${encodeURIComponent(film.title)}&limit=1`);
+                                const res = await fetch(`https://phimapi.com/v1/api/tim-kiem?keyword=${encodeURIComponent(film.title)}&limit=1`);
                                 const oData = await res.json();
                                 if (oData.status === 'success' && oData.data && oData.data.items && oData.data.items.length > 0) {
                                     const item = oData.data.items[0];
-                                    const imgDomain = oData.data.APP_DOMAIN_CDN_IMAGE || 'https://img.ophim.live';
+                                    const imgDomain = oData.data.APP_DOMAIN_CDN_IMAGE || 'https://phimimg.com';
                                     
                                     const isTrailer = (item.episode_current && item.episode_current.toLowerCase().includes('trailer')) || (item.status === 'trailer');
                                     const trailerBadge = isTrailer 
@@ -5279,7 +5279,7 @@ let aiChatHistory = [];
                 id: 2,
                 author: { name: 'Admin', avatar: 'https://i.pravatar.cc/150?img=11' },
                 content: 'Vừa cày xong bộ phim hay tuyệt trên KietFilm! Đề xuất mọi người xem thử nhé.',
-                media: 'https://img.ophim.live/uploads/movies/biet-doi-danh-thue-4-poster.jpg',
+                media: 'https://phimimg.com/uploads/movies/biet-doi-danh-thue-4-poster.jpg',
                 privacy: 'public',
                 likes: 12,
                 time: '1 giờ trước'

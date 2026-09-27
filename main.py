@@ -1309,23 +1309,39 @@ async def recommend(
         )
     recommendations = []
     try:
-        with DDGS() as ddgs:
-            gen = ddgs.videos(f"site:youtube.com {keyword}", max_results=5)
-            for r in gen:
-                vid = (
-                    r["content"].split("v=")[1].split("&")[0]
-                    if "v=" in r["content"]
-                    else ""
-                )
-                recommendations.append(
-                    {
-                        "title": r["title"],
-                        "link": r["content"],
-                        "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
-                    }
-                )
-    except:
-        pass
+        ytmusic = YTMusic(location="VN")
+        search_filter = "songs" if type == "music" else "videos"
+        results = ytmusic.search(keyword, filter=search_filter, limit=8)
+        for r in results:
+            vid = r.get('videoId')
+            if vid and len(vid) == 11:
+                recommendations.append({
+                    "title": r.get("title", "Unknown"),
+                    "link": f"https://www.youtube.com/watch?v={vid}",
+                    "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
+                })
+    except Exception as e:
+        print(f"YTMusic Recommend Error: {e}")
+        # Fallback: try DDGS as secondary option
+        try:
+            from duckduckgo_search import DDGS as _DDGS
+            with _DDGS(timeout=15) as ddgs:
+                gen = ddgs.videos(f"site:youtube.com {keyword}", max_results=5)
+                for r in gen:
+                    url = r.get("content", "")
+                    vid = ""
+                    if "v=" in url:
+                        vid = url.split("v=")[1].split("&")[0].split("#")[0]
+                    elif "youtu.be/" in url:
+                        vid = url.split("youtu.be/")[1].split("?")[0]
+                    if vid and len(vid) == 11:
+                        recommendations.append({
+                            "title": r.get("title", "Unknown"),
+                            "link": f"https://www.youtube.com/watch?v={vid}",
+                            "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
+                        })
+        except Exception as e2:
+            print(f"DDGS Fallback Error: {e2}")
 
     return {"mood": mood, "recommendations": recommendations}
 
