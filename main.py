@@ -18,7 +18,12 @@ except ImportError:
     PYRB_AVAILABLE = False
     print("WARNING: pyrubberband not available, using librosa fallback for pitch/tempo")
 
-from pedalboard import Pedalboard, Reverb, Compressor, Gain, Chorus, HighpassFilter
+try:
+    from pedalboard import Pedalboard, Reverb, Compressor, Gain, Chorus, HighpassFilter
+    PEDALBOARD_AVAILABLE = True
+except ImportError:
+    PEDALBOARD_AVAILABLE = False
+    print("[WARNING] pedalboard not installed")
 from fastapi import FastAPI, UploadFile, File, Query, Form, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -36,11 +41,20 @@ except ImportError:
     G4F_AVAILABLE = False
     print("[WARNING] g4f not available, chat feature will be disabled")
 
-from deepface import DeepFace
-from ytmusicapi import YTMusic
-import edge_tts
-from gtts import gTTS
-from pydub import AudioSegment
+try:
+    from deepface import DeepFace
+    DEEPFACE_AVAILABLE = True
+except Exception as e:
+    DEEPFACE_AVAILABLE = False
+    print(f"[WARNING] DeepFace not available: {e}")
+try:
+    import edge_tts
+    from gtts import gTTS
+    from pydub import AudioSegment
+    TTS_AVAILABLE = True
+except Exception as e:
+    TTS_AVAILABLE = False
+    print(f"[WARNING] TTS/Audio libraries not available: {e}")
 
 # RVC Singing Voice Conversion
 try:
@@ -1227,32 +1241,162 @@ async def get_active_study_rooms():
 
 
 
-@app.get("/search")
-async def search(q: str, type: str = "music"):
-    keyword = f"{q} official mv" if type == "music" else f"{q} podcast vietnam full"
-    if "lofi" in q.lower() or "beats" in q.lower() or "ambient" in q.lower() or "focus" in q.lower() or type != "music":
-        keyword = q
+MOOD_DICTIONARY = {
+    "happy": {
+        "display": "Vui vẻ 😄",
+        "music_query": "nhạc vui tươi sôi động chill",
+        "podcast_query": "podcast truyền cảm hứng tích cực"
+    },
+    "sad": {
+        "display": "U buồn / Tâm trạng 😢",
+        "music_query": "nhạc buồn tâm trạng lofi nhẹ nhàng",
+        "podcast_query": "podcast tâm sự đêm khuya"
+    },
+    "angry": {
+        "display": "Căng thẳng / Tức giận 😡",
+        "music_query": "nhạc giải tỏa căng thẳng stress rock acoustic",
+        "podcast_query": "podcast thư giãn tâm trí"
+    },
+    "fear": {
+        "display": "Lo lắng / Thiền định 😨",
+        "music_query": "nhạc lofi thư giãn bình yên không lời",
+        "podcast_query": "podcast chữa lành tâm hồn"
+    },
+    "surprise": {
+        "display": "Bất ngờ 😲",
+        "music_query": "nhạc remix hot trend tiktok",
+        "podcast_query": "podcast khám phá điều thú vị"
+    },
+    "disgust": {
+        "display": "Thư thái / Chill 😠",
+        "music_query": "nhạc lofi chill nhẹ nhàng",
+        "podcast_query": "podcast câu chuyện cuộc sống"
+    },
+    "neutral": {
+        "display": "Bình thản / Thư giãn 😐",
+        "music_query": "nhạc lofi chill nhẹ nhàng thư giãn",
+        "podcast_query": "podcast kiến thức thú vị cuộc sống"
+    }
+}
 
+
+def direct_yt_search(keyword, limit=8):
+    """Direct YouTube HTML parsing search fallback - fast & 100% reliable"""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7"
+    }
+    url = f"https://www.youtube.com/results?search_query={requests.utils.quote(keyword)}"
+    try:
+        resp = requests.get(url, headers=headers, timeout=8)
+        html = resp.text
+        results = []
+        match = re.search(r'var ytInitialData = ({.*?});</script>', html)
+        if match:
+            try:
+                data = json.loads(match.group(1))
+                contents = data['contents']['twoColumnSearchResultsRenderer']['primaryContents']['sectionListRenderer']['contents'][0]['itemSectionRenderer']['contents']
+                for item in contents:
+                    if 'videoRenderer' in item:
+                        vr = item['videoRenderer']
+                        vid = vr.get('videoId')
+                        title = vr.get('title', {}).get('runs', [{}])[0].get('text', 'YouTube Video')
+                        if vid and len(vid) == 11:
+                            if not any(r['link'].endswith(vid) for r in results):
+                                results.append({
+                                    "title": title,
+                                    "link": f"https://www.youtube.com/watch?v={vid}",
+                                    "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+                                })
+                                if len(results) >= limit:
+                                    break
+            except Exception:
+                pass
+        if not results:
+            vids = re.findall(r'"videoId":"([a-zA-Z0-9_-]{11})"', html)
+            seen = set()
+            for vid in vids:
+                if vid not in seen:
+                    seen.add(vid)
+                    results.append({
+                        "title": f"YouTube Video ({vid})",
+                        "link": f"https://www.youtube.com/watch?v={vid}",
+                        "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+                    })
+                    if len(results) >= limit:
+                        break
+        return results
+    except Exception as e:
+        print("direct_yt_search error:", e)
+        return []
+
+
+def search_youtube_tracks(keyword, type="music", limit=8):
+    """Robust 3-tier YouTube Search: YTMusic -> Direct HTML Parser -> DDGS"""
     res = []
+    # Tier 1: YTMusic
     try:
         ytmusic = YTMusic(location="VN")
-        # Đối với type là music, ưu tiên songs và videos. Podcast thì search chung.
         search_filter = "songs" if type == "music" else "videos"
-        results = ytmusic.search(keyword, filter=search_filter, limit=8)
-        
+        results = ytmusic.search(keyword, filter=search_filter, limit=limit * 2)
+        if not results:
+            results = ytmusic.search(keyword, limit=limit * 2)
+
         for r in results:
             vid = r.get('videoId')
+            if not vid and isinstance(r.get('videoDetails'), dict):
+                vid = r['videoDetails'].get('videoId')
             if vid and len(vid) == 11:
-                # Tránh trùng lặp
                 if not any(item['link'] == f"https://www.youtube.com/watch?v={vid}" for item in res):
                     res.append({
                         "title": r.get("title", "Unknown"),
                         "link": f"https://www.youtube.com/watch?v={vid}",
                         "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
                     })
+                    if len(res) >= limit:
+                        break
     except Exception as e:
         print("YTMusic Search Error:", e)
 
+    # Tier 2: Direct YouTube search if Tier 1 returned no items
+    if not res:
+        print(f"Tier 1 empty for '{keyword}', executing Tier 2 Direct YT Search...")
+        res = direct_yt_search(keyword, limit=limit)
+
+    # Tier 3: DDGS fallback if Tier 1 & 2 returned no items
+    if not res:
+        try:
+            print(f"Tier 2 empty, executing Tier 3 DDGS Fallback for '{keyword}'...")
+            from duckduckgo_search import DDGS as _DDGS
+            with _DDGS(timeout=10) as ddgs:
+                gen = ddgs.videos(f"site:youtube.com {keyword}", max_results=limit)
+                for r in gen:
+                    url = r.get("content", "")
+                    vid = ""
+                    if "v=" in url:
+                        vid = url.split("v=")[1].split("&")[0].split("#")[0]
+                    elif "youtu.be/" in url:
+                        vid = url.split("youtu.be/")[1].split("?")[0]
+                    if vid and len(vid) == 11:
+                        if not any(item['link'] == f"https://www.youtube.com/watch?v={vid}" for item in res):
+                            res.append({
+                                "title": r.get("title", "Unknown"),
+                                "link": f"https://www.youtube.com/watch?v={vid}",
+                                "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+                            })
+        except Exception as e2:
+            print("DDGS Fallback Error:", e2)
+
+    return res
+
+
+@app.get("/search")
+async def search(q: str, type: str = "music"):
+    keyword = f"{q} official mv" if type == "music" else f"{q} podcast vietnam full"
+    if "lofi" in q.lower() or "beats" in q.lower() or "ambient" in q.lower() or "focus" in q.lower() or type != "music":
+        keyword = q
+
+    res = search_youtube_tracks(keyword, type=type, limit=8)
     return {"mood": "manual", "recommendations": res}
 
 
@@ -1273,7 +1417,7 @@ async def get_emotion(file: UploadFile = File(...)):
         if os.path.exists(t):
             try:
                 os.remove(t)
-            except:
+            except Exception:
                 pass
 
 
@@ -1285,65 +1429,40 @@ async def recommend(
     with open(t, "wb") as b:
         shutil.copyfileobj(file.file, b)
     try:
-        # Sử dụng mtcnn thay vì opencv để nhận diện khuôn mặt chính xác hơn (đặc biệt qua webcam)
-        res = DeepFace.analyze(
-            t, actions=["emotion"], enforce_detection=False, detector_backend="mtcnn"
-        )
+        try:
+            res = DeepFace.analyze(
+                t, actions=["emotion"], enforce_detection=False, detector_backend="opencv"
+            )
+        except Exception:
+            res = DeepFace.analyze(
+                t, actions=["emotion"], enforce_detection=False, detector_backend="ssd"
+            )
         mood = res[0]["dominant_emotion"]
     except Exception as e:
-        import traceback
-
         print(f"DeepFace analyze error: {e}")
-        traceback.print_exc()
         mood = "neutral"
-    if os.path.exists(t):
-        os.remove(t)
+    finally:
+        if os.path.exists(t):
+            try:
+                os.remove(t)
+            except Exception:
+                pass
 
-    # Tìm kiếm nội dung theo Mood (+ keyword nếu có)
+    mood_info = MOOD_DICTIONARY.get(mood, MOOD_DICTIONARY["neutral"])
     q = (q or "").strip()
     if q:
-        keyword = f"{q} {mood} music" if type == "music" else f"{q} {mood} podcast"
+        keyword = f"{q} {mood_info['music_query']}" if type == "music" else f"{q} {mood_info['podcast_query']}"
     else:
-        keyword = (
-            f"nhạc {mood} mood remix" if type == "music" else f"podcast {mood} cảm xúc"
-        )
-    recommendations = []
-    try:
-        ytmusic = YTMusic(location="VN")
-        search_filter = "songs" if type == "music" else "videos"
-        results = ytmusic.search(keyword, filter=search_filter, limit=8)
-        for r in results:
-            vid = r.get('videoId')
-            if vid and len(vid) == 11:
-                recommendations.append({
-                    "title": r.get("title", "Unknown"),
-                    "link": f"https://www.youtube.com/watch?v={vid}",
-                    "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
-                })
-    except Exception as e:
-        print(f"YTMusic Recommend Error: {e}")
-        # Fallback: try DDGS as secondary option
-        try:
-            from duckduckgo_search import DDGS as _DDGS
-            with _DDGS(timeout=15) as ddgs:
-                gen = ddgs.videos(f"site:youtube.com {keyword}", max_results=5)
-                for r in gen:
-                    url = r.get("content", "")
-                    vid = ""
-                    if "v=" in url:
-                        vid = url.split("v=")[1].split("&")[0].split("#")[0]
-                    elif "youtu.be/" in url:
-                        vid = url.split("youtu.be/")[1].split("?")[0]
-                    if vid and len(vid) == 11:
-                        recommendations.append({
-                            "title": r.get("title", "Unknown"),
-                            "link": f"https://www.youtube.com/watch?v={vid}",
-                            "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
-                        })
-        except Exception as e2:
-            print(f"DDGS Fallback Error: {e2}")
+        keyword = mood_info["music_query"] if type == "music" else mood_info["podcast_query"]
 
-    return {"mood": mood, "recommendations": recommendations}
+    recommendations = search_youtube_tracks(keyword, type=type, limit=8)
+
+    return {
+        "status": "success",
+        "mood": mood,
+        "mood_display": mood_info["display"],
+        "recommendations": recommendations
+    }
 
 
 @app.post("/generate-music")
@@ -1884,25 +2003,9 @@ async def dj_radio(
         comm = edge_tts.Communicate(intro_text, dj_voice)
         await comm.save(intro_path)
         
-        # 3. Fetch Playlist (using DDGS like /recommend)
-        keyword = f"nhạc {emo_lower} mood chill"
-        if emo_lower in ["joy", "triumph"]:
-            keyword = f"nhạc {emo_lower} remix sôi động"
-            
-        recommendations = []
-        try:
-            ytmusic = YTMusic(location="VN")
-            results = ytmusic.search(keyword, filter="songs", limit=10)
-            for r in results:
-                vid = r.get('videoId')
-                if vid and len(vid) == 11:
-                    recommendations.append({
-                        "title": r.get("title", "Unknown"),
-                        "link": f"https://www.youtube.com/watch?v={vid}",
-                        "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
-                    })
-        except Exception as e:
-            print(f"DJ Search Error: {e}")
+        mood_info = MOOD_DICTIONARY.get(emo_lower, MOOD_DICTIONARY["neutral"])
+        keyword = mood_info["music_query"]
+        recommendations = search_youtube_tracks(keyword, type="music", limit=10)
             
         return {
             "status": "success",

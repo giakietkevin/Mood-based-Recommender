@@ -6,13 +6,29 @@ Xử lý: Register, Login, Logout, Get Profile, Refresh Token
 import os
 from datetime import datetime, timedelta
 from typing import Optional
-from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from pydantic import BaseModel, EmailStr, Field
-from passlib.context import CryptContext
-from jose import JWTError, jwt
+try:
+    from bson import ObjectId
+    from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+    MOTOR_AVAILABLE = True
+except Exception as e:
+    MOTOR_AVAILABLE = False
+    ObjectId = None
+    AsyncIOMotorClient = None
+    AsyncIOMotorDatabase = None
+    print(f"[WARNING] Motor/Bson not available: {e}")
+try:
+    from passlib.context import CryptContext
+    from jose import JWTError, jwt
+    from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    security = HTTPBearer()
+    PASSLIB_AVAILABLE = True
+except Exception as e:
+    pwd_context = None
+    security = None
+    PASSLIB_AVAILABLE = False
+    print(f"[WARNING] Passlib/Jose not available: {e}")
 from fastapi import HTTPException, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 
 # Load .env file
@@ -33,9 +49,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-security = HTTPBearer()
+# Password hashing initialized in try-except block above
 
 # ============================================================
 # PYDANTIC MODELS

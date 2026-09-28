@@ -935,21 +935,16 @@
         }
 
         // Load Youtube API
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-        function onYouTubeIframeAPIReady() {
+        window.onYouTubeIframeAPIReady = function() {
+            if (window.ytPlayer) return;
             window.ytPlayer = new YT.Player('yt-player', {
                 height: '100%', width: '100%',
-                playerVars: { 'autoplay': 0, 'controls': 1, 'rel': 0, 'showinfo': 0 },
+                playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0, 'showinfo': 0 },
                 events: {
-                    'onReady': () => { isYtReady = true; },
+                    'onReady': () => { isYtReady = true; window.isYtReady = true; console.log('[YT] YouTube Player Ready'); },
                     'onError': (event) => {
                         console.warn("YouTube Player Error:", event.data);
                         if (event.data === 101 || event.data === 150 || event.data === 2) {
-                            alert("Video này bị YouTube chặn phát trên trang web khác. Đang mở YouTube trực tiếp...");
                             if (window.currentTrackData && window.currentTrackData.link) {
                                 window.open(window.currentTrackData.link, '_blank');
                             }
@@ -1070,7 +1065,8 @@
                     const res = await fetch(recommendUrl, { method: 'POST', body: fd });
                     const data = await res.json();
 
-                    moodDisplay.innerText = data.mood;
+                    const displayMoodText = data.mood_display || data.mood;
+                    moodDisplay.innerText = displayMoodText;
                     moodDisplay.classList.add('text-primary');
 
                     if (!data.recommendations || data.recommendations.length === 0) {
@@ -1085,7 +1081,7 @@
                         <img src="${item.thumbnail}" class="w-16 h-16 rounded-lg object-cover shadow-md">
                         <div class="min-w-0 flex-1">
                             <h4 class="font-bold text-sm text-white truncate leading-tight mb-1">${item.title}</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Mood: ${data.mood}</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Mood: ${displayMoodText}</p>
                         </div>
                         ${window.getActionButtonsHTML(item, 'youtube')}
                     </div>
@@ -1479,7 +1475,7 @@
         // Build a film card HTML snippet
         function buildFilmCard(m, imgDomain) {
             const thumbSrc = m.thumb_url
-                ? (m.thumb_url.startsWith('http') ? m.thumb_url : `${imgDomain}/uploads/movies/${m.thumb_url}`)
+                ? (m.thumb_url.startsWith('http') ? m.thumb_url : (m.thumb_url.startsWith('/') ? `${imgDomain}${m.thumb_url}` : `${imgDomain}/${m.thumb_url}`))
                 : 'https://via.placeholder.com/300x450/111/fff?text=No+Image';
             
             const typeBadge = m.type === 'series'
