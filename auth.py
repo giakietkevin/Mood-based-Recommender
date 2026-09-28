@@ -28,6 +28,26 @@ except Exception as e:
     security = None
     PASSLIB_AVAILABLE = False
     print(f"[WARNING] Passlib/Jose not available: {e}")
+try:
+    from pydantic import BaseModel, Field
+    try:
+        from pydantic import EmailStr
+    except Exception:
+        EmailStr = str
+    PYDANTIC_AVAILABLE = True
+except Exception as e:
+    PYDANTIC_AVAILABLE = False
+    print(f"[WARNING] Pydantic not available: {e}")
+    class BaseModel:
+        def __init__(self, **kwargs):
+            for k, v in kwargs.items():
+                setattr(self, k, v)
+        def dict(self, *args, **kwargs):
+            return self.__dict__
+    EmailStr = str
+    def Field(default=..., **kwargs):
+        return default
+
 from fastapi import HTTPException, status, Depends
 from dotenv import load_dotenv
 

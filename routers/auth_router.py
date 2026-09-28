@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+try:
+    from pydantic import BaseModel
+except Exception:
+    from auth import BaseModel
 
 # Import từ file auth.py
 from auth import (
