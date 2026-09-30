@@ -64,9 +64,6 @@ KietStation được chia thành nhiều không gian (Tab) với các chức nă
 - **Library**: Quản lý danh sách phát nhạc (Playlist), phim yêu thích (Watchlist) cá nhân.
 - **Social Feed (Trạm Dừng Chân)**: Nơi người dùng có thể đăng bài (Post), chia sẻ bài hát/phim đang xem, bình luận và tương tác (Thả tim) giống như một mạng xã hội thu nhỏ.
 
-### 🎧 6. Focus / DJ Radio
-- **Focus Room**: Không gian học tập/làm việc chung kết hợp đồng hồ đếm ngược (Pomodoro) và nhạc Lofi thư giãn.
-- Có thể bật camera để cùng học với người khác.
 
 ---
 
