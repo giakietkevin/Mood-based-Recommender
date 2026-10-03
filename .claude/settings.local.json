@@ -42,7 +42,8 @@
       "Bash(awk 'NR>=2130 && NR<=2198')",
       "Bash(awk 'NR>=1605 && NR<=1650')",
       "Bash(awk 'NR>=2150 && NR<=2197')",
-      "Bash(awk 'NR>=1605 && NR<=1615')"
+      "Bash(awk 'NR>=1605 && NR<=1615')",
+      "WebSearch"
     ]
   }
 }

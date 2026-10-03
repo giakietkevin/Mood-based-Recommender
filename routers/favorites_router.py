@@ -1,8 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Form
-from pydantic import BaseModel
+try:
+    from pydantic import BaseModel
+except Exception:
+    from auth import BaseModel
 from typing import List, Dict, Any
 from auth import MongoDBConnection, get_current_user
-from bson import ObjectId
+try:
+    from bson import ObjectId
+except Exception:
+    ObjectId = None
 from datetime import datetime
 
 router = APIRouter(prefix="/favorites", tags=["Favorites"])

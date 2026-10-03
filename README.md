@@ -46,7 +46,7 @@ KietStation được chia thành nhiều không gian (Tab) với các chức nă
 - **Tính năng Đề xuất Cảm xúc (Mood Detection)**: Bật camera, hệ thống AI sẽ quét khuôn mặt bạn, nhận diện cảm xúc (Vui, Buồn, Bình thường, Ngạc nhiên...) và tự động phát playlist phù hợp với tâm trạng hiện tại.
 
 ### 🎬 2. Film (Rạp phim & Watch Party)
-- Xem phim miễn phí được cấp bởi **OPhim API** với độ phân giải cao.
+- Xem phim miễn phí được cấp bởi với độ phân giải cao.
 - **Watch Party (Phòng xem chung)**:
   - Tạo phòng và gửi mã ID cho bạn bè.
   - Mọi người cùng xem phim đồng bộ thời gian thực (Sync).
@@ -60,13 +60,10 @@ KietStation được chia thành nhiều không gian (Tab) với các chức nă
 - Không gian chụp ảnh phong cách Hàn Quốc.
 - Ứng dụng AI **MediaPipe** để tự động tách nền, cho phép bạn ghép các phông nền (Background) ảo ngay trên trình duyệt mà không cần phông xanh.
 
-### 📚 5. Library & Social Feed (Trạm Dừng Chân)
+### 📚 5. Library & Social Feed (Trạm Dừng Chân) (Updating...)
 - **Library**: Quản lý danh sách phát nhạc (Playlist), phim yêu thích (Watchlist) cá nhân.
 - **Social Feed (Trạm Dừng Chân)**: Nơi người dùng có thể đăng bài (Post), chia sẻ bài hát/phim đang xem, bình luận và tương tác (Thả tim) giống như một mạng xã hội thu nhỏ.
 
-### 🎧 6. Focus / DJ Radio
-- **Focus Room**: Không gian học tập/làm việc chung kết hợp đồng hồ đếm ngược (Pomodoro) và nhạc Lofi thư giãn.
-- Có thể bật camera để cùng học với người khác.
 
 ---
 
