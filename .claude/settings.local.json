@@ -43,7 +43,12 @@
       "Bash(awk 'NR>=1605 && NR<=1650')",
       "Bash(awk 'NR>=2150 && NR<=2197')",
       "Bash(awk 'NR>=1605 && NR<=1615')",
-      "WebSearch"
+      "WebSearch",
+      "PowerShell(python -c \"from main import search_youtube_tracks; print\\(search_youtube_tracks\\('son tung'\\)\\)\")",
+      "PowerShell(python -c \"from ytmusicapi import YTMusic; ytm = YTMusic\\(\\); print\\(ytm.search\\('son tung official mv', filter='songs', limit=5\\)\\)\")",
+      "PowerShell(python -c \"from duckduckgo_search import DDGS; ddgs = DDGS\\(\\); print\\(list\\(ddgs.videos\\('site:youtube.com son tung official mv', max_results=5\\)\\)\\)\")",
+      "PowerShell(python -c \"from ytmusicapi import YTMusic; ytm = YTMusic\\(\\); res = ytm.search\\('son tung', filter='songs', limit=2\\); print\\(res[0].keys\\(\\)\\); print\\('videoId:', res[0].get\\('videoId'\\)\\); print\\('title:', res[0].get\\('title'\\)\\); print\\('thumbnails:', res[0].get\\('thumbnails'\\)\\)\")",
+      "PowerShell(python -c \"from ytmusicapi import YTMusic; ytm = YTMusic\\(\\); res = ytm.search\\('nguyen huu tri podcast vietnam full', filter='videos', limit=2\\); print\\(res\\)\")"
     ]
   }
 }
