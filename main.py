@@ -5,6 +5,8 @@ import shutil
 import uuid
 import json
 import random
+import time
+import urllib.parse
 import requests
 import numpy as np
 import librosa
@@ -29,9 +31,9 @@ try:
 except ImportError:
     PEDALBOARD_AVAILABLE = False
     print("[WARNING] pedalboard not installed")
-from fastapi import FastAPI, UploadFile, File, Query, Form, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, UploadFile, File, Query, Form, WebSocket, WebSocketDisconnect, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Dict, Any
@@ -1493,6 +1495,113 @@ async def search(q: str, type: str = "music"):
         res = search_youtube_tracks(f"{q} mv", type=type, limit=8)
 
     return {"mood": "manual", "recommendations": res}
+
+
+# --- DIRECT YOUTUBE AUDIO STREAMING (AD-FREE & EMBED-RESTRICTION-FREE) ---
+_yt_stream_cache = {}  # {video_id: {"url": str, "headers": dict, "expires_at": float, "title": str}}
+
+
+def get_yt_audio_stream_info(video_id: str):
+    """Extract or return cached direct audio stream URL using yt-dlp"""
+    now = time.time()
+    cached = _yt_stream_cache.get(video_id)
+    if cached and cached.get("expires_at", 0) > now:
+        return cached["url"], cached["headers"], cached.get("title", "")
+
+    import yt_dlp
+
+    ydl_opts = {
+        'format': 'bestaudio[ext=m4a]/bestaudio/best',
+        'quiet': True,
+        'no_warnings': True,
+        'js_runtimes': {'node': {}}
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
+        stream_url = info.get("url")
+        if not stream_url:
+            raise ValueError(f"No stream URL found for {video_id}")
+        stream_headers = info.get("http_headers", {})
+        title = info.get("title", "")
+
+        try:
+            parsed = urllib.parse.urlparse(stream_url)
+            params = urllib.parse.parse_qs(parsed.query)
+            exp = int(params.get("expire", [now + 14400])[0]) - 120
+        except Exception:
+            exp = now + 14400
+
+        _yt_stream_cache[video_id] = {
+            "url": stream_url,
+            "headers": stream_headers,
+            "expires_at": exp,
+            "title": title
+        }
+        return stream_url, stream_headers, title
+
+
+@app.get("/api/yt-stream/{video_id}")
+async def stream_yt_audio(video_id: str, request: Request):
+    """
+    Stream YouTube audio directly into the web audio player.
+    - Zero ads (plays pure raw audio stream).
+    - No iframe embed restrictions (error 150/101 bypassed).
+    - Supports HTTP Range requests for seeking and fast buffering.
+    """
+    if not re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
+        raise HTTPException(status_code=400, detail="Invalid YouTube video ID")
+
+    try:
+        stream_url, stream_headers, _ = get_yt_audio_stream_info(video_id)
+    except Exception as e:
+        print(f"Error extracting audio for {video_id}: {e}")
+        raise HTTPException(status_code=404, detail="Audio stream unavailable")
+
+    req_headers = stream_headers.copy()
+    range_header = request.headers.get("range")
+    if range_header:
+        req_headers["Range"] = range_header
+
+    try:
+        upstream = requests.get(stream_url, headers=req_headers, stream=True, timeout=15)
+    except Exception as e:
+        print(f"Error connecting to stream for {video_id}: {e}")
+        raise HTTPException(status_code=502, detail="Upstream stream connection failed")
+
+    status_code = upstream.status_code
+    resp_headers = {
+        "Accept-Ranges": "bytes",
+        "Content-Type": upstream.headers.get("Content-Type", "audio/mp4"),
+        "Cache-Control": "public, max-age=3600",
+    }
+    if "Content-Range" in upstream.headers:
+        resp_headers["Content-Range"] = upstream.headers["Content-Range"]
+    if "Content-Length" in upstream.headers:
+        resp_headers["Content-Length"] = upstream.headers["Content-Length"]
+
+    def iter_stream():
+        try:
+            for chunk in upstream.iter_content(chunk_size=65536):
+                if chunk:
+                    yield chunk
+        except Exception:
+            pass
+        finally:
+            upstream.close()
+
+    return StreamingResponse(iter_stream(), status_code=status_code, headers=resp_headers)
+
+
+@app.get("/api/yt-info/{video_id}")
+async def get_yt_audio_info(video_id: str):
+    """Check audio stream availability and metadata"""
+    if not re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
+        return {"status": "error", "message": "Invalid video ID"}
+    try:
+        stream_url, _, title = get_yt_audio_stream_info(video_id)
+        return {"status": "success", "video_id": video_id, "title": title, "stream_url": f"/api/yt-stream/{video_id}"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 @app.post("/api/emotion")
