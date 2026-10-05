@@ -1,4 +1,5 @@
 import os
+import re
 import ssl
 import shutil
 import uuid
@@ -8,6 +9,10 @@ import requests
 import numpy as np
 import librosa
 import soundfile as sf
+try:
+    from ytmusicapi import YTMusic
+except ImportError:
+    YTMusic = None
 
 # Pyrubberband - optional, fallback to librosa if not available
 try:
@@ -1280,8 +1285,81 @@ MOOD_DICTIONARY = {
 }
 
 
+def innertube_yt_search(keyword, limit=8):
+    """Direct YouTube InnerTube API search - fastest, reliable, full title & metadata"""
+    url = "https://www.youtube.com/youtubei/v1/search"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "context": {
+            "client": {
+                "clientName": "WEB",
+                "clientVersion": "2.20240101.00.00",
+                "hl": "vi",
+                "gl": "VN"
+            }
+        },
+        "query": keyword
+    }
+    try:
+        resp = requests.post(url, headers=headers, json=data, timeout=8)
+        if resp.status_code != 200:
+            return []
+        data = resp.json()
+        sections = data.get("contents", {}).get("twoColumnSearchResultsRenderer", {}).get("primaryContents", {}).get("sectionListRenderer", {}).get("contents", [])
+        results = []
+
+        def process_vr(vr):
+            vid = vr.get("videoId")
+            if not vid or len(vid) != 11:
+                return
+            if any(r["link"].endswith(vid) for r in results):
+                return
+            title_obj = vr.get("title", {})
+            title = ""
+            if "runs" in title_obj and title_obj["runs"]:
+                title = title_obj["runs"][0].get("text", "")
+            elif "simpleText" in title_obj:
+                title = title_obj.get("simpleText", "")
+            if not title:
+                title = "YouTube Video"
+
+            artist = ""
+            byline_obj = vr.get("ownerText") or vr.get("shortBylineText") or {}
+            if "runs" in byline_obj and byline_obj["runs"]:
+                artist = byline_obj["runs"][0].get("text", "")
+
+            results.append({
+                "title": title,
+                "artist": artist,
+                "link": f"https://www.youtube.com/watch?v={vid}",
+                "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+            })
+
+        for sec in sections:
+            item_sec = sec.get("itemSectionRenderer", {}).get("contents", [])
+            for item in item_sec:
+                if "videoRenderer" in item:
+                    process_vr(item["videoRenderer"])
+                    if len(results) >= limit:
+                        return results
+                elif "shelfRenderer" in item:
+                    shelf_items = item["shelfRenderer"].get("content", {}).get("verticalListRenderer", {}).get("items", [])
+                    for s_item in shelf_items:
+                        if "videoRenderer" in s_item:
+                            process_vr(s_item["videoRenderer"])
+                            if len(results) >= limit:
+                                return results
+        return results
+    except Exception as e:
+        print("innertube_yt_search error:", e)
+        return []
+
+
 def direct_yt_search(keyword, limit=8):
-    """Direct YouTube HTML parsing search fallback - fast & 100% reliable"""
+    """Direct YouTube HTML parsing search fallback - fast & reliable"""
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept-Language": "vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7"
@@ -1291,7 +1369,9 @@ def direct_yt_search(keyword, limit=8):
         resp = requests.get(url, headers=headers, timeout=8)
         html = resp.text
         results = []
-        match = re.search(r'var ytInitialData = ({.*?});</script>', html)
+        match = re.search(r'ytInitialData\s*=\s*({.+?});\s*</script>', html)
+        if not match:
+            match = re.search(r'var ytInitialData = ({.*?});</script>', html)
         if match:
             try:
                 data = json.loads(match.group(1))
@@ -1301,10 +1381,12 @@ def direct_yt_search(keyword, limit=8):
                         vr = item['videoRenderer']
                         vid = vr.get('videoId')
                         title = vr.get('title', {}).get('runs', [{}])[0].get('text', 'YouTube Video')
+                        artist = vr.get('ownerText', {}).get('runs', [{}])[0].get('text', '')
                         if vid and len(vid) == 11:
                             if not any(r['link'].endswith(vid) for r in results):
                                 results.append({
                                     "title": title,
+                                    "artist": artist,
                                     "link": f"https://www.youtube.com/watch?v={vid}",
                                     "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
                                 })
@@ -1320,6 +1402,7 @@ def direct_yt_search(keyword, limit=8):
                     seen.add(vid)
                     results.append({
                         "title": f"YouTube Video ({vid})",
+                        "artist": "",
                         "link": f"https://www.youtube.com/watch?v={vid}",
                         "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
                     })
@@ -1332,71 +1415,83 @@ def direct_yt_search(keyword, limit=8):
 
 
 def search_youtube_tracks(keyword, type="music", limit=8):
-    """Robust 3-tier YouTube Search: YTMusic -> Direct HTML Parser -> DDGS"""
+    """Multi-tier YouTube Search: InnerTube -> YTMusic -> HTML Parser -> yt_dlp fallback"""
     res = []
-    # Tier 1: YTMusic
+
+    # Tier 1: InnerTube (fastest, full YouTube catalog, highest reliability)
     try:
-        ytmusic = YTMusic(location="VN")
-        search_filter = "songs" if type == "music" else "videos"
-        results = ytmusic.search(keyword, filter=search_filter, limit=limit * 2)
-        if not results:
-            results = ytmusic.search(keyword, limit=limit * 2)
-
-        for r in results:
-            vid = r.get('videoId')
-            if not vid and isinstance(r.get('videoDetails'), dict):
-                vid = r['videoDetails'].get('videoId')
-            if vid and len(vid) == 11:
-                if not any(item['link'] == f"https://www.youtube.com/watch?v={vid}" for item in res):
-                    res.append({
-                        "title": r.get("title", "Unknown"),
-                        "link": f"https://www.youtube.com/watch?v={vid}",
-                        "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
-                    })
-                    if len(res) >= limit:
-                        break
+        res = innertube_yt_search(keyword, limit=limit)
     except Exception as e:
-        print("YTMusic Search Error:", e)
+        print("InnerTube Search Error:", e)
 
-    # Tier 2: Direct YouTube search if Tier 1 returned no items
+    # Tier 2: YTMusic API
+    if not res and YTMusic:
+        try:
+            ytmusic = YTMusic(location="VN")
+            search_filter = "songs" if type == "music" else "videos"
+            results = ytmusic.search(keyword, filter=search_filter, limit=limit * 2)
+            if not results:
+                results = ytmusic.search(keyword, limit=limit * 2)
+
+            for r in results:
+                vid = r.get('videoId')
+                if not vid and isinstance(r.get('videoDetails'), dict):
+                    vid = r['videoDetails'].get('videoId')
+                if vid and len(vid) == 11:
+                    if not any(item['link'] == f"https://www.youtube.com/watch?v={vid}" for item in res):
+                        artists = r.get("artists", [])
+                        artist_name = artists[0].get("name", "") if artists else ""
+                        res.append({
+                            "title": r.get("title", "Unknown"),
+                            "artist": artist_name,
+                            "link": f"https://www.youtube.com/watch?v={vid}",
+                            "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+                        })
+                        if len(res) >= limit:
+                            break
+        except Exception as e:
+            print("YTMusic Search Error:", e)
+
+    # Tier 3: Direct YouTube HTML search
     if not res:
-        print(f"Tier 1 empty for '{keyword}', executing Tier 2 Direct YT Search...")
+        print(f"Tier 1 & 2 empty for '{keyword}', executing Tier 3 Direct YT Search...")
         res = direct_yt_search(keyword, limit=limit)
 
-    # Tier 3: DDGS fallback if Tier 1 & 2 returned no items
+    # Tier 4: yt_dlp search fallback
     if not res:
         try:
-            print(f"Tier 2 empty, executing Tier 3 DDGS Fallback for '{keyword}'...")
-            from duckduckgo_search import DDGS as _DDGS
-            with _DDGS(timeout=10) as ddgs:
-                gen = ddgs.videos(f"site:youtube.com {keyword}", max_results=limit)
-                for r in gen:
-                    url = r.get("content", "")
-                    vid = ""
-                    if "v=" in url:
-                        vid = url.split("v=")[1].split("&")[0].split("#")[0]
-                    elif "youtu.be/" in url:
-                        vid = url.split("youtu.be/")[1].split("?")[0]
+            import yt_dlp
+            ydl_opts = {'quiet': True, 'extract_flat': True, 'skip_download': True}
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(f"ytsearch{limit}:{keyword}", download=False)
+                for entry in info.get('entries', []):
+                    vid = entry.get('id')
                     if vid and len(vid) == 11:
-                        if not any(item['link'] == f"https://www.youtube.com/watch?v={vid}" for item in res):
-                            res.append({
-                                "title": r.get("title", "Unknown"),
-                                "link": f"https://www.youtube.com/watch?v={vid}",
-                                "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
-                            })
-        except Exception as e2:
-            print("DDGS Fallback Error:", e2)
+                        res.append({
+                            "title": entry.get('title', 'YouTube Video'),
+                            "artist": entry.get('uploader', ''),
+                            "link": f"https://www.youtube.com/watch?v={vid}",
+                            "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+                        })
+        except Exception as e:
+            print("yt_dlp Fallback Error:", e)
 
     return res
 
 
 @app.get("/search")
 async def search(q: str, type: str = "music"):
-    keyword = f"{q} official mv" if type == "music" else f"{q} podcast vietnam full"
-    if "lofi" in q.lower() or "beats" in q.lower() or "ambient" in q.lower() or "focus" in q.lower() or type != "music":
-        keyword = q
+    q = q.strip()
+    if not q:
+        return {"mood": "manual", "recommendations": []}
 
-    res = search_youtube_tracks(keyword, type=type, limit=8)
+    # Search exact user query first
+    res = search_youtube_tracks(q, type=type, limit=8)
+
+    # If empty and type is music, try with 'mv'
+    if not res and type == "music":
+        res = search_youtube_tracks(f"{q} mv", type=type, limit=8)
+
     return {"mood": "manual", "recommendations": res}
 
 
