@@ -86,13 +86,13 @@ from hf_music_gen import get_hf_beat, generate_singing_vocal, HF_AVAILABLE
 if HF_TOKEN:
     os.environ["HF_TOKEN"] = HF_TOKEN
 
-# Fix lỗi SSL (Quan trọng cho tải Beat/Search)
+# SSL: Sử dụng certifi thay vì tắt xác thực SSL toàn cục (tránh rủi ro MITM)
 try:
-    _create_unverified_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
-else:
-    ssl._create_default_https_context = _create_unverified_https_context
+    import certifi
+    os.environ.setdefault("SSL_CERT_FILE", certifi.where())
+    os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
+except ImportError:
+    print("[WARNING] certifi not installed, SSL may fail on some systems")
 
 import subprocess
 import atexit
@@ -106,14 +106,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Import Auth Router
+# Import Auth & Recommender Routers
 from routers.auth_router import router as auth_router
 from routers.favorites_router import router as favorites_router
+from routers.recommend_router import router as recommend_router
 from auth import MongoDBConnection
 
-# Include Auth Router
+# Include Routers
 app.include_router(auth_router)
 app.include_router(favorites_router)
+app.include_router(recommend_router)
 
 # Startup & Shutdown Events
 @app.on_event("startup")
@@ -980,13 +982,41 @@ async def get_my_songs(uid: str = Query(None)):
 async def delete_song(url: str = Query(...), uid: str = Query(...)):
     if not uid:
         return {"status": "error", "message": "UID required"}
+
+    # --- Security: Path Traversal Prevention ---
     try:
-        fn = url.split("/")[-1]
-        path = os.path.join("generated_music", fn)
-        if os.path.exists(path):
-            os.remove(path)
+        # 1. Bóc tách tên file an toàn, loại bỏ mọi path component
+        raw_fn = urllib.parse.unquote(url.split("/")[-1])
+        fn = os.path.basename(raw_fn)  # Strip any ../../ traversal attempts
+
+        # 2. Chỉ cho phép tên file hợp lệ (uuid.wav / uuid.mp3)
+        if not re.match(r'^[a-zA-Z0-9_-]+\.(wav|mp3)$', fn):
+            raise HTTPException(status_code=400, detail="Invalid file name format")
+
+        # 3. Xây dựng đường dẫn tuyệt đối và kiểm tra nằm đúng trong generated_music
+        allowed_dir = os.path.realpath(os.path.join(BASE_DIR, "generated_music"))
+        target_path = os.path.realpath(os.path.join(allowed_dir, fn))
+        if not target_path.startswith(allowed_dir + os.sep) and target_path != allowed_dir:
+            raise HTTPException(status_code=403, detail="Access denied: path traversal detected")
+
+        # 4. Kiểm tra quyền sở hữu: bài hát phải thuộc uid
+        song_db = load_songs_db()
+        user_songs = song_db.get(uid, [])
+        owned = any(
+            os.path.basename(urllib.parse.unquote((s.get("file_url") or "").split("/")[-1])) == fn
+            for s in user_songs
+        )
+        if not owned:
+            raise HTTPException(status_code=403, detail="You do not own this song")
+
+        # 5. Xóa file và cập nhật DB
+        if os.path.exists(target_path):
+            os.remove(target_path)
         delete_song_from_db(uid, url)
         return {"status": "success"}
+
+    except HTTPException:
+        raise
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -1625,48 +1655,7 @@ async def get_emotion(file: UploadFile = File(...)):
                 pass
 
 
-@app.post("/recommend")
-async def recommend(
-    file: UploadFile = File(...), type: str = "music", q: str = Query("")
-):
-    t = f"temp_{uuid.uuid4()}.jpg"
-    with open(t, "wb") as b:
-        shutil.copyfileobj(file.file, b)
-    try:
-        try:
-            res = DeepFace.analyze(
-                t, actions=["emotion"], enforce_detection=False, detector_backend="opencv"
-            )
-        except Exception:
-            res = DeepFace.analyze(
-                t, actions=["emotion"], enforce_detection=False, detector_backend="ssd"
-            )
-        mood = res[0]["dominant_emotion"]
-    except Exception as e:
-        print(f"DeepFace analyze error: {e}")
-        mood = "neutral"
-    finally:
-        if os.path.exists(t):
-            try:
-                os.remove(t)
-            except Exception:
-                pass
-
-    mood_info = MOOD_DICTIONARY.get(mood, MOOD_DICTIONARY["neutral"])
-    q = (q or "").strip()
-    if q:
-        keyword = f"{q} {mood_info['music_query']}" if type == "music" else f"{q} {mood_info['podcast_query']}"
-    else:
-        keyword = mood_info["music_query"] if type == "music" else mood_info["podcast_query"]
-
-    recommendations = search_youtube_tracks(keyword, type=type, limit=8)
-
-    return {
-        "status": "success",
-        "mood": mood,
-        "mood_display": mood_info["display"],
-        "recommendations": recommendations
-    }
+# /recommend route is now handled by routers/recommend_router.py (Hybrid Personalized Recommender)
 
 
 @app.post("/generate-music")

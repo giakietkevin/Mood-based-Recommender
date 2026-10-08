@@ -662,6 +662,11 @@
         window.playTrack = function(data, mode) {
             window.currentTrackData = data;
 
+            // ── Feedback Loop: Ghi nhận sự kiện 'play' ──
+            window._trackListenSent = false;  // Reset flag cho listen_30s
+            window._trackPlayStartTime = Date.now();
+            _sendInteraction(data, 'play');
+
             // Track play count for trending
             if (data.title && data.link) {
                 const fd = new FormData();
@@ -860,11 +865,45 @@
             }
         }
 
+        // ==========================================
+        // FEEDBACK LOOP & INTERACTION TRACKER
+        // ==========================================
+        window._sendInteraction = function(songData, interactionType, moodContext) {
+            if (!songData) return;
+            const link = songData.link || songData.file_url || '';
+            if (!link) return;
+
+            const payload = {
+                song_id: songData.id || link,
+                title: songData.title || '',
+                artist: songData.artist || '',
+                link: link,
+                interaction_type: interactionType,
+                mood_context: moodContext || (window._lastDetectedMood || 'neutral')
+            };
+
+            const token = window.MongoAuth && typeof window.MongoAuth.getToken === 'function' ? window.MongoAuth.getToken() : null;
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            fetch('/api/interaction', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(payload)
+            }).catch(e => console.warn('[Interaction] Error logging feedback:', e));
+        };
+
         function onTrackUpdate() {
             if (localAudio.duration && !isNaN(localAudio.duration)) {
                 const pct = (localAudio.currentTime / localAudio.duration) * 100;
                 const fill = document.getElementById('progress-fill');
                 if (fill) fill.style.width = `${pct}%`;
+
+                // Feedback Loop: Tự động ghi nhận khi nghe quá 30 giây (tín hiệu tích cực)
+                if (localAudio.currentTime >= 30 && !window._trackListenSent && window.currentTrackData) {
+                    window._trackListenSent = true;
+                    window._sendInteraction(window.currentTrackData, 'listen_30s');
+                }
             }
         }
 
@@ -1054,29 +1093,52 @@
                 const fd = new FormData();
                 fd.append('file', blob, 'mood.jpg');
 
+                // Gửi guest favorites (cho khách chưa đăng nhập) để cá nhân hóa
+                if (!window.currentUserUid && myFavorites && myFavorites.length > 0) {
+                    fd.append('guest_favorites', JSON.stringify(myFavorites));
+                }
+
                 try {
                     const keyword = document.getElementById('search-input').value.trim();
                     const recommendUrl = `/recommend?type=${encodeURIComponent(currentType)}${keyword ? `&q=${encodeURIComponent(keyword)}` : ''}`;
-                    const res = await fetch(recommendUrl, { method: 'POST', body: fd });
+
+                    // Gửi kèm Access Token nếu đã đăng nhập
+                    const fetchOpts = { method: 'POST', body: fd };
+                    const token = window.MongoAuth && typeof window.MongoAuth.getToken === 'function' ? window.MongoAuth.getToken() : null;
+                    if (token) {
+                        fetchOpts.headers = { 'Authorization': `Bearer ${token}` };
+                    }
+
+                    const res = await fetch(recommendUrl, fetchOpts);
                     const data = await res.json();
 
                     const displayMoodText = data.mood_display || data.mood;
+                    window._lastDetectedMood = data.mood || 'neutral';
                     moodDisplay.innerText = displayMoodText;
                     moodDisplay.classList.add('text-primary');
+
+                    // Badge cá nhân hóa
+                    const personalizedBadge = data.personalized
+                        ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] font-bold ml-2"><span class="material-icons-round text-[11px]">auto_awesome</span>Cá nhân hóa</span>'
+                        : '';
+                    moodDisplay.innerHTML = displayMoodText + personalizedBadge;
 
                     if (!data.recommendations || data.recommendations.length === 0) {
                         recContainer.innerHTML = `<div class="text-center py-10 text-slate-500">Không tìm thấy gợi ý phù hợp.</div>`;
                         return;
                     }
 
-                    // Render Recommendations
+                    // Render Recommendations (kèm match_reason badge)
                     recContainer.innerHTML = data.recommendations.map(item => `
                     <div class="glass-card p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
                          onclick='playTrack(${JSON.stringify(item).replace(/'/g, "&#39;")}, "youtube")'>
                         <img src="${item.thumbnail}" class="w-16 h-16 rounded-lg object-cover shadow-md">
                         <div class="min-w-0 flex-1">
                             <h4 class="font-bold text-sm text-white truncate leading-tight mb-1">${item.title}</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Mood: ${displayMoodText}</p>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${item.artist || displayMoodText}</p>
+                                ${item.match_reason ? `<span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-primary/90 font-medium">${item.match_reason}</span>` : ''}
+                            </div>
                         </div>
                         ${window.getActionButtonsHTML(item, 'youtube')}
                     </div>
@@ -1211,6 +1273,10 @@
                     myFavorites.splice(favIndex, 1);
                 } else {
                     myFavorites.unshift(song);
+                    // Feedback Loop: Tự động ghi nhận tín hiệu 'like'
+                    if (typeof window._sendInteraction === 'function') {
+                        window._sendInteraction(song, 'like');
+                    }
                 }
                 renderLibraryFavorites();
                 updateAllFavIcons();
