@@ -60,9 +60,6 @@ KietStation được chia thành nhiều không gian (Tab) với các chức nă
 - Không gian chụp ảnh phong cách Hàn Quốc.
 - Ứng dụng AI **MediaPipe** để tự động tách nền, cho phép bạn ghép các phông nền (Background) ảo ngay trên trình duyệt mà không cần phông xanh.
 
-### 📚 5. Library & Social Feed (Trạm Dừng Chân) (Updating...)
-- **Library**: Quản lý danh sách phát nhạc (Playlist), phim yêu thích (Watchlist) cá nhân.
-- **Social Feed (Trạm Dừng Chân)**: Nơi người dùng có thể đăng bài (Post), chia sẻ bài hát/phim đang xem, bình luận và tương tác (Thả tim) giống như một mạng xã hội thu nhỏ.
 
 
 ---
