@@ -1206,20 +1206,20 @@
                 container.innerHTML = data.recommendations.map((item, index) => {
                     const safeItem = encodeURIComponent(JSON.stringify(item)).replace(/'/g, "%27");
                     return `
-                    <div class="grid grid-cols-12 gap-2 items-center px-3.5 py-2 hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                    <div class="grid grid-cols-12 gap-2 items-center px-3.5 py-2 hover:bg-surface-container-low transition-colors group cursor-pointer border-b border-surface-container-high/40"
                          onclick="playTrack('${safeItem}', 'youtube')">
-                        <div class="col-span-1 text-center font-mono text-xs text-slate-500 group-hover:text-slate-300">
+                        <div class="col-span-1 text-center font-mono text-xs text-charcoal-black/50 group-hover:text-charcoal-black">
                             ${index + 1}
                         </div>
                         <div class="col-span-6 sm:col-span-6 flex items-center gap-2.5 min-w-0">
-                            <img src="${item.thumbnail}" class="w-10 h-10 rounded-md object-cover bg-slate-950 border border-slate-800/80 flex-shrink-0" alt="" />
+                            <img src="${item.thumbnail}" class="w-10 h-10 rounded-md object-cover bg-surface-container-low border border-surface-container-high flex-shrink-0" alt="" />
                             <div class="min-w-0 flex-1">
-                                <h4 class="text-xs font-medium text-slate-100 truncate group-hover:text-blue-400 transition-colors">${item.title}</h4>
-                                <p class="text-[11px] text-slate-400 truncate">${item.artist || (currentType === 'podcast' ? 'Podcast' : 'Audio Track')}</p>
+                                <h4 class="text-xs font-semibold text-charcoal-black truncate group-hover:text-accent-blue transition-colors">${item.title}</h4>
+                                <p class="text-[11px] text-charcoal-black/60 truncate">${item.artist || (currentType === 'podcast' ? 'Podcast' : 'Audio Track')}</p>
                             </div>
                         </div>
                         <div class="col-span-3 sm:col-span-3 hidden sm:flex items-center min-w-0">
-                            <span class="inline-block text-[10px] px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 border border-slate-700/50 truncate max-w-full">
+                            <span class="inline-block text-[10px] px-2 py-0.5 rounded-md bg-pastel-lavender text-charcoal-black font-medium border border-accent-blue/15 truncate max-w-full">
                                 ${currentType === 'podcast' ? 'Podcast' : 'Search Result'}
                             </span>
                         </div>
@@ -1339,20 +1339,20 @@
                     recContainer.innerHTML = data.recommendations.map((item, index) => {
                         const safeItem = encodeURIComponent(JSON.stringify(item)).replace(/'/g, "%27");
                         return `
-                        <div class="grid grid-cols-12 gap-2 items-center px-3.5 py-2 hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                        <div class="grid grid-cols-12 gap-2 items-center px-3.5 py-2 hover:bg-surface-container-low transition-colors group cursor-pointer border-b border-surface-container-high/40"
                              onclick="playTrack('${safeItem}', 'youtube')">
-                            <div class="col-span-1 text-center font-mono text-xs text-slate-500 group-hover:text-slate-300">
+                            <div class="col-span-1 text-center font-mono text-xs text-charcoal-black/50 group-hover:text-charcoal-black">
                                 ${index + 1}
                             </div>
                             <div class="col-span-6 sm:col-span-6 flex items-center gap-2.5 min-w-0">
-                                <img src="${item.thumbnail}" class="w-10 h-10 rounded-md object-cover bg-slate-950 border border-slate-800/80 flex-shrink-0" alt="" />
+                                <img src="${item.thumbnail}" class="w-10 h-10 rounded-md object-cover bg-surface-container-low border border-surface-container-high flex-shrink-0" alt="" />
                                 <div class="min-w-0 flex-1">
-                                    <h4 class="text-xs font-medium text-slate-100 truncate group-hover:text-blue-400 transition-colors">${item.title}</h4>
-                                    <p class="text-[11px] text-slate-400 truncate">${item.artist || displayMoodText}</p>
+                                    <h4 class="text-xs font-semibold text-charcoal-black truncate group-hover:text-accent-blue transition-colors">${item.title}</h4>
+                                    <p class="text-[11px] text-charcoal-black/60 truncate">${item.artist || displayMoodText}</p>
                                 </div>
                             </div>
                             <div class="col-span-3 sm:col-span-3 hidden sm:flex items-center min-w-0">
-                                <span class="inline-block text-[10px] px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 border border-slate-700/50 truncate max-w-full">
+                                <span class="inline-block text-[10px] px-2 py-0.5 rounded-md bg-pastel-lavender text-charcoal-black font-medium border border-accent-blue/15 truncate max-w-full">
                                     ${item.match_reason || displayMoodText}
                                 </span>
                             </div>
@@ -1382,15 +1382,15 @@
 
             return `
             <div class="flex items-center gap-1">
-                <button onclick="toggleFavorite(event, '${songStr}')" class="w-7 h-7 rounded-md border border-slate-800 bg-slate-950/80 hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-100 transition-colors" title="Yêu thích">
-                    <span class="material-icons-round text-sm ${isFav ? 'text-red-500' : ''}" data-fav-id="${songId}">${isFav ? 'favorite' : 'favorite_border'}</span>
+                <button onclick="toggleFavorite(event, '${songStr}')" class="w-7 h-7 rounded-md border border-surface-container-high bg-pure-white hover:bg-pastel-lavender flex items-center justify-center text-charcoal-black hover:text-charcoal-black transition-colors" title="Yêu thích">
+                    <span class="material-icons-round text-sm ${isFav ? 'text-red-500' : 'text-charcoal-black'}" data-fav-id="${songId}">${isFav ? 'favorite' : 'favorite_border'}</span>
                 </button>
-                <button onclick="openPlaylistModal(event, '${songStr}')" class="w-7 h-7 rounded-md border border-slate-800 bg-slate-950/80 hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-100 transition-colors" title="Thêm vào Playlist">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <button onclick="openPlaylistModal(event, '${songStr}')" class="w-7 h-7 rounded-md border border-surface-container-high bg-pure-white hover:bg-pastel-lavender flex items-center justify-center text-charcoal-black hover:text-charcoal-black transition-colors" title="Thêm vào Playlist">
+                    <svg class="w-3.5 h-3.5 text-charcoal-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/>
                     </svg>
                 </button>
-                <button onclick="playTrack('${songStr}', '${mode || 'youtube'}')" class="w-7 h-7 rounded-md bg-blue-600 hover:bg-blue-500 flex items-center justify-center text-white transition-colors" title="Phát bài này">
+                <button onclick="playTrack('${songStr}', '${mode || 'youtube'}')" class="w-7 h-7 rounded-md bg-accent-blue hover:bg-blue-700 flex items-center justify-center text-white transition-colors" title="Phát bài này">
                     <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                         <polygon points="6 3 20 12 6 21 6 3"/>
                     </svg>
@@ -1883,7 +1883,7 @@
 
             const nameSafe = (m.name || '').replace(/'/g, "&#39;");
             return `
-            <div class="film-card group relative bg-white/5 rounded-2xl overflow-hidden border border-white/5 hover:border-primary/30 transition-all duration-500 cursor-pointer animate-fade-in" 
+            <div class="film-card group relative bg-pure-white rounded-2xl overflow-hidden border border-surface-container-high/80 shadow-sm hover:border-charcoal-black/30 hover:shadow-md transition-all duration-500 cursor-pointer animate-fade-in" 
                  onclick="streamFilmOphim('${m.slug}')">
                 
                 <button onclick="toggleWatchlist('${m._id}', '${nameSafe}', '${m.thumb_url}', event)" 
@@ -1891,11 +1891,11 @@
                     <span class="material-icons-round text-sm">${inWatchlist ? 'bookmark' : 'bookmark_border'}</span>
                 </button>
 
-                <div class="aspect-[2/3] relative overflow-hidden">
+                <div class="aspect-[2/3] relative overflow-hidden bg-surface-container-low">
                     <img src="${thumbSrc}" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'" 
                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
                     
-                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
                     
                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <span class="material-icons-round text-white text-4xl drop-shadow-lg">${isTrailer ? 'videocam' : 'play_circle'}</span>
@@ -1917,9 +1917,9 @@
 
                     ${m.year ? `<span class="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md">${m.year}</span>` : ''}
                 </div>
-                <div class="p-3">
-                    <h3 class="text-white font-bold text-[11px] line-clamp-1 group-hover:text-primary transition-colors">${m.name || ''}</h3>
-                    <p class="text-slate-500 text-[10px] mt-0.5 line-clamp-1">${m.origin_name || ''}</p>
+                <div class="p-3 bg-pure-white">
+                    <h3 class="text-charcoal-black font-bold text-[12px] line-clamp-1 group-hover:text-accent-blue transition-colors">${m.name || ''}</h3>
+                    <p class="text-charcoal-black/60 text-[11px] mt-0.5 line-clamp-1 font-medium">${m.origin_name || ''}</p>
                 </div>
             </div>`;
         }
@@ -1958,7 +1958,7 @@
                 let html = '';
                 for (let i = start; i <= end; i++) {
                     html += `<button onclick="filmGoToPage(${i})"
-                        class="w-8 h-8 rounded-lg text-[10px] font-bold transition-all ${i === filmCurrentPage ? 'bg-primary text-black' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'}">${i}</button>`;
+                        class="w-8 h-8 rounded-lg text-xs font-bold transition-all ${i === filmCurrentPage ? 'bg-charcoal-black text-pure-white shadow-sm' : 'bg-surface-container-low text-charcoal-black border border-surface-container-high hover:bg-pastel-lavender'}">${i}</button>`;
                 }
                 dots.innerHTML = html;
             }

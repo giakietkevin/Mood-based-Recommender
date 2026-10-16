@@ -4054,50 +4054,50 @@
     </script>
     <!-- AUTH MODAL -->
     <div id="auth-modal"
-        class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl transition-all duration-300 hidden opacity-0 pointer-events-none">
-        <div class="glass-card w-full max-w-md rounded-[2.5rem] border border-white/10 p-8 shadow-2xl relative overflow-hidden transform scale-95 transition-transform duration-300"
+        class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-charcoal-black/60 backdrop-blur-md transition-all duration-300 hidden opacity-0 pointer-events-none">
+        <div class="bg-pure-white w-full max-w-md rounded-[2.5rem] border border-surface-container-high p-8 shadow-2xl relative overflow-hidden transform scale-95 transition-transform duration-300"
             id="auth-modal-content">
-            <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 blur-[80px] rounded-full"></div>
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-pastel-lavender blur-[80px] rounded-full pointer-events-none"></div>
 
             <div class="text-center mb-8 relative z-10">
                 <span
-                    class="material-icons-round text-primary text-5xl mb-2 drop-shadow-[0_0_15px_rgba(var(--color-primary),0.5)]">fingerprint</span>
-                <h3 class="text-3xl font-display font-black text-white uppercase tracking-tight">Kiet<span
-                        class="text-primary">Station</span></h3>
-                <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mt-1">Xác Thực Danh Tính Người
+                    class="material-icons-round text-accent-blue text-5xl mb-2 drop-shadow-sm">fingerprint</span>
+                <h3 class="text-3xl font-display font-black text-charcoal-black uppercase tracking-tight">Kiet<span
+                        class="text-accent-blue">Station</span></h3>
+                <p class="text-charcoal-black/60 text-xs font-semibold uppercase tracking-widest mt-1">Xác Thực Danh Tính Người
                     Dùng</p>
             </div>
 
             <div class="space-y-4 relative z-10">
                 <div id="auth-error"
-                    class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl p-3 text-center font-bold">
+                    class="hidden bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl p-3 text-center font-bold">
                 </div>
 
                 <input type="email" id="auth-email" placeholder="Địa chỉ Email"
-                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none placeholder-slate-500 font-medium transition-all">
+                    class="w-full bg-surface-container-low border border-surface-container-high rounded-xl px-4 py-3.5 text-sm text-charcoal-black focus:border-accent-blue focus:bg-pure-white focus:ring-1 focus:ring-accent-blue outline-none placeholder-charcoal-black/40 font-medium transition-all">
 
                 <!-- Full Name (Only for Register) -->
                 <input type="text" id="auth-fullname" placeholder="Họ và Tên của bạn"
-                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none placeholder-slate-500 font-medium hidden transition-all">
+                    class="w-full bg-surface-container-low border border-surface-container-high rounded-xl px-4 py-3.5 text-sm text-charcoal-black focus:border-accent-blue focus:bg-pure-white focus:ring-1 focus:ring-accent-blue outline-none placeholder-charcoal-black/40 font-medium hidden transition-all">
 
                 <input type="password" id="auth-password" placeholder="Mật khẩu"
-                    class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none placeholder-slate-500 font-medium transition-all">
+                    class="w-full bg-surface-container-low border border-surface-container-high rounded-xl px-4 py-3.5 text-sm text-charcoal-black focus:border-accent-blue focus:bg-pure-white focus:ring-1 focus:ring-accent-blue outline-none placeholder-charcoal-black/40 font-medium transition-all">
 
                 <button onclick="handleAuthAction()" id="auth-btn"
-                    class="w-full bg-primary text-[#0a0a0a] font-bold text-sm py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 mt-4 uppercase tracking-wider flex items-center justify-center gap-2">
+                    class="w-full bg-charcoal-black text-pure-white font-bold text-sm py-4 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-md mt-4 uppercase tracking-wider flex items-center justify-center gap-2">
                     <span class="material-icons-round text-[18px]">login</span> ĐĂNG NHẬP
                 </button>
             </div>
 
-            <div class="mt-6 text-center relative z-10 p-4 border border-white/5 rounded-xl bg-white/5">
+            <div class="mt-6 text-center relative z-10 p-4 border border-surface-container-high rounded-xl bg-surface-container-low">
                 <button onclick="toggleAuthMode()" id="auth-toggle-btn"
-                    class="text-xs text-slate-300 hover:text-white font-bold hover:underline transition-all">
+                    class="text-xs text-charcoal-black hover:text-accent-blue font-bold hover:underline transition-all">
                     Chưa có tài khoản? Nhấn để Đăng ký ngay
                 </button>
             </div>
 
             <button id="auth-skip-btn" onclick="skipAuthForNow()"
-                class="absolute top-4 right-4 text-slate-500 hover:text-white material-icons-round cursor-pointer transition-colors z-20 tooltip"
+                class="absolute top-4 right-4 text-charcoal-black/50 hover:text-charcoal-black material-icons-round cursor-pointer transition-colors z-20 tooltip"
                 title="Bỏ qua (Guest)">close</button>
         </div>
     </div>
