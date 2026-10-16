@@ -1544,7 +1544,14 @@ def get_yt_audio_stream_info(video_id: str):
         'format': 'bestaudio[ext=m4a]/bestaudio/best',
         'quiet': True,
         'no_warnings': True,
-        'js_runtimes': {'node': {}}
+        'js_runtimes': {'node': {}},
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android'],
+                'player_skip': ['webpage', 'configs']
+            }
+        },
+        'socket_timeout': 10
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
@@ -2190,19 +2197,27 @@ async def dj_radio(
         
         # 2. Generate TTS
         final_id = str(uuid.uuid4())
-        intro_path = os.path.join("generated_music", f"dj_intro_{final_id}.wav")
-        
-        import edge_tts
-        comm = edge_tts.Communicate(intro_text, dj_voice)
-        await comm.save(intro_path)
-        
+        intro_filename = f"dj_intro_{final_id}.mp3"
+        intro_filepath = os.path.join(BASE_DIR, "generated_music", intro_filename)
+        os.makedirs(os.path.join(BASE_DIR, "generated_music"), exist_ok=True)
+
+        try:
+            import edge_tts
+            comm = edge_tts.Communicate(intro_text, dj_voice)
+            await comm.save(intro_filepath)
+        except Exception as e_tts:
+            print(f"Edge TTS fallback to gTTS: {e_tts}")
+            from gtts import gTTS
+            tts = gTTS(intro_text, lang="vi")
+            tts.save(intro_filepath)
+
         mood_info = MOOD_DICTIONARY.get(emo_lower, MOOD_DICTIONARY["neutral"])
         keyword = mood_info["music_query"]
         recommendations = search_youtube_tracks(keyword, type="music", limit=10)
-            
+
         return {
             "status": "success",
-            "dj_intro_url": f"/{intro_path}",
+            "dj_intro_url": f"/generated_music/{intro_filename}",
             "playlist": recommendations
         }
     except Exception as e:

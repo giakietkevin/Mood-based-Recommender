@@ -196,25 +196,33 @@ async function loadDiscoverContent(page = 1) {
         
         if (currentDiscoverMode === 'film') {
             const randomPage = page > 1 ? page : Math.floor(Math.random() * 20) + 1;
-            const res = await fetch(`https://ophim1.com/v1/api/danh-sach/phim-moi-cap-nhat?page=${randomPage}`);
+            const res = await fetch(`https://phimapi.com/v1/api/danh-sach/phim-moi-cap-nhat?page=${randomPage}`);
             const data = await res.json();
+            const items = data.data?.items || data.items || [];
 
-            if (data.status === 'success' && data.data.items.length > 0) {
-                const imgDomain = data.data.APP_DOMAIN_CDN_IMAGE || data.pathImage || 'https://img.ophim.live';
-                formattedCards = data.data.items.map(item => ({
-                    id: item._id,
+            if (items.length > 0) {
+                const imgDomain = data.data?.APP_DOMAIN_CDN_IMAGE || data.pathImage || 'https://phimimg.com';
+                const resolveImg = (url) => {
+                    if (!url) return 'https://via.placeholder.com/300x450?text=No+Image';
+                    if (url.startsWith('http')) return url;
+                    if (url.startsWith('/')) return `${imgDomain}${url}`;
+                    return `${imgDomain}/${url}`;
+                };
+
+                formattedCards = items.map(item => ({
+                    id: item._id || item.slug,
                     slug: item.slug,
                     title: item.name,
-                    originalTitle: item.origin_name,
-                    image: `${imgDomain}/uploads/movies/${item.poster_url}`,
-                    thumb: `${imgDomain}/uploads/movies/${item.thumb_url}`,
-                    year: item.year,
-                    type: item.type === 'series' ? 'Phim Bộ' : 'Phim Lẻ',
+                    originalTitle: item.origin_name || '',
+                    image: resolveImg(item.poster_url || item.thumb_url),
+                    thumb: resolveImg(item.thumb_url || item.poster_url),
+                    year: item.year || '2024',
+                    type: item.type === 'series' ? 'Phim Bộ' : (item.type === 'hoathinh' ? 'Hoạt Hình' : 'Phim Lẻ'),
                     quality: item.quality || 'HD',
                     lang: item.lang || 'Vietsub'
                 }));
             }
-                } else {
+        } else {
             // Music Discovery (Fetching from existing local backend /search)
             const searchTerms = ['lofi chill viet nam', 'vietnamese pop 2024 hit', 'tiktok viral vn', 'rap viet trending', 'indie vn chill', 'nhac acoustic hay', 'remix hot tiktok'];
             const randomTerm = searchTerms[Math.floor(Math.random() * searchTerms.length)];
@@ -432,12 +440,22 @@ window.handleSwipeAction = function(action) {
                 showView('film');
                 if (window.streamFilmOphim) window.streamFilmOphim(currentData.slug, currentData.title);
             } else {
-                // Play / search music on YouTube
-                showView('dashboard');
-                const searchInput = document.getElementById('search-input');
-                if (searchInput) {
-                    searchInput.value = currentData.title + ' ' + currentData.originalTitle;
-                    if (window.performSearch) window.performSearch();
+                // Play directly in website player bar
+                if (typeof window.playTrack === 'function') {
+                    window.playTrack({
+                        title: currentData.title,
+                        artist: currentData.originalTitle || 'Music',
+                        link: currentData.slug || currentData.id,
+                        thumbnail: currentData.image || currentData.thumb
+                    }, 'youtube');
+                    showToast('Đang phát: ' + currentData.title);
+                } else {
+                    showView('dashboard');
+                    const searchInput = document.getElementById('search-input');
+                    if (searchInput) {
+                        searchInput.value = currentData.title + ' ' + currentData.originalTitle;
+                        if (window.performSearch) window.performSearch();
+                    }
                 }
             }
             return;

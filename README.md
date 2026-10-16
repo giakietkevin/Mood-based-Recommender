@@ -7,7 +7,7 @@ sdk: docker
 
 # KietStation (Mood-based-Recommender) 🎵🎬
 
-Hệ thống giải trí trực tuyến đa chức năng tích hợp trí tuệ nhân tạo (AI) nhận diện khuôn mặt để đề xuất nội dung (nhạc & phim), hỗ trợ Studio sản xuất nhạc AI, mạng xã hội mini và tính năng Watch Party chia sẻ qua WebRTC.
+Hệ thống giải trí trực tuyến đa chức năng tích hợp trí tuệ nhân tạo (AI) nhận diện khuôn mặt để đề xuất nội dung (nhạc & phim), hỗ trợ Studio sản xuất nhạc AI, mạng xã hội mini và tính năng Watch Party chia sẻ qua WebRTC. Với hệ thống giúp các bạn giải quyết được các nhu cầu giải trí, KietStation mong muốn mang đến cho mọi người những trải nghiệm mượt mà và tiện lợi nhất.
 
 ---
 

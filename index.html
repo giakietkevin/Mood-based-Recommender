@@ -170,7 +170,7 @@
                     class="nav-pill flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">DJ
                     RADIO</button>
                 <button type="button" onclick="showView('studio')" id="nav-studio"
-                    class="nav-pill flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">STUDIO</button>
+                    class="nav-pill flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap inline-flex items-center justify-center gap-1">STUDIO <span class="material-icons-round text-[13px] text-amber-400">lock</span></button>
                 <button type="button" onclick="showView('focus')" id="nav-focus"
                     class="nav-pill flex-shrink-0 sm:flex-1 px-4 sm:px-5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold text-slate-400 hover:text-white transition-all whitespace-nowrap">FOCUS</button>
                 <button type="button" onclick="showView('about')" id="nav-about"
@@ -786,6 +786,29 @@
                     <button onclick="showView('home')"
                         class="mt-8 text-slate-500 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors">Quay
                         lại trang chủ</button>
+                </div>
+            </div>
+
+            <!-- STUDIO UNDER DEVELOPMENT MODAL -->
+            <div id="studio-under-dev-modal"
+                class="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in hidden">
+                <div
+                    class="glass-card w-full max-w-sm rounded-[2.5rem] border border-white/10 p-8 flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
+                    <div class="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/10 blur-[80px] rounded-full"></div>
+                    <div
+                        class="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mb-5 border border-amber-500/30">
+                        <span class="material-icons-round text-3xl">construction</span>
+                    </div>
+                    <h3 class="text-xl font-display font-bold text-white mb-2 uppercase tracking-tight">AI Studio</h3>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-4">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        Đang phát triển
+                    </span>
+                    <p class="text-slate-300 text-sm mb-6 leading-relaxed">Tính năng đang trong giai đoạn phát triển. Vui lòng quay lại sau!</p>
+                    <button onclick="closeStudioUnderDevModal()"
+                        class="w-full bg-primary text-[#0a0a0a] font-bold py-3.5 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 uppercase tracking-widest text-xs">
+                        ĐÃ HIỂU
+                    </button>
                 </div>
             </div>
         <!-- FILM STATION VIEW -->
@@ -3428,15 +3451,17 @@
             </div>
 
             <div class="flex items-center justify-center gap-1 sm:gap-4 flex-shrink-0">
-                <button type="button" class="text-slate-400 hover:text-white transition-colors hidden md:block"
-                    aria-hidden="true"><span class="material-icons-round">skip_previous</span></button>
+                <button type="button" id="prev-btn" onclick="playPreviousTrack()"
+                    class="text-slate-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/5"
+                    title="Bài trước" aria-label="Previous track"><span class="material-icons-round text-xl sm:text-2xl">skip_previous</span></button>
                 <button type="button" id="play-btn" onclick="toggleMainPlay()"
                     class="w-11 h-11 sm:w-12 sm:h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all touch-manipulation"
                     aria-label="Play or pause">
                     <span id="play-icon" class="material-icons-round text-2xl">play_arrow</span>
                 </button>
-                <button type="button" class="text-slate-400 hover:text-white transition-colors hidden md:block"
-                    aria-hidden="true"><span class="material-icons-round">skip_next</span></button>
+                <button type="button" id="next-btn" onclick="playNextTrack()"
+                    class="text-slate-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/5"
+                    title="Bài tiếp theo" aria-label="Next track"><span class="material-icons-round text-xl sm:text-2xl">skip_next</span></button>
             </div>
 
             <div
@@ -3790,9 +3815,9 @@
                 </button>
                 <button type="button" onclick="showView('studio'); closeMobileMoreMenu()" id="mob-nav-studio">
                     <div class="mob-more-icon" style="background:rgba(20,184,166,0.15);color:#2dd4bf">
-                        <span class="material-icons-round">mic</span>
+                        <span class="material-icons-round">lock</span>
                     </div>
-                    <span>Studio</span>
+                    <span>Studio (Đang phát triển)</span>
                 </button>
                 <button type="button" onclick="showView('about'); closeMobileMoreMenu()" id="mob-nav-about">
                     <div class="mob-more-icon" style="background:rgba(59,130,246,0.15);color:#60a5fa">

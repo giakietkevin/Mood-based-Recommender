@@ -48,7 +48,8 @@
       "PowerShell(python -c \"from ytmusicapi import YTMusic; ytm = YTMusic\\(\\); print\\(ytm.search\\('son tung official mv', filter='songs', limit=5\\)\\)\")",
       "PowerShell(python -c \"from duckduckgo_search import DDGS; ddgs = DDGS\\(\\); print\\(list\\(ddgs.videos\\('site:youtube.com son tung official mv', max_results=5\\)\\)\\)\")",
       "PowerShell(python -c \"from ytmusicapi import YTMusic; ytm = YTMusic\\(\\); res = ytm.search\\('son tung', filter='songs', limit=2\\); print\\(res[0].keys\\(\\)\\); print\\('videoId:', res[0].get\\('videoId'\\)\\); print\\('title:', res[0].get\\('title'\\)\\); print\\('thumbnails:', res[0].get\\('thumbnails'\\)\\)\")",
-      "PowerShell(python -c \"from ytmusicapi import YTMusic; ytm = YTMusic\\(\\); res = ytm.search\\('nguyen huu tri podcast vietnam full', filter='videos', limit=2\\); print\\(res\\)\")"
+      "PowerShell(python -c \"from ytmusicapi import YTMusic; ytm = YTMusic\\(\\); res = ytm.search\\('nguyen huu tri podcast vietnam full', filter='videos', limit=2\\); print\\(res\\)\")",
+      "PowerShell(python -c \"import urllib.request, json; req = urllib.request.Request\\('https://phimapi.com/v1/api/danh-sach/phim-moi-cap-nhat?page=1', headers={'User-Agent': 'Mozilla/5.0'}\\); res = urllib.request.urlopen\\(req, timeout=10\\); data = json.loads\\(res.read\\(\\)\\); d = data.get\\('data', {}\\); print\\('data keys:', d.keys\\(\\)\\); print\\('items len:', len\\(d.get\\('items', []\\)\\)\\); print\\('sample item:', d.get\\('items', [{}]\\)[0].get\\('name'\\), d.get\\('items', [{}]\\)[0].get\\('poster_url'\\), d.get\\('items', [{}]\\)[0].get\\('thumb_url'\\)\\); print\\('APP_DOMAIN_CDN_IMAGE:', d.get\\('APP_DOMAIN_CDN_IMAGE'\\)\\)\")"
     ]
   }
 }

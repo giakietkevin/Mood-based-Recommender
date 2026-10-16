@@ -155,10 +155,20 @@
             initUI(); // Re-render
         };
 
+        // Studio Under Development Modal handlers
+        window.showStudioUnderDevModal = () => {
+            const modal = document.getElementById('studio-under-dev-modal');
+            if (modal) modal.classList.remove('hidden');
+        };
+
+        window.closeStudioUnderDevModal = () => {
+            const modal = document.getElementById('studio-under-dev-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
         // Global helper for PiP Logic
         window.attemptSmartPiP = async (videoEl) => {
             if (!videoEl || videoEl.paused || !document.pictureInPictureEnabled) {
-                if (videoEl && !videoEl.paused) videoEl.pause();
                 return;
             }
             try {
@@ -166,8 +176,8 @@
                     await videoEl.requestPictureInPicture();
                 }
             } catch (e) {
-                console.warn("PiP failed, pausing video as fallback", e);
-                videoEl.pause();
+                // Do NOT pause video - keep playing smoothly in background
+                console.warn("PiP not available or permission denied without user gesture; video continues playing:", e);
             }
         };
 
@@ -180,11 +190,11 @@
         // Listen for Browser Tab Switching (External)
         document.addEventListener('visibilitychange', () => {
             const filmVideo = document.getElementById('film-video-player');
-             
+
             const activeVideo = (filmVideo && !filmVideo.paused) ? filmVideo : null;
 
             if (document.visibilityState === 'hidden') {
-                // User left the browser tab entirely
+                // User left the browser tab entirely - keep playing smoothly, attempt PiP if allowed
                 if (activeVideo) window.attemptSmartPiP(activeVideo);
             } else {
                 // User came back to the browser tab
@@ -197,6 +207,12 @@
         });
 
         window.showView = (viewName) => {
+            // Lock Studio view: Show under development modal
+            if (viewName === 'studio') {
+                window.showStudioUnderDevModal();
+                return;
+            }
+
             // Require password for film/movie views
             if (viewName === 'film' || viewName === 'movie') {
                 const modal = document.getElementById('film-vip-modal');
@@ -207,7 +223,7 @@
                     return;
                 }
             }
-            
+
             const vipModal = document.getElementById('film-vip-modal');
             if (vipModal) {
                 // Luôn ẩn modal nếu chuyển sang tab khác, hoặc nếu đã ở tab film mà ĐÃ XÁC THỰC
@@ -659,13 +675,26 @@
         // 5. PLAYER LOGIC (Unified Local + Youtube)
         // ==========================================
         window.currentTrackData = null;
+        window.lastRecommendations = [];
+
         window.playTrack = function(data, mode) {
+            if (typeof data === 'string') {
+                try {
+                    data = JSON.parse(decodeURIComponent(data));
+                } catch(e) {
+                    try {
+                        data = JSON.parse(data);
+                    } catch(e2) {
+                        data = { title: 'Unknown', link: data };
+                    }
+                }
+            }
             window.currentTrackData = data;
 
             // ── Feedback Loop: Ghi nhận sự kiện 'play' ──
             window._trackListenSent = false;  // Reset flag cho listen_30s
             window._trackPlayStartTime = Date.now();
-            _sendInteraction(data, 'play');
+            if (typeof _sendInteraction === 'function') _sendInteraction(data, 'play');
 
             // Track play count for trending
             if (data.title && data.link) {
@@ -688,39 +717,47 @@
             const dlBtn = document.getElementById('download-btn');
 
             // Show player
-            playerBar.classList.remove('hidden', 'translate-y-full');
+            if (playerBar) playerBar.classList.remove('hidden', 'translate-y-full');
 
-            currentMode = mode;
+            currentMode = mode || (data.link ? 'youtube' : 'local');
 
             if (mode === 'local') {
                 // STOP Youtube
-                if (isYtReady && window.ytPlayer.stopVideo) window.ytPlayer.stopVideo();
+                if (isYtReady && window.ytPlayer && window.ytPlayer.stopVideo) window.ytPlayer.stopVideo();
 
                 // Setup UI
-                pTitle.innerText = data.title;
-                pDesc.innerText = `AI Generated • ${data.style} • ${data.mood}`;
-                pThumb.src = "https://cdn-icons-png.flaticon.com/512/12204/12204300.png"; // AI Icon
-                dlBtn.href = data.file_url;
-                dlBtn.classList.remove('hidden');
-                document.getElementById('yt-video-btn').classList.add('hidden');
+                if (pTitle) pTitle.innerText = data.title;
+                if (pDesc) pDesc.innerText = `AI Generated • ${data.style || ''} • ${data.mood || ''}`;
+                if (pThumb) pThumb.src = data.thumbnail || "https://cdn-icons-png.flaticon.com/512/12204/12204300.png"; // AI Icon
+                if (dlBtn) {
+                    dlBtn.href = data.file_url;
+                    dlBtn.classList.remove('hidden');
+                }
+                const ytBtn = document.getElementById('yt-video-btn');
+                if (ytBtn) ytBtn.classList.add('hidden');
 
                 // Play Audio
+                if (playIcon) playIcon.innerText = "hourglass_top";
                 localAudio.src = data.file_url;
-                localAudio.play();
-                playIcon.innerText = "pause";
+                localAudio.play().then(() => {
+                    if (playIcon) playIcon.innerText = "pause";
+                }).catch(() => {
+                    if (playIcon) playIcon.innerText = "play_arrow";
+                });
 
-            } else if (mode === 'youtube') {
-                // If video modal player is running, stop it
+            } else {
+                // YouTube Mode - Direct ad-free audio stream
                 if (isYtReady && window.ytPlayer && window.ytPlayer.stopVideo) {
                     try { window.ytPlayer.stopVideo(); } catch (e) {}
                 }
 
                 // Setup UI
-                pTitle.innerText = data.title;
-                pDesc.innerText = data.artist || "YouTube Audio";
-                pThumb.src = data.thumbnail || "https://cdn-icons-png.flaticon.com/512/12204/12204300.png";
-                dlBtn.classList.add('hidden');
-                document.getElementById('yt-video-btn').classList.remove('hidden');
+                if (pTitle) pTitle.innerText = data.title;
+                if (pDesc) pDesc.innerText = data.artist || "YouTube Audio";
+                if (pThumb) pThumb.src = data.thumbnail || "https://cdn-icons-png.flaticon.com/512/12204/12204300.png";
+                if (dlBtn) dlBtn.classList.add('hidden');
+                const ytBtn = document.getElementById('yt-video-btn');
+                if (ytBtn) ytBtn.classList.remove('hidden');
 
                 let videoId = data.link;
                 if (data.link && (data.link.includes('youtube.com') || data.link.includes('youtu.be'))) {
@@ -728,24 +765,53 @@
                 }
 
                 if (videoId && videoId.length === 11) {
+                    if (playIcon) playIcon.innerText = "hourglass_top";
                     // Play direct audio stream from backend (No Ads, No IFrame error 150)
                     localAudio.src = `/api/yt-stream/${videoId}`;
                     localAudio.play().then(() => {
-                        playIcon.innerText = "pause";
+                        if (playIcon) playIcon.innerText = "pause";
                     }).catch(err => {
                         console.warn("[playTrack] Autoplay blocked or waiting user gesture:", err);
-                        playIcon.innerText = "play_arrow";
+                        if (playIcon) playIcon.innerText = "play_arrow";
                     });
                 } else {
                     console.warn("Invalid video ID for YouTube track:", data);
+                    if (typeof showToast === 'function') showToast("Định dạng bài hát không hợp lệ", "error");
                 }
             }
 
             // Adaptive Vibe Update
-            updateUITheme(pThumb.src);
+            if (pThumb && typeof updateUITheme === 'function') updateUITheme(pThumb.src);
 
             // Achievement Track: Watch/Listen
-            trackActivity('consume_media');
+            if (typeof trackActivity === 'function') trackActivity('consume_media');
+        };
+
+        // Attach native audio event handlers for seamless UI sync
+        if (localAudio) {
+            localAudio.onplaying = () => {
+                const playIcon = document.getElementById('play-icon');
+                if (playIcon) playIcon.innerText = "pause";
+            };
+            localAudio.onpause = () => {
+                const playIcon = document.getElementById('play-icon');
+                if (playIcon) playIcon.innerText = "play_arrow";
+            };
+            localAudio.onwaiting = () => {
+                const playIcon = document.getElementById('play-icon');
+                if (playIcon) playIcon.innerText = "hourglass_top";
+            };
+            localAudio.onerror = (e) => {
+                const playIcon = document.getElementById('play-icon');
+                if (playIcon) playIcon.innerText = "play_arrow";
+                console.error("[localAudio] Stream error:", e);
+                if (typeof showToast === 'function') {
+                    showToast("Không thể tải luồng phát trực tiếp. Đang chuyển bài tiếp...", "error");
+                }
+                setTimeout(() => {
+                    if (typeof playNextTrack === 'function') playNextTrack();
+                }, 1500);
+            };
         }
 
         const colorThief = new ColorThief();
@@ -907,6 +973,58 @@
             }
         }
 
+        window.playNextTrack = () => {
+            if (typeof djActive !== 'undefined' && djActive && typeof nextDJTrack === 'function') {
+                nextDJTrack();
+                return;
+            }
+            if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof playNextInQueue === 'function') {
+                playNextInQueue();
+                return;
+            }
+            if (window.lastRecommendations && window.lastRecommendations.length > 0 && window.currentTrackData) {
+                const curId = window.currentTrackData.link || window.currentTrackData.file_url;
+                const idx = window.lastRecommendations.findIndex(s => (s.link || s.file_url) === curId);
+                if (idx >= 0 && idx < window.lastRecommendations.length - 1) {
+                    window.playTrack(window.lastRecommendations[idx + 1], 'youtube');
+                    return;
+                }
+            }
+            if (myFavorites && myFavorites.length > 0 && window.currentTrackData) {
+                const curId = window.currentTrackData.link || window.currentTrackData.file_url;
+                const idx = myFavorites.findIndex(s => (s.link || s.file_url) === curId);
+                if (idx >= 0 && idx < myFavorites.length - 1) {
+                    const nextSong = myFavorites[idx + 1];
+                    window.playTrack(nextSong, (nextSong.type === 'youtube' || nextSong.link) ? 'youtube' : 'local');
+                    return;
+                }
+            }
+        };
+
+        window.playPreviousTrack = () => {
+            if (typeof djActive !== 'undefined' && djActive && typeof playDJTrack === 'function' && typeof djCurrentIndex !== 'undefined' && djCurrentIndex > 0) {
+                playDJTrack(djCurrentIndex - 1);
+                return;
+            }
+            if (window.lastRecommendations && window.lastRecommendations.length > 0 && window.currentTrackData) {
+                const curId = window.currentTrackData.link || window.currentTrackData.file_url;
+                const idx = window.lastRecommendations.findIndex(s => (s.link || s.file_url) === curId);
+                if (idx > 0) {
+                    window.playTrack(window.lastRecommendations[idx - 1], 'youtube');
+                    return;
+                }
+            }
+            if (myFavorites && myFavorites.length > 0 && window.currentTrackData) {
+                const curId = window.currentTrackData.link || window.currentTrackData.file_url;
+                const idx = myFavorites.findIndex(s => (s.link || s.file_url) === curId);
+                if (idx > 0) {
+                    const prevSong = myFavorites[idx - 1];
+                    window.playTrack(prevSong, (prevSong.type === 'youtube' || prevSong.link) ? 'youtube' : 'local');
+                    return;
+                }
+            }
+        };
+
         function onTrackEnded() {
             document.getElementById('play-icon').innerText = "play_arrow";
             document.getElementById('progress-fill').style.width = "0%";
@@ -914,6 +1032,8 @@
                 nextDJTrack();
             } else if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof playNextInQueue === 'function') {
                 playNextInQueue();
+            } else if (typeof playNextTrack === 'function') {
+                playNextTrack();
             }
         }
 
@@ -1032,17 +1152,20 @@
                     return;
                 }
 
-                container.innerHTML = data.recommendations.map(item => `
-                <div class="glass-card p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
-                     onclick='playTrack(${JSON.stringify(item).replace(/'/g, "&#39;")}, "youtube")'>
-                    <img src="${item.thumbnail}" class="w-16 h-16 rounded-lg object-cover shadow-md">
-                    <div class="min-w-0 flex-1">
-                        <h4 class="font-bold text-sm text-white truncate leading-tight mb-1">${item.title}</h4>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${currentType === 'podcast' ? 'Podcast' : 'Youtube Music'}</p>
-                    </div>
-                    ${window.getActionButtonsHTML(item, 'youtube')}
-                </div>
-            `).join('');
+                window.lastRecommendations = data.recommendations;
+                container.innerHTML = data.recommendations.map(item => {
+                    const safeItem = encodeURIComponent(JSON.stringify(item)).replace(/'/g, "%27");
+                    return `
+                    <div class="glass-card p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
+                         onclick="playTrack('${safeItem}', 'youtube')">
+                        <img src="${item.thumbnail}" class="w-16 h-16 rounded-lg object-cover shadow-md">
+                        <div class="min-w-0 flex-1">
+                            <h4 class="font-bold text-sm text-white truncate leading-tight mb-1">${item.title}</h4>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${currentType === 'podcast' ? 'Podcast' : 'Youtube Music'}</p>
+                        </div>
+                        ${window.getActionButtonsHTML(item, 'youtube')}
+                    </div>`;
+                }).join('');
             } catch (e) {
                 container.innerHTML = `<div class="text-center py-10 text-red-400">Search Failed.</div>`;
             }
@@ -1128,21 +1251,24 @@
                         return;
                     }
 
+                    window.lastRecommendations = data.recommendations;
                     // Render Recommendations (kèm match_reason badge)
-                    recContainer.innerHTML = data.recommendations.map(item => `
-                    <div class="glass-card p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
-                         onclick='playTrack(${JSON.stringify(item).replace(/'/g, "&#39;")}, "youtube")'>
-                        <img src="${item.thumbnail}" class="w-16 h-16 rounded-lg object-cover shadow-md">
-                        <div class="min-w-0 flex-1">
-                            <h4 class="font-bold text-sm text-white truncate leading-tight mb-1">${item.title}</h4>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${item.artist || displayMoodText}</p>
-                                ${item.match_reason ? `<span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-primary/90 font-medium">${item.match_reason}</span>` : ''}
+                    recContainer.innerHTML = data.recommendations.map(item => {
+                        const safeItem = encodeURIComponent(JSON.stringify(item)).replace(/'/g, "%27");
+                        return `
+                        <div class="glass-card p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
+                             onclick="playTrack('${safeItem}', 'youtube')">
+                            <img src="${item.thumbnail}" class="w-16 h-16 rounded-lg object-cover shadow-md">
+                            <div class="min-w-0 flex-1">
+                                <h4 class="font-bold text-sm text-white truncate leading-tight mb-1">${item.title}</h4>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${item.artist || displayMoodText}</p>
+                                    ${item.match_reason ? `<span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-primary/90 font-medium">${item.match_reason}</span>` : ''}
+                                </div>
                             </div>
-                        </div>
-                        ${window.getActionButtonsHTML(item, 'youtube')}
-                    </div>
-                `).join('');
+                            ${window.getActionButtonsHTML(item, 'youtube')}
+                        </div>`;
+                    }).join('');
 
                 } catch (e) {
                     console.error(e);
@@ -1158,7 +1284,7 @@
         // 7. LIBRARY & PLAYLIST LOGIC
         // ==========================================
         window.getActionButtonsHTML = (song, mode) => {
-            const songStr = encodeURIComponent(JSON.stringify(song));
+            const songStr = encodeURIComponent(JSON.stringify(song)).replace(/'/g, "%27");
             const songId = song.link || song.file_url;
             const isFav = myFavorites.some(f => (f.link || f.file_url) === songId);
 
@@ -1170,7 +1296,7 @@
                 <button onclick="openPlaylistModal(event, '${songStr}')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-colors" title="Thêm vào Playlist">
                     <span class="material-icons-round text-sm">playlist_add</span>
                 </button>
-                <button class="w-8 h-8 rounded-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center text-primary transition-colors">
+                <button onclick="playTrack('${songStr}', '${mode || 'youtube'}')" class="w-8 h-8 rounded-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center text-primary transition-colors" title="Phát bài này">
                     <span class="material-icons-round text-sm">play_arrow</span>
                 </button>
             </div>
@@ -1180,15 +1306,26 @@
         window.loadFavorites = async () => {
             let tempFavs = [];
             // Load backend favorites if logged in
-            if (window.currentUserUid && window.MongoAuth.getToken()) {
+            if (window.currentUserUid && window.MongoAuth && window.MongoAuth.getToken()) {
                 try {
                     const res = await window.MongoAuth.authenticatedFetch('/favorites/music');
                     const dbFavs = await res.json();
-                    tempFavs = [...dbFavs];
+                    if (Array.isArray(dbFavs)) tempFavs = [...dbFavs];
                 } catch (e) {
                     console.warn('Failed to load favorites from MongoDB:', e);
                 }
             }
+
+            // Load local favorites for guests / offline
+            try {
+                const guestFavs = JSON.parse(localStorage.getItem('kiet_guest_favorites') || '[]');
+                guestFavs.forEach(g => {
+                    const gId = g.link || g.file_url;
+                    if (gId && !tempFavs.some(t => (t.link || t.file_url) === gId)) {
+                        tempFavs.push(g);
+                    }
+                });
+            } catch(e) {}
 
             // Load local favorites from Tinder Music feature (fallback for guests)
             try {
@@ -1197,7 +1334,7 @@
                     title: f.title,
                     artist: f.artist,
                     thumbnail: f.image,
-                    link: f.slug || (f.id.includes('youtube.com') ? f.id : 'https://www.youtube.com/watch?v=' + f.id),
+                    link: f.slug || (f.id && f.id.includes('youtube.com') ? f.id : 'https://www.youtube.com/watch?v=' + (f.id || '')),
                     type: 'youtube',
                     source: 'tinder'
                 }));
@@ -1211,84 +1348,106 @@
 
             myFavorites = tempFavs;
             renderLibraryFavorites();
-            if(typeof updateAllFavIcons === 'function') updateAllFavIcons();
+            if (typeof updateAllFavIcons === 'function') updateAllFavIcons();
         };
 
         window.loadPlaylists = async () => {
-            if (!window.currentUserUid) return;
-            try {
-                const res = await fetch(`/playlists?uid=${window.currentUserUid}`);
-                const data = await res.json();
-                myPlaylists = Array.isArray(data) ? data : [];
-                renderLibraryPlaylists();
-            } catch (e) {
-                myPlaylists = [];
-                console.warn('Could not load playlists:', e);
+            let pls = [];
+            if (window.currentUserUid) {
+                try {
+                    const res = await fetch(`/playlists?uid=${window.currentUserUid}`);
+                    const data = await res.json();
+                    if (Array.isArray(data)) pls = data;
+                } catch (e) {
+                    console.warn('Could not load backend playlists:', e);
+                }
             }
+
+            // Load guest/offline playlists
+            try {
+                const guestPls = JSON.parse(localStorage.getItem('kiet_guest_playlists') || '[]');
+                if (Array.isArray(guestPls)) {
+                    guestPls.forEach(g => {
+                        if (!pls.some(p => p.id === g.id)) {
+                            pls.push(g);
+                        }
+                    });
+                }
+            } catch (e) {}
+
+            myPlaylists = pls;
+            renderLibraryPlaylists();
         };
 
         window.toggleFavorite = async (e, songStr) => {
-            e.stopPropagation();
+            if (e && e.stopPropagation) e.stopPropagation();
 
-            // Try to parse song data
+            // Safely parse song data
             let song;
             try {
-                song = JSON.parse(decodeURIComponent(songStr));
+                song = typeof songStr === 'object' ? songStr : JSON.parse(decodeURIComponent(songStr));
             } catch(err) {
-                return;
-            }
-
-            // If it's a Tinder music favorite (has source: 'tinder'), handle locally
-            if (song.source === 'tinder') {
-                const songId = song.link || song.file_url;
-                const favIndex = myFavorites.findIndex(f => (f.link || f.file_url) === songId);
-                if (favIndex >= 0) {
-                    myFavorites.splice(favIndex, 1);
-                    // Remove from localStorage
-                    try {
-                        let localFavs = JSON.parse(localStorage.getItem('kiet_music_favorites') || '[]');
-                        localFavs = localFavs.filter(f => f.id !== song.link.split('v=')[1]);
-                        localStorage.setItem('kiet_music_favorites', JSON.stringify(localFavs));
-                    } catch(e) {}
-                } else {
-                    myFavorites.unshift(song);
+                try {
+                    song = JSON.parse(songStr);
+                } catch(err2) {
+                    return;
                 }
-                renderLibraryFavorites();
-                updateAllFavIcons();
-                return;
             }
 
-            // Original backend logic for logged-in users
-            if (!window.currentUserUid) {
-                return;
+            const songId = song.link || song.file_url || (song.id ? (song.id.includes('youtube.com') ? song.id : 'https://www.youtube.com/watch?v=' + song.id) : '');
+            if (!songId) return;
+
+            const favIndex = myFavorites.findIndex(f => (f.link || f.file_url) === songId);
+            const isAdding = (favIndex < 0);
+
+            if (isAdding) {
+                myFavorites.unshift(song);
+                if (typeof showToast === 'function') showToast(`Đã thêm "${song.title}" vào Yêu thích`);
+                // Feedback Loop: Tự động ghi nhận tín hiệu 'like'
+                if (typeof window._sendInteraction === 'function') {
+                    window._sendInteraction(song, 'like');
+                }
+            } else {
+                myFavorites.splice(favIndex, 1);
+                if (typeof showToast === 'function') showToast(`Đã xóa khỏi Yêu thích`);
             }
+
+            // Always persist locally for guest/instant sync
             try {
-                const formData = new FormData();
-                formData.append('song', decodeURIComponent(songStr));
-
-                // Optimistic Update UI
-                const songId = song.link || song.file_url;
-                const favIndex = myFavorites.findIndex(f => (f.link || f.file_url) === songId);
-                if (favIndex >= 0) {
-                    myFavorites.splice(favIndex, 1);
-                } else {
-                    myFavorites.unshift(song);
-                    // Feedback Loop: Tự động ghi nhận tín hiệu 'like'
-                    if (typeof window._sendInteraction === 'function') {
-                        window._sendInteraction(song, 'like');
+                let guestFavs = JSON.parse(localStorage.getItem('kiet_guest_favorites') || '[]');
+                if (isAdding) {
+                    if (!guestFavs.some(f => (f.link || f.file_url) === songId)) {
+                        guestFavs.unshift(song);
                     }
+                } else {
+                    guestFavs = guestFavs.filter(f => (f.link || f.file_url) !== songId);
                 }
-                renderLibraryFavorites();
-                updateAllFavIcons();
+                localStorage.setItem('kiet_guest_favorites', JSON.stringify(guestFavs));
 
-                await window.MongoAuth.authenticatedFetch('/favorites/music/toggle', {
-                    method: 'POST',
-                    body: formData
-                });
-            } catch (e) {
-                console.warn('Failed to toggle favorite in MongoDB:', e);
-                // Nếu lỗi, load lại từ server để sync UI
-                loadFavorites();
+                // Also update Tinder local storage if matching
+                if (song.source === 'tinder' && !isAdding) {
+                    let localFavs = JSON.parse(localStorage.getItem('kiet_music_favorites') || '[]');
+                    const targetVid = song.link && song.link.includes('v=') ? song.link.split('v=')[1] : song.id;
+                    localFavs = localFavs.filter(f => f.id !== targetVid);
+                    localStorage.setItem('kiet_music_favorites', JSON.stringify(localFavs));
+                }
+            } catch(err) {}
+
+            renderLibraryFavorites();
+            updateAllFavIcons();
+
+            // Backend sync if user is logged in
+            if (window.currentUserUid && window.MongoAuth && window.MongoAuth.getToken()) {
+                try {
+                    const formData = new FormData();
+                    formData.append('song', JSON.stringify(song));
+                    await window.MongoAuth.authenticatedFetch('/favorites/music/toggle', {
+                        method: 'POST',
+                        body: formData
+                    });
+                } catch (e) {
+                    console.warn('Failed to toggle favorite in MongoDB:', e);
+                }
             }
         };
 
@@ -1303,6 +1462,7 @@
 
         window.renderLibraryFavorites = () => {
             const container = document.getElementById('library-favorites-list');
+            if (!container) return;
             if (myFavorites.length === 0) {
                 container.innerHTML = `
                     <div class="flex flex-col items-center justify-center h-40 opacity-50">
@@ -1316,6 +1476,7 @@
 
         window.renderLibraryPlaylists = () => {
             const container = document.getElementById('library-playlists-list');
+            if (!container) return;
             if (myPlaylists.length === 0) {
                 container.innerHTML = `
                     <div class="flex flex-col items-center justify-center h-40 opacity-50">
@@ -1332,7 +1493,7 @@
                         </div>
                         <div class="min-w-0">
                             <h4 class="font-bold text-white text-sm truncate">${pl.name}</h4>
-                            <p class="text-xs text-slate-400">${pl.songs.length} bài hát</p>
+                            <p class="text-xs text-slate-400">${(pl.songs || []).length} bài hát</p>
                         </div>
                     </div>
                 </div>
@@ -1342,9 +1503,10 @@
         function buildSongCardHTML(item) {
             const mode = (item.type === 'youtube' || item.link) ? 'youtube' : 'local';
             const thumb = item.thumbnail || "https://cdn-icons-png.flaticon.com/512/12204/12204300.png";
+            const safeSongStr = encodeURIComponent(JSON.stringify(item)).replace(/'/g, "%27");
             return `
             <div class="glass-card p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
-                 onclick='playTrack(${JSON.stringify(item).replace(/'/g, "&#39;")}, "${mode}")'>
+                 onclick="playTrack('${safeSongStr}', '${mode}')">
                 <div class="flex items-center gap-3 min-w-0 flex-1 pr-2">
                     <img src="${thumb}" class="w-12 h-12 rounded-lg object-cover shadow-md bg-black/20">
                     <div class="min-w-0">
@@ -1361,7 +1523,7 @@
             if (!pl) return;
             document.getElementById('playlist-details-title').innerText = pl.name;
             const container = document.getElementById('playlist-details-list');
-            if (pl.songs.length === 0) {
+            if (!pl.songs || pl.songs.length === 0) {
                 container.innerHTML = `<p class="text-center text-slate-500 text-[10px] py-4">Playlist rỗng.</p>`;
             } else {
                 container.innerHTML = pl.songs.map(song => buildSongCardHTML(song)).join('');
@@ -1372,30 +1534,38 @@
 
         // Modal Logic
         window.openPlaylistModal = (e, songStr) => {
-            e.stopPropagation();
-            if (!window.currentUserUid) {
-                // Playlist requires login - skip silently for guests
-                return;
+            if (e && e.stopPropagation) e.stopPropagation();
+            try {
+                songToPlaylist = typeof songStr === 'object' ? JSON.stringify(songStr) : decodeURIComponent(songStr);
+            } catch(err) {
+                songToPlaylist = songStr;
             }
-            songToPlaylist = decodeURIComponent(songStr);
             window.renderPlaylistModalList();
-            document.getElementById('playlist-modal').classList.remove('opacity-0', 'pointer-events-none');
+            const modal = document.getElementById('playlist-modal');
+            if (modal) modal.classList.remove('opacity-0', 'pointer-events-none');
         };
 
         window.closePlaylistModal = () => {
-            document.getElementById('playlist-modal').classList.add('opacity-0', 'pointer-events-none');
+            const modal = document.getElementById('playlist-modal');
+            if (modal) modal.classList.add('opacity-0', 'pointer-events-none');
         };
 
         window.renderPlaylistModalList = () => {
             const container = document.getElementById('modal-playlists-list');
+            if (!container) return;
             if (myPlaylists.length === 0) {
-                container.innerHTML = `<p class="text-slate-500 text-[10px] text-center italic py-2">Bạn chưa có playlist nào.</p>`;
+                container.innerHTML = `<p class="text-slate-500 text-[10px] text-center italic py-2">Bạn chưa có playlist nào. Nhập tên bên dưới để tạo ngay!</p>`;
                 return;
             }
+            let songObj = null;
+            try {
+                songObj = JSON.parse(songToPlaylist);
+            } catch(e) {}
+            const songId = songObj ? (songObj.link || songObj.file_url) : null;
+
             container.innerHTML = myPlaylists.map(pl => {
-                const songObj = JSON.parse(songToPlaylist);
-                const songId = songObj.link || songObj.file_url;
-                const isInPl = pl.songs.some(s => (s.link || s.file_url) === songId);
+                const songsArr = Array.isArray(pl.songs) ? pl.songs : [];
+                const isInPl = songId ? songsArr.some(s => (s.link || s.file_url) === songId) : false;
                 return `
                 <div class="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 cursor-pointer" onclick="toggleSongInPlaylist('${pl.id}')">
                     <span class="text-xs text-white font-bold truncate pr-2">${pl.name}</span>
@@ -1406,55 +1576,110 @@
         };
 
         window.createNewPlaylist = async (e) => {
-            e.stopPropagation();
+            if (e && e.stopPropagation) e.stopPropagation();
             const input = document.getElementById('new-playlist-name');
-            const name = input.value.trim();
+            const name = input ? input.value.trim() : '';
             if (!name) return;
 
-            const formData = new FormData();
-            formData.append('uid', window.currentUserUid);
-            formData.append('name', name);
+            if (window.currentUserUid) {
+                const formData = new FormData();
+                formData.append('uid', window.currentUserUid);
+                formData.append('name', name);
 
-            try {
-                const res = await fetch('/playlists', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    myPlaylists.push(data.playlist);
-                    input.value = '';
-                    window.renderPlaylistModalList();
-                    window.renderLibraryPlaylists();
-                    // auto add current song to new playlist
-                    if (songToPlaylist) {
-                        await toggleSongInPlaylist(data.playlist.id);
+                try {
+                    const res = await fetch('/playlists', { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (data.status === 'success' && data.playlist) {
+                        myPlaylists.push(data.playlist);
+                        if (input) input.value = '';
+                        window.renderPlaylistModalList();
+                        window.renderLibraryPlaylists();
+                        if (songToPlaylist) {
+                            await toggleSongInPlaylist(data.playlist.id);
+                        }
+                        if (typeof showToast === 'function') showToast(`Đã tạo playlist "${name}"`);
+                        return;
                     }
-                }
-            } catch (err) { }
+                } catch (err) { }
+            }
+
+            // Guest / Offline fallback
+            const newPl = {
+                id: 'pl_' + Date.now(),
+                name: name,
+                songs: []
+            };
+            myPlaylists.push(newPl);
+            try {
+                let guestPls = JSON.parse(localStorage.getItem('kiet_guest_playlists') || '[]');
+                guestPls.push(newPl);
+                localStorage.setItem('kiet_guest_playlists', JSON.stringify(guestPls));
+            } catch(e) {}
+
+            if (input) input.value = '';
+            window.renderPlaylistModalList();
+            window.renderLibraryPlaylists();
+            if (typeof showToast === 'function') showToast(`Đã tạo playlist "${name}"`);
+
+            if (songToPlaylist) {
+                await toggleSongInPlaylist(newPl.id);
+            }
         };
 
         window.toggleSongInPlaylist = async (playlistId) => {
             if (!songToPlaylist) return;
-            const formData = new FormData();
-            formData.append('uid', window.currentUserUid);
-            formData.append('playlist_id', playlistId);
-            formData.append('song', songToPlaylist);
+            const pl = myPlaylists.find(p => p.id === playlistId);
+            if (!pl) return;
 
+            let songObj;
             try {
-                // Optimistic UI update
-                const pl = myPlaylists.find(p => p.id === playlistId);
-                const songObj = JSON.parse(songToPlaylist);
-                const songId = songObj.link || songObj.file_url;
-                const idx = pl.songs.findIndex(s => (s.link || s.file_url) === songId);
-                if (idx >= 0) pl.songs.splice(idx, 1);
-                else pl.songs.push(songObj);
-                window.renderPlaylistModalList();
-                window.renderLibraryPlaylists();
-                if (!document.getElementById('playlist-details-overlay').classList.contains('translate-x-full')) {
-                    // refresh if details is open
-                    openPlaylistDetails(playlistId);
-                }
+                songObj = JSON.parse(songToPlaylist);
+            } catch(e) {
+                return;
+            }
 
-                await fetch('/playlists/song', { method: 'POST', body: formData });
-            } catch (e) { }
+            const songId = songObj.link || songObj.file_url;
+            if (!Array.isArray(pl.songs)) pl.songs = [];
+            const idx = pl.songs.findIndex(s => (s.link || s.file_url) === songId);
+            const isAdding = (idx < 0);
+
+            if (isAdding) {
+                pl.songs.push(songObj);
+                if (typeof showToast === 'function') showToast(`Đã thêm vào playlist "${pl.name}"`);
+            } else {
+                pl.songs.splice(idx, 1);
+                if (typeof showToast === 'function') showToast(`Đã xóa khỏi playlist "${pl.name}"`);
+            }
+
+            window.renderPlaylistModalList();
+            window.renderLibraryPlaylists();
+            const detailsOverlay = document.getElementById('playlist-details-overlay');
+            if (detailsOverlay && !detailsOverlay.classList.contains('translate-x-full')) {
+                openPlaylistDetails(playlistId);
+            }
+
+            // Save to guest playlists in localStorage if local playlist or guest
+            try {
+                let guestPls = JSON.parse(localStorage.getItem('kiet_guest_playlists') || '[]');
+                const gIdx = guestPls.findIndex(p => p.id === playlistId);
+                if (gIdx >= 0) {
+                    guestPls[gIdx] = pl;
+                } else if (playlistId.startsWith('pl_')) {
+                    guestPls.push(pl);
+                }
+                localStorage.setItem('kiet_guest_playlists', JSON.stringify(guestPls));
+            } catch(e) {}
+
+            // Backend sync if user is logged in
+            if (window.currentUserUid && !playlistId.startsWith('pl_')) {
+                try {
+                    const formData = new FormData();
+                    formData.append('uid', window.currentUserUid);
+                    formData.append('playlist_id', playlistId);
+                    formData.append('song', songToPlaylist);
+                    await fetch('/playlists/song', { method: 'POST', body: formData });
+                } catch (e) { }
+            }
         };
 
 
@@ -5308,7 +5533,7 @@ let aiChatHistory = [];
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
-            if (window.MongoAuth && window.MongoAuth.getAuthToken()) {
+            if (window.MongoAuth && (window.MongoAuth.getToken ? window.MongoAuth.getToken() : window.MongoAuth.getAuthToken())) {
                 try {
                     const profile = await window.MongoAuth.getProfile();
                     handleLoginSuccess(profile);
@@ -8254,7 +8479,7 @@ window.startDJRadio = async () => {
         fd.append('dj_voice', voice);
 
         introText.innerText = "Dang goi DJ API...";
-        const res = await fetch('http://127.0.0.1:7860/api/dj-radio', { method: 'POST', body: fd });
+        const res = await fetch('/api/dj-radio', { method: 'POST', body: fd });
 
         if (!res.ok) {
             throw new Error(`API error: ${res.status} ${res.statusText}`);

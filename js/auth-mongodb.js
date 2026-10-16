@@ -194,6 +194,7 @@ window.MongoAuth = {
     refreshToken: refreshAccessToken,
     getProfile: getUserProfile,
     getToken: getAuthToken,
+    getAuthToken: getAuthToken,
     getRefreshToken: getRefreshToken,
     clearTokens: clearAuthTokens,
     authenticatedFetch: authenticatedFetch
