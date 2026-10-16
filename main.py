@@ -1547,7 +1547,7 @@ def get_yt_audio_stream_info(video_id: str):
         'js_runtimes': {'node': {}},
         'extractor_args': {
             'youtube': {
-                'player_client': ['android'],
+                'player_client': ['android', 'ios', 'web'],
                 'player_skip': ['webpage', 'configs']
             }
         },
@@ -1601,6 +1601,14 @@ async def stream_yt_audio(video_id: str, request: Request):
 
     try:
         upstream = requests.get(stream_url, headers=req_headers, stream=True, timeout=15)
+        # If upstream expired or blocked cached token, clear cache and retry once
+        if upstream.status_code in (403, 410):
+            _yt_stream_cache.pop(video_id, None)
+            stream_url, stream_headers, _ = get_yt_audio_stream_info(video_id)
+            req_headers = stream_headers.copy()
+            if range_header:
+                req_headers["Range"] = range_header
+            upstream = requests.get(stream_url, headers=req_headers, stream=True, timeout=15)
     except Exception as e:
         print(f"Error connecting to stream for {video_id}: {e}")
         raise HTTPException(status_code=502, detail="Upstream stream connection failed")
