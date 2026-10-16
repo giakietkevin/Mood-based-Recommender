@@ -202,6 +202,13 @@
                     SIGN IN
                 </button>
 
+                <!-- Mobile Navigation Menu Toggle Button (Visible below xl) -->
+                <button type="button" onclick="toggleMobileMoreMenu()"
+                    class="xl:hidden w-9 h-9 rounded-full bg-surface-container-low hover:bg-pastel-lavender flex items-center justify-center text-charcoal-black transition-colors"
+                    title="Menu Trang">
+                    <span class="material-symbols-outlined text-[20px]">menu</span>
+                </button>
+
                 <!-- User Profile (Visible when Logged In) -->
                 <div id="user-profile" class="hidden flex items-center gap-2 cursor-pointer" onclick="toggleUserDropdown(event)">
                     <div class="relative">
@@ -4096,7 +4103,7 @@
     </div>
 
     <!-- Mobile Bottom Navigation -->
-    <div class="mobile-bottom-nav sm:hidden">
+    <div class="mobile-bottom-nav xl:hidden">
         <button type="button" onclick="showView('home')" id="mob-nav-home" class="active hidden" style="display: none;">
             <span class="material-icons-round">home</span>
             <span class="label">Home</span>
@@ -4119,53 +4126,77 @@
         </button>
     </div>
 
-    <!-- Mobile More Menu Modal -->
-    <div id="mobile-more-menu" class="mobile-more-overlay sm:hidden" onclick="closeMobileMoreMenu(event)">
+    <!-- Mobile More Menu Modal / Sheet -->
+    <div id="mobile-more-menu" class="mobile-more-overlay" onclick="closeMobileMoreMenu(event)">
         <div class="mobile-more-sheet">
             <div class="mobile-more-handle"></div>
-            <p class="mobile-more-title">Khám phá thêm</p>
+            <p class="mobile-more-title">Khám phá Station</p>
             <div class="mobile-more-grid">
+                <button type="button" onclick="showView('dashboard'); closeMobileMoreMenu()" id="mob-nav-dash-grid">
+                    <div class="mob-more-icon" style="background:rgba(37,99,235,0.12);color:#2563EB">
+                        <span class="material-icons-round">music_note</span>
+                    </div>
+                    <span>Mood Station</span>
+                </button>
+                <button type="button" onclick="showView('home'); closeMobileMoreMenu()" id="mob-nav-home-grid">
+                    <div class="mob-more-icon" style="background:rgba(232,229,255,0.8);color:#0F172A">
+                        <span class="material-icons-round">forum</span>
+                    </div>
+                    <span>Community</span>
+                </button>
+                <button type="button" onclick="showView('film'); closeMobileMoreMenu()" id="mob-nav-film-grid">
+                    <div class="mob-more-icon" style="background:rgba(227,242,237,0.8);color:#059669">
+                        <span class="material-icons-round">movie</span>
+                    </div>
+                    <span>Film Station</span>
+                </button>
                 <button type="button" onclick="showView('djradio'); closeMobileMoreMenu()" id="mob-nav-djradio">
-                    <div class="mob-more-icon" style="background:rgba(34,197,94,0.15);color:#4ade80">
+                    <div class="mob-more-icon" style="background:rgba(34,197,94,0.15);color:#10B981">
                         <span class="material-icons-round">radio</span>
                     </div>
                     <span>DJ Radio</span>
                 </button>
                 <button type="button" onclick="showView('discover'); closeMobileMoreMenu()" id="mob-nav-discover">
-                    <div class="mob-more-icon" style="background:rgba(99,102,241,0.15);color:#818cf8">
+                    <div class="mob-more-icon" style="background:rgba(99,102,241,0.15);color:#6366F1">
                         <span class="material-icons-round">explore</span>
                     </div>
                     <span>Discover</span>
                 </button>
                 <button type="button" onclick="showView('library'); closeMobileMoreMenu()" id="mob-nav-library">
-                    <div class="mob-more-icon" style="background:rgba(236,72,153,0.15);color:#f472b6">
+                    <div class="mob-more-icon" style="background:rgba(236,72,153,0.15);color:#EC4899">
                         <span class="material-icons-round">library_music</span>
                     </div>
                     <span>Library</span>
                 </button>
                 <button type="button" onclick="showView('focus'); closeMobileMoreMenu()" id="mob-nav-focus">
-                    <div class="mob-more-icon" style="background:rgba(234,179,8,0.15);color:#facc15">
+                    <div class="mob-more-icon" style="background:rgba(234,179,8,0.15);color:#D97706">
                         <span class="material-icons-round">timer</span>
                     </div>
                     <span>Focus Mode</span>
                 </button>
                 <button type="button" onclick="showView('photobooth'); closeMobileMoreMenu()" id="mob-nav-photobooth">
-                    <div class="mob-more-icon" style="background:rgba(234,179,8,0.15);color:#facc15">
+                    <div class="mob-more-icon" style="background:rgba(253,232,233,0.8);color:#E11D48">
                         <span class="material-icons-round">camera_alt</span>
                     </div>
-                    <span>Photo</span>
+                    <span>Photo Booth</span>
                 </button>
-                <button type="button" onclick="showView('studio'); closeMobileMoreMenu()" id="mob-nav-studio">
-                    <div class="mob-more-icon" style="background:rgba(20,184,166,0.15);color:#2dd4bf">
-                        <span class="material-icons-round">lock</span>
+                <button type="button" onclick="showView('game'); closeMobileMoreMenu()" id="mob-nav-game-grid">
+                    <div class="mob-more-icon" style="background:rgba(168,85,247,0.15);color:#9333EA">
+                        <span class="material-icons-round">sports_esports</span>
                     </div>
-                    <span>Studio (Đang phát triển)</span>
+                    <span>Game</span>
                 </button>
                 <button type="button" onclick="showView('about'); closeMobileMoreMenu()" id="mob-nav-about">
-                    <div class="mob-more-icon" style="background:rgba(59,130,246,0.15);color:#60a5fa">
+                    <div class="mob-more-icon" style="background:rgba(59,130,246,0.15);color:#2563EB">
                         <span class="material-icons-round">person</span>
                     </div>
-                    <span>About</span>
+                    <span>About / Bio</span>
+                </button>
+                <button type="button" onclick="showView('guide'); closeMobileMoreMenu()" id="mob-nav-profile-grid">
+                    <div class="mob-more-icon" style="background:rgba(20,184,166,0.15);color:#0D9488">
+                        <span class="material-icons-round">account_circle</span>
+                    </div>
+                    <span>Hồ sơ cá nhân</span>
                 </button>
             </div>
         </div>
