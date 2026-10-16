@@ -53,7 +53,7 @@
     gap: 12px;
     padding: 10px 12px;
     border-radius: 12px;
-    color: #cbd5e1;
+    color: #45464D;
     font-size: 14px;
     font-weight: 600;
     transition: all 0.2s;
@@ -61,13 +61,13 @@
 }
 
 .fb-nav-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--primary);
+    background: #F2F4F6;
+    color: #0F172A;
 }
 
 .fb-nav-item.active {
-    background: var(--primary-glow);
-    color: var(--primary);
+    background: #E8E5FF;
+    color: #0F172A;
 }
 
 .fb-nav-item .icon-box {
@@ -77,7 +77,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
+    background: #F2F4F6;
 }
 
 /* 4. Stories Section */
@@ -100,8 +100,9 @@
     position: relative;
     overflow: hidden;
     cursor: pointer;
-    background: #1a1a1a;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #FFFFFF;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -123,7 +124,7 @@
 .fb-story-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.7) 100%);
+    background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, transparent 40%, rgba(0,0,0,0.6) 100%);
 }
 
 .fb-story-avatar {
@@ -133,9 +134,9 @@
     width: 36px;
     height: 36px;
     border-radius: 12px;
-    border: 3px solid var(--primary);
+    border: 3px solid #E8E5FF;
     padding: 2px;
-    background: #000;
+    background: #FFFFFF;
 }
 
 .fb-story-name {
@@ -150,30 +151,33 @@
 
 /* 5. Post Creator Overhaul */
 .fb-post-box {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
+    background: #FFFFFF;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+    border-radius: 16px;
     padding: 16px;
 }
 
 .fb-post-trigger {
-    background: rgba(255, 255, 255, 0.05);
+    background: #F8FAFC;
+    border: 1px solid rgba(15, 23, 42, 0.08);
     border-radius: 24px;
     padding: 10px 16px;
-    color: #94a3b8;
+    color: #64748B;
     font-size: 14px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
     user-select: none;
 }
 
 .fb-post-trigger:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: #F1F5F9;
+    color: #0F172A;
 }
 
 .fb-post-actions {
     display: flex;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
     margin-top: 12px;
     padding-top: 8px;
 }
@@ -186,22 +190,23 @@
     gap: 8px;
     padding: 10px;
     border-radius: 10px;
-    color: #94a3b8;
+    color: #64748B;
     font-size: 13px;
     font-weight: 600;
     transition: all 0.2s;
 }
 
 .fb-action-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
+    background: #F8FAFC;
+    color: #0F172A;
 }
 
 /* 6. Post Card Overhaul */
 .fb-card {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
     overflow: hidden;
     margin-bottom: 16px;
     transition: transform 0.2s;
@@ -218,19 +223,19 @@
     padding: 0 16px 14px;
     font-size: 15px;
     line-height: 1.6;
-    color: #e2e8f0;
+    color: #191C1E;
 }
 
 .fb-card-media {
     width: 100%;
     max-height: 500px;
     object-fit: contain;
-    background: #000;
+    background: #F8FAFC;
 }
 
 .fb-card-footer {
     padding: 8px 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.03);
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 .fb-stats {
@@ -239,12 +244,12 @@
     justify-content: space-between;
     padding: 8px 4px;
     font-size: 12px;
-    color: #94a3b8;
+    color: #64748B;
 }
 
 .fb-interaction-row {
     display: flex;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
     padding: 4px 0;
 }
 
@@ -260,7 +265,7 @@
 }
 
 .fb-contact-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: #F2F4F6;
 }
 
 .contact-avatar-box {
@@ -282,8 +287,8 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: #22c55e;
-    border: 2px solid #0a0a0a;
+    background: #10B981;
+    border: 2px solid #FFFFFF;
 }
 
 /* 8. Utilities */

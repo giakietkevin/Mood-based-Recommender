@@ -1,18 +1,27 @@
-/* LINEAR / RAYCAST / SPOTIFY DARK THEME DESIGN TOKENS */
+/* LUMINA STUDIO MINIMALIST DESIGN SYSTEM - BASE TOKENS */
 :root {
-    --glass-bg: #111827;
-    --glass-border: rgba(30, 41, 59, 0.8);
-    --glass-shadow: none;
-    --glass-blur: none;
-    --glass-highlight: transparent;
+    --glass-bg: #FFFFFF;
+    --glass-border: rgba(15, 23, 42, 0.06);
+    --glass-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+    --glass-blur: 16px;
+    --glass-highlight: rgba(255, 255, 255, 0.8);
+
+    --surface-slate: #F8FAFC;
+    --pure-white: #FFFFFF;
+    --charcoal-black: #0F172A;
+    --accent-blue: #2563EB;
+    --status-emerald: #10B981;
+    --pastel-lavender: #E8E5FF;
+    --pastel-sage: #E3F2ED;
+    --pastel-blush: #FDE8E9;
 }
 
 /* Base Container Surface */
 .glass-panel {
-    background: #111827;
-    border: 1px solid rgba(30, 41, 59, 0.8);
-    box-shadow: none;
-    border-radius: 8px;
+    background: #FFFFFF;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+    border-radius: 16px;
     position: relative;
     overflow: hidden;
 }
@@ -22,22 +31,30 @@
 }
 
 .glass-panel:hover {
-    border-color: rgba(51, 65, 85, 0.9);
+    border-color: rgba(37, 99, 235, 0.2);
 }
 
 /* Navigation */
 .glass-nav {
-    background: rgba(11, 15, 23, 0.95);
-    border-bottom: 1px solid rgba(30, 41, 59, 0.8);
-    box-shadow: none;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
 }
 
 /* Nav Pills */
 .nav-pill {
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 6px;
-    transition: all 0.15s ease;
+    border-radius: 9999px;
+    color: #45464D;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    cursor: pointer;
+    user-select: none;
 }
 
 .nav-pill::after {
@@ -45,22 +62,30 @@
 }
 
 .nav-pill:hover {
-    background: #1E293B;
-    color: #F8FAFC;
+    background: #E8E5FF !important;
+    color: #0F172A !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.nav-pill:active {
+    transform: translateY(0);
 }
 
 .nav-pill.active {
-    background: #1E293B;
-    border-color: rgba(51, 65, 85, 0.8);
-    color: #F8FAFC !important;
+    background: #E8E5FF !important;
+    border-color: rgba(37, 99, 235, 0.2) !important;
+    color: #0F172A !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
 }
 
 /* Feed Cards */
 .glass-post {
-    background: #111827;
-    border-radius: 8px;
-    border: 1px solid rgba(30, 41, 59, 0.8);
-    box-shadow: none;
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
     overflow: hidden;
 }
 
@@ -70,24 +95,25 @@
 
 /* Inputs & Buttons */
 .glass-input {
-    background: #0B0F17;
-    border: 1px solid rgba(30, 41, 59, 0.8);
-    border-radius: 6px;
-    color: #F8FAFC;
-    transition: border-color 0.15s ease;
+    background: #FFFFFF;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 8px;
+    color: #0F172A;
+    transition: all 0.15s ease;
 }
 
 .glass-input:focus {
-    background: #0B0F17;
+    background: #FFFFFF;
     border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
     outline: none;
 }
 
 .glass-btn {
-    background: #1E293B;
-    border: 1px solid rgba(30, 41, 59, 0.8);
-    border-radius: 6px;
-    color: #F8FAFC;
+    background: #FFFFFF;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 8px;
+    color: #0F172A;
     transition: all 0.15s ease;
     display: inline-flex;
     align-items: center;
@@ -99,25 +125,27 @@
 }
 
 .glass-btn:hover {
-    background: #334155;
+    background: #F1F5F9;
+    border-color: rgba(15, 23, 42, 0.2);
 }
 
 .glass-btn-primary {
-    background: #2563EB;
-    border: 1px solid #1D4ED8;
+    background: #0F172A;
+    border: 1px solid #0F172A;
     color: #FFFFFF;
 }
 
 .glass-btn-primary:hover {
-    background: #1D4ED8;
+    background: rgba(15, 23, 42, 0.88);
 }
 
 /* Stories */
 .modern-story {
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     position: relative;
-    border: 1px solid rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .modern-story::before {
@@ -127,17 +155,18 @@
 /* Custom Scrollbar for Glass UI */
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(15, 23, 42, 0.02);
     border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.12);
     border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(15, 23, 42, 0.24);
 }
 
 /* Animations */
@@ -150,15 +179,13 @@
     animation: float 4s ease-in-out infinite;
 }
 
-/* Media Queries for Mobile Responsiveness Additions */
+/* Media Queries for Mobile Responsiveness */
 @media (max-width: 768px) {
     .glass-nav {
-        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-top: max(0.5rem, env(safe-area-inset-top));
         padding-bottom: 0.5rem;
     }
     .glass-post {
-        border-radius: 16px;
-        border-left: none;
-        border-right: none;
+        border-radius: 12px;
     }
 }

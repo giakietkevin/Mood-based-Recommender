@@ -303,42 +303,43 @@ async function loadDiscoverContent(page = 1) {
 function renderDiscoverCards() {
     const container = document.getElementById('swipe-container');
 
-    // Only render top 4 cards
-    for (let i = 0; i < 4; i++) {
+    // Only render top 4 cards (from currentCardIndex down to 0 for proper stacking)
+    const activeCards = [];
+    for (let i = 3; i >= 0; i--) {
         const cardIndex = currentCardIndex + i;
-        if (cardIndex >= discoverCards.length) break;
+        if (cardIndex >= discoverCards.length) continue;
 
         const cardData = discoverCards[cardIndex];
+        let cardEl = document.getElementById(`dcard-${cardData.id}`);
 
-        // Skip if already exists
-        if (document.getElementById(`dcard-${cardData.id}`)) {
-            const cardEl = document.getElementById(`dcard-${cardData.id}`);
+        if (!cardEl) {
+            const cardHTML = `
+                <div id="dcard-${cardData.id}" class="discover-card" data-index="${i}" data-slug="${cardData.slug}">
+                    <img src="${cardData.image}" onerror="this.src='${cardData.thumb}'" class="discover-card-img" alt="${cardData.title}" draggable="false">
+                    <div class="discover-card-overlay">
+                        <div class="mb-2">
+                            <span class="discover-tag">${cardData.type}</span>
+                            <span class="discover-tag" style="background: rgba(233,255,185,0.2); color: var(--primary)">${cardData.year}</span>
+                            <span class="discover-tag">${cardData.quality}</span>
+                            <span class="discover-tag">${cardData.lang}</span>
+                        </div>
+                        <h3 class="text-2xl font-black text-white mb-1 leading-tight">${cardData.title}</h3>
+                        <p class="text-slate-300 text-sm font-medium truncate">${cardData.originalTitle}</p>
+                    </div>
+
+                    <div class="swipe-stamp stamp-like">YÊU THÍCH</div>
+                    <div class="swipe-stamp stamp-nope">BỎ QUA</div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', cardHTML);
+            cardEl = document.getElementById(`dcard-${cardData.id}`);
+        } else {
             cardEl.setAttribute('data-index', i);
-            continue;
         }
 
-        const cardHTML = `
-            <div id="dcard-${cardData.id}" class="discover-card" data-index="${i}" data-slug="${cardData.slug}">
-                <img src="${cardData.image}" onerror="this.src='${cardData.thumb}'" class="discover-card-img" alt="${cardData.title}" draggable="false">
-                <div class="discover-card-overlay">
-                    <div class="mb-2">
-                        <span class="discover-tag">${cardData.type}</span>
-                        <span class="discover-tag" style="background: rgba(233,255,185,0.2); color: var(--primary)">${cardData.year}</span>
-                        <span class="discover-tag">${cardData.quality}</span>
-                        <span class="discover-tag">${cardData.lang}</span>
-                    </div>
-                    <h3 class="text-2xl font-black text-white mb-1 leading-tight">${cardData.title}</h3>
-                    <p class="text-slate-300 text-sm font-medium truncate">${cardData.originalTitle}</p>
-                </div>
-
-                <div class="swipe-stamp stamp-like">YÊU THÍCH</div>
-                <div class="swipe-stamp stamp-nope">BỎ QUA</div>
-            </div>
-        `;
-
-        container.insertAdjacentHTML('afterbegin', cardHTML);
-
-        if (i === 0) setupCardInteraction(cardData.id);
+        if (i === 0 && cardData) {
+            setupCardInteraction(cardData.id);
+        }
     }
 
     if (discoverCards.length - currentCardIndex <= 3 && !isDiscoverLoading) {
@@ -350,7 +351,14 @@ function renderDiscoverCards() {
     }
 }
 
+let activeDragCleanup = null;
+
 function setupCardInteraction(cardId) {
+    if (activeDragCleanup) {
+        activeDragCleanup();
+        activeDragCleanup = null;
+    }
+
     const card = document.getElementById(`dcard-${cardId}`);
     if (!card) return;
 
@@ -378,14 +386,16 @@ function setupCardInteraction(cardId) {
         card.style.transform = `translateX(${currentX}px) rotate(${rotate}deg)`;
 
         const opacity = Math.min(Math.abs(currentX) / 100, 1);
-        if (currentX > 0) {
-            likeStamp.style.opacity = opacity;
-            likeStamp.style.transform = `scale(${0.5 + (opacity * 0.5)}) rotate(-15deg)`;
-            nopeStamp.style.opacity = 0;
-        } else {
-            nopeStamp.style.opacity = opacity;
-            nopeStamp.style.transform = `scale(${0.5 + (opacity * 0.5)}) rotate(15deg)`;
-            likeStamp.style.opacity = 0;
+        if (likeStamp && nopeStamp) {
+            if (currentX > 0) {
+                likeStamp.style.opacity = opacity;
+                likeStamp.style.transform = `scale(${0.5 + (opacity * 0.5)}) rotate(-15deg)`;
+                nopeStamp.style.opacity = 0;
+            } else {
+                nopeStamp.style.opacity = opacity;
+                nopeStamp.style.transform = `scale(${0.5 + (opacity * 0.5)}) rotate(15deg)`;
+                likeStamp.style.opacity = 0;
+            }
         }
     }
 
@@ -402,8 +412,8 @@ function setupCardInteraction(cardId) {
             }
         } else {
             card.style.transform = 'scale(1) translateX(0) rotate(0deg)';
-            likeStamp.style.opacity = 0;
-            nopeStamp.style.opacity = 0;
+            if (likeStamp) likeStamp.style.opacity = 0;
+            if (nopeStamp) nopeStamp.style.opacity = 0;
         }
         currentX = 0;
     }
@@ -415,10 +425,24 @@ function setupCardInteraction(cardId) {
     card.addEventListener('touchstart', onDragStart, {passive: true});
     window.addEventListener('touchmove', onDragMove, {passive: true});
     window.addEventListener('touchend', onDragEnd);
+
+    activeDragCleanup = () => {
+        card.removeEventListener('mousedown', onDragStart);
+        window.removeEventListener('mousemove', onDragMove);
+        window.removeEventListener('mouseup', onDragEnd);
+        card.removeEventListener('touchstart', onDragStart);
+        window.removeEventListener('touchmove', onDragMove);
+        window.removeEventListener('touchend', onDragEnd);
+    };
 }
 
 window.handleSwipeAction = function(action) {
     if (currentCardIndex >= discoverCards.length) return;
+
+    if (activeDragCleanup) {
+        activeDragCleanup();
+        activeDragCleanup = null;
+    }
 
     const currentData = discoverCards[currentCardIndex];
     const cardEl = document.getElementById(`dcard-${currentData.id}`);
@@ -440,7 +464,6 @@ window.handleSwipeAction = function(action) {
                 showView('film');
                 if (window.streamFilmOphim) window.streamFilmOphim(currentData.slug, currentData.title);
             } else {
-                // Play directly in website player bar
                 if (typeof window.playTrack === 'function') {
                     window.playTrack({
                         title: currentData.title,

@@ -243,8 +243,8 @@
                 const mobNav = document.getElementById(`mob-nav-${v}`);
                 if (el) el.classList.add('hidden');
                 if (nav) {
-                    nav.classList.remove('bg-white/10', 'text-white', 'shadow-sm', 'shadow-primary/20');
-                    nav.classList.add('text-slate-400');
+                    nav.classList.remove('bg-white/10', 'text-white', 'shadow-sm', 'shadow-primary/20', 'bg-slate-800', 'bg-pastel-lavender', 'text-charcoal-black', 'font-semibold', 'shadow-[0_2px_8px_rgba(15,23,42,0.04)]');
+                    nav.classList.add('text-on-surface-variant');
                 }
                 if (mobNav) mobNav.classList.remove('active');
             });
@@ -256,8 +256,8 @@
 
             if (activeView) activeView.classList.remove('hidden');
             if (activeNav) {
-                activeNav.classList.add('bg-white/10', 'text-white', 'shadow-sm');
-                activeNav.classList.remove('text-slate-400');
+                activeNav.classList.add('bg-pastel-lavender', 'text-charcoal-black', 'font-semibold', 'shadow-[0_2px_8px_rgba(15,23,42,0.04)]');
+                activeNav.classList.remove('text-on-surface-variant', 'text-slate-400');
             }
             if (activeMobNav) activeMobNav.classList.add('active');
 
@@ -620,23 +620,22 @@
                 }
 
                 const html = songs.map(s => `
-                    <div class="glass-card p-5 rounded-[2.5rem] border border-white/10 active:scale-95 transition-all group relative overflow-hidden">
-                        <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="bg-pure-white p-5 rounded-2xl border border-surface-container-high/80 shadow-sm active:scale-95 transition-all group relative overflow-hidden">
                         <div class="flex items-center gap-4 relative z-10">
-                            <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 text-primary">
+                            <div class="w-12 h-12 bg-pastel-lavender rounded-xl flex items-center justify-center border border-accent-blue/10 text-accent-blue">
                                 <span class="material-icons-round text-xl">music_note</span>
                             </div>
                             <div class="flex-1 min-w-0 pr-10">
-                                <h4 class="text-white font-bold text-sm truncate">${s.title}</h4>
-                                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">${s.style} • ${s.mood}</p>
+                                <h4 class="text-charcoal-black font-bold text-sm truncate">${s.title}</h4>
+                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">${s.style} • ${s.mood}</p>
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="playLocalSong('${s.file_url}', '${s.title}', '${s.style}')" 
-                                    class="w-10 h-10 bg-primary/10 rounded-xl text-primary flex items-center justify-center hover:bg-primary transition-all hover:text-white">
+                                    class="w-10 h-10 bg-surface-container-low rounded-xl text-charcoal-black flex items-center justify-center hover:bg-pastel-lavender transition-all">
                                     <span class="material-icons-round text-sm">play_arrow</span>
                                 </button>
                                 <button onclick="deleteLocalSong('${s.file_url}')" 
-                                    class="w-10 h-10 bg-red-400/10 rounded-xl text-red-500 flex items-center justify-center hover:bg-red-500 transition-all hover:text-white">
+                                    class="w-10 h-10 bg-rose-50 rounded-xl text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all">
                                     <span class="material-icons-round text-sm">delete</span>
                                 </button>
                             </div>
@@ -6018,7 +6017,7 @@ let aiChatHistory = [];
                                 <div class="flex-1 relative">
                                     <textarea id="comment-input-${post.id}"
                                               rows="1"
-                                              placeholder="💬 Viết bình luận..."
+                                              placeholder="Viết bình luận..."
                                               class="glass-input w-full px-4 py-2.5 pr-12 text-[13px] text-white placeholder-slate-500 resize-none overflow-hidden"
                                               oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
                                               onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); submitComment('${post.id}'); }"></textarea>
@@ -7357,7 +7356,7 @@ let aiChatHistory = [];
             if (window.showView) window.showView('dashboard');
 
             const contentInput = document.getElementById('home-post-content');
-            if (contentInput) contentInput.value = `Mình đang thưởng thức: ${title} 🎵\nCùng trải nghiệm nhé!`;
+            if (contentInput) contentInput.value = `Mình đang thưởng thức: ${title}\nCùng trải nghiệm nhé!`;
 
             const mediaInput = document.getElementById('home-post-media-url');
             if (mediaUrl && !mediaUrl.includes('placeholder')) {
@@ -8092,8 +8091,8 @@ let aiChatHistory = [];
                             <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                             <span class="text-[9px] font-bold text-white uppercase tracking-tight">${label}</span>
                         </div>
-                        <div id="emotion-${contId}" class="absolute top-2 right-2 px-2 py-1 bg-primary/20 backdrop-blur-md rounded-lg border border-primary/40 opacity-0 transition-opacity">
-                            <span class="text-lg">😊</span>
+                        <div id="emotion-${contId}" class="absolute top-2 right-2 px-2 py-0.5 bg-slate-900/90 backdrop-blur-md rounded border border-slate-700/60 opacity-0 transition-opacity">
+                            <span class="text-[10px] font-mono uppercase text-slate-300">CALM</span>
                         </div>
                     `;
                     grid.appendChild(container);
@@ -8202,8 +8201,8 @@ let aiChatHistory = [];
         // --- EMOTION TRACKING ---
         let emotionInterval = null;
         const EMOTION_MAP = {
-            'angry': '🔥', 'disgust': '🤢', 'fear': '😨', 'happy': '😂', 
-            'sad': '😭', 'surprise': '😲', 'neutral': '😐'
+            'angry': 'ANGRY', 'disgust': 'DISGUST', 'fear': 'FEAR', 'happy': 'HAPPY',
+            'sad': 'SAD', 'surprise': 'SURPRISE', 'neutral': 'NEUTRAL'
         };
 
         function startEmotionTracking() {
@@ -8832,6 +8831,8 @@ function startDJEmotionLoop() {
                 selector.innerHTML = '';
                 const djSelector = document.getElementById('dj-camera-device-select');
                 if (djSelector) djSelector.innerHTML = '';
+                const focusSelector = document.getElementById('focus-camera-device-select');
+                if (focusSelector) focusSelector.innerHTML = '';
 
                 videoDevices.forEach((device, idx) => {
                     const opt = document.createElement('option');
@@ -8846,7 +8847,6 @@ function startDJEmotionLoop() {
                         djSelector.appendChild(opt2);
                     }
 
-                    const focusSelector = document.getElementById('focus-camera-device-select');
                     if (focusSelector) {
                         const opt3 = document.createElement('option');
                         opt3.value = device.deviceId;
