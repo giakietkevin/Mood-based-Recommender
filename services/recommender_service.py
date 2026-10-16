@@ -26,7 +26,7 @@ except Exception:
 # Arousal: [-1.0, 1.0] (Calm/Low Energy to Excited/High Energy)
 EMOTION_COORDINATES: Dict[str, Dict[str, Any]] = {
     "happy": {
-        "display": "Vui vẻ & Sôi động 😄",
+        "display": "Vui vẻ & Sôi động",
         "valence": 0.8,
         "arousal": 0.7,
         "energy": "high",
@@ -40,7 +40,7 @@ EMOTION_COORDINATES: Dict[str, Dict[str, Any]] = {
         "podcast_query": "podcast truyền cảm hứng tích cực"
     },
     "surprise": {
-        "display": "Bất ngờ & Đột phá 😲",
+        "display": "Bất ngờ & Đột phá",
         "valence": 0.5,
         "arousal": 0.85,
         "energy": "high",
@@ -54,7 +54,7 @@ EMOTION_COORDINATES: Dict[str, Dict[str, Any]] = {
         "podcast_query": "podcast khám phá điều thú vị bất ngờ"
     },
     "neutral": {
-        "display": "Bình thản & Thư thái 😐",
+        "display": "Bình thản & Thư thái",
         "valence": 0.0,
         "arousal": -0.2,
         "energy": "medium",
@@ -68,7 +68,7 @@ EMOTION_COORDINATES: Dict[str, Dict[str, Any]] = {
         "podcast_query": "podcast kiến thức thú vị cuộc sống"
     },
     "disgust": {
-        "display": "Thư giãn & Dễ chịu 🍃",
+        "display": "Thư giãn & Dễ chịu",
         "valence": 0.2,
         "arousal": -0.5,
         "energy": "low",
@@ -82,7 +82,7 @@ EMOTION_COORDINATES: Dict[str, Dict[str, Any]] = {
         "podcast_query": "podcast câu chuyện cuộc sống nhẹ nhàng"
     },
     "sad": {
-        "display": "U buồn & Lắng đọng 😢",
+        "display": "U buồn & Lắng đọng",
         "valence": -0.75,
         "arousal": -0.6,
         "energy": "low",
@@ -96,7 +96,7 @@ EMOTION_COORDINATES: Dict[str, Dict[str, Any]] = {
         "podcast_query": "podcast tâm sự đêm khuya chữa lành"
     },
     "angry": {
-        "display": "Giải tỏa Căng thẳng 😡",
+        "display": "Giải tỏa Căng thẳng",
         "valence": -0.55,
         "arousal": 0.85,
         "energy": "high",
@@ -110,7 +110,7 @@ EMOTION_COORDINATES: Dict[str, Dict[str, Any]] = {
         "podcast_query": "podcast thư giãn tâm trí giải tỏa âu lo"
     },
     "fear": {
-        "display": "An yên & Chữa lành 😨",
+        "display": "An yên & Chữa lành",
         "valence": -0.4,
         "arousal": 0.1,
         "energy": "low-medium",

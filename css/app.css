@@ -1,50 +1,40 @@
 :root {
-    --primary: #c20606;
-    --primary-container: #ffee00;
-    --on-primary: #4a6600;
-    --secondary: #c97cff;
-    --tertiary: #8ff5ff;
-    --on-tertiary: #003640;
-    --surface: #0e0e0e;
-    --surface-low: #131313;
-    --surface-mid: #1a1a1a;
-    --surface-high: #20201f;
-    --surface-highest: #262626;
-    --on-surface: #ffffff;
-    --on-surface-variant: #adaaaa;
-    --outline-variantW: #484847;
-    --primary-glow: rgba(233, 255, 185, 0.15);
-    --bg-darker: #0e0e0e;
+    --primary: #2563EB;
+    --primary-hover: #1D4ED8;
+    --primary-container: #1E293B;
+    --on-primary: #FFFFFF;
+    --secondary: #3B82F6;
+    --tertiary: #60A5FA;
+    --on-tertiary: #0B0F17;
+    --surface: #111827;
+    --surface-low: #0B0F17;
+    --surface-mid: #111827;
+    --surface-high: #1E293B;
+    --surface-highest: #334155;
+    --on-surface: #F8FAFC;
+    --on-surface-variant: #94A3B8;
+    --outline-variantW: #334155;
+    --primary-glow: transparent;
+    --bg-darker: #0B0F17;
+    --border-color: rgba(30, 41, 59, 0.8);
 }
 
 html {
     -webkit-text-size-adjust: 100%;
-    transition: all 0.5s ease;
 }
 
 body {
-    background-color: var(--bg-darker);
-    color: #ffffff;
+    background-color: #0B0F17;
+    color: #F8FAFC;
     overscroll-behavior-y: none;
     min-height: 100vh;
     min-height: 100dvh;
     overflow-x: hidden;
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    background-attachment: fixed;
     position: relative;
 }
 
 body::before {
-    content: '';
-    position: fixed;
-    top: -10%;
-    left: -10%;
-    width: 120%;
-    height: 120%;
-    background: radial-gradient(circle at 50% 50%, var(--primary-glow) 0%, transparent 40%);
-    pointer-events: none;
-    z-index: -1;
-    transition: all 1s ease;
+    display: none;
 }
 
 .mirror-mode {
@@ -85,13 +75,11 @@ select:focus option {
     margin-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Glassmorphism Card */
+/* Glassmorphism Card -> Data-Dense Solid Card */
 .glass-card {
-    background: rgba(15, 15, 15, 0.6);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    background: #111827;
+    border: 1px solid rgba(30, 41, 59, 0.8);
+    box-shadow: none;
 }
 
 .film-search-input {

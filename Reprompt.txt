@@ -1,0 +1,81 @@
+# ROLE & OBJECTIVE
+You are a Principal Product Designer and Senior Frontend Engineer specializing in data-dense, minimalist web applications (Linear, Raycast, and Spotify style).
+Your task is to refactor and redesign the interface for "KietStation" (a mood-based music and audio streaming workspace with facial mood detection).
+
+Transform the current experimental, fragmented UI into a polished, production-grade Dark Mode SPA using React, Tailwind CSS, and Lucide React.
+
+---
+
+### CORE ARCHITECTURAL SHIFT
+Eliminate the mental-model conflict between Facebook clone and AI tool. 
+- Demote/isolate the social feed into a separate tab or collapsible panel.
+- Establish the primary screen as a unified **2-Column Asymmetric Audio Workspace**:
+  1. Left Column (35% width, fixed/sticky): Camera preview, facial scan controller, detected emotional metrics, and active session status.
+  2. Right Column (65% width): Recommended tracks/podcasts based on detected mood, queue management, and quick manual mood override chips.
+  3. Fixed Persistent Bottom Bar: Global media playback controls.
+
+---
+
+### STRICT ANTI-AI DESIGN CONSTRAINTS (ZERO-TOLERANCE RULES)
+1. **NO EMOJIS ANYWHERE:** Absolutely zero emoji characters (no 🎧, 👥, ✨, 💭, 🚀, etc.). All iconography must strictly use `lucide-react` with `strokeWidth={1.5}` and inherit neutral text colors (`text-slate-400`).
+2. **NO NEON OR GLOW SLOP:** No glowing drop shadows, no `backdrop-blur-xl` glassy gimmicks on main layout containers, and no rainbow/purple-to-blue gradients.
+3. **NO PILL-SHAPED CONTAINERS:** Do NOT use `rounded-full` for cards, standard buttons, or input boxes. Use a consistent `rounded-lg` (8px) for cards/containers and `rounded-md` (6px) for inputs and buttons.
+4. **NO CENTERED PROSE:** All descriptions, lists, headers, and form inputs must be strictly left-aligned. No centered paragraphs.
+5. **CLEAN MICRO-BADGES:** Replace mood indicators and online statuses with discrete status dots (e.g., `<span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />`) accompanied by uppercase tracking-wider text (`text-[11px] font-medium tracking-wider text-slate-400`).
+
+---
+
+### DESIGN TOKENS (TAILWIND SPECIFICATIONS)
+- **Palette (Solid, Grounded Dark Theme):**
+  - Page Background: `#0B0F17` (Slate 950 deep)
+  - Card/Container Surface: `#111827` (Slate 900)
+  - Secondary Elevated Surface: `#1E293B` (Slate 800)
+  - Border Lines: 1px solid `border-slate-800/80` or `border-slate-700/50`
+  - Text Primary: `#F8FAFC` (Slate 50)
+  - Text Muted/Secondary: `#94A3B8` (Slate 400)
+  - Single Accent (Interactive): `#2563EB` (Blue 600) or clean neutral monochrome highlights.
+- **Typography:**
+  - Font: Clean sans-serif (`font-sans`, Inter / Geist).
+  - Hierarchy: Section Title (`text-sm font-semibold tracking-tight text-slate-200`), Item Title (`text-sm font-medium text-slate-100`), Metadata (`text-xs text-slate-400`).
+
+---
+
+### COMPONENT SPECIFICATIONS
+
+#### 1. Global Navigation Bar (Height: 56px, border-b border-slate-800)
+- Left: Monochromatic brand mark "KIETSTATION" in `text-sm font-bold tracking-widest text-slate-100` with an inline subtle `<Disc className="w-4 h-4 text-slate-400" />`.
+- Center: Text-only segmented control tabs:
+  - `[ Mood Station ]` (Active: `bg-slate-800 text-white shadow-xs`)
+  - `[ Community & Feed ]`
+  - `[ Studio Generator ]`
+- Right: Watch Party status badge (`border border-slate-800 bg-slate-900/50 text-[11px] px-2.5 py-1 text-slate-300` with a 6px green pulse dot) and a clean user avatar dropdown (size: 28x28px).
+
+#### 2. Left Column: Mood Scanner Engine
+- Do not show step-by-step tutorials ("Connect -> Analyze -> Play"). Present it as an integrated device viewport.
+- Camera Viewport: Aspect ratio 16:9, contained in `bg-slate-950 border border-slate-800 rounded-lg overflow-hidden relative`.
+  - When idle: Show a clean placeholder state with a low-contrast camera outline icon and a primary action button: `Start Camera Scan`.
+  - When scanning: Show simulated facial landmarks or a minimalistic scanner line, with a gear icon in the top-right corner to open camera selection.
+- Scan Result Card:
+  - Display the primary mood as a bold headline: e.g., `CALM / FOCUS`.
+  - Secondary telemetry metrics in a 2x2 grid: Valence, Arousal, Confidence rate (using clean tabular numerals).
+  - Secondary action: `Rescan` button (`variant="outline"`, size `sm`).
+
+#### 3. Right Column: Content & Queue Hub
+- Header: Minimal search input with `<Search className="w-4 h-4 text-slate-500" />` + Quick filter chips (`Focus`, `Deep Bass`, `Ambient`, `Uplifting`) using `text-xs px-2.5 py-1 rounded-md border border-slate-800 hover:border-slate-700 text-slate-300`.
+- Track List (High Information Density):
+  - No large floating cards. Use a clean dense list table/row layout:
+  - Row columns: `#Index` (text-xs text-slate-500) | `Artwork` (40x40px rounded-md) | `Track Title + Artist` (stacked text-sm / text-xs) | `Tags/Genre` (Badge) | `Duration` | `<Play className="w-4 h-4" />`.
+  - Hover effect: Subtle row background shift (`hover:bg-slate-800/40 transition-colors`).
+
+#### 4. Persistent Bottom Player Bar (Height: 64px, fixed bottom-0)
+- Left: Currently playing thumbnail, title, artist, and heart icon.
+- Center: Player controls (`Shuffle`, `Previous`, `Play/Pause` solid circle, `Next`, `Repeat`) with a slim scrubber progress bar.
+- Right: Volume slider, Watch Party member avatars stack (max 3 overlapping circles), and audio device icon.
+
+---
+
+### IMPLEMENTATION REQUIREMENTS
+- Write production-ready, clean, and modular React code with Tailwind CSS.
+- Provide interactive dummy states (e.g., `isCameraActive`, `currentMood`, `isPlaying`, `selectedTab`).
+- Ensure no element overlaps or causes unwanted horizontal scrollbars.
+- Return the refactored layout and core interactive components immediately.

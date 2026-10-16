@@ -11,7 +11,7 @@
     "artist": "",
     "thumbnail": "https://i.ytimg.com/vi/emMR03tG2CE/hqdefault.jpg",
     "link": "https://www.youtube.com/watch?v=emMR03tG2CE",
-    "plays": 1
+    "plays": 2
   },
   {
     "title": "Mood (Lofi)",
@@ -109,6 +109,13 @@
     "artist": "Gió Thu Chill",
     "thumbnail": "https://i.ytimg.com/vi/CCgt6IwzZoU/hqdefault.jpg",
     "link": "https://www.youtube.com/watch?v=CCgt6IwzZoU",
+    "plays": 1
+  },
+  {
+    "title": "Songs that'll make you dance the whole day ~ Mood booster playlist",
+    "artist": "Just Chillin'",
+    "thumbnail": "https://i.ytimg.com/vi/ljnGl5nvUJY/hqdefault.jpg",
+    "link": "https://www.youtube.com/watch?v=ljnGl5nvUJY",
     "plays": 1
   }
 ]

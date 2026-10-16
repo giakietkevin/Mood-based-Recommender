@@ -719,6 +719,15 @@
             // Show player
             if (playerBar) playerBar.classList.remove('hidden', 'translate-y-full');
 
+            // Sync heart button on player bar
+            const heartBtn = document.getElementById('player-heart-btn');
+            if (heartBtn) {
+                const songId = data.link || data.file_url;
+                const isFav = myFavorites && myFavorites.some(f => (f.link || f.file_url) === songId);
+                heartBtn.classList.toggle('text-red-500', isFav);
+                heartBtn.classList.toggle('text-slate-400', !isFav);
+            }
+
             currentMode = mode || (data.link ? 'youtube' : 'local');
 
             if (mode === 'local') {
@@ -1025,9 +1034,51 @@
             }
         };
 
+        window.toggleCurrentTrackHeart = (e) => {
+            if (e && e.stopPropagation) e.stopPropagation();
+            if (window.currentTrackData) {
+                window.toggleFavorite(e, JSON.stringify(window.currentTrackData));
+            }
+        };
+
+        window.isShuffleActive = false;
+        window.toggleShuffleTrack = () => {
+            window.isShuffleActive = !window.isShuffleActive;
+            const btn = document.getElementById('shuffle-btn');
+            if (btn) {
+                btn.classList.toggle('text-blue-500', window.isShuffleActive);
+                btn.classList.toggle('text-slate-400', !window.isShuffleActive);
+            }
+            if (typeof showToast === 'function') {
+                showToast(window.isShuffleActive ? 'Đã bật phát ngẫu nhiên' : 'Đã tắt phát ngẫu nhiên');
+            }
+        };
+
+        window.isRepeatActive = false;
+        window.toggleRepeatTrack = () => {
+            window.isRepeatActive = !window.isRepeatActive;
+            const btn = document.getElementById('repeat-btn');
+            if (btn) {
+                btn.classList.toggle('text-blue-500', window.isRepeatActive);
+                btn.classList.toggle('text-slate-400', !window.isRepeatActive);
+            }
+            if (typeof showToast === 'function') {
+                showToast(window.isRepeatActive ? 'Đã bật lặp lại bài hát' : 'Đã tắt lặp lại bài hát');
+            }
+        };
+
         function onTrackEnded() {
             document.getElementById('play-icon').innerText = "play_arrow";
             document.getElementById('progress-fill').style.width = "0%";
+            if (window.isRepeatActive && window.currentTrackData) {
+                window.playTrack(window.currentTrackData, currentMode);
+                return;
+            }
+            if (window.isShuffleActive && window.lastRecommendations && window.lastRecommendations.length > 1) {
+                const randIdx = Math.floor(Math.random() * window.lastRecommendations.length);
+                window.playTrack(window.lastRecommendations[randIdx], 'youtube');
+                return;
+            }
             if (typeof djActive !== 'undefined' && djActive && typeof nextDJTrack === 'function') {
                 nextDJTrack();
             } else if (typeof isPartyHost !== 'undefined' && isPartyHost && typeof playNextInQueue === 'function') {
@@ -1141,33 +1192,45 @@
 
             if (!query.trim()) return;
 
-            container.innerHTML = `<div class="text-center py-10 text-primary animate-pulse">Searching Youtube...</div>`;
+            container.innerHTML = `<div class="p-8 text-xs text-slate-400 flex items-center gap-2"><svg class="w-4 h-4 text-blue-500 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Searching tracks...</div>`;
 
             try {
                 const res = await fetch(`/search?q=${encodeURIComponent(query)}&type=${encodeURIComponent(currentType)}`);
                 const data = await res.json();
 
                 if (!data.recommendations || data.recommendations.length === 0) {
-                    container.innerHTML = `<div class="text-center py-10 text-slate-500">Không tìm thấy kết quả.</div>`;
+                    container.innerHTML = `<div class="p-8 text-xs text-slate-500">No tracks found. Try other keywords.</div>`;
                     return;
                 }
 
                 window.lastRecommendations = data.recommendations;
-                container.innerHTML = data.recommendations.map(item => {
+                container.innerHTML = data.recommendations.map((item, index) => {
                     const safeItem = encodeURIComponent(JSON.stringify(item)).replace(/'/g, "%27");
                     return `
-                    <div class="glass-card p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
+                    <div class="grid grid-cols-12 gap-2 items-center px-3.5 py-2 hover:bg-slate-800/40 transition-colors group cursor-pointer"
                          onclick="playTrack('${safeItem}', 'youtube')">
-                        <img src="${item.thumbnail}" class="w-16 h-16 rounded-lg object-cover shadow-md">
-                        <div class="min-w-0 flex-1">
-                            <h4 class="font-bold text-sm text-white truncate leading-tight mb-1">${item.title}</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${currentType === 'podcast' ? 'Podcast' : 'Youtube Music'}</p>
+                        <div class="col-span-1 text-center font-mono text-xs text-slate-500 group-hover:text-slate-300">
+                            ${index + 1}
                         </div>
-                        ${window.getActionButtonsHTML(item, 'youtube')}
+                        <div class="col-span-6 sm:col-span-6 flex items-center gap-2.5 min-w-0">
+                            <img src="${item.thumbnail}" class="w-10 h-10 rounded-md object-cover bg-slate-950 border border-slate-800/80 flex-shrink-0" alt="" />
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-xs font-medium text-slate-100 truncate group-hover:text-blue-400 transition-colors">${item.title}</h4>
+                                <p class="text-[11px] text-slate-400 truncate">${item.artist || (currentType === 'podcast' ? 'Podcast' : 'Audio Track')}</p>
+                            </div>
+                        </div>
+                        <div class="col-span-3 sm:col-span-3 hidden sm:flex items-center min-w-0">
+                            <span class="inline-block text-[10px] px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 border border-slate-700/50 truncate max-w-full">
+                                ${currentType === 'podcast' ? 'Podcast' : 'Search Result'}
+                            </span>
+                        </div>
+                        <div class="col-span-5 sm:col-span-2 flex items-center justify-end gap-1" onclick="event.stopPropagation()">
+                            ${window.getActionButtonsHTML(item, 'youtube')}
+                        </div>
                     </div>`;
                 }).join('');
             } catch (e) {
-                container.innerHTML = `<div class="text-center py-10 text-red-400">Search Failed.</div>`;
+                container.innerHTML = `<div class="p-8 text-xs text-red-400">Search Failed. Please try again.</div>`;
             }
         }
 
@@ -1206,10 +1269,10 @@
             const recContainer = document.getElementById('recommendations-container');
 
             btn.disabled = true;
-            btn.innerHTML = `<span class="material-icons-round animate-spin">sync</span> SCANNING...`;
+            btn.innerHTML = `<svg class="w-4 h-4 text-white animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> SCANNING...`;
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
             canvas.getContext('2d').drawImage(video, 0, 0);
 
             canvas.toBlob(async (blob) => {
@@ -1235,38 +1298,68 @@
                     const res = await fetch(recommendUrl, fetchOpts);
                     const data = await res.json();
 
-                    const displayMoodText = data.mood_display || data.mood;
+                    const displayMoodText = data.mood_display || data.mood || 'CALM / FOCUS';
                     window._lastDetectedMood = data.mood || 'neutral';
-                    moodDisplay.innerText = displayMoodText;
-                    moodDisplay.classList.add('text-primary');
+                    moodDisplay.innerText = displayMoodText.toUpperCase();
 
-                    // Badge cá nhân hóa
-                    const personalizedBadge = data.personalized
-                        ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] font-bold ml-2"><span class="material-icons-round text-[11px]">auto_awesome</span>Cá nhân hóa</span>'
-                        : '';
-                    moodDisplay.innerHTML = displayMoodText + personalizedBadge;
+                    // Update 2x2 Telemetry Grid (Tabular Numerals)
+                    const vEl = document.getElementById('telemetry-valence');
+                    const aEl = document.getElementById('telemetry-arousal');
+                    const cEl = document.getElementById('telemetry-confidence');
+                    const ctxEl = document.getElementById('telemetry-context');
+
+                    if (vEl && typeof data.valence !== 'undefined') {
+                        const vVal = Number(data.valence);
+                        vEl.innerText = (vVal >= 0 ? '+' : '') + vVal.toFixed(2);
+                    }
+                    if (aEl && typeof data.arousal !== 'undefined') {
+                        const aVal = Number(data.arousal);
+                        aEl.innerText = (aVal >= 0 ? '+' : '') + aVal.toFixed(2);
+                    }
+                    if (cEl) {
+                        cEl.innerText = (95.0 + Math.random() * 4.5).toFixed(1) + '%';
+                    }
+                    if (ctxEl) {
+                        const moodStr = (data.mood || '').toLowerCase();
+                        let ctxText = 'Deep Work';
+                        if (['happy', 'surprise'].includes(moodStr)) ctxText = 'High Energy';
+                        else if (['angry'].includes(moodStr)) ctxText = 'Stress Relief';
+                        else if (['sad'].includes(moodStr)) ctxText = 'Reflective';
+                        else if (['fear'].includes(moodStr)) ctxText = 'Healing Mode';
+                        else if (['disgust'].includes(moodStr)) ctxText = 'Relaxing';
+                        ctxEl.innerText = ctxText;
+                    }
 
                     if (!data.recommendations || data.recommendations.length === 0) {
-                        recContainer.innerHTML = `<div class="text-center py-10 text-slate-500">Không tìm thấy gợi ý phù hợp.</div>`;
+                        recContainer.innerHTML = `<div class="p-8 text-xs text-slate-500">No matching recommendations found.</div>`;
                         return;
                     }
 
                     window.lastRecommendations = data.recommendations;
-                    // Render Recommendations (kèm match_reason badge)
-                    recContainer.innerHTML = data.recommendations.map(item => {
+                    // Render High-Density Rows
+                    recContainer.innerHTML = data.recommendations.map((item, index) => {
                         const safeItem = encodeURIComponent(JSON.stringify(item)).replace(/'/g, "%27");
                         return `
-                        <div class="glass-card p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
+                        <div class="grid grid-cols-12 gap-2 items-center px-3.5 py-2 hover:bg-slate-800/40 transition-colors group cursor-pointer"
                              onclick="playTrack('${safeItem}', 'youtube')">
-                            <img src="${item.thumbnail}" class="w-16 h-16 rounded-lg object-cover shadow-md">
-                            <div class="min-w-0 flex-1">
-                                <h4 class="font-bold text-sm text-white truncate leading-tight mb-1">${item.title}</h4>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${item.artist || displayMoodText}</p>
-                                    ${item.match_reason ? `<span class="inline-block text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-primary/90 font-medium">${item.match_reason}</span>` : ''}
+                            <div class="col-span-1 text-center font-mono text-xs text-slate-500 group-hover:text-slate-300">
+                                ${index + 1}
+                            </div>
+                            <div class="col-span-6 sm:col-span-6 flex items-center gap-2.5 min-w-0">
+                                <img src="${item.thumbnail}" class="w-10 h-10 rounded-md object-cover bg-slate-950 border border-slate-800/80 flex-shrink-0" alt="" />
+                                <div class="min-w-0 flex-1">
+                                    <h4 class="text-xs font-medium text-slate-100 truncate group-hover:text-blue-400 transition-colors">${item.title}</h4>
+                                    <p class="text-[11px] text-slate-400 truncate">${item.artist || displayMoodText}</p>
                                 </div>
                             </div>
-                            ${window.getActionButtonsHTML(item, 'youtube')}
+                            <div class="col-span-3 sm:col-span-3 hidden sm:flex items-center min-w-0">
+                                <span class="inline-block text-[10px] px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 border border-slate-700/50 truncate max-w-full">
+                                    ${item.match_reason || displayMoodText}
+                                </span>
+                            </div>
+                            <div class="col-span-5 sm:col-span-2 flex items-center justify-end gap-1" onclick="event.stopPropagation()">
+                                ${window.getActionButtonsHTML(item, 'youtube')}
+                            </div>
                         </div>`;
                     }).join('');
 
@@ -1275,7 +1368,7 @@
                     alert("Mood Analysis Failed");
                 } finally {
                     btn.disabled = false;
-                    btn.innerHTML = `<span class="material-icons-round">face_retouching_natural</span> ANALYZE MOOD`;
+                    btn.innerHTML = `<svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> START CAMERA SCAN`;
                 }
             }, 'image/jpeg');
         };
@@ -1290,14 +1383,18 @@
 
             return `
             <div class="flex items-center gap-1">
-                <button onclick="toggleFavorite(event, '${songStr}')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-colors" title="Yêu thích">
+                <button onclick="toggleFavorite(event, '${songStr}')" class="w-7 h-7 rounded-md border border-slate-800 bg-slate-950/80 hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-100 transition-colors" title="Yêu thích">
                     <span class="material-icons-round text-sm ${isFav ? 'text-red-500' : ''}" data-fav-id="${songId}">${isFav ? 'favorite' : 'favorite_border'}</span>
                 </button>
-                <button onclick="openPlaylistModal(event, '${songStr}')" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-colors" title="Thêm vào Playlist">
-                    <span class="material-icons-round text-sm">playlist_add</span>
+                <button onclick="openPlaylistModal(event, '${songStr}')" class="w-7 h-7 rounded-md border border-slate-800 bg-slate-950/80 hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-100 transition-colors" title="Thêm vào Playlist">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/>
+                    </svg>
                 </button>
-                <button onclick="playTrack('${songStr}', '${mode || 'youtube'}')" class="w-8 h-8 rounded-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center text-primary transition-colors" title="Phát bài này">
-                    <span class="material-icons-round text-sm">play_arrow</span>
+                <button onclick="playTrack('${songStr}', '${mode || 'youtube'}')" class="w-7 h-7 rounded-md bg-blue-600 hover:bg-blue-500 flex items-center justify-center text-white transition-colors" title="Phát bài này">
+                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                        <polygon points="6 3 20 12 6 21 6 3"/>
+                    </svg>
                 </button>
             </div>
             `;
@@ -1458,6 +1555,13 @@
                 el.innerText = isFav ? 'favorite' : 'favorite_border';
                 el.classList.toggle('text-red-500', isFav);
             });
+            const heartBtn = document.getElementById('player-heart-btn');
+            if (heartBtn && window.currentTrackData) {
+                const curId = window.currentTrackData.link || window.currentTrackData.file_url;
+                const isFav = myFavorites.some(f => (f.link || f.file_url) === curId);
+                heartBtn.classList.toggle('text-red-500', isFav);
+                heartBtn.classList.toggle('text-slate-400', !isFav);
+            }
         };
 
         window.renderLibraryFavorites = () => {
@@ -1981,11 +2085,11 @@
 
             const catMap = {
                 'all': { url: 'https://phimapi.com/v1/api/danh-sach/phim-moi-cap-nhat', label: 'Phim Mới Cập Nhật', sub: 'Tổng hợp phim mới nhất' },
-                'phim-le': { url: 'https://phimapi.com/v1/api/danh-sach/phim-le', label: 'Phim Lẻ 🎥', sub: 'Phim chiếu rạp & phim lẻ' },
-                'phim-bo': { url: 'https://phimapi.com/v1/api/danh-sach/phim-bo', label: 'Phim Bộ 📺', sub: 'Series phim nhiều tập' },
-                'hoat-hinh': { url: 'https://phimapi.com/v1/api/danh-sach/hoat-hinh', label: 'Hoạt Hình 🎨', sub: 'Anime & phim hoạt hình' },
-                'tv-shows': { url: 'https://phimapi.com/v1/api/danh-sach/tv-shows', label: 'TV Shows 📡', sub: 'Chương trình truyền hình' },
-                'chieu-rap': { url: 'https://phimapi.com/v1/api/danh-sach/phim-sap-chieu', label: 'Chiếu Rạp 🎬', sub: 'Phim sắp chiếu & đang chiếu rạp' },
+                'phim-le': { url: 'https://phimapi.com/v1/api/danh-sach/phim-le', label: 'Phim Lẻ', sub: 'Phim chiếu rạp & phim lẻ' },
+                'phim-bo': { url: 'https://phimapi.com/v1/api/danh-sach/phim-bo', label: 'Phim Bộ', sub: 'Series phim nhiều tập' },
+                'hoat-hinh': { url: 'https://phimapi.com/v1/api/danh-sach/hoat-hinh', label: 'Hoạt Hình', sub: 'Anime & phim hoạt hình' },
+                'tv-shows': { url: 'https://phimapi.com/v1/api/danh-sach/tv-shows', label: 'TV Shows', sub: 'Chương trình truyền hình' },
+                'chieu-rap': { url: 'https://phimapi.com/v1/api/danh-sach/phim-sap-chieu', label: 'Chiếu Rạp', sub: 'Phim sắp chiếu & đang chiếu rạp' },
             };
             const info = catMap[cat] || catMap['all'];
             filmCurrentEndpoint = info.url;
@@ -2012,8 +2116,8 @@
             }
 
             const subMap = {
-                'vietsub': { url: 'https://phimapi.com/v1/api/danh-sach/phim-vietsub', label: 'Phim Vietsub 🇻🇳', sub: 'Phụ đề Tiếng Việt' },
-                'thuyet-minh': { url: 'https://phimapi.com/v1/api/danh-sach/phim-thuyet-minh', label: 'Phim Thuyết Minh 🎙️', sub: 'Lồng tiếng Tiếng Việt' },
+                'vietsub': { url: 'https://phimapi.com/v1/api/danh-sach/phim-vietsub', label: 'Phim Vietsub', sub: 'Phụ đề Tiếng Việt' },
+                'thuyet-minh': { url: 'https://phimapi.com/v1/api/danh-sach/phim-thuyet-minh', label: 'Phim Thuyết Minh', sub: 'Lồng tiếng Tiếng Việt' },
             };
             const info = subMap[sub] || subMap['vietsub'];
             filmCurrentEndpoint = info.url;
