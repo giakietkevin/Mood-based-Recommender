@@ -1,0 +1,97 @@
+# APP SHEET — True-black flat
+seed 918944239 · drawn 2026-10-25 · kind community · dark
+Brief: Dark cinematic AI music app: mood, discover, library, study room, films
+
+This is the style for this product. Adopt it whole and keep its move intact; everything the sheet does not fix comes from the
+shared defaults in references/app-screens.md. Redraw only for a reason you can state (it contradicts the brand, or the product is
+used in a way the style does not suit) and say why in your report. The values were measured on real product screens: use them
+as given rather than rounding them towards your habits.
+
+## 1. The style
+Night mode on true black: sidebar, top bar and page share one ground, elevation is a lightness step alone, and colour is confined to data marks.
+
+**The move:** Elevation by lightness alone (#000 ground, #111 card, #2a2a2a nested panel) with no borders or shadows on cards; the active nav item is marked only by its label going from #bbb to #fff; the primary control is made primary by inversion, a white 36px pill with black text.
+
+**Colour budget:** at or under 3%; the accent never touches buttons, tabs or nav.
+**Off-style here:** a navy or slate dark theme; glow, neon borders or shadows; a hue per chart (five hues across four charts was flagged); the accent on buttons, tabs or nav; a 64px top bar left empty across most of its width (flagged twice).
+Distilled from 5 screens: an events back office, an event analytics tab, a community overview, an artist studio home, an artist insights page. The studied screens of this kind used a violet-magenta (#dd6cff) and an orange (#ff5500) as their one data hue. The library deals a lime, which keeps the move and stays clear of the violet ban; because the lime is a yellow-green, it is also the positive colour (a second, mint green beside it read as two greens). The greys are #b4b4b4 for secondary text and #949494 for meta, 32 levels apart rather than the 20 of the measured #aaa and #969696, which read as one grey; #949494 still holds 4.5:1 on the #2a2a2a nested panel.
+
+**Its face.** Choose one of these (or one of your own of the same weight) before you build, write it in your notes next to
+the screen's question, and check that it shows on the first screen. Without one the screen reads as a well-applied kit.
+- The one data hue from the product's world in place of the dealt lime: a solar amber (#f2b33d) for an energy home, a sky blue (#4cb3f0) for water or weather, a lime only for sport. It is still the only hue on data and never touches buttons, tabs or nav. A green or yellow-green hue is also --positive; an amber that sits beside --warning leaves the warning to its pill pair.
+- A ground with the product's temperature: the studied #000 for media and events, a warm near-black (#0e0d0c) for a home, a cool one (#0c0d0f) for a monitor, with cards one lightness step above it (#181716, #15171a). Never navy or slate.
+- A signature element from the product's world as the lead: the energy home's power flow (sun, house, battery and grid with their live kW), an event's doors against capacity, an artist's release with its cover.
+
+## 2. Tokens
+```css
+:root {
+  --ground: #000000;
+  --surface: #111111;
+  --raised: #2a2a2a;
+  --border: #1a1a1a;
+  --rule: #161616;
+  --control: #444444;
+  --text: #ffffff;
+  --muted: #b4b4b4;
+  --faint: #949494;
+  --accent: #c6f24e;
+  --positive: #c6f24e;
+  --negative: #e5484d;
+  --warning: #e5a93b;
+  --chart-1: #c6f24e;
+  --chart-2: #e6e6e6;
+  --chart-3: #6b6b6b;
+  --pill-positive-bg: #222a10; --pill-positive-ink: #c6f24e;
+  --pill-negative-bg: #2c1a20; --pill-negative-ink: #e5566f;
+  --pill-warning-bg: #2b2414; --pill-warning-ink: #e5a93b;
+  --pill-neutral-bg: #222222; --pill-neutral-ink: #ffffff;
+  --radius-card: 20px;
+  --radius-control: 999px;
+  --row-height: 80px;
+  --sidebar-width: 210px;
+  --gap: 14px;
+  --pad: 22px;
+  --control-height: 36px;
+  --fs-title: 20px;
+  --fs-section: 16px;
+  --fs-kpi: 24px;
+  --fs-body: 14px;
+  --fs-small: 12px;
+}
+```
+Density: medium. One gap value, horizontally and vertically. No shadow on anything at rest.
+
+## 3. Type — Inter
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+```
+`font-family: "Inter", system-ui, sans-serif`. Weights 400, 500, 600. Sizes: title 20px · section 16px · kpi 24px · body 14px · small 12px. Nothing above 600; inactive nav labels #bbb, active #fff.
+Numbers: `font-variant-numeric: tabular-nums` on every table, KPI and anything that updates. Sentence case; no tracked capitals.
+
+## 4. Shell — No sidebar
+A 46-48px top bar on the page ground over a centred 1088-1208px column; the logo sits exactly on the column's left edge and the bar's right cluster ends near its right edge, so header and content share one column. Three to five text links, a 36px search, the account. Use it for generated reports, viewers and products with few destinations; with a sticky bar on the same ground, give it a 1px rule when content scrolls under it (the studied bar without one sliced content off).
+Numbers: topBar 46-48px on the page ground, no border; column centred, 1088-1208px; gutters 152-212px at a 1512px window; logo on the column's left edge; links 14-15px semibold grey.
+On a phone: The bar keeps the logo, a search icon and a menu button; the links move into the menu sheet. The column becomes the full width with 16px margins.
+
+## 5. Screens
+
+### home
+No pattern in the library for this screen. Compose it from the rules in references/app-screens.md.
+
+### list — Table with tabs and a filter bar
+Title row: an 18-24px title on the left, at most an outlined secondary and the one primary (36px) on the right. Underline tabs for the list's states on a full-width 1px rule with a 2px indicator as wide as the label; 22-32px below, the toolbar: a search of about 252-316 x 32-36 on the left, the count ('7 events') and the sort on the right. The table sits on the panel or page ground with no card around it: a header of 12-13px grey sentence-case labels with no fill and no rule, rows on a 48-56px pitch for one line or 72-92px with a thumbnail (media height plus 24-32px), 1px rules 3-7% darker than the ground or no rules at all, the identity column given the most width, numbers right-aligned in tabular figures with the unit muted ('5 /10'), one status mark per row and one kebab at the far right. Drop a column that is empty in every row (a blank co-host column left a 300px dead band). On an overview, cap the rows and link to the full list; on the full list, state the total and load more at the end.
+On a phone: Rows become two-line items: identity and the key number on line 1, the secondary fields in 13px grey on line 2, the kebab at the right. Tabs scroll in their own row; the search becomes a full-width field.
+
+### detail — Object header and a six-column grid
+The page header is the object itself: one card (88px, 14px padding) holding a 50x62 cover, the 18/600 name with 28px icon buttons beside it (open, copy, share), a 13px grey meta line (date, time, place) and outlined 36px actions on the right. Under it, underline tabs on a full-width 1px rule, then a 36px row with a segmented time range on the left and a refresh button on the right. The body is one 6-column grid with one gutter (14px) in both directions whose spans change by row while every edge lands on the same lines: 3 KPI tiles of 2 columns, the main chart in 4 columns beside a side chart in 2, two progress cards of 3, a full-width trend of 6. Give the widest card to the screen's question, and do not give 824px to one ring and one legend row (flagged).
+On a phone: The header card keeps cover, name and meta, with actions in a kebab; every grid item takes the full width in the same order.
+
+## 6. Always
+Real data for this product, written before the markup: names, amounts that add up, dates in order, units on every figure,
+honest zeros and dashes. One chart answers one question. No gradients, glows, glass, icons in tinted squares, sparklines on KPIs,
+rainbow charts, emoji, lorem or Acme. `<skill>/assets/app.css` and `<skill>/assets/charts.js` are a neutral start set to these
+rules. Check with `node <skill>/scripts/lint.mjs <files>` and `node <skill>/scripts/inspect.mjs <page>`: this sheet switches both
+to app rules.
+
+Saved to C:/Mood-based-Recommender/.taste-skill/app-true-black-flat/direction.json · reprint with `node draw.mjs --show`

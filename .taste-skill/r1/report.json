@@ -1,0 +1,2568 @@
+{
+ "url": "index.html",
+ "at": "2026-10-25T07:32:51.539Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    1,
+    1
+   ],
+   "motion": {
+    "elements": 11,
+    "css": 10,
+    "transitions": 1,
+    "scripted": 0,
+    "videos": 4,
+    "playingVideos": 4
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 1355,
+     "screens": 1.5,
+     "words": 320,
+     "img": 36,
+     "video": 4,
+     "canvas": 8,
+     "svg": 10,
+     "sections": 9,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 1,
+     "videoCount": 1,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [
+      "http://127.0.0.1:60483/index.html",
+      "http://127.0.0.1:60483/index.html"
+     ],
+     "emoji": [],
+     "videosNoPoster": 1
+    },
+    "hero": {
+     "text": "Adaptive Mood Station",
+     "words": 3,
+     "chars": 21,
+     "lines": 1,
+     "size": 30,
+     "vw": 2.1,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": 0,
+     "leading": 1.2,
+     "top": 105,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "Adaptive Mood Station",
+     "words": 3,
+     "lines": 1,
+     "size": 30,
+     "font": "Inter"
+    },
+    "headings": [
+     {
+      "text": "Adaptive Mood Station",
+      "words": 3,
+      "chars": 21,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.23,
+      "top": 105,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "fingerprint",
+      "words": 1,
+      "chars": 11,
+      "lines": 1,
+      "size": 48,
+      "vw": 3.3,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.03,
+      "top": 237,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "KietStation",
+      "words": 1,
+      "chars": 11,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.27,
+      "top": 293,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "assistant",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.04,
+      "top": 735,
+      "tag": "button",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 4,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 3,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 0.77,
+       "mono": false
+      },
+      {
+       "family": "Material Icons Round",
+       "share": 0.09,
+       "mono": false
+      },
+      {
+       "family": "Material Symbols Outlined",
+       "share": 0.08,
+       "mono": true
+      },
+      {
+       "family": "ui-monospace",
+       "share": 0.06,
+       "mono": false
+      }
+     ],
+     "familyCount": 4,
+     "sizes": [
+      11,
+      12,
+      14,
+      16,
+      18,
+      20,
+      24,
+      30,
+      48
+     ],
+     "sizeCount": 9,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 12,
+      "leading": 1.63,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 9.1
+     },
+     "measureChars": 75,
+     "max": {
+      "size": 48,
+      "vw": 3.3,
+      "font": "Material Icons Round",
+      "text": "fingerprint"
+     },
+     "monoShare": 0.14,
+     "monoProseShare": 0.14,
+     "monoFamilies": [
+      "Material Symbols Outlined",
+      "ui-monospace"
+     ],
+     "monoSamples": [
+      "groups",
+      "notifications",
+      "person",
+      "settings",
+      "logout",
+      "14ms"
+     ],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.07,
+     "centerShare": 0.38,
+     "smallText": 36
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#000000",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 0
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#111111",
+       "top": 321,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0.07
+       }
+      },
+      {
+       "color": "#000000",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#b4b4b4",
+       "share": 0.42
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.35
+      },
+      {
+       "color": "#000000",
+       "share": 0.04
+      },
+      {
+       "color": "#c6f24e",
+       "share": 0.04
+      },
+      {
+       "color": "#bbbbbb",
+       "share": 0.03
+      }
+     ],
+     "button": {
+      "bg": "#ffffff",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 1
+      },
+      "fg": "#000000"
+     },
+     "lowContrast": [
+      {
+       "text": "forum",
+       "ratio": 1.2,
+       "need": 3,
+       "size": 24,
+       "fg": "#0f172a",
+       "bg": "#000000"
+      },
+      {
+       "text": "Đăng xuất",
+       "ratio": 3.9,
+       "need": 4.5,
+       "size": 12,
+       "fg": "#dc2626",
+       "bg": "#111111"
+      },
+      {
+       "text": "logout",
+       "ratio": 3.9,
+       "need": 4.5,
+       "size": 16,
+       "fg": "#dc2626",
+       "bg": "#111111"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 9,
+     "inHero": 7,
+     "radius": 12,
+     "height": 40,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "groups WATCH PARTY",
+      "SIGN IN",
+      "face Start Camera Scan",
+      "play_arrow Play All",
+      "refresh RETAKE THIS SHOT"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 5,
+     "shadowSamples": [
+      "div#notif-dropdown.absolute.top-full → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 7,
+     "hairlineSamples": [
+      "div.px-4.py-3 318px",
+      "div.p-5.flex 822px",
+      "div.px-4.py-2.5 822px",
+      "div.px-5.py-3 822px",
+      "div.flex.items-center 464px"
+     ],
+     "outlinedBoxes": 14,
+     "dashed": 0,
+     "blurred": 1,
+     "roundedBoxes": 21,
+     "boxRadius": 16,
+     "squareMedia": 0,
+     "roundedMedia": 1,
+     "mediaRadius": 12,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 3,
+       "iconTopped": false,
+       "rounded": true,
+       "top": 173
+      },
+      {
+       "count": 3,
+       "iconTopped": false,
+       "rounded": true,
+       "top": 173
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": true,
+     "height": 65,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "material icons round",
+     "material symbols outlined"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 1355,
+    "margins": {
+     "left": 0,
+     "right": 117
+    },
+    "sections": [],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Adaptive Mood Station",
+      "size": 30,
+      "top": 105,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [
+     {
+      "text": "Khám phá Station",
+      "side": "left",
+      "px": 0
+     },
+     {
+      "text": "Mood Station",
+      "side": "left",
+      "px": 0
+     }
+    ],
+    "edges": [
+     {
+      "x": 96,
+      "n": 1
+     },
+     {
+      "x": 117,
+      "n": 1
+     },
+     {
+      "x": 593,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 3,
+    "bodySize": 12,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0.08,
+    "voidBox": {
+     "x": 1020,
+     "y": 480,
+     "w": 420,
+     "h": 240
+    }
+   },
+   "app": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "dark": true,
+    "ground": "#000000",
+    "sidebar": null,
+    "topbar": {
+     "h": 65
+    },
+    "canvas": {
+     "left": 96,
+     "right": 24
+    },
+    "hero": {
+     "text": "Adaptive Mood Station",
+     "words": 3,
+     "chars": 21,
+     "lines": 1,
+     "size": 30,
+     "vw": 2.1,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": 0,
+     "leading": 1.2,
+     "top": 105,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 10,
+     "firstScreen": 8,
+     "ragged": [
+      {
+       "diff": 149,
+       "top": 173
+      }
+     ],
+     "voids": [
+      {
+       "gap": 518,
+       "at": 219,
+       "panel": "close"
+      },
+      {
+       "gap": 176,
+       "at": 625,
+       "panel": "Calibrated Audio Stream"
+      },
+      {
+       "gap": 49,
+       "at": 348,
+       "panel": "KietStation"
+      }
+     ]
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 15,
+     "radii": [
+      [
+       16,
+       8
+      ],
+      [
+       12,
+       5
+      ],
+      [
+       24,
+       1
+      ],
+      [
+       40,
+       1
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 3,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 5,
+     "tabularShare": 1,
+     "kpiMax": 16
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.67,
+     "tiny": 8,
+     "tinySamples": [
+      "Classic 8px",
+      "Local 1vs1 8px",
+      "Puzzle 8px",
+      "Hardcore 8px"
+     ],
+     "sizes": [
+      8,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      20,
+      24,
+      30,
+      36,
+      48,
+      96
+     ]
+    },
+    "title": {
+     "text": "Adaptive Mood Station",
+     "size": 30,
+     "top": 105
+    },
+    "colourShare": 0.002
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 3,
+   "filled": [
+    1,
+    1,
+    1
+   ],
+   "motion": {
+    "elements": 12,
+    "css": 10,
+    "transitions": 2,
+    "scripted": 0,
+    "videos": 4,
+    "playingVideos": 4
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 2243,
+     "screens": 2.2,
+     "words": 313,
+     "img": 36,
+     "video": 4,
+     "canvas": 8,
+     "svg": 10,
+     "sections": 9,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 1,
+     "videoCount": 1,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [
+      "http://127.0.0.1:60483/index.html",
+      "http://127.0.0.1:60483/index.html"
+     ],
+     "emoji": [],
+     "videosNoPoster": 1
+    },
+    "hero": {
+     "text": "Adaptive Mood Station",
+     "words": 3,
+     "chars": 21,
+     "lines": 1,
+     "size": 30,
+     "vw": 3.9,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": 0,
+     "leading": 1.2,
+     "top": 105,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "Adaptive Mood Station",
+     "words": 3,
+     "lines": 1,
+     "size": 30,
+     "font": "Inter"
+    },
+    "headings": [
+     {
+      "text": "Adaptive Mood Station",
+      "words": 3,
+      "chars": 21,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.43,
+      "top": 105,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "fingerprint",
+      "words": 1,
+      "chars": 11,
+      "lines": 1,
+      "size": 48,
+      "vw": 6.3,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.06,
+      "top": 299,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "KietStation",
+      "words": 1,
+      "chars": 11,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.5,
+      "top": 355,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "assistant",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.07,
+      "top": 859,
+      "tag": "button",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 4,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 3,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 0.75,
+       "mono": false
+      },
+      {
+       "family": "Material Icons Round",
+       "share": 0.11,
+       "mono": false
+      },
+      {
+       "family": "Material Symbols Outlined",
+       "share": 0.08,
+       "mono": true
+      },
+      {
+       "family": "ui-monospace",
+       "share": 0.06,
+       "mono": false
+      }
+     ],
+     "familyCount": 4,
+     "sizes": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      16,
+      18,
+      20,
+      22,
+      24,
+      30,
+      48
+     ],
+     "sizeCount": 12,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 12,
+      "leading": 1.63,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 9.1
+     },
+     "measureChars": 75,
+     "max": {
+      "size": 48,
+      "vw": 6.3,
+      "font": "Material Icons Round",
+      "text": "fingerprint"
+     },
+     "monoShare": 0.14,
+     "monoProseShare": 0.14,
+     "monoFamilies": [
+      "Material Symbols Outlined",
+      "ui-monospace"
+     ],
+     "monoSamples": [
+      "notifications",
+      "menu",
+      "person",
+      "settings",
+      "logout",
+      "14ms"
+     ],
+     "microLabels": 1,
+     "microLabelShare": 0.008,
+     "microSamples": [
+      "Khám phá Station"
+     ],
+     "upperShare": 0.07,
+     "centerShare": 0.38,
+     "smallText": 39
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#000000",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 0
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#111111",
+       "top": 173,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0.07
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 240,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      },
+      {
+       "color": "#000000",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#b4b4b4",
+       "share": 0.42
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.28
+      },
+      {
+       "color": "#0f172a",
+       "share": 0.07
+      },
+      {
+       "color": "#000000",
+       "share": 0.04
+      },
+      {
+       "color": "#c6f24e",
+       "share": 0.04
+      }
+     ],
+     "button": {
+      "bg": "#ffffff",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 1
+      },
+      "fg": "#000000"
+     },
+     "lowContrast": [
+      {
+       "text": "radio",
+       "ratio": 2.5,
+       "need": 3,
+       "size": 24,
+       "fg": "#10b981",
+       "bg": "#ffffff"
+      },
+      {
+       "text": "Đăng xuất",
+       "ratio": 3.9,
+       "need": 4.5,
+       "size": 12,
+       "fg": "#dc2626",
+       "bg": "#111111"
+      },
+      {
+       "text": "logout",
+       "ratio": 3.9,
+       "need": 4.5,
+       "size": 16,
+       "fg": "#dc2626",
+       "bg": "#111111"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 8,
+     "inHero": 5,
+     "radius": 12,
+     "height": 40,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "SIGN IN",
+      "face Start Camera Scan",
+      "refresh RETAKE THIS SHOT",
+      "Chia sẻ ngay",
+      "login ĐĂNG NHẬP"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 7,
+     "shadowSamples": [
+      "div#notif-dropdown.absolute.top-full → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 9,
+     "hairlineSamples": [
+      "div.px-4.py-3 318px",
+      "div.p-5.flex 718px",
+      "div.px-4.py-2.5 718px",
+      "div.px-5.py-3 718px",
+      "div.flex.items-center 464px"
+     ],
+     "outlinedBoxes": 14,
+     "dashed": 0,
+     "blurred": 3,
+     "roundedBoxes": 22,
+     "boxRadius": 16,
+     "squareMedia": 0,
+     "roundedMedia": 1,
+     "mediaRadius": 12,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "video",
+      "ratio": 0.33
+     }
+    ],
+    "nav": {
+     "links": 0,
+     "fixed": true,
+     "height": 65,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "material icons round",
+     "material symbols outlined"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 2243,
+    "margins": {
+     "left": 45,
+     "right": 45
+    },
+    "sections": [
+     {
+      "sel": "div.lg:col-span-4.flex",
+      "tag": "div",
+      "top": 173,
+      "height": 1133,
+      "words": 90,
+      "media": 1,
+      "middle": 0,
+      "heading": null,
+      "left": 45,
+      "right": 45,
+      "textLeft": 45,
+      "textRight": 45,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.lg:col-span-8.flex",
+      "tag": "div",
+      "top": 1330,
+      "height": 843,
+      "words": 83,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Calibrated Audio Stream",
+       "size": 16,
+       "tag": "h2"
+      },
+      "left": 45,
+      "right": 41,
+      "textLeft": 45,
+      "textRight": 41,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Adaptive Mood Station",
+      "size": 30,
+      "top": 105,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 24,
+      "n": 1
+     },
+     {
+      "x": 45,
+      "n": 1
+     },
+     {
+      "x": 97,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 3,
+    "bodySize": 12,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "dark": true,
+    "ground": "#000000",
+    "sidebar": null,
+    "topbar": {
+     "h": 65
+    },
+    "canvas": {
+     "left": 20,
+     "right": 23
+    },
+    "hero": {
+     "text": "Adaptive Mood Station",
+     "words": 3,
+     "chars": 21,
+     "lines": 1,
+     "size": 30,
+     "vw": 3.9,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": 0,
+     "leading": 1.2,
+     "top": 105,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 10,
+     "firstScreen": 6,
+     "ragged": [],
+     "voids": [
+      {
+       "gap": 356,
+       "at": 362,
+       "panel": "close"
+      },
+      {
+       "gap": 176,
+       "at": 1782,
+       "panel": "Calibrated Audio Stream"
+      },
+      {
+       "gap": 49,
+       "at": 410,
+       "panel": "KietStation"
+      }
+     ]
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 15,
+     "radii": [
+      [
+       16,
+       8
+      ],
+      [
+       12,
+       5
+      ],
+      [
+       24,
+       1
+      ],
+      [
+       40,
+       1
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 3,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 5,
+     "tabularShare": 1,
+     "kpiMax": 16
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.68,
+     "tiny": 13,
+     "tinySamples": [
+      "Classic 8px",
+      "Local 1vs1 8px",
+      "Puzzle 8px",
+      "Hardcore 8px"
+     ],
+     "sizes": [
+      8,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      20,
+      22,
+      24,
+      30,
+      36,
+      48,
+      96
+     ]
+    },
+    "title": {
+     "text": "Adaptive Mood Station",
+     "size": 30,
+     "top": 105
+    },
+    "colourShare": 0.003
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 3,
+   "filled": [
+    1,
+    1,
+    1
+   ],
+   "motion": {
+    "elements": 11,
+    "css": 9,
+    "transitions": 2,
+    "scripted": 0,
+    "videos": 4,
+    "playingVideos": 4
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 2307,
+     "screens": 2.7,
+     "words": 309,
+     "img": 36,
+     "video": 4,
+     "canvas": 8,
+     "svg": 10,
+     "sections": 9,
+     "horizontalOverflow": 100,
+     "overflowCulprits": [
+      "div.absolute.top-10 (+100px)"
+     ],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 1,
+     "videoCount": 1,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [
+      "http://127.0.0.1:60483/index.html",
+      "http://127.0.0.1:60483/index.html"
+     ],
+     "emoji": [],
+     "videosNoPoster": 1
+    },
+    "hero": {
+     "text": "Adaptive Mood Station",
+     "words": 3,
+     "chars": 21,
+     "lines": 1,
+     "size": 24,
+     "vw": 6.2,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": 0,
+     "leading": 1.33,
+     "top": 105,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "Adaptive Mood Station",
+     "words": 3,
+     "lines": 1,
+     "size": 24,
+     "font": "Inter"
+    },
+    "headings": [
+     {
+      "text": "close",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.12,
+      "top": 24,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "Adaptive Mood Station",
+      "words": 3,
+      "chars": 21,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.33,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 105,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "close",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.06,
+      "top": 193,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "fingerprint",
+      "words": 1,
+      "chars": 11,
+      "lines": 1,
+      "size": 48,
+      "vw": 12.3,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.12,
+      "top": 209,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "close",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.08,
+      "top": 229,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "share Chia sẻ nội dung",
+      "words": 5,
+      "chars": 22,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.5,
+      "top": 231,
+      "mixedFonts": [
+       "Inter",
+       "Material Icons Round"
+      ],
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "KietStation",
+      "words": 1,
+      "chars": 11,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.75,
+      "top": 265,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "close",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.06,
+      "top": 331,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "playlist_add Add to Playlist",
+      "words": 4,
+      "chars": 28,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.4,
+      "top": 332,
+      "mixedFonts": [
+       "Inter",
+       "Material Icons Round"
+      ],
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "close",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.1,
+      "top": 338,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "refresh",
+      "words": 1,
+      "chars": 7,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "left",
+      "widthRatio": 0.06,
+      "top": 426,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "assistant",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.14,
+      "top": 684,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "CALM / FOCUS",
+      "words": 3,
+      "chars": 12,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.33,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.59,
+      "top": 754,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "music_note",
+      "words": 1,
+      "chars": 10,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "left",
+      "widthRatio": 0.06,
+      "top": 792,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "movie",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "left",
+      "widthRatio": 0.06,
+      "top": 792,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "sports_esports",
+      "words": 1,
+      "chars": 14,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.06,
+      "top": 792,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "apps",
+      "words": 1,
+      "chars": 4,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.06,
+      "top": 792,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "music_note",
+      "words": 1,
+      "chars": 10,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "left",
+      "widthRatio": 0.12,
+      "top": 924,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "forum",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.12,
+      "top": 924,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "movie",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.12,
+      "top": 924,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "radio",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "left",
+      "widthRatio": 0.12,
+      "top": 1010,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "explore",
+      "words": 1,
+      "chars": 7,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.12,
+      "top": 1010,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "library_music",
+      "words": 1,
+      "chars": 13,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.12,
+      "top": 1010,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "timer",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "left",
+      "widthRatio": 0.12,
+      "top": 1097,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "camera_alt",
+      "words": 1,
+      "chars": 10,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.12,
+      "top": 1097,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "sports_esports",
+      "words": 1,
+      "chars": 14,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.12,
+      "top": 1097,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "person",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "left",
+      "widthRatio": 0.12,
+      "top": 1183,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "account_circle",
+      "words": 1,
+      "chars": 14,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Material Icons Round",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.12,
+      "top": 1183,
+      "tag": "div",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 28,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 24,
+     "medianWords": 1,
+     "mixedFontHeadings": 2
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 0.74,
+       "mono": false
+      },
+      {
+       "family": "Material Icons Round",
+       "share": 0.11,
+       "mono": false
+      },
+      {
+       "family": "Material Symbols Outlined",
+       "share": 0.08,
+       "mono": true
+      },
+      {
+       "family": "ui-monospace",
+       "share": 0.06,
+       "mono": false
+      }
+     ],
+     "familyCount": 4,
+     "sizes": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      16,
+      18,
+      20,
+      22,
+      24,
+      30,
+      48
+     ],
+     "sizeCount": 12,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 12,
+      "leading": 1.63,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 9.1
+     },
+     "measureChars": 51,
+     "max": {
+      "size": 48,
+      "vw": 12.3,
+      "font": "Material Icons Round",
+      "text": "fingerprint"
+     },
+     "monoShare": 0.14,
+     "monoProseShare": 0.14,
+     "monoFamilies": [
+      "Material Symbols Outlined",
+      "ui-monospace"
+     ],
+     "monoSamples": [
+      "notifications",
+      "menu",
+      "person",
+      "settings",
+      "logout",
+      "14ms"
+     ],
+     "microLabels": 1,
+     "microLabelShare": 0.009,
+     "microSamples": [
+      "Khám phá Station"
+     ],
+     "upperShare": 0.07,
+     "centerShare": 0.38,
+     "smallText": 38
+    },
+    "eyebrows": [
+     {
+      "text": "DETECTED EMOTION",
+      "above": "CALM / FOCUS",
+      "upper": true,
+      "tracked": false,
+      "mono": false,
+      "pill": true,
+      "size": 11,
+      "top": 709
+     }
+    ],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#000000",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 0
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#111111",
+       "top": 215,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0.07
+       }
+      },
+      {
+       "color": "#000000",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 844,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#b4b4b4",
+       "share": 0.42
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.28
+      },
+      {
+       "color": "#0f172a",
+       "share": 0.07
+      },
+      {
+       "color": "#000000",
+       "share": 0.04
+      },
+      {
+       "color": "#c6f24e",
+       "share": 0.04
+      }
+     ],
+     "button": {
+      "bg": "#ffffff",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 1
+      },
+      "fg": "#000000"
+     },
+     "lowContrast": [
+      {
+       "text": "radio",
+       "ratio": 2.5,
+       "need": 3,
+       "size": 24,
+       "fg": "#10b981",
+       "bg": "#ffffff"
+      },
+      {
+       "text": "Đăng xuất",
+       "ratio": 3.9,
+       "need": 4.5,
+       "size": 12,
+       "fg": "#dc2626",
+       "bg": "#111111"
+      },
+      {
+       "text": "logout",
+       "ratio": 3.9,
+       "need": 4.5,
+       "size": 16,
+       "fg": "#dc2626",
+       "bg": "#111111"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 8,
+     "inHero": 5,
+     "radius": 12,
+     "height": 40,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "SIGN IN",
+      "face Start Camera Scan",
+      "refresh RETAKE THIS SHOT",
+      "Chia sẻ ngay",
+      "login ĐĂNG NHẬP"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 7,
+     "shadowSamples": [
+      "div#notif-dropdown.absolute.top-full → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 9,
+     "hairlineSamples": [
+      "div.px-4.py-3 318px",
+      "div.p-5.flex 356px",
+      "div.px-4.py-2.5 356px",
+      "div.px-5.py-3 356px",
+      "div.flex.items-center 310px"
+     ],
+     "outlinedBoxes": 14,
+     "dashed": 0,
+     "blurred": 3,
+     "roundedBoxes": 22,
+     "boxRadius": 16,
+     "squareMedia": 0,
+     "roundedMedia": 1,
+     "mediaRadius": 12,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "video",
+      "ratio": 0.23
+     }
+    ],
+    "nav": {
+     "links": 0,
+     "fixed": true,
+     "height": 65,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "material icons round",
+     "material symbols outlined"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 2307,
+    "margins": {
+     "left": 37,
+     "right": 37
+    },
+    "sections": [
+     {
+      "sel": "div.absolute.top-10",
+      "tag": "div",
+      "top": 120,
+      "height": 384,
+      "words": 0,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.absolute.top-1/2",
+      "tag": "div",
+      "top": 1158,
+      "height": 448,
+      "words": 0,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.lg:col-span-4.flex",
+      "tag": "div",
+      "top": 215,
+      "height": 1048,
+      "words": 90,
+      "media": 1,
+      "middle": 0,
+      "heading": null,
+      "left": 37,
+      "right": 37,
+      "textLeft": 37,
+      "textRight": 37,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lg:col-span-8.flex",
+      "tag": "div",
+      "top": 1287,
+      "height": 950,
+      "words": 81,
+      "media": 0,
+      "middle": 34,
+      "heading": {
+       "text": "Calibrated Audio Stream",
+       "size": 16,
+       "tag": "h2"
+      },
+      "left": 37,
+      "right": 0,
+      "textLeft": 37,
+      "textRight": -56,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Adaptive Mood Station",
+      "size": 24,
+      "top": 105,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 16,
+      "n": 1
+     },
+     {
+      "x": 37,
+      "n": 1
+     },
+     {
+      "x": 72,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 3,
+    "bodySize": 12,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "dark": true,
+    "ground": "#000000",
+    "sidebar": null,
+    "topbar": {
+     "h": 65
+    },
+    "canvas": {
+     "left": 20,
+     "right": 0
+    },
+    "hero": {
+     "text": "Adaptive Mood Station",
+     "words": 3,
+     "chars": 21,
+     "lines": 1,
+     "size": 24,
+     "vw": 6.2,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": 0,
+     "leading": 1.33,
+     "top": 105,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 10,
+     "firstScreen": 6,
+     "ragged": [],
+     "voids": [
+      {
+       "gap": 156,
+       "at": 1849,
+       "panel": "Calibrated Audio Stream"
+      },
+      {
+       "gap": 143,
+       "at": 378,
+       "panel": "close"
+      },
+      {
+       "gap": 49,
+       "at": 320,
+       "panel": "KietStation"
+      }
+     ]
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 15,
+     "radii": [
+      [
+       16,
+       8
+      ],
+      [
+       12,
+       5
+      ],
+      [
+       24,
+       1
+      ],
+      [
+       40,
+       1
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 3,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 5,
+     "tabularShare": 1,
+     "kpiMax": 16
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.69,
+     "tiny": 13,
+     "tinySamples": [
+      "Classic 8px",
+      "Local 1vs1 8px",
+      "Puzzle 8px",
+      "Hardcore 8px"
+     ],
+     "sizes": [
+      8,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      20,
+      22,
+      24,
+      30,
+      36,
+      48,
+      72
+     ]
+    },
+    "title": {
+     "text": "Adaptive Mood Station",
+     "size": 24,
+     "top": 105
+    },
+    "colourShare": 0.006
+   },
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "FAIL",
+   "id": "contrast",
+   "width": 1440,
+   "message": "Unreadable text: \"forum\" 1.2:1 (#0f172a on #000000)",
+   "fix": "Raise contrast to at least 4.5:1 for text, 3:1 for large display.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "font-count",
+   "width": 1440,
+   "message": "4 typefaces in use (Inter, Material Icons Round, Material Symbols Outlined, ui-monospace).",
+   "fix": "Two at most: one display, one text. Often one is enough.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "no-poster",
+   "width": 1440,
+   "message": "1 clip(s) without a poster.",
+   "fix": "Give every clip a poster frame: in the study of 100 Sites of the Day only 31% had one, and the blank or grey boxes before the clips played were recorded as faults (references/imagery.md §11).",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "broken-image",
+   "width": 1440,
+   "message": "Broken image(s): http://127.0.0.1:60483/index.html, http://127.0.0.1:60483/index.html",
+   "fix": "Fix the URL or replace the asset.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "edge-text",
+   "width": 1440,
+   "message": "2 text block(s) sit within 16px of the screen edge: \"Khám phá Station\" (0px from the left); \"Mood Station\" (0px from the left)",
+   "fix": "Keep text inside the page margin (16–32px or more). Only display type deliberately bled past the edge may touch it."
+  },
+  {
+   "level": "FAIL",
+   "id": "tiny-text",
+   "width": 1440,
+   "message": "8 text blocks under 11px: Classic 8px, Local 1vs1 8px, Puzzle 8px, Hardcore 8px.",
+   "fix": "Nothing below 11px; secondary text 12px, data 13–14px.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "ragged-row",
+   "width": 1440,
+   "message": "1 pair(s) of cards in one row end at different heights (by 149px).",
+   "fix": "Cards that share a row share a bottom edge: balance them by their content (the same number of rows, a block of similar height beside it), or stack them. In testing, ragged rows were marked down every time."
+  },
+  {
+   "level": "WARN",
+   "id": "panel-void",
+   "width": 1440,
+   "message": "3 card(s) hold a blank band inside: 518px in \"close\", 176px in \"Calibrated Audio Stream\", 49px in \"KietStation\".",
+   "fix": "A card stretches to its neighbour only when it has content to fill. Keep a legend or a note directly under its chart (only an action or a total may sit at a stretched card's foot), let a short card keep its own height (align-items: start), and let a filtered block shrink to its rows."
+  },
+  {
+   "level": "FAIL",
+   "id": "covered-text",
+   "width": 1440,
+   "message": "Large text lies under another element at some scroll position: \"Adaptive Mood Station\" (screen 1, 100% hidden); \"CALM / FOCUS\" (screen 2, 100% hidden); \"close\" (screen 2, 100% hidden); \"refresh\" (screen 2, 100% hidden)",
+   "fix": "Nothing may sit on top of a headline or statement. Move the picture, shorten the pinned run, or raise the text above it (z-index) and give it a ground.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "micro-label",
+   "width": 768,
+   "message": "1 tiny uppercase letter-spaced label(s): \"Khám phá Station\"",
+   "fix": "Prefer sentence case at body size.",
+   "alsoAt": [
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "mixed-font-headline",
+   "width": 390,
+   "message": "2 headline(s) switch typeface or to italic mid-line (the \"one italic serif word\" move).",
+   "fix": "Set the whole headline in one face. Emphasis comes from the words."
+  },
+  {
+   "level": "FAIL",
+   "id": "overflow",
+   "width": 390,
+   "message": "Page scrolls sideways by 100px at 390px. Widest offenders: div.absolute.top-10 (+100px).",
+   "fix": "Constrain the element that is wider than the viewport (max-width: 100%, or overflow: clip on its section)."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "C:\\Mood-based-Recommender\\.taste-skill\\r1\\desktop-fold.jpg",
+   "pages": [
+    "C:\\Mood-based-Recommender\\.taste-skill\\r1\\desktop-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "C:\\Mood-based-Recommender\\.taste-skill\\r1\\tablet-fold.jpg",
+   "pages": [
+    "C:\\Mood-based-Recommender\\.taste-skill\\r1\\tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "C:\\Mood-based-Recommender\\.taste-skill\\r1\\mobile-fold.jpg",
+   "pages": [
+    "C:\\Mood-based-Recommender\\.taste-skill\\r1\\mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

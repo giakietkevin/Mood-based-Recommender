@@ -13,14 +13,14 @@
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#F8FAFC">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="theme-color" content="#000000">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/12204/12204300.png">
 
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
@@ -39,46 +39,54 @@
             theme: {
                 extend: {
                     colors: {
-                        "inverse-surface": "#2d3133",
-                        "on-secondary-container": "#fefcff",
-                        "tertiary-fixed-dim": "#c6c4dd",
-                        "on-tertiary-container": "#838298",
-                        "tertiary-fixed": "#e3e0fa",
+                        "inverse-surface": "#f2f2f2",
+                        "on-secondary-container": "#000000",
+                        "tertiary-fixed-dim": "#b4b4b4",
+                        "on-tertiary-container": "#949494",
+                        "tertiary-fixed": "#2a2a2a",
                         "on-error": "#ffffff",
-                        "surface-container-high": "#e6e8ea",
-                        "surface-container-low": "#f2f4f6",
-                        "inverse-on-surface": "#eff1f3",
-                        "outline-variant": "#c6c6cd",
-                        error: "#ba1a1a",
-                        "pastel-sage": "#E3F2ED",
-                        "primary-container": "#131b2e",
-                        secondary: "#0051d5",
-                        "secondary-container": "#316bf3",
-                        background: "#f7f9fb",
-                        "surface-container-highest": "#e0e3e5",
-                        "on-primary": "#ffffff",
-                        "pastel-lavender": "#E8E5FF",
-                        "on-primary-container": "#7c839b",
-                        "surface-container": "#eceef0",
-                        "pastel-blush": "#FDE8E9",
-                        outline: "#76777d",
-                        "on-background": "#191c1e",
-                        "surface-bright": "#f7f9fb",
-                        "charcoal-black": "#0F172A",
-                        "surface-dim": "#d8dadc",
-                        "on-surface": "#191c1e",
-                        "surface-container-lowest": "#ffffff",
-                        primary: "#0F172A",
-                        surface: "#f7f9fb",
-                        "pure-white": "#FFFFFF",
-                        "status-emerald": "#10B981",
-                        "surface-slate": "#F8FAFC",
-                        "on-surface-variant": "#45464d",
-                        "accent-blue": "#2563EB",
-                        "slate-950": "#0B0F17",
-                        "slate-900": "#111827",
-                        "slate-800": "#1E293B",
-                        "bg-dark": "#F8FAFC"
+                        "surface-container-high": "#222222",
+                        "surface-container-low": "#181818",
+                        "inverse-on-surface": "#111111",
+                        "outline-variant": "#2a2a2a",
+                        error: "#e5484d",
+                        "pastel-sage": "#1b2410",
+                        "primary-container": "#2a2a2a",
+                        secondary: "#c6f24e",
+                        "secondary-container": "#c6f24e",
+                        background: "#000000",
+                        "surface-container-highest": "#2a2a2a",
+                        "on-primary": "#000000",
+                        "pastel-lavender": "#2a2a2a",
+                        "on-primary-container": "#b4b4b4",
+                        "surface-container": "#1c1c1c",
+                        "pastel-blush": "#2c1a20",
+                        outline: "#949494",
+                        "on-background": "#ffffff",
+                        "surface-bright": "#000000",
+                        "charcoal-black": "#ffffff",
+                        "surface-dim": "#000000",
+                        "on-surface": "#ffffff",
+                        "surface-container-lowest": "#111111",
+                        primary: "#ffffff",
+                        surface: "#000000",
+                        "pure-white": "#111111",
+                        "status-emerald": "#c6f24e",
+                        "surface-slate": "#000000",
+                        "on-surface-variant": "#b4b4b4",
+                        "accent-blue": "#c6f24e",
+                        "slate-50": "#151515",
+                        "slate-100": "#1a1a1a",
+                        "slate-200": "#2a2a2a",
+                        "slate-300": "#444444",
+                        "slate-400": "#949494",
+                        "slate-500": "#b4b4b4",
+                        "slate-600": "#cfcfcf",
+                        "slate-700": "#e6e6e6",
+                        "slate-950": "#0a0a0a",
+                        "slate-900": "#111111",
+                        "slate-800": "#1a1a1a",
+                        "bg-dark": "#000000"
                     },
                     borderRadius: {
                         DEFAULT: "0.25rem",
@@ -102,8 +110,8 @@
                     },
                     fontFamily: {
                         sans: ["Inter", "-apple-system", "sans-serif"],
-                        display: ["Outfit", "sans-serif"],
-                        headline: ["Outfit", "sans-serif"],
+                        display: ["Inter", "sans-serif"],
+                        headline: ["Inter", "sans-serif"],
                         body: ["Inter", "sans-serif"]
                     },
                     fontSize: {
@@ -113,8 +121,8 @@
                         "title-md": ["1.125rem", { lineHeight: "1.4", fontWeight: "600" }],
                         "body-lg": ["1rem", { lineHeight: "1.6", fontWeight: "400" }],
                         "body-md": ["0.875rem", { lineHeight: "1.5", fontWeight: "400" }],
-                        "label-md": ["0.75rem", { lineHeight: "1.4", letterSpacing: "0.04em", fontWeight: "600" }],
-                        "label-sm": ["0.6875rem", { lineHeight: "1.3", letterSpacing: "0.08em", fontWeight: "600" }]
+                        "label-md": ["0.75rem", { lineHeight: "1.4", letterSpacing: "0", fontWeight: "600" }],
+                        "label-sm": ["0.6875rem", { lineHeight: "1.3", letterSpacing: "0", fontWeight: "600" }]
                     }
                 },
             },
@@ -124,17 +132,18 @@
     <link rel="stylesheet" href="css/app.css">
     <link rel="stylesheet" href="css/facebook_layout.css">
     <link rel="stylesheet" href="css/glassmorphism.css">
+    <link rel="stylesheet" href="css/station.css">
 </head>
 
 <body
-    class="bg-surface-slate text-on-surface min-h-screen min-h-[100dvh] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] font-sans antialiased selection:bg-pastel-lavender selection:text-charcoal-black">
+    class="dark bg-surface-slate text-on-surface min-h-screen min-h-[100dvh] pb-[calc(7rem+env(safe-area-inset-bottom,0px))] font-sans antialiased selection:bg-pastel-lavender selection:text-charcoal-black">
 
     <header class="fixed top-0 w-full z-50 bg-pure-white/85 backdrop-blur-xl border-b border-surface-container-high/60 shadow-[0_1px_8px_rgba(0,0,0,0.03)]">
         <div class="max-w-[82rem] mx-auto h-16 flex items-center justify-between gap-space-md px-4 sm:px-6 lg:px-8">
             <!-- Left: Lumina Brand Mark -->
             <div class="flex items-center gap-space-lg flex-shrink-0">
                 <div class="flex items-center gap-1.5 cursor-pointer group" onclick="showView('dashboard')">
-                    <span class="font-display font-bold text-xl tracking-tight uppercase text-charcoal-black">KIET<span class="text-accent-blue">STATION</span></span>
+                    <span class="font-display font-semibold text-xl tracking-tight text-charcoal-black">Kiet<span class="text-accent-blue">Station</span></span>
                     <span class="w-2 h-2 rounded-full bg-status-emerald animate-pulse ml-0.5"></span>
                 </div>
 
@@ -170,13 +179,16 @@
                 <div id="nav-party-status"
                     class="hidden sm:flex items-center gap-2 border border-slate-200 bg-pure-white text-[11px] px-3 py-1 text-charcoal-black rounded-full shadow-xs">
                     <span class="w-2 h-2 rounded-full bg-status-emerald animate-pulse"></span>
-                    <span id="nav-party-id" class="font-medium tracking-wider uppercase text-[11px]">PARTY ACTIVE</span>
+                    <span id="nav-party-id" class="font-medium tracking-wider uppercase text-[11px]">Đang xem chung</span>
                 </div>
                 <button onclick="startWatchParty()"
-                    class="hidden lg:flex items-center gap-1.5 border border-slate-200 bg-pure-white hover:bg-slate-50 text-charcoal-black px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-wider shadow-xs transition-all active:scale-95">
+                    class="hidden 2xl:flex items-center gap-1.5 border border-slate-200 bg-pure-white hover:bg-slate-50 text-charcoal-black px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-wider shadow-xs transition-all active:scale-95">
                     <span class="material-symbols-outlined text-[16px] text-accent-blue">groups</span>
-                    WATCH PARTY
+                    Xem chung
                 </button>
+
+                <button id="lang-toggle" type="button" onclick="toggleLang()" title="Ngôn ngữ / Language"
+                    class="h-9 px-3 rounded-full bg-surface-container-low hover:bg-pastel-lavender text-xs font-semibold text-charcoal-black transition-colors">VI</button>
 
                 <!-- Notifications Button -->
                 <div class="relative">
@@ -199,7 +211,7 @@
                 <!-- Login Button (Visible when Guest) -->
                 <button id="login-btn"
                     class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-charcoal-black hover:bg-charcoal-black/90 text-pure-white transition-all shadow-xs active:scale-95">
-                    SIGN IN
+                    Đăng nhập
                 </button>
 
                 <!-- Mobile Navigation Menu Toggle Button (Visible below xl) -->
@@ -523,7 +535,7 @@
                                     <span class="material-symbols-outlined text-secondary text-[18px]">trending_up</span>
                                     <h3 class="font-display font-semibold text-xs text-charcoal-black uppercase tracking-wider">Trending Songs</h3>
                                 </div>
-                                <span class="text-[10px] text-on-surface-variant font-mono">LIVE</span>
+                                <span class="text-[10px] text-on-surface-variant tabular-nums">LIVE</span>
                             </div>
                             <div id="sidebar-trending" class="space-y-2">
                                 <div class="flex items-center justify-center py-6 text-on-surface-variant">
@@ -577,19 +589,11 @@
             <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
                 <div class="flex flex-col gap-1">
                     <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-0.5 rounded-full bg-pastel-lavender text-charcoal-black font-semibold text-[11px] uppercase tracking-wider">Biometric Acoustic Engine</span>
-                        <span class="text-on-surface-variant text-[11px]">v4.2.0 • Online</span>
+                        <span class="text-on-surface-variant text-xs">Máy quét cảm xúc · Online</span>
                     </div>
-                    <h1 class="font-display font-bold text-2xl sm:text-3xl tracking-tight text-charcoal-black">Adaptive Mood Station</h1>
+                    <h1 class="font-display font-bold text-2xl sm:text-3xl tracking-tight text-charcoal-black">Tâm trạng hôm nay</h1>
                 </div>
-                <div class="flex items-center gap-2 self-start md:self-auto">
-                    <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pure-white shadow-sm border border-surface-container-high/60">
-                        <span class="w-2 h-2 rounded-full bg-status-emerald animate-pulse"></span>
-                        <span class="text-xs font-semibold text-charcoal-black">Neural Mesh Sync</span>
-                        <span class="text-[11px] text-on-surface-variant font-mono">14ms</span>
-                    </div>
-                </div>
-            </header>
+                </header>
 
             <!-- Main Two-Column Architectural Workspace -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -600,7 +604,7 @@
                         <div class="flex items-center justify-between gap-2 mb-3">
                             <div class="flex items-center gap-1.5">
                                 <span class="material-symbols-outlined text-charcoal-black text-[18px]">videocam</span>
-                                <span class="text-xs font-semibold text-charcoal-black uppercase tracking-wider">Visual Sensor</span>
+                                <span class="text-xs font-semibold text-charcoal-black uppercase tracking-wider">Camera</span>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <select id="camera-device-select" onchange="window.onCameraDeviceChange(this)"
@@ -620,7 +624,7 @@
                         </div>
 
                         <!-- Sleek Viewfinder Frame -->
-                        <div class="relative w-full aspect-[4/3] sm:aspect-video rounded-xl bg-charcoal-black overflow-hidden flex items-center justify-center group shadow-inner">
+                        <div class="relative w-full aspect-[4/3] sm:aspect-video rounded-xl bg-[#0a0a0a] overflow-hidden flex items-center justify-center group shadow-inner">
                             <video id="video" autoplay playsinline
                                 class="w-full h-full object-cover opacity-90 transition-opacity group-hover:opacity-100"></video>
                             <canvas id="canvas" class="hidden"></canvas>
@@ -629,7 +633,7 @@
                             <div class="absolute inset-3 pointer-events-none flex flex-col justify-between">
                                 <div class="flex justify-between items-start">
                                     <div class="w-3.5 h-3.5 border-t-2 border-l-2 border-pure-white/80 rounded-tl-sm"></div>
-                                    <div class="px-1.5 py-0.5 rounded bg-charcoal-black/70 backdrop-blur-sm text-[10px] text-pure-white font-mono">
+                                    <div class="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] text-pure-white tabular-nums">
                                         FPS 60.0
                                     </div>
                                     <div class="w-3.5 h-3.5 border-t-2 border-r-2 border-pure-white/80 rounded-tr-sm"></div>
@@ -645,7 +649,7 @@
 
                                 <div class="flex justify-between items-end">
                                     <div class="w-3.5 h-3.5 border-b-2 border-l-2 border-pure-white/80 rounded-bl-sm"></div>
-                                    <span class="text-[10px] text-charcoal-black font-mono bg-pure-white/80 px-1.5 py-0.5 rounded backdrop-blur-sm font-semibold">FACE ID: AUTO</span>
+                                    <span class="text-[10px] text-charcoal-black tabular-nums bg-pure-white/80 px-1.5 py-0.5 rounded backdrop-blur-sm font-semibold">FACE ID: AUTO</span>
                                     <div class="w-3.5 h-3.5 border-b-2 border-r-2 border-pure-white/80 rounded-br-sm"></div>
                                 </div>
                             </div>
@@ -657,13 +661,13 @@
                         </div>
 
                         <p class="text-xs text-on-surface-variant mt-3 mb-3 leading-relaxed">
-                            Real-time micro-expression scanning matches your current emotional state to frequency-calibrated audio stems.
+                            Camera nhận diện biểu cảm của bạn và chọn nhạc hợp với tâm trạng lúc này.
                         </p>
 
                         <button id="analyze-btn"
                             class="w-full h-11 rounded-xl bg-charcoal-black hover:bg-charcoal-black/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-pure-white font-semibold text-xs tracking-wider uppercase shadow-sm">
                             <span class="material-symbols-outlined text-[18px]">face</span>
-                            <span>Start Camera Scan</span>
+                            <span>Quét tâm trạng</span>
                         </button>
                     </section>
 
@@ -671,13 +675,13 @@
                     <section class="bg-pure-white rounded-2xl p-5 shadow-sm border border-surface-container-high/60 space-y-4">
                         <div class="flex items-center justify-between">
                             <span class="px-2.5 py-0.5 rounded-full bg-pastel-lavender text-charcoal-black font-semibold text-[10px] uppercase tracking-wider">
-                                DETECTED EMOTION
+                                Tâm trạng nhận diện
                             </span>
                             <button onclick="document.getElementById('analyze-btn').click()"
                                 class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-surface-slate text-charcoal-black hover:bg-surface-container transition-all flex items-center gap-1.5"
                                 title="Rescan Mood">
                                 <span class="material-symbols-outlined text-[14px]">refresh</span>
-                                <span>Rescan</span>
+                                <span>Quét lại</span>
                             </button>
                         </div>
 
@@ -685,7 +689,7 @@
                         <div class="flex items-baseline justify-between">
                             <div>
                                 <h2 id="mood-display" class="font-display text-2xl font-bold tracking-tight text-charcoal-black uppercase">CALM / FOCUS</h2>
-                                <p class="text-[11px] text-on-surface-variant mt-0.5">Recommended Resonance: 432 Hz Ambient</p>
+                                <p class="text-[11px] text-on-surface-variant mt-0.5">Gợi ý: nhạc ambient 432 Hz</p>
                             </div>
                             <div class="w-10 h-10 rounded-xl bg-pastel-sage flex items-center justify-center text-charcoal-black flex-shrink-0">
                                 <span class="material-symbols-outlined text-[20px]">spa</span>
@@ -695,35 +699,35 @@
                         <!-- Minimalist Telemetry Grid (2x2) with Tabular Figures -->
                         <div class="grid grid-cols-2 gap-2.5">
                             <div class="p-3 rounded-xl bg-surface-slate flex flex-col justify-between border border-surface-container-high/40">
-                                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Valence</span>
-                                <span id="telemetry-valence" class="font-display text-base font-bold text-charcoal-black font-mono tracking-tight mt-1">+0.00</span>
-                                <span class="text-[10px] text-status-emerald font-medium mt-0.5">Neutral Equilibrium</span>
+                                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Cảm xúc</span>
+                                <span id="telemetry-valence" class="font-display text-base font-bold text-charcoal-black tabular-nums tracking-tight mt-1">+0.00</span>
+                                <span class="text-[10px] text-status-emerald font-medium mt-0.5">Cân bằng</span>
                             </div>
                             <div class="p-3 rounded-xl bg-surface-slate flex flex-col justify-between border border-surface-container-high/40">
-                                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Arousal</span>
-                                <span id="telemetry-arousal" class="font-display text-base font-bold text-charcoal-black font-mono tracking-tight mt-1">-0.20</span>
-                                <span class="text-[10px] text-secondary font-medium mt-0.5">Subdued Resting</span>
+                                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Năng lượng</span>
+                                <span id="telemetry-arousal" class="font-display text-base font-bold text-charcoal-black tabular-nums tracking-tight mt-1">-0.20</span>
+                                <span class="text-[10px] text-secondary font-medium mt-0.5">Nghỉ ngơi</span>
                             </div>
                             <div class="p-3 rounded-xl bg-surface-slate flex flex-col justify-between border border-surface-container-high/40">
-                                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Confidence</span>
-                                <span id="telemetry-confidence" class="font-display text-base font-bold text-charcoal-black font-mono tracking-tight mt-1">96.8%</span>
-                                <span class="text-[10px] text-on-surface-variant font-medium mt-0.5">High Stability</span>
+                                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Độ chắc chắn</span>
+                                <span id="telemetry-confidence" class="font-display text-base font-bold text-charcoal-black tabular-nums tracking-tight mt-1">96.8%</span>
+                                <span class="text-[10px] text-on-surface-variant font-medium mt-0.5">Ổn định</span>
                             </div>
                             <div class="p-3 rounded-xl bg-surface-slate flex flex-col justify-between border border-surface-container-high/40">
-                                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Context</span>
+                                <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Bối cảnh</span>
                                 <span id="telemetry-context" class="font-display text-base font-bold text-charcoal-black tracking-tight mt-1 truncate">Deep Work</span>
-                                <span class="text-[10px] text-on-surface-variant font-medium mt-0.5">Circadian Shift</span>
+                                <span class="text-[10px] text-on-surface-variant font-medium mt-0.5">Theo giờ trong ngày</span>
                             </div>
                         </div>
 
                         <!-- Frequency Resonance Bar Indicator -->
                         <div class="flex flex-col gap-1.5 pt-1">
                             <div class="flex justify-between items-center text-xs text-on-surface-variant font-medium">
-                                <span>Dynamic Harmony Level</span>
-                                <span class="font-mono text-charcoal-black font-semibold">84%</span>
+                                <span>Mức hòa hợp</span>
+                                <span class="tabular-nums text-charcoal-black font-semibold">84%</span>
                             </div>
                             <div class="w-full h-1.5 bg-surface-slate rounded-full overflow-hidden flex">
-                                <div class="h-full bg-charcoal-black w-[84%] rounded-full transition-all duration-500"></div>
+                                <div class="h-full bg-accent-blue w-[84%] rounded-full transition-all duration-500"></div>
                             </div>
                         </div>
                     </section>
@@ -770,7 +774,7 @@
                                 </span>
                                 <input id="search-input"
                                     class="w-full h-11 pl-10 pr-24 rounded-xl bg-surface-slate text-charcoal-black text-xs font-medium placeholder:text-on-surface-variant/60 focus:outline-none focus:bg-pure-white focus:ring-1 focus:ring-accent-blue transition-all"
-                                    placeholder="Search sonic frequencies, artists, or stem moods..."
+                                    placeholder="Tìm bài hát, nghệ sĩ hoặc tâm trạng..."
                                     enterkeyhint="search"
                                     onkeydown="if(event.key==='Enter') performSearch()" />
                                 <button type="button" onclick="performSearch()"
@@ -794,7 +798,7 @@
 
                         <!-- Delicate Pastel Mood Quick-Filter Chips -->
                         <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-                            <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mr-1 whitespace-nowrap">Presets:</span>
+                            <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mr-1 whitespace-nowrap">Gợi ý nhanh:</span>
                             <button onclick="document.getElementById('search-input').value='Focus Study'; performSearch()"
                                 class="px-3 py-1 rounded-full bg-pastel-lavender hover:bg-pastel-lavender/80 text-charcoal-black font-semibold text-xs flex items-center gap-1 transition-all whitespace-nowrap">
                                 <span>Focus</span>
@@ -828,8 +832,8 @@
                                     <span class="material-symbols-outlined text-[20px]">queue_music</span>
                                 </div>
                                 <div>
-                                    <h2 class="font-display text-base font-bold text-charcoal-black">Calibrated Audio Stream</h2>
-                                    <p class="text-[11px] text-on-surface-variant">Synchronized with Detected Valence &amp; Focus Index</p>
+                                    <h2 class="font-display text-base font-bold text-charcoal-black">Nhạc dành cho bạn</h2>
+                                    <p class="text-[11px] text-on-surface-variant">Chọn theo tâm trạng vừa quét</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
@@ -841,17 +845,17 @@
                                 <button onclick="document.querySelector('#recommendations-container button')?.click()"
                                     class="px-4 h-9 rounded-full bg-charcoal-black text-pure-white text-xs font-semibold hover:bg-charcoal-black/90 active:scale-95 transition-all flex items-center gap-1.5 shadow-sm">
                                     <span class="material-symbols-outlined text-[18px]">play_arrow</span>
-                                    <span>Play All</span>
+                                    <span>Phát tất cả</span>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Table Header -->
                         <div class="px-4 py-2.5 bg-surface-slate/60 border-b border-surface-container-low text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider grid grid-cols-12 gap-2 items-center">
-                            <div class="col-span-1 text-center font-mono">#</div>
-                            <div class="col-span-6 sm:col-span-6">Track &amp; Artist</div>
-                            <div class="col-span-3 sm:col-span-3 hidden sm:block">Mood Match</div>
-                            <div class="col-span-5 sm:col-span-2 text-right">Action</div>
+                            <div class="col-span-1 text-center tabular-nums">#</div>
+                            <div class="col-span-6 sm:col-span-6">Bài hát</div>
+                            <div class="col-span-3 sm:col-span-3 hidden sm:block">Độ hợp</div>
+                            <div class="col-span-5 sm:col-span-2 text-right">Phát</div>
                         </div>
 
                         <!-- Table Rows Container -->
@@ -861,17 +865,17 @@
                                 <div class="w-10 h-10 rounded-xl bg-pastel-lavender flex items-center justify-center text-charcoal-black">
                                     <span class="material-symbols-outlined text-[20px]">graphic_eq</span>
                                 </div>
-                                <h4 class="font-display text-sm font-semibold text-charcoal-black">Awaiting Mood Telemetry or Search</h4>
+                                <h4 class="font-display text-sm font-semibold text-charcoal-black">Chưa có gợi ý nào</h4>
                                 <p class="text-xs text-on-surface-variant max-w-md leading-relaxed">
-                                    Click "Start Camera Scan" on the left viewport or search keywords above to stream personalized high-bitrate audio stems.
+                                    Quét tâm trạng bằng camera hoặc tìm theo từ khóa để nghe nhạc phù hợp.
                                 </p>
                             </div>
                         </div>
 
                         <!-- Table Card Footer -->
                         <div class="px-5 py-3 bg-surface-slate/40 border-t border-surface-container-low flex items-center justify-between">
-                            <span class="text-[11px] text-on-surface-variant font-medium">Lossless 24-bit Hi-Res Acoustic Mesh</span>
-                            <span class="text-[11px] text-on-surface-variant font-mono">KietStation Minimal Audio</span>
+                            
+                            
                         </div>
                     </section>
 
@@ -880,25 +884,25 @@
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-1.5">
                                 <span class="material-symbols-outlined text-charcoal-black text-[18px]">timeline</span>
-                                <span class="text-xs font-semibold text-charcoal-black uppercase tracking-wider">Acoustic Trajectory</span>
+                                <span class="text-xs font-semibold text-charcoal-black uppercase tracking-wider">Diễn biến tâm trạng</span>
                             </div>
-                            <span class="text-[11px] text-on-surface-variant">Estimated Focus Window: 48m</span>
+                            <span class="text-[11px] text-on-surface-variant">Tập trung được khoảng 48 phút</span>
                         </div>
                         <div class="w-full h-14 relative flex items-end">
-                            <svg class="w-full h-full text-charcoal-black overflow-visible" fill="none" preserveAspectRatio="none" viewBox="0 0 600 60">
+                            <svg class="w-full h-full text-accent-blue overflow-visible" fill="none" preserveAspectRatio="none" viewBox="0 0 600 60">
                                 <defs>
                                     <linearGradient id="gradient-mood" x1="0" x2="0" y1="0" y2="1">
                                         <stop offset="0%" stop-color="#E8E5FF" stop-opacity="0.8"></stop>
                                         <stop offset="100%" stop-color="#E8E5FF" stop-opacity="0.0"></stop>
                                     </linearGradient>
                                 </defs>
-                                <path d="M0 45 C 80 40, 140 10, 220 18 C 300 26, 360 48, 440 22 C 520 -4, 560 30, 600 25 L 600 60 L 0 60 Z" fill="url(#gradient-mood)"></path>
+                                <path d="M0 45 C 80 40, 140 10, 220 18 C 300 26, 360 48, 440 22 C 520 -4, 560 30, 600 25 L 600 60 L 0 60 Z" fill="rgba(198,242,78,0.12)"></path>
                                 <path d="M0 45 C 80 40, 140 10, 220 18 C 300 26, 360 48, 440 22 C 520 -4, 560 30, 600 25" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
                                 <circle class="fill-charcoal-black" cx="220" cy="18" r="4"></circle>
                                 <circle class="stroke-accent-blue/40 fill-none animate-ping" cx="220" cy="18" r="8"></circle>
                             </svg>
                         </div>
-                        <div class="flex justify-between items-center mt-2 text-[10px] text-on-surface-variant font-mono">
+                        <div class="flex justify-between items-center mt-2 text-[10px] text-on-surface-variant tabular-nums">
                             <span>09:00 Rest</span>
                             <span class="text-charcoal-black font-semibold">10:15 Deep Work (Current)</span>
                             <span>11:30 Rebalance</span>
@@ -954,7 +958,7 @@
                                     class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block ml-1">Lyrics
                                     (Lời bài hát)</label>
                                 <textarea id="gen-lyrics" rows="8"
-                                    class="w-full h-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white font-mono text-sm focus:border-primary focus:ring-0 transition-colors placeholder-slate-600 resize-none leading-relaxed"
+                                    class="w-full h-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white tabular-nums text-sm focus:border-primary focus:ring-0 transition-colors placeholder-slate-600 resize-none leading-relaxed"
                                     placeholder="Nhập lời bài hát vào đây...&#10;Xuống dòng để AI bắt nhịp tốt hơn...&#10;&#10;Ví dụ:&#10;Hôm nay trời đẹp quá&#10;Em có muốn đi chơi không?"></textarea>
                             </div>
                         </div>
@@ -1053,57 +1057,29 @@
             <div class="absolute top-20 right-1/4 w-80 h-80 rounded-full bg-pastel-sage/20 blur-3xl pointer-events-none -z-10"></div>
 
             <!-- Header Section with High Architectural Quietude -->
-            <header class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-2 border-b border-surface-container-high/60">
-                <div class="flex flex-col gap-1 max-w-2xl">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-accent-blue animate-pulse"></span>
-                        <span class="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">User Repository // Vault 09</span>
-                    </div>
-                    <h1 class="font-display font-bold text-2xl sm:text-3xl text-charcoal-black tracking-tight">Personal Archive &amp; Collections</h1>
-                    <p class="text-xs text-on-surface-variant leading-relaxed">Surgically curated audio lossless stems, editorial playlists, and high-dynamic cinematics synced across all client terminals.</p>
-                </div>
-
-                <!-- Quick Metrics Telemetry Pills -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pure-white shadow-sm border border-surface-container-high/60">
-                        <span class="material-symbols-outlined text-[16px] text-accent-blue">music_note</span>
-                        <span class="text-xs font-semibold text-charcoal-black">Lossless</span>
-                        <span class="text-[10px] text-on-surface-variant uppercase font-medium">Tracks</span>
-                    </div>
-                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pure-white shadow-sm border border-surface-container-high/60">
-                        <span class="material-symbols-outlined text-[16px] text-charcoal-black">queue_music</span>
-                        <span class="text-xs font-semibold text-charcoal-black">Smart</span>
-                        <span class="text-[10px] text-on-surface-variant uppercase font-medium">Playlists</span>
-                    </div>
-                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pure-white shadow-sm border border-surface-container-high/60">
-                        <span class="material-symbols-outlined text-[16px] text-status-emerald">movie</span>
-                        <span class="text-xs font-semibold text-charcoal-black">4K DCI</span>
-                        <span class="text-[10px] text-on-surface-variant uppercase font-medium">Watchlist</span>
-                    </div>
-                </div>
+            <header class="flex flex-col gap-1 pb-2">
+                <h1 class="font-display font-semibold text-2xl sm:text-3xl text-charcoal-black tracking-tight">Thư viện của bạn</h1>
+                <p class="text-sm text-on-surface-variant">Bài hát yêu thích, playlist và phim đã lưu, đồng bộ trên mọi thiết bị.</p>
             </header>
 
             <!-- Main 3-Column Studio Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
                 <!-- ================= COLUMN 1: FAVORITE TRACKS ================= -->
-                <div class="bg-pure-white rounded-2xl shadow-sm border border-surface-container-high/60 p-5 h-[75vh] flex flex-col relative">
+                <div class="bg-pure-white rounded-2xl shadow-sm border border-surface-container-high/60 p-5 min-h-[20rem] max-h-[75vh] flex flex-col relative">
                     <!-- Card Header -->
                     <div class="flex items-center justify-between pb-3 mb-3 border-b border-surface-container-low">
                         <div class="flex flex-col">
-                            <span class="text-[10px] uppercase font-semibold text-accent-blue tracking-wider">Audio Stream</span>
+                            
                             <h2 class="font-display font-semibold text-base text-charcoal-black flex items-center gap-1.5">
                                 <span class="material-symbols-outlined text-accent-blue text-[18px]">favorite</span>
                                 <span>Bài Hát Yêu Thích</span>
                             </h2>
                         </div>
-                        <span class="px-2 py-0.5 rounded-full bg-pastel-lavender font-semibold text-[10px] text-charcoal-black uppercase">
-                            FLAC 24b
-                        </span>
                     </div>
 
                     <!-- Track List Container -->
                     <div id="library-favorites-list" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                        <div class="flex flex-col items-center justify-center h-48 text-on-surface-variant opacity-60">
+                        <div class="flex flex-col items-center justify-center py-10 text-on-surface-variant">
                             <span class="material-symbols-outlined text-[36px] mb-2">favorite_border</span>
                             <p class="text-xs font-medium">Chưa có bài hát yêu thích nào.</p>
                         </div>
@@ -1111,13 +1087,13 @@
                 </div>
 
                 <!-- ================= COLUMN 2: PLAYLISTS ================= -->
-                <div class="bg-pure-white rounded-2xl shadow-sm border border-surface-container-high/60 p-5 h-[75vh] flex flex-col relative overflow-hidden">
+                <div class="bg-pure-white rounded-2xl shadow-sm border border-surface-container-high/60 p-5 min-h-[20rem] max-h-[75vh] flex flex-col relative overflow-hidden">
                     <div class="flex items-center justify-between pb-3 mb-3 border-b border-surface-container-low">
                         <div class="flex flex-col">
-                            <span class="text-[10px] uppercase font-semibold text-on-surface-variant tracking-wider">Curations</span>
+                            
                             <h2 class="font-display font-semibold text-base text-charcoal-black flex items-center gap-1.5">
                                 <span class="material-symbols-outlined text-charcoal-black text-[18px]">queue_music</span>
-                                <span>Playlists</span>
+                                <span>Playlist</span>
                             </h2>
                         </div>
                         <button onclick="document.getElementById('playlist-modal').classList.remove('opacity-0', 'pointer-events-none')"
@@ -1128,7 +1104,7 @@
                     </div>
 
                     <div id="library-playlists-list" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                        <div class="flex flex-col items-center justify-center h-48 text-on-surface-variant opacity-60">
+                        <div class="flex flex-col items-center justify-center py-10 text-on-surface-variant">
                             <span class="material-symbols-outlined text-[36px] mb-2">library_music</span>
                             <p class="text-xs font-medium">Chưa có playlist nào.</p>
                         </div>
@@ -1149,10 +1125,10 @@
                 </div>
 
                 <!-- ================= COLUMN 3: PHIM YÊU THÍCH (WATCHLIST) ================= -->
-                <div class="bg-pure-white rounded-2xl shadow-sm border border-surface-container-high/60 p-5 h-[75vh] flex flex-col relative">
+                <div class="bg-pure-white rounded-2xl shadow-sm border border-surface-container-high/60 p-5 min-h-[20rem] max-h-[75vh] flex flex-col relative">
                     <div class="flex items-center justify-between pb-3 mb-3 border-b border-surface-container-low">
                         <div class="flex flex-col">
-                            <span class="text-[10px] uppercase font-semibold text-status-emerald tracking-wider">Cinema Vault</span>
+                            
                             <h2 class="font-display font-semibold text-base text-charcoal-black flex items-center gap-1.5">
                                 <span class="material-symbols-outlined text-status-emerald text-[18px]">movie_filter</span>
                                 <span>Phim Yêu Thích</span>
@@ -1245,10 +1221,10 @@
                     </div>
                     <div class="flex flex-col">
                         <div class="flex items-center gap-2">
-                            <h2 class="font-display font-bold text-xl tracking-tight text-charcoal-black uppercase">KIET<span class="text-accent-blue">FILM</span></h2>
-                            <span class="px-2 py-0.5 rounded-full bg-pastel-sage text-[10px] font-bold text-charcoal-black uppercase tracking-wider">Station 02</span>
+                            <h2 class="font-display font-bold text-xl tracking-tight text-charcoal-black uppercase">Kiet<span class="text-accent-blue">Film</span></h2>
+                            
                         </div>
-                        <span class="text-[11px] text-slate-500 uppercase tracking-widest font-semibold">Curated Cinema Archive &amp; Lossless Stream</span>
+                        <span class="text-xs text-slate-500">Phim tuyển chọn, xem ngay trên KietStation</span>
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
@@ -1259,7 +1235,7 @@
                             class="w-full h-11 pl-10 pr-24 rounded-xl bg-pure-white border border-surface-container-high/80 text-charcoal-black placeholder:text-slate-400 text-xs font-medium shadow-sm focus:border-accent-blue focus:ring-1 focus:ring-accent-blue focus:outline-none transition-all">
                         <button type="submit" id="btn-stream-film"
                             class="absolute right-1 px-3 h-9 rounded-lg bg-charcoal-black hover:bg-charcoal-black/90 active:scale-95 text-pure-white text-[11px] font-bold transition-all uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                            <span>TÌM</span>
+                            <span>Tìm</span>
                             <span class="material-icons-round text-sm">arrow_forward</span>
                         </button>
                     </form>
@@ -1277,7 +1253,7 @@
 
             <!-- Gacha Modal -->
             <div id="gacha-modal"
-                class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-charcoal-black/60 backdrop-blur-md hidden animate-fade-in">
+                class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md hidden animate-fade-in">
                 <div class="bg-pure-white w-full max-w-[340px] rounded-3xl border border-surface-container-high/80 p-8 flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
                     <div class="w-16 h-16 bg-pastel-blush border border-rose-200 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-200/50 mb-5 rotate-6 transition-transform">
                         <span class="material-icons-round text-charcoal-black text-3xl">casino</span>
@@ -1289,13 +1265,13 @@
                     <div class="flex flex-col w-full gap-2.5">
                         <button onclick="rollFilmGacha(1)"
                             class="w-full h-12 rounded-xl bg-surface-container-low hover:bg-pastel-lavender border border-surface-container-high text-charcoal-black text-xs font-bold transition-all flex items-center justify-center relative group">
-                            <span class="absolute left-3 w-6 h-6 rounded-full bg-charcoal-black/10 flex items-center justify-center text-[10px] shrink-0 font-bold">1</span>
+                            <span class="absolute left-3 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] shrink-0 font-bold">1</span>
                             <span class="uppercase tracking-wide">Quay x1</span>
                             <span class="material-icons-round text-sm opacity-0 group-hover:opacity-100 transition-all absolute right-3 text-accent-blue">auto_awesome</span>
                         </button>
                         <button onclick="rollFilmGacha(5)"
                             class="w-full h-12 rounded-xl bg-surface-container-low hover:bg-pastel-lavender border border-surface-container-high text-charcoal-black text-xs font-bold transition-all flex items-center justify-center relative group">
-                            <span class="absolute left-3 w-6 h-6 rounded-full bg-charcoal-black/10 flex items-center justify-center text-[10px] shrink-0 font-bold">5</span>
+                            <span class="absolute left-3 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] shrink-0 font-bold">5</span>
                             <span class="uppercase tracking-wide">Quay x5</span>
                             <span class="material-icons-round text-sm opacity-0 group-hover:opacity-100 transition-all absolute right-3 text-accent-blue">auto_awesome_motion</span>
                         </button>
@@ -1368,7 +1344,7 @@
 
             <!-- Genre Selection Modal (NEW) -->
             <div id="genre-modal"
-                class="fixed inset-0 z-[10000] flex items-start justify-center p-4 sm:pt-14 bg-charcoal-black/60 backdrop-blur-md hidden animate-fade-in">
+                class="fixed inset-0 z-[10000] flex items-start justify-center p-4 sm:pt-14 bg-black/70 backdrop-blur-md hidden animate-fade-in">
                 <div
                     class="bg-pure-white w-full max-w-4xl rounded-3xl border border-surface-container-high/80 pt-5 px-8 pb-8 flex flex-col shadow-2xl relative overflow-hidden max-h-[90vh]">
                     <div class="flex items-center justify-between mb-4">
@@ -1405,7 +1381,7 @@
 
             <!-- Country Selection Modal -->
             <div id="country-modal"
-                class="fixed inset-0 z-[10000] flex items-start justify-center p-4 sm:pt-14 bg-charcoal-black/60 backdrop-blur-md hidden animate-fade-in">
+                class="fixed inset-0 z-[10000] flex items-start justify-center p-4 sm:pt-14 bg-black/70 backdrop-blur-md hidden animate-fade-in">
                 <div
                     class="bg-pure-white w-full max-w-4xl rounded-3xl border border-surface-container-high/80 pt-5 px-8 pb-8 flex flex-col shadow-2xl relative overflow-hidden max-h-[90vh]">
                     <div class="flex items-center justify-between mb-4">
@@ -1442,7 +1418,7 @@
 
             <!-- Year Selection Modal -->
             <div id="year-modal"
-                class="fixed inset-0 z-[10000] flex items-start justify-center p-4 sm:pt-14 bg-charcoal-black/60 backdrop-blur-md hidden animate-fade-in">
+                class="fixed inset-0 z-[10000] flex items-start justify-center p-4 sm:pt-14 bg-black/70 backdrop-blur-md hidden animate-fade-in">
                 <div
                     class="bg-pure-white w-full max-w-3xl rounded-3xl border border-surface-container-high/80 pt-5 px-8 pb-8 flex flex-col shadow-2xl relative overflow-hidden max-h-[90vh]">
                     <div class="flex items-center justify-between mb-4">
@@ -1486,7 +1462,7 @@
                     <!-- Player Card Level 1 -->
                     <div class="bg-pure-white rounded-2xl p-4 sm:p-5 shadow-sm border border-surface-container-high/80">
                         <div id="film-player-wrapper"
-                            class="w-full aspect-video bg-charcoal-black rounded-xl shadow-lg relative overflow-hidden flex items-center justify-center">
+                            class="w-full aspect-video bg-[#0a0a0a] rounded-xl shadow-lg relative overflow-hidden flex items-center justify-center">
                             <div id="film-pl-placeholder" class="text-center p-6 text-slate-400">
                                 <span class="material-icons-round text-5xl mb-2 opacity-40">smart_display</span>
                                 <p class="text-sm font-bold text-slate-200">Chưa có video nào đang phát</p>
@@ -1899,7 +1875,7 @@
                                 <div class="flex items-center justify-between mb-0.5">
                                     <h4 class="text-xs font-black text-white uppercase tracking-tight truncate">Flappy
                                         Kiet</h4>
-                                    <span class="game-badge">Action</span>
+                                    <span class="game-badge">Phát</span>
                                 </div>
                                 <p class="text-[9px] text-slate-500 truncate font-medium">Vượt chướng ngại vật</p>
                             </div>
@@ -2367,7 +2343,7 @@
                 <!-- Left: Video Preview -->
                 <div class="lg:col-span-8 flex flex-col gap-4">
                     <div
-                        class="relative rounded-2xl overflow-hidden bg-charcoal-black shadow-lg aspect-[3/4] sm:aspect-video lg:aspect-[4/3] border border-surface-container-high group">
+                        class="relative rounded-2xl overflow-hidden bg-[#0a0a0a] aspect-[3/4] sm:aspect-video lg:aspect-[4/3] border border-surface-container-high group">
                         <video id="pb-video" autoplay playsinline class="w-full h-full object-cover"></video>
                         <canvas id="pb-seg-canvas" class="hidden absolute inset-0 w-full h-full object-cover"></canvas>
                         <canvas id="pb-canvas" class="hidden"></canvas>
@@ -2382,7 +2358,7 @@
                         </div>
 
                         <div id="pb-capture-status"
-                            class="absolute top-6 left-6 px-4 py-2 bg-charcoal-black/80 backdrop-blur-md rounded-full border border-pure-white/10 hidden z-30">
+                            class="absolute top-6 left-6 px-4 py-2 bg-black/80 backdrop-blur-md rounded-full border border-pure-white/10 hidden z-30">
                             <p id="pb-capture-status-text"
                                 class="text-xs font-bold text-pure-white uppercase tracking-wider flex items-center gap-2">
                                 <span class="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span>
@@ -2493,7 +2469,7 @@
                             <!-- Placeholder: Content generated by JS -->
                         </div>
                         <div
-                            class="absolute -bottom-5 left-1/2 -translate-x-1/2 px-4 py-1 bg-charcoal-black/80 backdrop-blur-md rounded-full text-[10px] font-bold text-pure-white uppercase tracking-widest pointer-events-none shadow-sm">
+                            class="absolute -bottom-5 left-1/2 -translate-x-1/2 px-4 py-1 bg-black/80 backdrop-blur-md rounded-full text-[10px] font-bold text-pure-white uppercase tracking-widest pointer-events-none shadow-sm">
                             Xem Trước Khung Ảnh
                         </div>
                     </div>
@@ -2811,7 +2787,7 @@
                                 onerror="this.src='https://api.dicebear.com/7.x/identicon/svg?seed=guest&size=128'"
                                 class="w-full h-full rounded-2xl border-4 border-surface-container-high object-cover shadow-sm transition-all group-hover:scale-105 bg-surface-container-low">
                             <label for="avatar-input" id="profile-avatar-upload-label"
-                                class="absolute inset-0 flex items-center justify-center bg-charcoal-black/40 backdrop-blur-sm rounded-2xl opacity-0 group-hover:opacity-100 cursor-pointer transition-all border-2 border-accent-blue/50">
+                                class="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-2xl opacity-0 group-hover:opacity-100 cursor-pointer transition-all border-2 border-accent-blue/50">
                                 <span class="material-icons-round text-pure-white text-3xl">photo_camera</span>
                                 <input type="file" id="avatar-input" class="hidden" accept="image/*"
                                     onchange="handleAvatarUpload(event)">
@@ -2972,7 +2948,7 @@
         <section class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 bg-pure-white p-6 sm:p-8 rounded-3xl shadow-sm border border-surface-container-high/80 mb-6">
             <div class="flex flex-col gap-2 max-w-xl">
                 <div class="flex items-center gap-2">
-                    <span class="px-3 py-0.5 rounded-full bg-pastel-lavender text-xs font-bold uppercase tracking-wider text-charcoal-black">Adaptive Neural Broadcast</span>
+                    
                     <span class="w-2 h-2 rounded-full bg-status-emerald animate-ping"></span>
                     <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Stream Ch. 09</span>
                 </div>
@@ -3025,10 +3001,10 @@
                         </div>
                     </div>
                     <!-- Frame -->
-                    <div class="relative rounded-xl overflow-hidden aspect-video bg-charcoal-black shadow-inner flex items-center justify-center">
+                    <div class="relative rounded-xl overflow-hidden aspect-video bg-[#0a0a0a] flex items-center justify-center">
                         <video id="dj-video" class="w-full h-full object-cover opacity-90" autoplay playsinline muted></video>
                         <div id="dj-webcam-overlay"
-                            class="absolute inset-0 flex items-center justify-center bg-charcoal-black/60 backdrop-blur-sm z-10 transition-opacity">
+                            class="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-10 transition-opacity">
                             <span class="material-icons-round text-pure-white/50 text-4xl animate-pulse">videocam_off</span>
                         </div>
                         <div class="absolute inset-x-0 h-0.5 bg-accent-blue/80 top-1/3 shadow-[0_0_12px_rgba(37,99,235,0.8)] animate-pulse pointer-events-none"></div>
@@ -3111,7 +3087,7 @@
                 <h1 class="text-3xl sm:text-4xl font-display font-bold text-charcoal-black tracking-tight">
                     Deep Work <span class="text-accent-blue">Sanctuary</span>
                 </h1>
-                <p class="text-slate-500 text-xs sm:text-sm mt-1">Pomodoro timer • Lo-fi lossless music • Biometric emotion detection</p>
+                <p class="text-slate-500 text-xs sm:text-sm mt-1">Đồng hồ Pomodoro, nhạc lo-fi và nhận diện cảm xúc khi học</p>
             </div>
 
             <!-- Study Room Quick Actions -->
@@ -3170,7 +3146,7 @@
 
                     <!-- Progress Bar -->
                     <div class="w-full h-1.5 bg-surface-container-low rounded-full overflow-hidden mb-6">
-                        <div id="focus-progress-bar" class="h-full bg-charcoal-black transition-all duration-1000"
+                        <div id="focus-progress-bar" class="h-full bg-accent-blue transition-all duration-1000"
                             style="width: 0%"></div>
                     </div>
 
@@ -3231,10 +3207,10 @@
                         </div>
                     </div>
                     <div
-                        class="relative rounded-2xl overflow-hidden aspect-video bg-charcoal-black shadow-inner flex items-center justify-center">
+                        class="relative rounded-2xl overflow-hidden aspect-video bg-[#0a0a0a] flex items-center justify-center">
                         <video id="focus-video" class="w-full h-full object-cover opacity-90" autoplay playsinline muted></video>
                         <div id="focus-webcam-overlay"
-                            class="absolute inset-0 flex items-center justify-center bg-charcoal-black/60 backdrop-blur-sm z-10 transition-opacity">
+                            class="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-10 transition-opacity">
                             <span class="material-icons-round text-pure-white/50 text-4xl animate-pulse">videocam_off</span>
                         </div>
                     </div>
@@ -4054,7 +4030,7 @@
     </script>
     <!-- AUTH MODAL -->
     <div id="auth-modal"
-        class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-charcoal-black/60 backdrop-blur-md transition-all duration-300 hidden opacity-0 pointer-events-none">
+        class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md transition-all duration-300 hidden opacity-0 pointer-events-none">
         <div class="bg-pure-white w-full max-w-md rounded-[2.5rem] border border-surface-container-high p-8 shadow-2xl relative overflow-hidden transform scale-95 transition-transform duration-300"
             id="auth-modal-content">
             <div class="absolute -top-24 -right-24 w-48 h-48 bg-pastel-lavender blur-[80px] rounded-full pointer-events-none"></div>
@@ -4208,6 +4184,7 @@
     <script src="js/app.js"></script>
     <script src="js/focus-mode.js"></script>
     <script src="js/study-room.js"></script>
+    <script src="js/i18n.js"></script>
 </body>
 
 </html>
