@@ -827,7 +827,6 @@
                         const cur = (localAudio.getAttribute('src') || '').split('/').pop();
                         if (cur === videoId && localAudio.paused && localAudio.readyState < 3 && window.__ksEmbedTried !== videoId) {
                             window.__ksEmbedTried = videoId;
-                            if (typeof showToast === 'function') showToast("Máy chủ phản hồi chậm. Đang mở trình phát YouTube...", "error");
                             window.toggleYtVideo({ embed: true });
                         }
                     }, 10000);
@@ -875,7 +874,6 @@
                     // the server could not fetch this audio (common when YouTube blocks a hosting IP):
                     // play it through YouTube's own player, which runs from the listener's connection
                     window.__ksEmbedTried = failedId;
-                    if (typeof showToast === 'function') showToast("Không phát được luồng trực tiếp. Đang mở trình phát YouTube...", "error");
                     window.toggleYtVideo({ embed: true });
                     return;
                 }
