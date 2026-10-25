@@ -4,7 +4,7 @@
 // - Pages, scripts and styles are fetched network-first so a deploy shows up on the next load;
 //   the cache is only the offline fallback. (A stale-while-revalidate cache kept serving the previous
 //   scripts for one more visit after every deploy.)
-const CACHE_NAME = 'kietstation-pwa-v5';
+const CACHE_NAME = 'kietstation-pwa-v6';
 
 const SHELL = [
   '/',
@@ -25,6 +25,7 @@ const SHELL = [
   '/js/now-playing.js',
   '/js/extras.js',
   '/js/media-session.js',
+  '/js/embed-bridge.js',
   '/js/i18n.js',
   '/favicon-32x32.png',
   '/android-chrome-192x192.png',

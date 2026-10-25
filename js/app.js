@@ -55,7 +55,7 @@
         let ytResumeAudio = false;
         function ytEmbedHtml(vidId, title, start) {
             const safeTitle = String(title || 'Video').replace(/"/g, '&quot;');
-            return '<iframe class="w-full h-full" style="border:0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="' + safeTitle + '" src="https://www.youtube-nocookie.com/embed/' + vidId + '?autoplay=1&rel=0&playsinline=1&start=' + Math.max(0, Math.floor(start || 0)) + '"></iframe>' +
+            return '<iframe class="w-full h-full" style="border:0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" data-vid="' + vidId + '" title="' + safeTitle + '" src="https://www.youtube-nocookie.com/embed/' + vidId + '?autoplay=1&rel=0&playsinline=1&enablejsapi=1&start=' + Math.max(0, Math.floor(start || 0)) + '"></iframe>' +
                 '<a href="https://www.youtube.com/watch?v=' + vidId + '" target="_blank" rel="noopener" class="absolute left-4 bottom-4 px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-semibold hover:bg-black">Mở trên YouTube</a>';
         }
         // opts.embed === true: skip the server video stream and use YouTube's own player (used when the server
@@ -75,11 +75,25 @@
                     if (typeof showToast === 'function') showToast('Bài này không có video để xem', 'error');
                     return;
                 }
+                const showModal = () => {
+                    modal.classList.remove('opacity-0', 'pointer-events-none');
+                    modal.classList.add('opacity-100', 'pointer-events-auto');
+                };
+                // the song is already playing through the embed (kept alive when the window was closed): just show it
+                if (host.dataset.keep === '1' && host.querySelector('iframe[data-vid="' + vidId + '"]')) {
+                    showModal();
+                    return;
+                }
                 const start = (localAudio && localAudio.currentTime) ? Math.floor(localAudio.currentTime) : 0;
                 ytResumeAudio = !forceEmbed && !!(localAudio && !localAudio.paused);
+                if (window.KSEmbed && window.KSEmbed.active()) window.KSEmbed.release();
                 if (localAudio && !localAudio.paused) localAudio.pause();
+                delete host.dataset.keep;
                 if (forceEmbed) {
                     host.innerHTML = ytEmbedHtml(vidId, t.title, start);
+                    // this embed IS the song: keep it playing when the window is closed and let the player controls drive it
+                    host.dataset.keep = '1';
+                    if (window.KSEmbed) window.KSEmbed.attach(host.querySelector('iframe'));
                 } else {
                     host.innerHTML = '<video id="yt-native-video" class="w-full h-full bg-black" controls autoplay playsinline src="/api/yt-video/' + vidId + '"></video>' +
                         '<a href="https://www.youtube.com/watch?v=' + vidId + '" target="_blank" rel="noopener" class="absolute left-4 bottom-14 px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-semibold hover:bg-black">Mở trên YouTube</a>';
@@ -93,6 +107,10 @@
                 }
                 modal.classList.remove('opacity-0', 'pointer-events-none');
                 modal.classList.add('opacity-100', 'pointer-events-auto');
+            } else if (host.dataset.keep === '1' && host.querySelector('iframe')) {
+                // closing only hides it: the song keeps playing and the player controls stay in charge
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.classList.remove('opacity-100', 'pointer-events-auto');
             } else {
                 const nv = document.getElementById('yt-native-video');
                 if (nv && localAudio && nv.currentTime > 0) { try { localAudio.currentTime = nv.currentTime; } catch (e) {} }
@@ -847,6 +865,7 @@
                 if (playIcon) playIcon.innerText = "hourglass_top";
             };
             localAudio.onerror = (e) => {
+                if (window.KSEmbed && window.KSEmbed.active()) return; // the embed is the source now
                 const playIcon = document.getElementById('play-icon');
                 if (playIcon) playIcon.innerText = "play_arrow";
                 console.error("[localAudio] Stream error:", e);
