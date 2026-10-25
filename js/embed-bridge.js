@@ -100,6 +100,25 @@
         }
     });
 
+    // The play/pause buttons: with the embed as the source the <audio> element has no src, which the other
+    // wrappers read as "nothing loaded yet" and restart the song. Pause must just pause.
+    const origToggle = window.toggleMainPlay;
+    if (typeof origToggle === 'function') {
+        window.toggleMainPlay = function () {
+            if (!S.on) return origToggle.apply(this, arguments);
+            const a = audio();
+            const wasPlaying = !a.paused;
+            if (wasPlaying) {
+                window.dispatchEvent(new Event('ks-user-paused'));
+                a.pause();
+            } else {
+                a.play();
+            }
+            const icon = $('play-icon');
+            if (icon) icon.innerText = wasPlaying ? 'play_arrow' : 'pause';
+        };
+    }
+
     // A new song takes over: drop the old embed first so two videos never play together.
     const origPlay = window.playTrack;
     if (typeof origPlay === 'function') {
