@@ -1129,7 +1129,7 @@
                 const data = await res.json();
 
                 if (!data.recommendations || data.recommendations.length === 0) {
-                    container.innerHTML = `<div class="p-8 text-xs text-slate-500">No tracks found. Try other keywords.</div>`;
+                    window.UIState.render(container, 'empty', 'Không tìm thấy bài nào. Thử từ khóa khác.');
                     return;
                 }
 
@@ -1160,7 +1160,7 @@
                     </div>`;
                 }).join('');
             } catch (e) {
-                container.innerHTML = `<div class="p-8 text-xs text-red-400">Search Failed. Please try again.</div>`;
+                window.UIState.render(container, 'error', 'Tìm kiếm không thành công. Vui lòng thử lại.', () => performSearch());
             }
         }
 
@@ -1261,7 +1261,7 @@
                     }
 
                     if (!data.recommendations || data.recommendations.length === 0) {
-                        recContainer.innerHTML = `<div class="p-8 text-xs text-slate-500">No matching recommendations found.</div>`;
+                        window.UIState.render(recContainer, 'empty', 'Chưa tìm thấy bài hát phù hợp. Thử chọn tâm trạng khác hoặc tìm theo từ khóa.');
                         return;
                     }
 
@@ -1295,7 +1295,7 @@
 
                 } catch (e) {
                     console.error(e);
-                    alert("Mood Analysis Failed");
+                    window.UIState.render(recContainer, 'error', 'Không quét được tâm trạng. Kiểm tra camera và kết nối, hoặc chọn tâm trạng bằng tay.', () => document.getElementById('analyze-btn').click());
                 } finally {
                     btn.disabled = false;
                     btn.innerHTML = `<svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> START CAMERA SCAN`;
@@ -1320,6 +1320,9 @@
                     <svg class="w-3.5 h-3.5 text-charcoal-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/>
                     </svg>
+                </button>
+                <button onclick="queueAddFromButton(event, '${songStr}')" class="w-7 h-7 rounded-md border border-surface-container-high bg-pure-white hover:bg-pastel-lavender flex items-center justify-center text-charcoal-black transition-colors" title="Thêm vào hàng đợi" aria-label="Thêm vào hàng đợi">
+                    <span class="material-symbols-outlined text-[16px]">queue_music</span>
                 </button>
                 <button onclick="playTrack('${songStr}', '${mode || 'youtube'}')" class="w-7 h-7 rounded-md bg-accent-blue hover:bg-blue-700 flex items-center justify-center text-white transition-colors" title="Phát bài này">
                     <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">

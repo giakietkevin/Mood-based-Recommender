@@ -61,7 +61,7 @@
                     </div>
                     <div class="np-times"><span id="np-cur">0:00</span><span id="np-dur">0:00</span></div>
                     <div class="np-controls">
-                        <button type="button" class="np-btn np-pod" id="np-back" aria-label="Lùi 15 giây" title="Lùi 15 giây">
+                        <button type="button" class="np-btn np-pod" id="np-back" aria-label="Lùi 10 giây" title="Lùi 10 giây">
                             <span class="material-symbols-outlined">replay_10</span>
                         </button>
                         <button type="button" class="np-btn" id="np-prev" aria-label="Bài trước"><span class="material-symbols-outlined">skip_previous</span></button>
@@ -80,15 +80,23 @@
                             <span class="material-symbols-outlined">favorite</span>
                         </button>
                     </div>
+                    <div class="np-tabs" role="tablist" aria-label="Lời bài hát và hàng đợi">
+                        <button type="button" role="tab" class="np-tab is-on" id="np-tab-lyrics" aria-selected="true" aria-controls="np-lyrics">Lời bài hát</button>
+                        <button type="button" role="tab" class="np-tab" id="np-tab-queue" aria-selected="false" aria-controls="np-queue">Sắp tới <span class="np-count" id="np-queue-count" hidden>0</span></button>
+                    </div>
+                    <div class="np-panel" id="np-lyrics" role="tabpanel" aria-labelledby="np-tab-lyrics" aria-live="polite"></div>
+                    <div class="np-panel" id="np-queue" role="tabpanel" aria-labelledby="np-tab-queue" hidden></div>
                 </div>
             </div>`;
         document.body.appendChild(el);
+        $('np-tab-lyrics').addEventListener('click', () => showTab('lyrics'));
+        $('np-tab-queue').addEventListener('click', () => showTab('queue'));
 
         $('np-close').addEventListener('click', close);
         $('np-play').addEventListener('click', () => { if (window.toggleMainPlay) window.toggleMainPlay(); });
         $('np-prev').addEventListener('click', () => { if (window.playPreviousTrack) window.playPreviousTrack(); });
         $('np-next').addEventListener('click', () => { if (window.playNextTrack) window.playNextTrack(); });
-        $('np-back').addEventListener('click', () => skip(-15));
+        $('np-back').addEventListener('click', () => skip(-10));
         $('np-fwd').addEventListener('click', () => skip(30));
         $('np-speed').addEventListener('click', () => {
             speedIdx = (speedIdx + 1) % SPEEDS.length;
@@ -147,6 +155,7 @@
         $('np-seek').setAttribute('aria-valuenow', String(Math.round(pct)));
         $('np-cur').textContent = fmt(a.currentTime);
         $('np-dur').textContent = fmt(a.duration);
+        syncLyrics();
     }
 
     // The field takes the cover's dominant colour, darkened, as one flat tone.
@@ -167,6 +176,129 @@
         };
         probe.src = url;
     }
+
+
+    // ---- tabs, lyrics ---------------------------------------------------
+    let tab = 'lyrics';
+    let lyr = { key: '', lines: [], active: -1, state: 'idle' };
+    const lyrCache = new Map();
+
+    function showTab(name) {
+        tab = name;
+        ['lyrics', 'queue'].forEach((n) => {
+            const on = n === name;
+            $('np-tab-' + n).classList.toggle('is-on', on);
+            $('np-tab-' + n).setAttribute('aria-selected', String(on));
+            $('np-' + n).hidden = !on;
+        });
+        if (name === 'queue' && window.KSQueue) window.KSQueue.render();
+        if (name === 'lyrics') loadLyrics(window.currentTrackData);
+    }
+
+    function trackKey(d) { return d ? (d.link || d.file_url || d.title || '') : ''; }
+
+    function lyricsMessage(text, retry) {
+        const box = $('np-lyrics');
+        box.innerHTML = '';
+        const p = document.createElement('p');
+        p.className = 'np-empty';
+        p.textContent = text;
+        box.appendChild(p);
+        if (retry) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'np-chip';
+            b.textContent = 'Thử lại';
+            b.addEventListener('click', () => { lyrCache.delete(lyr.key); loadLyrics(window.currentTrackData, true); });
+            box.appendChild(b);
+        }
+    }
+
+    function renderLyrics(res) {
+        const box = $('np-lyrics');
+        box.innerHTML = '';
+        lyr.active = -1;
+        lyr.lines = [];
+        if (res.instrumental) { lyricsMessage('Bài này không có lời (nhạc không lời).'); return; }
+        if (res.synced && res.synced.length) {
+            lyr.lines = res.synced;
+            const wrap = document.createElement('div');
+            wrap.className = 'np-lines';
+            res.synced.forEach((l, i) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'np-line';
+                b.dataset.i = String(i);
+                b.textContent = l.text || '♪';
+                b.addEventListener('click', () => { const a = audio(); if (a) a.currentTime = l.t; });
+                wrap.appendChild(b);
+            });
+            box.appendChild(wrap);
+            syncLyrics();
+        } else if (res.plain) {
+            const pre = document.createElement('div');
+            pre.className = 'np-plain';
+            pre.textContent = res.plain;
+            box.appendChild(pre);
+        } else {
+            lyricsMessage('Chưa có lời cho bài này.');
+            return;
+        }
+        const src = document.createElement('p');
+        src.className = 'np-credit';
+        src.textContent = res.source === 'youtube-subtitles' ? 'Phụ đề do chủ video đăng tải (không phải lời chính thức)' : 'Lời bài hát: lrclib.net';
+        box.appendChild(src);
+    }
+
+    async function loadLyrics(data, force) {
+        if (!data || tab !== 'lyrics') return;
+        const key = trackKey(data);
+        if (!force && key === lyr.key && lyr.state === 'done') return;
+        lyr = { key, lines: [], active: -1, state: 'loading' };
+        if (lyrCache.has(key)) { renderLyrics(lyrCache.get(key)); lyr.state = 'done'; return; }
+        lyricsMessage('Đang tìm lời bài hát...');
+        const a = audio();
+        const q = new URLSearchParams({ title: data.title || '', artist: data.artist || '' });
+        if (a && isFinite(a.duration) && a.duration > 0) q.set('duration', String(Math.round(a.duration)));
+        const vidMatch = /(?:v=|youtu\.be\/)([\w-]{11})/.exec(data.link || '') || /^([\w-]{11})$/.exec(data.link || '');
+        if (vidMatch) q.set('vid', vidMatch[1]);
+        try {
+            const r = await fetch('/api/lyrics?' + q.toString());
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const res = await r.json();
+            if (trackKey(window.currentTrackData) !== key) return; // the track changed while we waited
+            lyrCache.set(key, res);
+            lyr.state = 'done';
+            renderLyrics(res);
+        } catch (e) {
+            if (trackKey(window.currentTrackData) !== key) return;
+            lyr.state = 'error';
+            lyricsMessage('Không tải được lời bài hát.', true);
+        }
+    }
+
+    function syncLyrics() {
+        const a = audio();
+        if (!a || !lyr.lines.length || tab !== 'lyrics') return;
+        const t = a.currentTime + 0.25;
+        let lo = 0, hi = lyr.lines.length - 1, idx = -1;
+        while (lo <= hi) {
+            const mid = (lo + hi) >> 1;
+            if (lyr.lines[mid].t <= t) { idx = mid; lo = mid + 1; } else hi = mid - 1;
+        }
+        if (idx === lyr.active) return;
+        lyr.active = idx;
+        const box = $('np-lyrics');
+        const prev = box.querySelector('.np-line.is-now');
+        if (prev) prev.classList.remove('is-now');
+        const cur = idx >= 0 ? box.querySelector('.np-line[data-i="' + idx + '"]') : null;
+        if (cur) {
+            cur.classList.add('is-now');
+            box.scrollTo({ top: cur.offsetTop - box.clientHeight / 2 + cur.clientHeight / 2, behavior: 'smooth' });
+        }
+    }
+
+    window.NowPlaying = { isOpen: () => open, showTab: showTab };
 
     function fill(data) {
         if (!data) return;
@@ -193,6 +325,9 @@
         syncHeart();
         syncPlay();
         syncTime();
+        lyr.state = 'idle';
+        loadLyrics(data);
+        if (window.KSQueue) window.KSQueue.render();
     }
 
     function openView() {

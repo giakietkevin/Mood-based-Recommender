@@ -110,12 +110,14 @@ app.add_middleware(
 from routers.auth_router import router as auth_router
 from routers.favorites_router import router as favorites_router
 from routers.recommend_router import router as recommend_router
+from routers.media_router import router as media_router
 from auth import MongoDBConnection
 
 # Include Routers
 app.include_router(auth_router)
 app.include_router(favorites_router)
 app.include_router(recommend_router)
+app.include_router(media_router)
 
 # Startup & Shutdown Events
 @app.on_event("startup")

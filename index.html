@@ -764,6 +764,20 @@
 
                 <!-- RIGHT COLUMN: Search, Filters, and Recommended Queue (col-span-8) -->
                 <div class="lg:col-span-8 flex flex-col gap-5">
+                    <!-- 0. Manual mood + recent plays -->
+                    <section id="mood-picker" class="bg-pure-white rounded-2xl p-5 flex flex-col gap-3" aria-labelledby="mood-picker-title">
+                        <div>
+                            <h2 id="mood-picker-title" class="font-display font-semibold text-lg text-charcoal-black">Hôm nay bạn thấy thế nào?</h2>
+                            <p class="text-sm text-on-surface-variant">Chọn một tâm trạng để nhận gợi ý nhạc, không cần bật camera.</p>
+                        </div>
+                        <div id="mood-chips" class="ks-mood-row" role="group" aria-label="Chọn tâm trạng"></div>
+                    </section>
+
+                    <section id="recent-section" class="flex flex-col gap-3" aria-labelledby="recent-title" hidden>
+                        <h2 id="recent-title" class="font-display font-semibold text-lg text-charcoal-black">Nghe gần đây</h2>
+                        <div id="recent-row" class="ks-recent-row"></div>
+                    </section>
+
                     <!-- 1. Search & Filter Bar Section -->
                     <section class="bg-pure-white rounded-2xl p-5 shadow-sm border border-surface-container-high/60 flex flex-col gap-4">
                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -4184,6 +4198,8 @@
     <script src="js/app.js"></script>
     <script src="js/focus-mode.js"></script>
     <script src="js/study-room.js"></script>
+    <script src="js/queue.js"></script>
+    <script src="js/listening.js"></script>
     <script src="js/now-playing.js"></script>
     <script src="js/i18n.js"></script>
 </body>

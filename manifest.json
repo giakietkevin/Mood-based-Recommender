@@ -1,16 +1,22 @@
 {
   "id": "/",
-  "name": "KietSound Pro - AI Music Studio",
-  "short_name": "KietSound",
-  "description": "Nhận diện cảm xúc, gợi ý nhạc và tạo bài hát AI với giọng RVC.",
-  "start_url": "/?view=studio",
+  "name": "KietStation",
+  "short_name": "KietStation",
+  "description": "Nhận diện tâm trạng, gợi ý nhạc, xem phim và học cùng bạn bè.",
+  "start_url": "/?view=dashboard",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "browser"],
-  "background_color": "#090A0C",
-  "theme_color": "#090A0C",
+  "display_override": [
+    "standalone",
+    "browser"
+  ],
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "any",
-  "categories": ["music", "entertainment"],
+  "categories": [
+    "music",
+    "entertainment"
+  ],
   "lang": "vi",
   "icons": [
     {
@@ -38,7 +44,13 @@
       "short_name": "Studio",
       "description": "Tạo nhạc từ lời bài hát",
       "url": "/?view=studio",
-      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/12204/12204300.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "https://cdn-icons-png.flaticon.com/512/12204/12204300.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
