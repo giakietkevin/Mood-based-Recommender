@@ -50,33 +50,46 @@
         window.mainStream = null;
         window.selectedVideoDeviceId = null;
 
+        // Video view: a plain embedded iframe. The IFrame API script is never loaded on this page,
+        // so window.ytPlayer does not exist and the old API-based toggle opened an empty modal.
+        let ytResumeAudio = false;
         window.toggleYtVideo = () => {
             const modal = document.getElementById('yt-video-modal');
-            if (modal.classList.contains('opacity-0')) {
+            const host = document.getElementById('yt-player');
+            if (!modal || !host) return;
+            const opening = modal.classList.contains('opacity-0');
+            if (opening) {
+                const t = window.currentTrackData || {};
+                let vidId = t.link || '';
+                if (vidId.length !== 11) vidId = extractVideoId(vidId) || '';
+                if (!vidId) {
+                    if (typeof showToast === 'function') showToast('Bài này không có video để xem', 'error');
+                    return;
+                }
+                const start = (localAudio && localAudio.currentTime) ? Math.floor(localAudio.currentTime) : 0;
+                ytResumeAudio = !!(localAudio && !localAudio.paused);
+                if (ytResumeAudio) localAudio.pause();
+                const safeTitle = String(t.title || 'Video').replace(/"/g, '&quot;');
+                host.innerHTML = '<video id="yt-native-video" class="w-full h-full bg-black" controls autoplay playsinline src="/api/yt-video/' + vidId + '"></video>' +
+                    '<a href="https://www.youtube.com/watch?v=' + vidId + '" target="_blank" rel="noopener" class="absolute left-4 bottom-14 px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-semibold hover:bg-black">Mở trên YouTube</a>';
+                const vid = document.getElementById('yt-native-video');
+                vid.addEventListener('loadedmetadata', () => { try { if (start > 0) vid.currentTime = start; } catch (e) {} }, { once: true });
+                // If the server cannot extract the video, fall back to the official embed.
+                vid.addEventListener('error', () => {
+                    if (!document.getElementById('yt-native-video')) return;
+                    host.innerHTML = '<iframe class="w-full h-full" style="border:0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="' + safeTitle + '" src="https://www.youtube-nocookie.com/embed/' + vidId + '?autoplay=1&rel=0&start=' + Math.floor(vid.currentTime || start) + '"></iframe>' +
+                        '<a href="https://www.youtube.com/watch?v=' + vidId + '" target="_blank" rel="noopener" class="absolute left-4 bottom-4 px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-semibold hover:bg-black">Mở trên YouTube</a>';
+                }, { once: true });
                 modal.classList.remove('opacity-0', 'pointer-events-none');
                 modal.classList.add('opacity-100', 'pointer-events-auto');
-                if (currentMode === 'youtube' && window.currentTrackData) {
-                    const vidId = extractVideoId(window.currentTrackData.link);
-                    if (vidId && isYtReady && window.ytPlayer && window.ytPlayer.loadVideoById) {
-                        const curTime = (localAudio && localAudio.currentTime) ? localAudio.currentTime : 0;
-                        if (localAudio && !localAudio.paused) localAudio.pause();
-                        window.ytPlayer.loadVideoById({ videoId: vidId, startSeconds: curTime });
-                        window.ytPlayer.playVideo();
-                    }
-                }
             } else {
+                const nv = document.getElementById('yt-native-video');
+                if (nv && localAudio && nv.currentTime > 0) { try { localAudio.currentTime = nv.currentTime; } catch (e) {} }
+                host.innerHTML = '';
                 modal.classList.add('opacity-0', 'pointer-events-none');
                 modal.classList.remove('opacity-100', 'pointer-events-auto');
-                if (currentMode === 'youtube' && isYtReady && window.ytPlayer && window.ytPlayer.getCurrentTime) {
-                    try {
-                        const curTime = window.ytPlayer.getCurrentTime() || 0;
-                        if (window.ytPlayer.pauseVideo) window.ytPlayer.pauseVideo();
-                        if (localAudio) {
-                            localAudio.currentTime = curTime;
-                            localAudio.play().catch(() => {});
-                        }
-                    } catch (e) {}
-                }
+                if (ytResumeAudio && localAudio) localAudio.play().catch(() => {});
+                ytResumeAudio = false;
             }
         };
 
@@ -207,6 +220,8 @@
         });
 
         window.showView = (viewName) => {
+            // The community feed is retired: any link to it lands on the mood page.
+            if (viewName === 'home') viewName = 'dashboard';
             // Lock Studio view: Show under development modal
             if (viewName === 'studio') {
                 window.showStudioUnderDevModal();

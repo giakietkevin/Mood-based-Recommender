@@ -200,6 +200,27 @@
     "artist": "Rock Việt Chất",
     "thumbnail": "https://i.ytimg.com/vi/ixd7GBwjtrw/hqdefault.jpg",
     "link": "https://www.youtube.com/watch?v=ixd7GBwjtrw",
+    "plays": 2
+  },
+  {
+    "title": "NGUYỄN VĂN MƯỜI - MCK (OFFICIAL MUSIC VIDEO)",
+    "artist": "MCK // Nger",
+    "thumbnail": "https://i.ytimg.com/vi/vDgKtOoGljU/hqdefault.jpg",
+    "link": "https://www.youtube.com/watch?v=vDgKtOoGljU",
+    "plays": 2
+  },
+  {
+    "title": "OANH M = THUOC - MCK (OFFICIAL MUSIC VIDEO)",
+    "artist": "MCK // Nger",
+    "thumbnail": "https://i.ytimg.com/vi/66zRk_-sCCQ/hqdefault.jpg",
+    "link": "https://www.youtube.com/watch?v=66zRk_-sCCQ",
+    "plays": 1
+  },
+  {
+    "title": "SLIPPERY - MCK ft. TÙNG DƯƠNG (OFFICIAL MUSIC VIDEO)",
+    "artist": "MCK // Nger",
+    "thumbnail": "https://i.ytimg.com/vi/cXZKZaEBgtU/hqdefault.jpg",
+    "link": "https://www.youtube.com/watch?v=cXZKZaEBgtU",
     "plays": 1
   }
 ]

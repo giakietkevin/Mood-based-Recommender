@@ -1637,6 +1637,102 @@ async def stream_yt_audio(video_id: str, request: Request):
     return StreamingResponse(iter_stream(), status_code=status_code, headers=resp_headers)
 
 
+_yt_video_cache = {}  # {video_id: {"url": str, "headers": dict, "expires_at": float}}
+
+
+def get_yt_video_stream_info(video_id: str):
+    """Direct progressive MP4 (video + audio in one file) for the in-page video view."""
+    now = time.time()
+    cached = _yt_video_cache.get(video_id)
+    if cached and cached.get("expires_at", 0) > now:
+        return cached["url"], cached["headers"]
+
+    import yt_dlp
+
+    ydl_opts = {
+        'format': 'best[ext=mp4][height<=720][vcodec!=none][acodec!=none]/best[ext=mp4][vcodec!=none][acodec!=none]',
+        'quiet': True,
+        'no_warnings': True,
+        'js_runtimes': {'node': {}},
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android', 'ios', 'web'],
+                'player_skip': ['webpage', 'configs']
+            }
+        },
+        'socket_timeout': 10
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
+        stream_url = info.get("url")
+        if not stream_url:
+            raise ValueError(f"No video stream URL found for {video_id}")
+        headers = info.get("http_headers", {})
+        try:
+            params = urllib.parse.parse_qs(urllib.parse.urlparse(stream_url).query)
+            exp = int(params.get("expire", [now + 14400])[0]) - 120
+        except Exception:
+            exp = now + 14400
+        _yt_video_cache[video_id] = {"url": stream_url, "headers": headers, "expires_at": exp}
+        return stream_url, headers
+
+
+@app.get("/api/yt-video/{video_id}")
+async def stream_yt_video(video_id: str, request: Request):
+    """Stream a YouTube video as MP4 into a <video> tag (works when embedding is disabled)."""
+    if not re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
+        raise HTTPException(status_code=400, detail="Invalid YouTube video ID")
+
+    try:
+        stream_url, stream_headers = get_yt_video_stream_info(video_id)
+    except Exception as e:
+        print(f"Error extracting video for {video_id}: {e}")
+        raise HTTPException(status_code=404, detail="Video stream unavailable")
+
+    def open_upstream(url, headers):
+        req_headers = headers.copy()
+        if request.headers.get("range"):
+            req_headers["Range"] = request.headers["range"]
+        return requests.get(url, headers=req_headers, stream=True, timeout=15)
+
+    try:
+        upstream = open_upstream(stream_url, stream_headers)
+        if upstream.status_code in (403, 410):
+            _yt_video_cache.pop(video_id, None)
+            stream_url, stream_headers = get_yt_video_stream_info(video_id)
+            upstream = open_upstream(stream_url, stream_headers)
+        if upstream.status_code >= 400:
+            print(f"[yt-video] upstream {upstream.status_code} for {video_id}")
+            upstream.close()
+            raise HTTPException(status_code=502, detail=f"YouTube refused the video stream ({upstream.status_code})")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error connecting to video stream for {video_id}: {e}")
+        raise HTTPException(status_code=502, detail="Upstream stream connection failed")
+
+    resp_headers = {
+        "Accept-Ranges": "bytes",
+        "Content-Type": upstream.headers.get("Content-Type", "video/mp4"),
+        "Cache-Control": "public, max-age=3600",
+    }
+    for h in ("Content-Range", "Content-Length"):
+        if h in upstream.headers:
+            resp_headers[h] = upstream.headers[h]
+
+    def iter_stream():
+        try:
+            for chunk in upstream.iter_content(chunk_size=65536):
+                if chunk:
+                    yield chunk
+        except Exception:
+            pass
+        finally:
+            upstream.close()
+
+    return StreamingResponse(iter_stream(), status_code=upstream.status_code, headers=resp_headers)
+
+
 @app.get("/api/yt-info/{video_id}")
 async def get_yt_audio_info(video_id: str):
     """Check audio stream availability and metadata"""
