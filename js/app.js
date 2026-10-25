@@ -802,6 +802,17 @@
                     if (playIcon) playIcon.innerText = "hourglass_top";
                     // Play direct audio stream from backend (No Ads, No IFrame error 150)
                     localAudio.src = `/api/yt-stream/${videoId}`;
+                    // if the server is still working on it after a while, don't leave the listener waiting:
+                    // YouTube's own player starts from their connection
+                    clearTimeout(window.__ksSlowTimer);
+                    window.__ksSlowTimer = setTimeout(() => {
+                        const cur = (localAudio.getAttribute('src') || '').split('/').pop();
+                        if (cur === videoId && localAudio.paused && localAudio.readyState < 3 && window.__ksEmbedTried !== videoId) {
+                            window.__ksEmbedTried = videoId;
+                            if (typeof showToast === 'function') showToast("Máy chủ phản hồi chậm. Đang mở trình phát YouTube...", "error");
+                            window.toggleYtVideo({ embed: true });
+                        }
+                    }, 10000);
                     localAudio.play().then(() => {
                         if (playIcon) playIcon.innerText = "pause";
                     }).catch(err => {

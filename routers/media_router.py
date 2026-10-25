@@ -219,6 +219,12 @@ def _fetch_youtube_subs(video_id: str) -> Optional[Dict[str, Any]]:
     if time.time() < _SUBS_BLOCKED_UNTIL:
         return None
     try:
+        import main as _main  # the stream extractor already knows when YouTube is unreachable
+        if time.time() < getattr(_main, "_YTDLP_BLOCKED_UNTIL", 0.0):
+            return None
+    except Exception:
+        pass
+    try:
         import yt_dlp
 
         opts = {
@@ -254,7 +260,7 @@ def _fetch_youtube_subs(video_id: str) -> Optional[Dict[str, Any]]:
     except BaseException as e:  # yt-dlp raises many kinds of errors, even SystemExit: a miss must never break playback
         msg = str(e)
         print(f"[Lyrics] subtitle lookup failed for {video_id}: {type(e).__name__}: {msg[:160]}")
-        if any(w in msg for w in ("Sign in", "bot", "429", "Too Many")):
+        if any(w in msg for w in ("Sign in", "bot", "429", "Too Many", "timed out")):
             _SUBS_BLOCKED_UNTIL = time.time() + 300
         return None
 

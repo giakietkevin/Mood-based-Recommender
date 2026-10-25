@@ -1735,9 +1735,15 @@ def _ytdlp_extract(video_id, fmt):
         except Exception as e:
             last_err = e
             print(f"[yt-dlp] {video_id} failed with clients {clients}: {str(e)[:140]}")
+            # the host cannot even reach youtube.com in time: another player client hits the same wall,
+            # so stop here instead of waiting out every set
+            if "timed out" in str(e).lower():
+                break
     msg = str(last_err or "")
     if any(w in msg for w in ("Sign in", "bot", "429", "HTTP Error 403")):
         _YTDLP_BLOCKED_UNTIL = time.time() + 300
+    elif "timed out" in msg.lower():
+        _YTDLP_BLOCKED_UNTIL = time.time() + 60
     raise ValueError(f"No stream URL found for {video_id}: {last_err}")
 
 _yt_stream_cache = {}  # {video_id: {"url": str, "headers": dict, "expires_at": float, "title": str}}
