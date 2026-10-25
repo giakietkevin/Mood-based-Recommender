@@ -242,7 +242,7 @@
     "artist": "Rick Astley",
     "thumbnail": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
     "link": "dQw4w9WgXcQ",
-    "plays": 2
+    "plays": 4
   },
   {
     "title": "XA XÔI - MCK ft. OBITO (OFFICIAL MUSIC VIDEO)",
@@ -263,6 +263,20 @@
     "artist": "Ở đây có nhạc hay:)",
     "thumbnail": "https://i.ytimg.com/vi/Wv8sT-LcsbI/hqdefault.jpg",
     "link": "https://www.youtube.com/watch?v=Wv8sT-LcsbI",
+    "plays": 1
+  },
+  {
+    "title": "Tần số 432 Hz – Làm sạch năng lượng tiêu cực, tăng năng lượng tích cực, giải phóng căng thẳng",
+    "artist": "TDC Music",
+    "thumbnail": "https://i.ytimg.com/vi/O1aRo-xGxbM/hqdefault.jpg",
+    "link": "https://www.youtube.com/watch?v=O1aRo-xGxbM",
+    "plays": 1
+  },
+  {
+    "title": "Bai test loi",
+    "artist": "x",
+    "thumbnail": "",
+    "link": "zzzzzzzzzzz",
     "plays": 1
   }
 ]
