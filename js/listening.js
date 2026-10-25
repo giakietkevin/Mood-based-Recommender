@@ -46,8 +46,30 @@
     const ESC = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' };
     const esc = (v) => String(v == null ? '' : v).replace(/[<>&"']/g, (c) => ESC[c]);
 
+    // Ask the server to resolve the first few songs now, so a click starts playing right away.
+    let lastPrefetch = '';
+    function prefetchStreams(recs) {
+        const ids = (recs || []).map((r) => {
+            const m = /(?:v=|youtu\.be\/)([\w-]{11})/.exec(r && r.link || '');
+            return m ? m[1] : '';
+        }).filter(Boolean).slice(0, 3);
+        const sig = ids.join(',');
+        if (!ids.length || sig === lastPrefetch) return;
+        lastPrefetch = sig;
+        try {
+            fetch('/api/yt-prefetch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids }),
+                keepalive: true
+            }).catch(() => {});
+        } catch (e) { /* prefetch is only an optimisation */ }
+    }
+    window.ksPrefetch = prefetchStreams;
+
     function renderRecs(container, recs, fallbackLabel) {
         window.lastRecommendations = recs;
+        prefetchStreams(recs);
         const head = $('recs-head');
         if (head) head.style.display = 'none';
         const cards = recs.map((item) => {

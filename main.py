@@ -1,5 +1,7 @@
 import os
 import re
+import asyncio
+import threading
 import ssl
 import shutil
 import uuid
@@ -1642,6 +1644,33 @@ async def search(q: str, type: str = "music"):
 # a few different player clients before giving up.
 _COOKIES_PATH = None
 _YTDLP_BLOCKED_UNTIL = 0.0
+_YTDLP_BUDGET_SECONDS = 20
+
+# yt-dlp blocks for seconds at a time. Running it on the event loop froze every other request (search,
+# other songs) behind it, so it gets its own small thread pool, and two requests for the same video
+# share one extraction instead of each paying for it.
+from concurrent.futures import ThreadPoolExecutor as _TPE
+_YT_POOL = _TPE(max_workers=6, thread_name_prefix="ytdlp")
+_yt_inflight = {}
+_yt_inflight_lock = threading.Lock()
+
+
+def _yt_single_flight(key, fn, *args):
+    with _yt_inflight_lock:
+        fut = _yt_inflight.get(key)
+        if fut is None:
+            fut = _YT_POOL.submit(fn, *args)
+            _yt_inflight[key] = fut
+            def _done(_f, _k=key):
+                with _yt_inflight_lock:
+                    _yt_inflight.pop(_k, None)
+            fut.add_done_callback(_done)
+    return fut
+
+
+async def _yt_resolve(key, fn, video_id, timeout=30):
+    fut = _yt_single_flight(key, fn, video_id)
+    return await asyncio.wait_for(asyncio.shield(asyncio.wrap_future(fut)), timeout=timeout)
 
 
 def _ytdlp_cookie_file():
@@ -1679,14 +1708,20 @@ def _ytdlp_extract(video_id, fmt):
         raise ValueError("YouTube is refusing this server (cooling down)")
 
     last_err = None
+    started = time.time()
     for clients in _YT_CLIENT_SETS:
+        # one slow attempt must not drag a click into minutes: stop trying more client sets after the budget
+        if time.time() - started > _YTDLP_BUDGET_SECONDS:
+            break
         opts = {
             'format': fmt,
             'quiet': True,
             'no_warnings': True,
             'js_runtimes': {'node': {}},
             'extractor_args': {'youtube': {'player_client': clients, 'player_skip': ['webpage', 'configs']}},
-            'socket_timeout': 10,
+            'socket_timeout': 8,
+            'retries': 1,
+            'extractor_retries': 1,
         }
         cookies = _ytdlp_cookie_file()
         if cookies:
@@ -1695,6 +1730,7 @@ def _ytdlp_extract(video_id, fmt):
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
             if info and info.get("url"):
+                print(f"[yt-dlp] {video_id} ok in {time.time() - started:.1f}s with clients {clients}")
                 return info
         except Exception as e:
             last_err = e
@@ -1740,10 +1776,11 @@ async def stream_yt_audio(video_id: str, request: Request):
     if not re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
         raise HTTPException(status_code=400, detail="Invalid YouTube video ID")
 
+    loop = asyncio.get_running_loop()
     try:
-        stream_url, stream_headers, _ = get_yt_audio_stream_info(video_id)
+        stream_url, stream_headers, _ = await _yt_resolve(("a", video_id), get_yt_audio_stream_info, video_id)
     except Exception as e:
-        print(f"Error extracting audio for {video_id}: {e}")
+        print(f"Error extracting audio for {video_id}: {type(e).__name__}: {e}")
         raise HTTPException(status_code=404, detail="Audio stream unavailable")
 
     req_headers = stream_headers.copy()
@@ -1751,16 +1788,20 @@ async def stream_yt_audio(video_id: str, request: Request):
     if range_header:
         req_headers["Range"] = range_header
 
+    def _open(url, headers):
+        return requests.get(url, headers=headers, stream=True, timeout=(5, 15))
+
     try:
-        upstream = requests.get(stream_url, headers=req_headers, stream=True, timeout=15)
+        upstream = await loop.run_in_executor(None, _open, stream_url, req_headers)
         # If upstream expired or blocked cached token, clear cache and retry once
         if upstream.status_code in (403, 410):
+            upstream.close()
             _yt_stream_cache.pop(video_id, None)
-            stream_url, stream_headers, _ = get_yt_audio_stream_info(video_id)
+            stream_url, stream_headers, _ = await _yt_resolve(("a", video_id), get_yt_audio_stream_info, video_id)
             req_headers = stream_headers.copy()
             if range_header:
                 req_headers["Range"] = range_header
-            upstream = requests.get(stream_url, headers=req_headers, stream=True, timeout=15)
+            upstream = await loop.run_in_executor(None, _open, stream_url, req_headers)
     except Exception as e:
         print(f"Error connecting to stream for {video_id}: {e}")
         raise HTTPException(status_code=502, detail="Upstream stream connection failed")
@@ -1817,24 +1858,28 @@ async def stream_yt_video(video_id: str, request: Request):
     if not re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
         raise HTTPException(status_code=400, detail="Invalid YouTube video ID")
 
+    loop = asyncio.get_running_loop()
     try:
-        stream_url, stream_headers = get_yt_video_stream_info(video_id)
+        stream_url, stream_headers = await _yt_resolve(("v", video_id), get_yt_video_stream_info, video_id)
     except Exception as e:
-        print(f"Error extracting video for {video_id}: {e}")
+        print(f"Error extracting video for {video_id}: {type(e).__name__}: {e}")
         raise HTTPException(status_code=404, detail="Video stream unavailable")
+
+    range_header = request.headers.get("range")
 
     def open_upstream(url, headers):
         req_headers = headers.copy()
-        if request.headers.get("range"):
-            req_headers["Range"] = request.headers["range"]
-        return requests.get(url, headers=req_headers, stream=True, timeout=15)
+        if range_header:
+            req_headers["Range"] = range_header
+        return requests.get(url, headers=req_headers, stream=True, timeout=(5, 15))
 
     try:
-        upstream = open_upstream(stream_url, stream_headers)
+        upstream = await loop.run_in_executor(None, open_upstream, stream_url, stream_headers)
         if upstream.status_code in (403, 410):
+            upstream.close()
             _yt_video_cache.pop(video_id, None)
-            stream_url, stream_headers = get_yt_video_stream_info(video_id)
-            upstream = open_upstream(stream_url, stream_headers)
+            stream_url, stream_headers = await _yt_resolve(("v", video_id), get_yt_video_stream_info, video_id)
+            upstream = await loop.run_in_executor(None, open_upstream, stream_url, stream_headers)
         if upstream.status_code >= 400:
             print(f"[yt-video] upstream {upstream.status_code} for {video_id}")
             upstream.close()
@@ -1873,10 +1918,30 @@ async def get_yt_audio_info(video_id: str):
     if not re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
         return {"status": "error", "message": "Invalid video ID"}
     try:
-        stream_url, _, title = get_yt_audio_stream_info(video_id)
+        stream_url, _, title = await _yt_resolve(("a", video_id), get_yt_audio_stream_info, video_id)
         return {"status": "success", "video_id": video_id, "title": title, "stream_url": f"/api/yt-stream/{video_id}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
+@app.post("/api/yt-prefetch")
+async def prefetch_yt_audio(payload: dict):
+    """Warm the stream cache for songs the listener is likely to click next, so the click starts instantly.
+    Fire-and-forget: it only queues work (at most 3 ids, so a song clicked meanwhile still gets a free worker),
+    skips cached ones, and answers immediately."""
+    ids = payload.get("ids") if isinstance(payload, dict) else None
+    queued = 0
+    for vid in (ids if isinstance(ids, list) else [])[:3]:
+        if not isinstance(vid, str) or not re.match(r'^[a-zA-Z0-9_-]{11}$', vid):
+            continue
+        cached = _yt_stream_cache.get(vid)
+        if cached and cached.get("expires_at", 0) > time.time():
+            continue
+        if time.time() < _YTDLP_BLOCKED_UNTIL and not _ytdlp_cookie_file():
+            break
+        _yt_single_flight(("a", vid), get_yt_audio_stream_info, vid)
+        queued += 1
+    return {"queued": queued}
 
 
 @app.post("/api/emotion")
