@@ -98,8 +98,10 @@ def _cache_put(key: str, value: Dict[str, Any], ttl: int) -> None:
 
 def _usable(d: Dict[str, Any]) -> bool:
     """lrclib is community data: it holds placeholder rows (a single 'probe' line). Skip those."""
-    if not d or d.get("instrumental"):
-        return bool(d and d.get("instrumental"))
+    if not isinstance(d, dict) or not d:
+        return False
+    if d.get("instrumental"):
+        return True
     synced = d.get("syncedLyrics") or ""
     plain = d.get("plainLyrics") or ""
     return synced.count("[") >= 4 or len(plain.strip()) >= 40
@@ -133,8 +135,8 @@ def _fetch_lyrics(track: str, artist: str, duration: Optional[int]) -> Optional[
         if duration and abs((best.get("duration") or 0) - duration) > 15:
             return None
         return best
-    except (requests.RequestException, ValueError) as e:
-        print(f"[Lyrics] lookup failed: {e}")
+    except Exception as e:  # network, bad JSON, unexpected shape: all mean "no lyrics here"
+        print(f"[Lyrics] lookup failed: {type(e).__name__}: {e}")
     return None
 
 
@@ -209,40 +211,51 @@ def _clean_sub_lines(lines: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return out
 
 
-def _fetch_youtube_subs(video_id: str) -> Optional[Dict[str, Any]]:
-    import yt_dlp
+_SUBS_BLOCKED_UNTIL = 0.0
 
-    opts = {
-        "quiet": True,
-        "no_warnings": True,
-        "skip_download": True,
-        "js_runtimes": {"node": {}},
-        "socket_timeout": 10,
-        "extractor_args": {"youtube": {"player_client": ["android", "ios", "web"], "player_skip": ["webpage", "configs"]}},
-    }
-    # YouTube often answers 429 to anonymous server IPs; a cookies file from a signed-in browser lifts that.
-    cookies = os.environ.get("YTDLP_COOKIES_FILE")
-    if cookies and os.path.exists(cookies):
-        opts["cookiefile"] = cookies
+
+def _fetch_youtube_subs(video_id: str) -> Optional[Dict[str, Any]]:
+    global _SUBS_BLOCKED_UNTIL
+    if time.time() < _SUBS_BLOCKED_UNTIL:
+        return None
     try:
+        import yt_dlp
+
+        opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "skip_download": True,
+            "js_runtimes": {"node": {}},
+            "socket_timeout": 10,
+            "extractor_args": {"youtube": {"player_client": ["android", "ios", "web"], "player_skip": ["webpage", "configs"]}},
+        }
+        # YouTube often answers 429 to anonymous server IPs; cookies from a signed-in browser lift that.
+        cookies = os.environ.get("YTDLP_COOKIES_FILE")
+        if cookies and os.path.exists(cookies):
+            opts["cookiefile"] = cookies
+        elif os.environ.get("YTDLP_COOKIES"):
+            import tempfile
+            fd, tmp = tempfile.mkstemp(prefix="yt_cookies_", suffix=".txt")
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                fh.write(os.environ["YTDLP_COOKIES"])
+            opts["cookiefile"] = tmp
+
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
-            track = _pick_sub(info.get("subtitles") or {})
+            track = _pick_sub((info or {}).get("subtitles") or {})
             if not track:
                 return None
-            # reuse yt-dlp's own session (headers + cookies) instead of a bare requests call
-            try:
-                text = ydl.urlopen(track["url"]).read().decode("utf-8", errors="replace")
-            except Exception as e:
-                print(f"[Lyrics] subtitle download refused for {video_id}: {e}")
-                return None
+            text = ydl.urlopen(track["url"]).read().decode("utf-8", errors="replace")
         lines = _parse_json3(text) if track["ext"] == "json3" else _parse_vtt(text)
         lines = _clean_sub_lines(lines)
         if len(lines) < 4:
             return None
         return {"lines": lines, "lang": track["lang"]}
-    except Exception as e:  # yt-dlp raises many different errors; a miss must never break playback
-        print(f"[Lyrics] subtitle lookup failed for {video_id}: {e}")
+    except BaseException as e:  # yt-dlp raises many kinds of errors, even SystemExit: a miss must never break playback
+        msg = str(e)
+        print(f"[Lyrics] subtitle lookup failed for {video_id}: {type(e).__name__}: {msg[:160]}")
+        if any(w in msg for w in ("Sign in", "bot", "429", "Too Many")):
+            _SUBS_BLOCKED_UNTIL = time.time() + 300
         return None
 
 
@@ -264,35 +277,50 @@ async def get_lyrics(
     if cached is not None:
         return cached
 
-    data = await asyncio.get_event_loop().run_in_executor(None, _fetch_lyrics, track, who, duration)
+    loop = asyncio.get_event_loop()
+    try:
+        data = await asyncio.wait_for(loop.run_in_executor(None, _fetch_lyrics, track, who, duration), timeout=15)
+    except (Exception, SystemExit) as e:
+        print(f"[Lyrics] lookup error: {type(e).__name__}: {e}")
+        data = None
 
-    if not data or (not data.get("syncedLyrics") and not data.get("plainLyrics")):
-        if vid:
-            subs = await asyncio.get_event_loop().run_in_executor(None, _fetch_youtube_subs, vid)
-            if subs:
-                result = {
-                    "found": True,
-                    "synced": subs["lines"],
-                    "plain": "",
-                    "instrumental": False,
-                    "source": "youtube-subtitles",
-                    "lang": subs["lang"],
-                }
-                _cache_put(key, result, LYRICS_TTL)
-                return result
-        result = {"found": False, "synced": [], "plain": "", "source": "lrclib.net"}
-        _cache_put(key, result, LYRICS_MISS_TTL)
+    try:
+        if not data or (not data.get("syncedLyrics") and not data.get("plainLyrics")):
+            if vid:
+                try:
+                    subs = await asyncio.wait_for(loop.run_in_executor(None, _fetch_youtube_subs, vid), timeout=20)
+                except (Exception, SystemExit) as e:
+                    print(f"[Lyrics] subtitle fallback error: {type(e).__name__}: {e}")
+                    subs = None
+                if subs:
+                    result = {
+                        "found": True,
+                        "synced": subs["lines"],
+                        "plain": "",
+                        "instrumental": False,
+                        "source": "youtube-subtitles",
+                        "lang": subs["lang"],
+                    }
+                    _cache_put(key, result, LYRICS_TTL)
+                    return result
+            result = {"found": False, "synced": [], "plain": "", "source": "lrclib.net"}
+            _cache_put(key, result, LYRICS_MISS_TTL)
+            return result
+
+        result = {
+            "found": True,
+            "synced": parse_lrc(data.get("syncedLyrics") or ""),
+            "plain": (data.get("plainLyrics") or "")[:20000],
+            "instrumental": bool(data.get("instrumental")),
+            "source": "lrclib.net",
+        }
+        _cache_put(key, result, LYRICS_TTL)
         return result
-
-    result = {
-        "found": True,
-        "synced": parse_lrc(data.get("syncedLyrics") or ""),
-        "plain": (data.get("plainLyrics") or "")[:20000],
-        "instrumental": bool(data.get("instrumental")),
-        "source": "lrclib.net",
-    }
-    _cache_put(key, result, LYRICS_TTL)
-    return result
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        # a lyrics problem must never look like a server failure to the player
+        return {"found": False, "synced": [], "plain": "", "source": "lrclib.net", "error": True}
 
 
 @router.get("/api/history/recent")

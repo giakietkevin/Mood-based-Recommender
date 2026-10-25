@@ -1,9 +1,10 @@
 // KietStation service worker.
 // - App shell and static assets work offline.
 // - API calls, audio/video streams and range requests always go to the network.
-// - Pages are fetched network-first so a deploy shows up immediately; scripts and styles are served from
-//   the cache and refreshed in the background (stale-while-revalidate).
-const CACHE_NAME = 'kietstation-pwa-v4';
+// - Pages, scripts and styles are fetched network-first so a deploy shows up on the next load;
+//   the cache is only the offline fallback. (A stale-while-revalidate cache kept serving the previous
+//   scripts for one more visit after every deploy.)
+const CACHE_NAME = 'kietstation-pwa-v5';
 
 const SHELL = [
   '/',
@@ -92,19 +93,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // static assets: serve the cached copy, refresh it in the background
+  // scripts, styles, images: network first, cached copy when offline
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const refresh = fetch(request)
-        .then((response) => {
-          if (response && response.status === 200 && response.type === 'basic') {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((c) => c.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || refresh;
-    })
+    fetch(request)
+      .then((response) => {
+        if (response && response.status === 200 && response.type === 'basic') {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request))
   );
 });
