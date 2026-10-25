@@ -1,5 +1,5 @@
-# Sử dụng Python 3.9
-FROM python:3.9
+# Python 3.11: yt-dlp (needed for streaming) dropped Python 3.9, and an old yt-dlp no longer works with YouTube
+FROM python:3.11
 
 # Cài đặt thư viện hệ thống (OpenCV, FFmpeg, Audio Processing)
 RUN apt-get update && apt-get install -y ffmpeg \
@@ -11,6 +11,11 @@ RUN apt-get update && apt-get install -y ffmpeg \
     libsndfile1 \
     libsamplerate0 \
     libsamplerate0-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node.js 20: yt-dlp uses it to solve YouTube's JavaScript challenges. A failure here must not break the build.
+RUN apt-get update && apt-get install -y curl ca-certificates \
+    && (curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs || true) \
     && rm -rf /var/lib/apt/lists/*
 
 # Tạo thư mục làm việc

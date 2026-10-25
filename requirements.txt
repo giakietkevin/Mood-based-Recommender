@@ -9,6 +9,8 @@ requests
 python-dotenv
 numpy<2.0.0
 ytmusicapi
+# Audio/video/subtitle streaming from YouTube. Needs Python 3.10+; keep it current, YouTube changes often.
+yt-dlp[default]
 
 # Audio Processing Libraries (Text-to-Music v2.0 + RVC Singing Voice)
 edge-tts
