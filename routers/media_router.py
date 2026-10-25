@@ -383,3 +383,35 @@ async def recommend_by_mood(
 async def list_moods():
     """Mood keys + display names for the manual picker."""
     return {"moods": [{"key": k, "display": v["display"], "valence": v["valence"], "arousal": v["arousal"]} for k, v in EMOTION_COORDINATES.items()]}
+
+
+@router.get("/api/history/moods")
+async def mood_history(
+    days: int = Query(7, ge=1, le=90),
+    user_id: Optional[str] = Depends(_get_optional_user),
+):
+    """How many tracks the signed-in user played per mood in the last N days (guests get an empty list)."""
+    if not user_id or not MONGODB_READY:
+        return {"days": days, "moods": [], "guest": True}
+    from datetime import datetime, timedelta
+
+    try:
+        from auth import MongoDBConnection
+
+        db = MongoDBConnection.get_db()
+        since = datetime.utcnow() - timedelta(days=days)
+        pipeline = [
+            {"$match": {"user_id": user_id, "interaction_type": "play", "created_at": {"$gte": since}}},
+            {"$group": {"_id": "$mood_context", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+        ]
+        rows = await db["user_interactions"].aggregate(pipeline).to_list(length=20)
+    except Exception as e:
+        print(f"[History] mood aggregate error: {e}")
+        raise HTTPException(status_code=503, detail="Mood history is temporarily unavailable")
+    known = set(EMOTION_COORDINATES)
+    return {
+        "days": days,
+        "moods": [{"mood": r["_id"], "count": r["count"]} for r in rows if r["_id"] in known],
+        "guest": False,
+    }

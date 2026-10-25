@@ -1133,32 +1133,7 @@
                     return;
                 }
 
-                window.lastRecommendations = data.recommendations;
-                container.innerHTML = data.recommendations.map((item, index) => {
-                    const safeItem = encodeURIComponent(JSON.stringify(item)).replace(/'/g, "%27");
-                    return `
-                    <div class="grid grid-cols-12 gap-2 items-center px-3.5 py-2 hover:bg-surface-container-low transition-colors group cursor-pointer border-b border-surface-container-high/40"
-                         onclick="playTrack('${safeItem}', 'youtube')">
-                        <div class="col-span-1 text-center font-mono text-xs text-charcoal-black/50 group-hover:text-charcoal-black">
-                            ${index + 1}
-                        </div>
-                        <div class="col-span-6 sm:col-span-6 flex items-center gap-2.5 min-w-0">
-                            <img src="${item.thumbnail}" class="w-10 h-10 rounded-md object-cover bg-surface-container-low border border-surface-container-high flex-shrink-0" alt="" />
-                            <div class="min-w-0 flex-1">
-                                <h4 class="text-xs font-semibold text-charcoal-black truncate group-hover:text-accent-blue transition-colors">${item.title}</h4>
-                                <p class="text-[11px] text-charcoal-black/60 truncate">${item.artist || (currentType === 'podcast' ? 'Podcast' : 'Audio Track')}</p>
-                            </div>
-                        </div>
-                        <div class="col-span-3 sm:col-span-3 hidden sm:flex items-center min-w-0">
-                            <span class="inline-block text-[10px] px-2 py-0.5 rounded-md bg-pastel-lavender text-charcoal-black font-medium border border-accent-blue/15 truncate max-w-full">
-                                ${currentType === 'podcast' ? 'Podcast' : 'Search Result'}
-                            </span>
-                        </div>
-                        <div class="col-span-5 sm:col-span-2 flex items-center justify-end gap-1" onclick="event.stopPropagation()">
-                            ${window.getActionButtonsHTML(item, 'youtube')}
-                        </div>
-                    </div>`;
-                }).join('');
+                window.KSRenderRecs(container, data.recommendations, currentType === 'podcast' ? 'Podcast' : 'Kết quả tìm kiếm');
             } catch (e) {
                 window.UIState.render(container, 'error', 'Tìm kiếm không thành công. Vui lòng thử lại.', () => performSearch());
             }
@@ -1247,16 +1222,17 @@
                         aEl.innerText = (aVal >= 0 ? '+' : '') + aVal.toFixed(2);
                     }
                     if (cEl) {
-                        cEl.innerText = (95.0 + Math.random() * 4.5).toFixed(1) + '%';
+                        cEl.innerText = 'Từ camera';
                     }
+                    if (window.KSMoodLabels) window.KSMoodLabels(Number(data.valence), Number(data.arousal));
                     if (ctxEl) {
                         const moodStr = (data.mood || '').toLowerCase();
-                        let ctxText = 'Deep Work';
-                        if (['happy', 'surprise'].includes(moodStr)) ctxText = 'High Energy';
-                        else if (['angry'].includes(moodStr)) ctxText = 'Stress Relief';
-                        else if (['sad'].includes(moodStr)) ctxText = 'Reflective';
-                        else if (['fear'].includes(moodStr)) ctxText = 'Healing Mode';
-                        else if (['disgust'].includes(moodStr)) ctxText = 'Relaxing';
+                        let ctxText = 'Làm việc sâu';
+                        if (['happy', 'surprise'].includes(moodStr)) ctxText = 'Nhiều năng lượng';
+                        else if (['angry'].includes(moodStr)) ctxText = 'Xả căng thẳng';
+                        else if (['sad'].includes(moodStr)) ctxText = 'Trầm tư';
+                        else if (['fear'].includes(moodStr)) ctxText = 'Chữa lành';
+                        else if (['disgust'].includes(moodStr)) ctxText = 'Thư giãn';
                         ctxEl.innerText = ctxText;
                     }
 
@@ -1265,33 +1241,7 @@
                         return;
                     }
 
-                    window.lastRecommendations = data.recommendations;
-                    // Render High-Density Rows
-                    recContainer.innerHTML = data.recommendations.map((item, index) => {
-                        const safeItem = encodeURIComponent(JSON.stringify(item)).replace(/'/g, "%27");
-                        return `
-                        <div class="grid grid-cols-12 gap-2 items-center px-3.5 py-2 hover:bg-surface-container-low transition-colors group cursor-pointer border-b border-surface-container-high/40"
-                             onclick="playTrack('${safeItem}', 'youtube')">
-                            <div class="col-span-1 text-center font-mono text-xs text-charcoal-black/50 group-hover:text-charcoal-black">
-                                ${index + 1}
-                            </div>
-                            <div class="col-span-6 sm:col-span-6 flex items-center gap-2.5 min-w-0">
-                                <img src="${item.thumbnail}" class="w-10 h-10 rounded-md object-cover bg-surface-container-low border border-surface-container-high flex-shrink-0" alt="" />
-                                <div class="min-w-0 flex-1">
-                                    <h4 class="text-xs font-semibold text-charcoal-black truncate group-hover:text-accent-blue transition-colors">${item.title}</h4>
-                                    <p class="text-[11px] text-charcoal-black/60 truncate">${item.artist || displayMoodText}</p>
-                                </div>
-                            </div>
-                            <div class="col-span-3 sm:col-span-3 hidden sm:flex items-center min-w-0">
-                                <span class="inline-block text-[10px] px-2 py-0.5 rounded-md bg-pastel-lavender text-charcoal-black font-medium border border-accent-blue/15 truncate max-w-full">
-                                    ${item.match_reason || displayMoodText}
-                                </span>
-                            </div>
-                            <div class="col-span-5 sm:col-span-2 flex items-center justify-end gap-1" onclick="event.stopPropagation()">
-                                ${window.getActionButtonsHTML(item, 'youtube')}
-                            </div>
-                        </div>`;
-                    }).join('');
+                    window.KSRenderRecs(recContainer, data.recommendations, displayMoodText);
 
                 } catch (e) {
                     console.error(e);
@@ -1508,8 +1458,26 @@
                     </div>`;
                 return;
             }
-            container.innerHTML = myFavorites.map(song => buildSongCardHTML(song)).join('');
+            container.innerHTML = '<div class="ks-lib-grid">' + myFavorites.map(song => buildCoverCardHTML(song)).join('') + '</div>';
         };
+
+        // Favourites as large covers: the picture is what people recognise a song by.
+        function buildCoverCardHTML(item) {
+            const esc = (v) => String(v == null ? '' : v).replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' }[c]));
+            const mode = (item.type === 'youtube' || item.link) ? 'youtube' : 'local';
+            const thumb = item.thumbnail || 'https://cdn-icons-png.flaticon.com/512/12204/12204300.png';
+            const safe = encodeURIComponent(JSON.stringify(item)).replace(/'/g, '%27');
+            return `
+            <article class="ks-card" tabindex="0" role="button" aria-label="Phát ${esc(item.title)}"
+                     onclick="playTrack('${safe}', '${mode}')" onkeydown="if(event.key==='Enter'){playTrack('${safe}', '${mode}')}">
+                <div class="ks-card-cover">
+                    <img src="${esc(thumb)}" alt="" loading="lazy" decoding="async">
+                    <span class="ks-card-play" aria-hidden="true"><span class="material-symbols-outlined">play_arrow</span></span>
+                </div>
+                <h3 class="ks-card-title">${esc(item.title)}</h3>
+                <p class="ks-card-artist">${esc(item.artist || '')}</p>
+            </article>`;
+        }
 
         window.renderLibraryPlaylists = () => {
             const container = document.getElementById('library-playlists-list');

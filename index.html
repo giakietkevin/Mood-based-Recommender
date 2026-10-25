@@ -150,21 +150,26 @@
                 <!-- Center Navigation Segmented Control Pills -->
                 <nav class="hidden xl:flex items-center gap-1 p-1 bg-surface-container-low rounded-full">
                     <button type="button" onclick="showView('dashboard')" id="nav-dashboard"
-                        class="nav-pill px-space-md py-1 rounded-full transition-all duration-200 bg-pastel-lavender text-charcoal-black font-semibold shadow-[0_2px_8px_rgba(15,23,42,0.04)] text-label-md">Mood Station</button>
+                        class="nav-pill px-space-md py-1 rounded-full transition-all duration-200 bg-pastel-lavender text-charcoal-black font-semibold shadow-[0_2px_8px_rgba(15,23,42,0.04)] text-label-md">Tâm trạng</button>
                     <button type="button" onclick="showView('home')" id="nav-home" hidden
                         class="hidden nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant hover:text-charcoal-black transition-all duration-200">Community &amp; Feed</button>
                     <button type="button" onclick="showView('film')" id="nav-film"
-                        class="nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant hover:text-charcoal-black transition-all duration-200">Film</button>
+                        class="nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant hover:text-charcoal-black transition-all duration-200">Phim</button>
                     <button type="button" onclick="showView('discover')" id="nav-discover"
-                        class="nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant hover:text-charcoal-black transition-all duration-200">Discover</button>
-                    <button type="button" onclick="showView('djradio')" id="nav-djradio"
-                        class="nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant hover:text-charcoal-black transition-all duration-200">DJ Radio</button>
+                        class="nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant hover:text-charcoal-black transition-all duration-200">Khám phá</button>
                     <button type="button" onclick="showView('library')" id="nav-library"
-                        class="nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant hover:text-charcoal-black transition-all duration-200">Library</button>
+                        class="nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant hover:text-charcoal-black transition-all duration-200">Thư viện</button>
                     <button type="button" onclick="showView('focus')" id="nav-focus"
-                        class="nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant hover:text-charcoal-black transition-all duration-200">Focus</button>
-                    <button type="button" onclick="showView('photobooth')" id="nav-photobooth"
-                        class="nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant hover:text-charcoal-black transition-all duration-200">Photo Booth</button>
+                        class="nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant hover:text-charcoal-black transition-all duration-200">Phòng học</button>
+                                        <div class="relative" id="nav-more-wrap">
+                        <button type="button" id="nav-more" aria-haspopup="true" aria-expanded="false" aria-controls="nav-more-menu"
+                            class="nav-pill px-space-md py-1 rounded-full text-label-md text-on-surface-variant flex items-center gap-1">Thêm
+                            <span class="material-symbols-outlined text-[18px]" aria-hidden="true">expand_more</span></button>
+                        <div id="nav-more-menu" class="ks-menu" role="menu" hidden>
+                            <button type="button" role="menuitem" onclick="showView('djradio'); toggleNavMore(false)" id="nav-djradio" class="nav-pill">DJ Radio</button>
+                            <button type="button" role="menuitem" onclick="showView('photobooth'); toggleNavMore(false)" id="nav-photobooth" class="nav-pill">Photo Booth</button>
+                        </div>
+                    </div>
                     <!-- Hidden navigation triggers for other views -->
                     <button type="button" onclick="showView('studio')" id="nav-studio" class="hidden"></button>
                     <button type="button" onclick="showView('game')" id="nav-game" class="hidden"></button>
@@ -618,7 +623,7 @@
                                     <span id="camera-toggle-text" class="hidden">HIDE CAMERA</span>
                                 </button>
                                 <span class="px-2 py-0.5 rounded-full bg-pastel-sage text-charcoal-black font-semibold text-[10px] uppercase">
-                                    READY
+                                    Sẵn sàng
                                 </span>
                             </div>
                         </div>
@@ -633,9 +638,7 @@
                             <div class="absolute inset-3 pointer-events-none flex flex-col justify-between">
                                 <div class="flex justify-between items-start">
                                     <div class="w-3.5 h-3.5 border-t-2 border-l-2 border-pure-white/80 rounded-tl-sm"></div>
-                                    <div class="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] text-pure-white tabular-nums">
-                                        FPS 60.0
-                                    </div>
+                                    <div></div>
                                     <div class="w-3.5 h-3.5 border-t-2 border-r-2 border-pure-white/80 rounded-tr-sm"></div>
                                 </div>
 
@@ -649,7 +652,7 @@
 
                                 <div class="flex justify-between items-end">
                                     <div class="w-3.5 h-3.5 border-b-2 border-l-2 border-pure-white/80 rounded-bl-sm"></div>
-                                    <span class="text-[10px] text-charcoal-black tabular-nums bg-pure-white/80 px-1.5 py-0.5 rounded backdrop-blur-sm font-semibold">FACE ID: AUTO</span>
+                                    
                                     <div class="w-3.5 h-3.5 border-b-2 border-r-2 border-pure-white/80 rounded-br-sm"></div>
                                 </div>
                             </div>
@@ -688,7 +691,7 @@
                         <!-- Mood Display -->
                         <div class="flex items-baseline justify-between">
                             <div>
-                                <h2 id="mood-display" class="font-display text-2xl font-bold tracking-tight text-charcoal-black uppercase">CALM / FOCUS</h2>
+                                <h2 id="mood-display" class="font-display text-2xl font-bold tracking-tight text-charcoal-black uppercase">Bình thản</h2>
                                 <p class="text-[11px] text-on-surface-variant mt-0.5">Gợi ý: nhạc ambient 432 Hz</p>
                             </div>
                             <div class="w-10 h-10 rounded-xl bg-pastel-sage flex items-center justify-center text-charcoal-black flex-shrink-0">
@@ -715,19 +718,8 @@
                             </div>
                             <div class="p-3 rounded-xl bg-surface-slate flex flex-col justify-between border border-surface-container-high/40">
                                 <span class="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider">Bối cảnh</span>
-                                <span id="telemetry-context" class="font-display text-base font-bold text-charcoal-black tracking-tight mt-1 truncate">Deep Work</span>
+                                <span id="telemetry-context" class="font-display text-base font-bold text-charcoal-black tracking-tight mt-1 truncate">Làm việc sâu</span>
                                 <span class="text-[10px] text-on-surface-variant font-medium mt-0.5">Theo giờ trong ngày</span>
-                            </div>
-                        </div>
-
-                        <!-- Frequency Resonance Bar Indicator -->
-                        <div class="flex flex-col gap-1.5 pt-1">
-                            <div class="flex justify-between items-center text-xs text-on-surface-variant font-medium">
-                                <span>Mức hòa hợp</span>
-                                <span class="tabular-nums text-charcoal-black font-semibold">84%</span>
-                            </div>
-                            <div class="w-full h-1.5 bg-surface-slate rounded-full overflow-hidden flex">
-                                <div class="h-full bg-accent-blue w-[84%] rounded-full transition-all duration-500"></div>
                             </div>
                         </div>
                     </section>
@@ -737,25 +729,22 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-status-emerald animate-pulse"></span>
-                                <span class="text-xs font-semibold text-charcoal-black">P2P Mesh Session</span>
+                                <span class="text-xs font-semibold text-charcoal-black">Nghe chung</span>
                             </div>
-                            <span class="px-2 py-0.5 rounded-full bg-pastel-blush text-charcoal-black font-semibold text-[10px]">
-                                3 LISTENERS
-                            </span>
                         </div>
                         <p class="text-xs text-on-surface-variant leading-relaxed">
-                            Broadcast mood-synced lossless playback buffer to peer nodes across secure WebRTC channels.
+                            Tạo phòng để bạn bè nghe cùng một bài, cùng một lúc.
                         </p>
                         <div class="grid grid-cols-2 gap-2">
                             <button onclick="promptJoinParty()"
                                 class="h-10 px-3 rounded-xl bg-surface-slate hover:bg-surface-container transition-colors text-xs font-semibold text-charcoal-black flex items-center justify-center gap-1.5">
                                 <span class="material-symbols-outlined text-[16px]">key</span>
-                                <span>Join Code</span>
+                                <span>Nhập mã phòng</span>
                             </button>
                             <button onclick="startWatchParty()"
                                 class="h-10 px-3 rounded-xl bg-charcoal-black hover:bg-charcoal-black/90 active:scale-[0.98] transition-all text-xs font-semibold text-pure-white flex items-center justify-center gap-1.5">
                                 <span class="material-symbols-outlined text-[16px]">podcasts</span>
-                                <span>Host Party</span>
+                                <span>Tạo phòng</span>
                             </button>
                         </div>
                         <div id="dashboard-party-mesh-grid" class="hidden grid grid-cols-2 gap-2 pt-2 border-t border-surface-container-high/60"></div>
@@ -776,6 +765,11 @@
                     <section id="recent-section" class="flex flex-col gap-3" aria-labelledby="recent-title" hidden>
                         <h2 id="recent-title" class="font-display font-semibold text-lg text-charcoal-black">Nghe gần đây</h2>
                         <div id="recent-row" class="ks-recent-row"></div>
+                    </section>
+
+                    <section id="week-section" class="bg-pure-white rounded-2xl p-5 flex flex-col gap-3" aria-labelledby="week-title" hidden>
+                        <h2 id="week-title" class="font-display font-semibold text-lg text-charcoal-black">Tâm trạng của bạn tuần này</h2>
+                        <div id="week-moods" class="flex flex-col gap-2"></div>
                     </section>
 
                     <!-- 1. Search & Filter Bar Section -->
@@ -865,7 +859,7 @@
                         </div>
 
                         <!-- Table Header -->
-                        <div class="px-4 py-2.5 bg-surface-slate/60 border-b border-surface-container-low text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider grid grid-cols-12 gap-2 items-center">
+                        <div id="recs-head" class="px-4 py-2.5 bg-surface-slate/60 border-b border-surface-container-low text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider grid grid-cols-12 gap-2 items-center">
                             <div class="col-span-1 text-center tabular-nums">#</div>
                             <div class="col-span-6 sm:col-span-6">Bài hát</div>
                             <div class="col-span-3 sm:col-span-3 hidden sm:block">Độ hợp</div>
@@ -890,36 +884,6 @@
                         <div class="px-5 py-3 bg-surface-slate/40 border-t border-surface-container-low flex items-center justify-between">
                             
                             
-                        </div>
-                    </section>
-
-                    <!-- 3. Dynamic Mood Transition Timeline -->
-                    <section class="bg-pure-white rounded-2xl p-5 shadow-sm border border-surface-container-high/60">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center gap-1.5">
-                                <span class="material-symbols-outlined text-charcoal-black text-[18px]">timeline</span>
-                                <span class="text-xs font-semibold text-charcoal-black uppercase tracking-wider">Diễn biến tâm trạng</span>
-                            </div>
-                            <span class="text-[11px] text-on-surface-variant">Tập trung được khoảng 48 phút</span>
-                        </div>
-                        <div class="w-full h-14 relative flex items-end">
-                            <svg class="w-full h-full text-accent-blue overflow-visible" fill="none" preserveAspectRatio="none" viewBox="0 0 600 60">
-                                <defs>
-                                    <linearGradient id="gradient-mood" x1="0" x2="0" y1="0" y2="1">
-                                        <stop offset="0%" stop-color="#E8E5FF" stop-opacity="0.8"></stop>
-                                        <stop offset="100%" stop-color="#E8E5FF" stop-opacity="0.0"></stop>
-                                    </linearGradient>
-                                </defs>
-                                <path d="M0 45 C 80 40, 140 10, 220 18 C 300 26, 360 48, 440 22 C 520 -4, 560 30, 600 25 L 600 60 L 0 60 Z" fill="rgba(198,242,78,0.12)"></path>
-                                <path d="M0 45 C 80 40, 140 10, 220 18 C 300 26, 360 48, 440 22 C 520 -4, 560 30, 600 25" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
-                                <circle class="fill-charcoal-black" cx="220" cy="18" r="4"></circle>
-                                <circle class="stroke-accent-blue/40 fill-none animate-ping" cx="220" cy="18" r="8"></circle>
-                            </svg>
-                        </div>
-                        <div class="flex justify-between items-center mt-2 text-[10px] text-on-surface-variant tabular-nums">
-                            <span>09:00 Rest</span>
-                            <span class="text-charcoal-black font-semibold">10:15 Deep Work (Current)</span>
-                            <span>11:30 Rebalance</span>
                         </div>
                     </section>
                 </div>
@@ -4201,6 +4165,8 @@
     <script src="js/queue.js"></script>
     <script src="js/listening.js"></script>
     <script src="js/now-playing.js"></script>
+    <script src="js/extras.js"></script>
+    <script src="js/media-session.js"></script>
     <script src="js/i18n.js"></script>
 </body>
 

@@ -42,33 +42,39 @@
     };
     window.UIState = UIState;
 
-    // ---- shared recommendation rows -------------------------------------
+    // ---- shared recommendation grid -------------------------------------
+    const ESC = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' };
+    const esc = (v) => String(v == null ? '' : v).replace(/[<>&"']/g, (c) => ESC[c]);
+
     function renderRecs(container, recs, fallbackLabel) {
         window.lastRecommendations = recs;
-        container.innerHTML = recs.map((item, index) => {
+        const head = $('recs-head');
+        if (head) head.style.display = 'none';
+        const cards = recs.map((item) => {
             const safe = encodeURIComponent(JSON.stringify(item)).replace(/'/g, '%27');
-            const title = String(item.title || '').replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
-            const sub = String(item.artist || fallbackLabel || '').replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
-            const why = String(item.match_reason || fallbackLabel || '').replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+            const why = item.match_reason || fallbackLabel || '';
             return `
-            <div class="grid grid-cols-12 gap-2 items-center px-3.5 py-2 hover:bg-surface-container-low transition-colors group cursor-pointer border-b border-surface-container-high/40"
-                 onclick="playTrack('${safe}', 'youtube')">
-                <div class="col-span-1 text-center text-xs text-charcoal-black/50 group-hover:text-charcoal-black">${index + 1}</div>
-                <div class="col-span-6 flex items-center gap-2.5 min-w-0">
-                    <img src="${item.thumbnail || ''}" class="w-10 h-10 rounded-md object-cover bg-surface-container-low flex-shrink-0" alt="" loading="lazy" />
-                    <div class="min-w-0 flex-1">
-                        <h4 class="text-xs font-semibold text-charcoal-black truncate group-hover:text-accent-blue transition-colors">${title}</h4>
-                        <p class="text-[11px] text-charcoal-black/60 truncate">${sub}</p>
-                    </div>
+            <article class="ks-card" onclick="playTrack('${safe}', 'youtube')" tabindex="0" role="button"
+                     aria-label="Phát ${esc(item.title)}" onkeydown="if(event.key==='Enter'){playTrack('${safe}', 'youtube')}">
+                <div class="ks-card-cover">
+                    <img src="${esc(item.thumbnail)}" alt="" loading="lazy" decoding="async">
+                    <span class="ks-card-play" aria-hidden="true"><span class="material-symbols-outlined">play_arrow</span></span>
                 </div>
-                <div class="col-span-3 hidden sm:flex items-center min-w-0">
-                    <span class="inline-block text-[11px] px-2 py-0.5 rounded-md bg-pastel-lavender text-charcoal-black font-medium truncate max-w-full">${why}</span>
-                </div>
-                <div class="col-span-5 sm:col-span-2 flex items-center justify-end gap-1" onclick="event.stopPropagation()">
+                <h3 class="ks-card-title">${esc(item.title)}</h3>
+                <p class="ks-card-artist">${esc(item.artist || why)}</p>
+                <div class="ks-card-actions" onclick="event.stopPropagation()">
                     ${window.getActionButtonsHTML ? window.getActionButtonsHTML(item, 'youtube') : ''}
                 </div>
-            </div>`;
+            </article>`;
         }).join('');
+        container.innerHTML = '<div class="ks-grid">' + cards + '</div>' + saveBar(recs);
+    }
+    window.KSRenderRecs = renderRecs;
+
+    function saveBar(recs) {
+        if (!recs || !recs.length) return '';
+        return '<div class="ks-gridbar"><button type="button" class="ks-btn" onclick="saveRecsAsPlaylist()">Lưu thành playlist</button>' +
+            '<button type="button" class="ks-btn ks-btn-ghost" onclick="queueAllRecs()">Thêm tất cả vào hàng đợi</button></div>';
     }
 
     // ---- history ---------------------------------------------------------
@@ -183,6 +189,7 @@
             if (v && typeof data.valence !== 'undefined') v.textContent = (data.valence >= 0 ? '+' : '') + Number(data.valence).toFixed(2);
             if (a && typeof data.arousal !== 'undefined') a.textContent = (data.arousal >= 0 ? '+' : '') + Number(data.arousal).toFixed(2);
             if (c) c.textContent = 'Bạn chọn';
+            if (window.KSMoodLabels) window.KSMoodLabels(Number(data.valence), Number(data.arousal));
             if (x) x.textContent = (MOODS.find((m) => m.key === key) || {}).label || key;
 
             if (!data.recommendations || !data.recommendations.length) {
@@ -208,6 +215,28 @@
             b.addEventListener('click', () => pickMood(m.key));
             box.appendChild(b);
         });
+    }
+
+
+    // ---- "Thêm" navigation menu ------------------------------------------
+    window.toggleNavMore = function (force) {
+        const menu = $('nav-more-menu');
+        const btn = $('nav-more');
+        if (!menu || !btn) return;
+        const open = typeof force === 'boolean' ? force : menu.hidden;
+        menu.hidden = !open;
+        btn.setAttribute('aria-expanded', String(open));
+    };
+
+    function initNavMore() {
+        const btn = $('nav-more');
+        if (!btn) return;
+        btn.addEventListener('click', (e) => { e.stopPropagation(); window.toggleNavMore(); });
+        document.addEventListener('click', (e) => {
+            const wrap = $('nav-more-wrap');
+            if (wrap && !wrap.contains(e.target)) window.toggleNavMore(false);
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.toggleNavMore(false); });
     }
 
     // ---- keyboard shortcuts ---------------------------------------------
@@ -267,6 +296,7 @@
 
     function init() {
         buildMoodPicker();
+        initNavMore();
         renderHistory();
         mergeServerHistory();
         document.addEventListener('keydown', onKey);

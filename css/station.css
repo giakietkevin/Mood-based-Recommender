@@ -374,3 +374,54 @@ body.np-lock { overflow: hidden; }
 
 /* Tailwind's display utilities beat the hidden attribute; keep it meaningful for our own sections */
 [hidden] { display: none !important; }
+
+/* ---- "Thêm" navigation menu ----------------------------------------- */
+#nav-more-wrap { position: relative; }
+.ks-menu { position: absolute; top: calc(100% + 8px); left: 0; min-width: 180px; padding: 6px; border-radius: 14px; background: #181818; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; gap: 2px; z-index: 160; }
+.ks-menu[hidden] { display: none; }
+.ks-menu .nav-pill { width: 100%; text-align: left; padding: 10px 12px !important; border-radius: 10px !important; }
+.ks-menu .nav-pill:hover { background: #2a2a2a !important; }
+
+/* ---- recommendation + favourites grid with large covers ------------- */
+.ks-grid, .ks-lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 20px 16px; padding: 20px; }
+.ks-lib-grid { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); padding: 4px 0 12px; }
+.ks-card { display: flex; flex-direction: column; gap: 8px; min-width: 0; cursor: pointer; outline-offset: 4px; }
+.ks-card-cover { position: relative; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden; background: #1c1c1c; }
+.ks-card-cover img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ks-card:hover .ks-card-cover img, .ks-card:focus-visible .ks-card-cover img { transform: scale(1.05); }
+.ks-card-play { position: absolute; right: 10px; bottom: 10px; width: 44px; height: 44px; border-radius: 999px; background: #c6f24e; color: #000; display: flex; align-items: center; justify-content: center; opacity: 0; transform: translateY(8px); transition: opacity 0.2s ease, transform 0.2s ease; }
+.ks-card-play .material-symbols-outlined { font-size: 28px; font-variation-settings: "FILL" 1; }
+.ks-card:hover .ks-card-play, .ks-card:focus-visible .ks-card-play { opacity: 1; transform: none; }
+@media (hover: none) { .ks-card-play { opacity: 1; transform: none; } }
+.ks-card-title { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ks-card-artist { margin: 0; font-size: 12px; color: #b4b4b4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ks-card-actions { margin-top: 2px; }
+.ks-gridbar { display: flex; flex-wrap: wrap; gap: 10px; padding: 4px 20px 20px; }
+.ks-btn-ghost { background: #1c1c1c; color: #fff; }
+.ks-btn-ghost:hover { background: #2a2a2a; }
+#recs-head { display: none !important; }
+
+/* ---- this week's moods ---------------------------------------------- */
+.ks-bar-row { display: grid; grid-template-columns: 84px 1fr 56px; align-items: center; gap: 12px; font-size: 13px; }
+.ks-bar-label { color: #fff; font-weight: 500; }
+.ks-bar-track { height: 8px; border-radius: 999px; background: #1c1c1c; overflow: hidden; }
+.ks-bar-fill { height: 100%; border-radius: 999px; background: #c6f24e; transition: width 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ks-bar-n { color: #b4b4b4; text-align: right; font-variant-numeric: tabular-nums; }
+.np-chip.is-on { color: #c6f24e; }
+
+/* ---- bottom player bar ----------------------------------------------- */
+#player-bar { height: 84px !important; background: #000 !important; border-top: 0 !important; box-shadow: none !important; }
+#player-bar > div:first-child { height: 3px !important; background: #2a2a2a !important; }
+#player-bar > div:first-child > div { background: #c6f24e !important; }
+#player-bar > div:first-child > div > div { display: none; }
+#player-bar > div:last-child { height: 81px !important; max-width: 82rem; padding-left: 32px; padding-right: 32px; }
+#player-bar > div:last-child > div:first-child { max-width: 340px; gap: 14px; }
+#player-bar > div:last-child > div:first-child > div:first-child { width: 56px !important; height: 56px !important; }
+#player-thumb { width: 56px !important; height: 56px !important; border: 0 !important; border-radius: 8px !important; object-fit: cover; }
+#player-title { font-size: 14px !important; font-weight: 600 !important; color: #fff !important; }
+#player-desc { font-size: 12px !important; color: #b4b4b4 !important; }
+#player-bar #play-btn { width: 44px; height: 44px; background: #fff !important; color: #000 !important; }
+.np { inset: 0 0 84px 0; }
+body { padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px)) !important; }
+@media (max-width: 1279px) { #player-bar { bottom: 70px; } .np { inset: 0 0 154px 0; } }
+@media (max-width: 640px) { #player-bar > div:last-child { padding-left: 14px; padding-right: 14px; } #player-bar > div:last-child > div:first-child { max-width: 52%; } }

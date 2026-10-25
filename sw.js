@@ -3,7 +3,7 @@
 // - API calls, audio/video streams and range requests always go to the network.
 // - Pages are fetched network-first so a deploy shows up immediately; scripts and styles are served from
 //   the cache and refreshed in the background (stale-while-revalidate).
-const CACHE_NAME = 'kietstation-pwa-v3';
+const CACHE_NAME = 'kietstation-pwa-v4';
 
 const SHELL = [
   '/',
@@ -22,6 +22,8 @@ const SHELL = [
   '/js/queue.js',
   '/js/listening.js',
   '/js/now-playing.js',
+  '/js/extras.js',
+  '/js/media-session.js',
   '/js/i18n.js',
   '/favicon-32x32.png',
   '/android-chrome-192x192.png',
