@@ -1338,7 +1338,7 @@ def innertube_yt_search(keyword, limit=8):
         "query": keyword
     }
     try:
-        resp = requests.post(url, headers=headers, json=data, timeout=8)
+        resp = requests.post(url, headers=headers, json=data, timeout=5)
         if resp.status_code != 200:
             return []
         data = resp.json()
@@ -1400,7 +1400,7 @@ def direct_yt_search(keyword, limit=8):
     }
     url = f"https://www.youtube.com/results?search_query={requests.utils.quote(keyword)}"
     try:
-        resp = requests.get(url, headers=headers, timeout=8)
+        resp = requests.get(url, headers=headers, timeout=5)
         html = resp.text
         results = []
         match = re.search(r'ytInitialData\s*=\s*({.+?});\s*</script>', html)
@@ -1448,54 +1448,133 @@ def direct_yt_search(keyword, limit=8):
         return []
 
 
-def search_youtube_tracks(keyword, type="music", limit=8):
-    """Multi-tier YouTube Search: InnerTube -> YTMusic -> HTML Parser -> yt_dlp fallback"""
-    res = []
+_search_cache = {}          # {(keyword, type, limit): (expires_at, results)}
+_SEARCH_TTL = 1800          # 30 minutes: the same mood query is asked over and over, and API calls cost quota
+_SEARCH_CACHE_MAX = 300
 
-    # Tier 1: InnerTube (fastest, full YouTube catalog, highest reliability)
+
+def _ytmusic_search(keyword, type, limit):
+    if not YTMusic:
+        return []
+    out = []
+    ytmusic = YTMusic(location="VN")
+    search_filter = "songs" if type == "music" else "videos"
+    results = ytmusic.search(keyword, filter=search_filter, limit=limit * 2)
+    if not results:
+        results = ytmusic.search(keyword, limit=limit * 2)
+    for r in results or []:
+        vid = r.get('videoId')
+        if not vid and isinstance(r.get('videoDetails'), dict):
+            vid = r['videoDetails'].get('videoId')
+        if vid and len(vid) == 11 and not any(item['link'].endswith(vid) for item in out):
+            artists = r.get("artists", [])
+            out.append({
+                "title": r.get("title", "Unknown"),
+                "artist": artists[0].get("name", "") if artists else "",
+                "link": f"https://www.youtube.com/watch?v={vid}",
+                "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+            })
+            if len(out) >= limit:
+                break
+    return out
+
+
+# When YouTube blocks this server's IP (typical on hosted platforms), every scraping tier waits for its
+# timeout and returns nothing. Remember the block for a few minutes so the next searches fail fast
+# instead of making each person wait ~50 s, and tell the UI why.
+_SCRAPE_BLOCKED_UNTIL = 0.0
+_SCRAPE_BLOCK_SECONDS = 300
+
+
+def yt_scrape_blocked():
+    return time.time() < _SCRAPE_BLOCKED_UNTIL
+
+
+def _youtube_api_search(keyword, type, limit):
+    """Official YouTube Data API v3 search. Needs the YOUTUBE_API_KEY secret; not affected by IP blocks.
+    One search costs 100 of the 10,000 free daily units, so results are cached by the caller."""
+    key = os.environ.get("YOUTUBE_API_KEY", "").strip()
+    if not key:
+        return []
+    import html as _html
+
+    params = {
+        "part": "snippet",
+        "type": "video",
+        "maxResults": min(max(limit, 1), 25),
+        "q": keyword if type == "music" else f"{keyword} podcast",
+        "regionCode": "VN",
+        "relevanceLanguage": "vi",
+        "videoEmbeddable": "true",
+        "key": key,
+    }
+    if type == "music":
+        params["videoCategoryId"] = "10"  # Music
     try:
-        res = innertube_yt_search(keyword, limit=limit)
+        r = requests.get("https://www.googleapis.com/youtube/v3/search", params=params, timeout=6)
+        if r.status_code != 200:
+            print(f"[YouTubeAPI] HTTP {r.status_code}: {r.text[:160]}")
+            return []
+        out = []
+        for it in r.json().get("items", []):
+            vid = (it.get("id") or {}).get("videoId")
+            sn = it.get("snippet") or {}
+            if not vid or len(vid) != 11:
+                continue
+            thumbs = sn.get("thumbnails") or {}
+            thumb = (thumbs.get("high") or thumbs.get("medium") or thumbs.get("default") or {}).get("url") \
+                or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+            out.append({
+                "title": _html.unescape(sn.get("title", "YouTube Video")),
+                "artist": _html.unescape(sn.get("channelTitle", "")),
+                "link": f"https://www.youtube.com/watch?v={vid}",
+                "thumbnail": thumb,
+            })
+        return out[:limit]
     except Exception as e:
-        print("InnerTube Search Error:", e)
+        print("[YouTubeAPI] error:", e)
+        return []
 
-    # Tier 2: YTMusic API
-    if not res and YTMusic:
+
+def _search_youtube_tracks_uncached(keyword, type="music", limit=8):
+    """Tiers: official API (if a key is set) -> InnerTube + YTMusic side by side -> HTML -> yt-dlp.
+    The scraping tiers are skipped for a few minutes after they all failed."""
+    global _SCRAPE_BLOCKED_UNTIL
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    res = _youtube_api_search(keyword, type, limit)
+    if res:
+        return res
+    if yt_scrape_blocked():
+        return []
+
+    pool = ThreadPoolExecutor(max_workers=2)
+    try:
+        futures = [pool.submit(innertube_yt_search, keyword, limit)]
+        if YTMusic:
+            futures.append(pool.submit(_ytmusic_search, keyword, type, limit))
         try:
-            ytmusic = YTMusic(location="VN")
-            search_filter = "songs" if type == "music" else "videos"
-            results = ytmusic.search(keyword, filter=search_filter, limit=limit * 2)
-            if not results:
-                results = ytmusic.search(keyword, limit=limit * 2)
+            for fut in as_completed(futures, timeout=7):
+                try:
+                    got = fut.result()
+                except Exception as e:
+                    print("Search tier error:", e)
+                    continue
+                if got:
+                    res = got
+                    break
+        except Exception as e:  # the whole group timed out
+            print("Search tiers timed out:", e)
+    finally:
+        pool.shutdown(wait=False)
 
-            for r in results:
-                vid = r.get('videoId')
-                if not vid and isinstance(r.get('videoDetails'), dict):
-                    vid = r['videoDetails'].get('videoId')
-                if vid and len(vid) == 11:
-                    if not any(item['link'] == f"https://www.youtube.com/watch?v={vid}" for item in res):
-                        artists = r.get("artists", [])
-                        artist_name = artists[0].get("name", "") if artists else ""
-                        res.append({
-                            "title": r.get("title", "Unknown"),
-                            "artist": artist_name,
-                            "link": f"https://www.youtube.com/watch?v={vid}",
-                            "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
-                        })
-                        if len(res) >= limit:
-                            break
-        except Exception as e:
-            print("YTMusic Search Error:", e)
-
-    # Tier 3: Direct YouTube HTML search
     if not res:
-        print(f"Tier 1 & 2 empty for '{keyword}', executing Tier 3 Direct YT Search...")
         res = direct_yt_search(keyword, limit=limit)
 
-    # Tier 4: yt_dlp search fallback
     if not res:
         try:
             import yt_dlp
-            ydl_opts = {'quiet': True, 'extract_flat': True, 'skip_download': True}
+            ydl_opts = {'quiet': True, 'extract_flat': True, 'skip_download': True, 'socket_timeout': 6}
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(f"ytsearch{limit}:{keyword}", download=False)
                 for entry in info.get('entries', []):
@@ -1510,6 +1589,25 @@ def search_youtube_tracks(keyword, type="music", limit=8):
         except Exception as e:
             print("yt_dlp Fallback Error:", e)
 
+    if not res:
+        _SCRAPE_BLOCKED_UNTIL = time.time() + _SCRAPE_BLOCK_SECONDS
+        print(f"[Search] every scraping tier failed; skipping them for {_SCRAPE_BLOCK_SECONDS}s")
+    return res
+
+
+def search_youtube_tracks(keyword, type="music", limit=8):
+    """Cached search. Empty results are never cached so a temporary block does not stick."""
+    key = ((keyword or "").strip().lower(), type, limit)
+    now = time.time()
+    hit = _search_cache.get(key)
+    if hit and hit[0] > now:
+        return [dict(r) for r in hit[1]]
+    res = _search_youtube_tracks_uncached(keyword, type=type, limit=limit)
+    if res:
+        if len(_search_cache) >= _SEARCH_CACHE_MAX:
+            for k in sorted(_search_cache, key=lambda k: _search_cache[k][0])[:50]:
+                _search_cache.pop(k, None)
+        _search_cache[key] = (now + _SEARCH_TTL, [dict(r) for r in res])
     return res
 
 
@@ -1519,17 +1617,93 @@ async def search(q: str, type: str = "music"):
     if not q:
         return {"mood": "manual", "recommendations": []}
 
-    # Search exact user query first
-    res = search_youtube_tracks(q, type=type, limit=8)
+    import asyncio
+    loop = asyncio.get_event_loop()
+
+    # The search is blocking network work: run it in a worker thread so other requests keep flowing.
+    res = await loop.run_in_executor(None, lambda: search_youtube_tracks(q, type=type, limit=8))
 
     # If empty and type is music, try with 'mv'
     if not res and type == "music":
-        res = search_youtube_tracks(f"{q} mv", type=type, limit=8)
+        res = await loop.run_in_executor(None, lambda: search_youtube_tracks(f"{q} mv", type=type, limit=8))
 
-    return {"mood": "manual", "recommendations": res}
+    out = {"mood": "manual", "recommendations": res}
+    if not res and yt_scrape_blocked() and not os.environ.get("YOUTUBE_API_KEY"):
+        out["blocked"] = True
+        out["message"] = "YouTube đang chặn máy chủ này nên chưa tìm được bài hát."
+    return out
 
 
 # --- DIRECT YOUTUBE AUDIO STREAMING (AD-FREE & EMBED-RESTRICTION-FREE) ---
+
+# --- yt-dlp options shared by audio, video and subtitles ---
+# Hosted servers (Hugging Face and similar) sit on data-centre IPs that YouTube often answers with
+# "Sign in to confirm you're not a bot". Two things help: cookies from a signed-in browser, and trying
+# a few different player clients before giving up.
+_COOKIES_PATH = None
+_YTDLP_BLOCKED_UNTIL = 0.0
+
+
+def _ytdlp_cookie_file():
+    """Path to a cookies.txt, from YTDLP_COOKIES_FILE or from the YTDLP_COOKIES secret (its text content)."""
+    global _COOKIES_PATH
+    path = os.environ.get("YTDLP_COOKIES_FILE")
+    if path and os.path.exists(path):
+        return path
+    text = os.environ.get("YTDLP_COOKIES")
+    if text:
+        if _COOKIES_PATH and os.path.exists(_COOKIES_PATH):
+            return _COOKIES_PATH
+        import tempfile
+        fd, tmp = tempfile.mkstemp(prefix="yt_cookies_", suffix=".txt")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        _COOKIES_PATH = tmp
+        return tmp
+    return None
+
+
+_YT_CLIENT_SETS = [
+    ['android', 'ios', 'web'],
+    ['tv', 'web_safari', 'mweb'],
+    ['android_vr', 'web_embedded'],
+]
+
+
+def _ytdlp_extract(video_id, fmt):
+    """Run yt-dlp for one video, retrying with other player clients when YouTube refuses."""
+    import yt_dlp
+
+    global _YTDLP_BLOCKED_UNTIL
+    if time.time() < _YTDLP_BLOCKED_UNTIL and not _ytdlp_cookie_file():
+        raise ValueError("YouTube is refusing this server (cooling down)")
+
+    last_err = None
+    for clients in _YT_CLIENT_SETS:
+        opts = {
+            'format': fmt,
+            'quiet': True,
+            'no_warnings': True,
+            'js_runtimes': {'node': {}},
+            'extractor_args': {'youtube': {'player_client': clients, 'player_skip': ['webpage', 'configs']}},
+            'socket_timeout': 10,
+        }
+        cookies = _ytdlp_cookie_file()
+        if cookies:
+            opts['cookiefile'] = cookies
+        try:
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
+            if info and info.get("url"):
+                return info
+        except Exception as e:
+            last_err = e
+            print(f"[yt-dlp] {video_id} failed with clients {clients}: {str(e)[:140]}")
+    msg = str(last_err or "")
+    if any(w in msg for w in ("Sign in", "bot", "429", "HTTP Error 403")):
+        _YTDLP_BLOCKED_UNTIL = time.time() + 300
+    raise ValueError(f"No stream URL found for {video_id}: {last_err}")
+
 _yt_stream_cache = {}  # {video_id: {"url": str, "headers": dict, "expires_at": float, "title": str}}
 
 
@@ -1540,43 +1714,19 @@ def get_yt_audio_stream_info(video_id: str):
     if cached and cached.get("expires_at", 0) > now:
         return cached["url"], cached["headers"], cached.get("title", "")
 
-    import yt_dlp
+    info = _ytdlp_extract(video_id, 'bestaudio[ext=m4a]/bestaudio/best')
+    stream_url = info["url"]
+    stream_headers = info.get("http_headers", {})
+    title = info.get("title", "")
 
-    ydl_opts = {
-        'format': 'bestaudio[ext=m4a]/bestaudio/best',
-        'quiet': True,
-        'no_warnings': True,
-        'js_runtimes': {'node': {}},
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['android', 'ios', 'web'],
-                'player_skip': ['webpage', 'configs']
-            }
-        },
-        'socket_timeout': 10
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
-        stream_url = info.get("url")
-        if not stream_url:
-            raise ValueError(f"No stream URL found for {video_id}")
-        stream_headers = info.get("http_headers", {})
-        title = info.get("title", "")
+    try:
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(stream_url).query)
+        exp = int(params.get("expire", [now + 14400])[0]) - 120
+    except Exception:
+        exp = now + 14400
 
-        try:
-            parsed = urllib.parse.urlparse(stream_url)
-            params = urllib.parse.parse_qs(parsed.query)
-            exp = int(params.get("expire", [now + 14400])[0]) - 120
-        except Exception:
-            exp = now + 14400
-
-        _yt_stream_cache[video_id] = {
-            "url": stream_url,
-            "headers": stream_headers,
-            "expires_at": exp,
-            "title": title
-        }
-        return stream_url, stream_headers, title
+    _yt_stream_cache[video_id] = {"url": stream_url, "headers": stream_headers, "expires_at": exp, "title": title}
+    return stream_url, stream_headers, title
 
 
 @app.get("/api/yt-stream/{video_id}")
@@ -1649,34 +1799,16 @@ def get_yt_video_stream_info(video_id: str):
     if cached and cached.get("expires_at", 0) > now:
         return cached["url"], cached["headers"]
 
-    import yt_dlp
-
-    ydl_opts = {
-        'format': 'best[ext=mp4][height<=720][vcodec!=none][acodec!=none]/best[ext=mp4][vcodec!=none][acodec!=none]',
-        'quiet': True,
-        'no_warnings': True,
-        'js_runtimes': {'node': {}},
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['android', 'ios', 'web'],
-                'player_skip': ['webpage', 'configs']
-            }
-        },
-        'socket_timeout': 10
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
-        stream_url = info.get("url")
-        if not stream_url:
-            raise ValueError(f"No video stream URL found for {video_id}")
-        headers = info.get("http_headers", {})
-        try:
-            params = urllib.parse.parse_qs(urllib.parse.urlparse(stream_url).query)
-            exp = int(params.get("expire", [now + 14400])[0]) - 120
-        except Exception:
-            exp = now + 14400
-        _yt_video_cache[video_id] = {"url": stream_url, "headers": headers, "expires_at": exp}
-        return stream_url, headers
+    info = _ytdlp_extract(video_id, 'best[ext=mp4][height<=720][vcodec!=none][acodec!=none]/best[ext=mp4][vcodec!=none][acodec!=none]')
+    stream_url = info["url"]
+    headers = info.get("http_headers", {})
+    try:
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(stream_url).query)
+        exp = int(params.get("expire", [now + 14400])[0]) - 120
+    except Exception:
+        exp = now + 14400
+    _yt_video_cache[video_id] = {"url": stream_url, "headers": headers, "expires_at": exp}
+    return stream_url, headers
 
 
 @app.get("/api/yt-video/{video_id}")

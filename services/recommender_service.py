@@ -9,6 +9,7 @@ Integrates:
 """
 
 import math
+import asyncio
 import random
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
@@ -281,29 +282,36 @@ async def generate_hybrid_recommendations(
                 candidate_copy["_source"] = source_tag
                 candidate_pool.append(candidate_copy)
 
-    # 1. Thu thập Candidate Pool từ Mood Queries (60% weight)
+    # 1 + 2. Gather candidates from the mood queries and from the favourite artists.
+    # The searches are independent network calls, so they run side by side instead of one after another
+    # (each can take seconds from a hosted server) and off the event loop.
+    jobs: List[Any] = []
     if custom_query:
-        mood_q = f"{custom_query} {mood_info['descriptors'][0]}"
-        res = search_func(mood_q, type=item_type, limit=10)
-        add_candidates(res, "custom_mood")
+        jobs.append((f"{custom_query} {mood_info['descriptors'][0]}", item_type, 10, "custom_mood"))
     else:
-        # Chọn ngẫu nhiên 2 query từ danh sách biến thiên để tránh lặp kết quả
         queries = mood_info.get("music_queries", [mood_info.get("descriptors", [""])[0]])
-        sampled_queries = random.sample(queries, min(2, len(queries)))
-        for q in sampled_queries:
-            res = search_func(q, type=item_type, limit=8)
-            add_candidates(res, "mood_query")
+        for q in random.sample(queries, min(2, len(queries))):
+            jobs.append((q, item_type, 8, "mood_query"))
 
-    # 2. Thu thập Candidate Pool từ Gu cá nhân hóa (Personalized Seeds - 40% weight)
     fav_artists = user_profile.get("favorite_artists", {})
     if fav_artists and item_type == "music":
-        # Sắp xếp lấy top 2 nghệ sĩ yêu thích nhất
         top_artists = sorted(fav_artists.items(), key=lambda x: x[1], reverse=True)[:2]
         for artist_name, _ in top_artists:
             if artist_name:
-                personalized_q = f"{artist_name} {mood_info['descriptors'][0]}"
-                res = search_func(personalized_q, type="music", limit=6)
-                add_candidates(res, "personalized_artist")
+                jobs.append((f"{artist_name} {mood_info['descriptors'][0]}", "music", 6, "personalized_artist"))
+
+    loop = asyncio.get_event_loop()
+
+    async def run_job(job):
+        q, kind, lim, tag = job
+        try:
+            return tag, await loop.run_in_executor(None, lambda: search_func(q, type=kind, limit=lim))
+        except Exception as e:
+            print(f"[Recommender] search failed for '{q}': {e}")
+            return tag, []
+
+    for tag, res in await asyncio.gather(*[run_job(j) for j in jobs]):
+        add_candidates(res or [], tag)
 
     # 3. Chấm điểm & Re-ranking (Scoring)
     scored_candidates = []
