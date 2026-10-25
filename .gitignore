@@ -99,3 +99,6 @@ backend_results.json
 out.txt
 test_*.py
 sampleUI/
+
+# local design-review output (screenshots, reports)
+.taste-skill/
