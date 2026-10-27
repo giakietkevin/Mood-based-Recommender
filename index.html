@@ -9,13 +9,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="manifest" href="site.webmanifest">
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="theme-color" content="#000000">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/12204/12204300.png">
 
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
@@ -190,6 +188,12 @@
                     class="hidden 2xl:flex items-center gap-1.5 border border-slate-200 bg-pure-white hover:bg-slate-50 text-charcoal-black px-3 py-1.5 rounded-full text-[11px] font-semibold tracking-wider shadow-xs transition-all active:scale-95">
                     <span class="material-symbols-outlined text-[16px] text-accent-blue">groups</span>
                     Xem chung
+                </button>
+
+                <button id="install-app-btn" type="button" onclick="installApp()" title="Cài KietStation lên máy như một ứng dụng"
+                    class="hidden h-9 px-3 rounded-full bg-charcoal-black hover:opacity-90 text-pure-white text-xs font-semibold items-center gap-1.5 transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-[18px]">install_desktop</span>
+                    <span class="hidden sm:inline">Cài ứng dụng</span>
                 </button>
 
                 <button id="lang-toggle" type="button" onclick="toggleLang()" title="Ngôn ngữ / Language"
@@ -4005,6 +4009,40 @@
                 navigator.serviceWorker.register('sw.js', { scope: './' }).catch(function () { });
             });
         }
+
+        // "Install app" button: shown only when the browser offers installation (Chrome/Edge),
+        // hidden while running as the installed app and once it has been installed
+        (function () {
+            var deferredPrompt = null;
+            function btn() { return document.getElementById('install-app-btn'); }
+            function setVisible(on) {
+                var b = btn();
+                if (!b) return;
+                b.classList.toggle('hidden', !on);
+                b.classList.toggle('flex', on);
+            }
+            window.addEventListener('beforeinstallprompt', function (e) {
+                e.preventDefault();
+                deferredPrompt = e;
+                setVisible(true);
+            });
+            window.addEventListener('appinstalled', function () {
+                deferredPrompt = null;
+                setVisible(false);
+                if (typeof window.showToast === 'function') window.showToast('Đã cài KietStation');
+            });
+            window.installApp = function () {
+                if (!deferredPrompt) return;
+                var p = deferredPrompt;
+                deferredPrompt = null;
+                setVisible(false);
+                p.prompt();
+                p.userChoice.then(function (choice) {
+                    // dismissed: Chrome fires beforeinstallprompt again later, which shows the button again
+                    if (choice.outcome !== 'accepted') deferredPrompt = null;
+                });
+            };
+        })();
     </script>
     <!-- AUTH MODAL -->
     <div id="auth-modal"

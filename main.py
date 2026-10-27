@@ -163,9 +163,30 @@ async def get_index():
     return FileResponse(os.path.join(BASE_DIR, "index.html"))
 
 
-@app.get("/site.webmanifest")
-async def serve_webmanifest():
-    return FileResponse("site.webmanifest", media_type="application/manifest+json")
+# App icons live at the repo root; the manifest and <link rel="icon"> tags point at them
+# (one explicit route per file: a "/{name}" catch-all here would shadow /sw.js, /favorites, ...)
+_ROOT_ICONS = (
+    "favicon.ico",
+    "favicon-16x16.png",
+    "favicon-32x32.png",
+    "apple-touch-icon.png",
+    "android-chrome-192x192.png",
+    "android-chrome-512x512.png",
+    "maskable-512x512.png",
+)
+
+
+def _icon_route(name):
+    path = os.path.join(BASE_DIR, name)
+
+    async def serve_icon():
+        return FileResponse(path)
+
+    return serve_icon
+
+
+for _icon in _ROOT_ICONS:
+    app.add_api_route("/" + _icon, _icon_route(_icon), methods=["GET"], include_in_schema=False)
 
 
 SONGS_DB_FILE = "user_songs.json"

@@ -38,7 +38,8 @@
         ['Hôm nay bạn thấy thế nào?', 'How are you feeling today?'], ['Chọn một tâm trạng để nhận gợi ý nhạc, không cần bật camera.', 'Pick a mood to get music picks, no camera needed.'],
         ['Vui vẻ', 'Happy'], ['Bình thản', 'Calm'], ['Buồn', 'Sad'], ['Bực bội', 'Angry'], ['Lo lắng', 'Anxious'], ['Bất ngờ', 'Surprised'], ['Chán nản', 'Fed up'],
         ['Nghe gần đây', 'Recently played'], ['Lời bài hát', 'Lyrics'], ['Sắp tới', 'Up next'], ['Xóa tất cả', 'Clear all'], ['Thử lại', 'Try again'],
-        ['Tâm trạng của bạn tuần này', 'Your moods this week'], ['Lưu thành playlist', 'Save as playlist'], ['Thêm tất cả vào hàng đợi', 'Queue all'], ['Chia sẻ', 'Share'], ['Hẹn giờ tắt', 'Sleep timer'], ['Đang phát', 'Now playing'], ['Chọn bài hát', 'Pick a track'], ['Hồ sơ cá nhân', 'My profile'], ['Giới thiệu', 'About'], ['Chế độ tập trung', 'Focus mode']
+        ['Tâm trạng của bạn tuần này', 'Your moods this week'], ['Lưu thành playlist', 'Save as playlist'], ['Thêm tất cả vào hàng đợi', 'Queue all'], ['Chia sẻ', 'Share'], ['Hẹn giờ tắt', 'Sleep timer'], ['Đang phát', 'Now playing'], ['Chọn bài hát', 'Pick a track'], ['Hồ sơ cá nhân', 'My profile'], ['Giới thiệu', 'About'], ['Chế độ tập trung', 'Focus mode'],
+        ['Cài ứng dụng', 'Install app'], ['Cài KietStation lên máy như một ứng dụng', 'Install KietStation on this device as an app'], ['Đã cài KietStation', 'KietStation installed']
     ];
     // English strings that sit in the HTML today and map to Vietnamese by default
     const EN_ONLY = { 'Home': 'Trang chủ', 'Music': 'Nhạc', 'More': 'Thêm', 'Community': 'Cộng đồng', 'Film Station': 'Phim', 'Focus Mode': 'Chế độ tập trung', 'About / Bio': 'Giới thiệu' };

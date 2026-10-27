@@ -20,19 +20,19 @@
   "lang": "vi",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/12204/12204300.png",
+      "src": "/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/12204/12204300.png",
+      "src": "/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/12204/12204300.png",
+      "src": "/maskable-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -46,7 +46,7 @@
       "url": "/?view=studio",
       "icons": [
         {
-          "src": "https://cdn-icons-png.flaticon.com/512/12204/12204300.png",
+          "src": "/android-chrome-192x192.png",
           "sizes": "192x192",
           "type": "image/png"
         }
