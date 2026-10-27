@@ -102,3 +102,8 @@ sampleUI/
 
 # local design-review output (screenshots, reports)
 .taste-skill/
+
+# Desktop app build (desktop/build.ps1 writes the heavy output outside the repo)
+desktop/launcher/node_modules/
+desktop/launcher/src-tauri/target/
+desktop/launcher/src-tauri/gen/

@@ -2,6 +2,8 @@ fastapi
 uvicorn[standard]
 python-multipart
 deepface
+# deepface 0.0.103+ imports werkzeug but does not declare it
+werkzeug
 tensorflow
 tf-keras
 opencv-python-headless

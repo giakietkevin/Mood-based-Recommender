@@ -1,0 +1,10 @@
+{
+  "name": "kietstation-launcher",
+  "private": true,
+  "scripts": {
+    "build": "tauri build --no-bundle"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.5.0"
+  }
+}
