@@ -19,6 +19,36 @@ const jsDir = path.join(root, "js");
 const vendorDir = path.join(jsDir, "vendor");
 const indexPath = path.join(root, "index.html");
 
+// TVs have no reachable console, so on Tizen show script errors on screen (ES5, runs first).
+const TV_ERROR_OVERLAY = `<script>
+(function () {
+  if (!/Tizen|SMART-TV/i.test(navigator.userAgent)) return;
+  var lines = [];
+  function show(text) {
+    lines.push(text);
+    var box = document.getElementById("tv-error-overlay");
+    if (!box) {
+      if (!document.body) return;
+      box = document.createElement("pre");
+      box.id = "tv-error-overlay";
+      box.style.cssText = "position:fixed;left:0;right:0;bottom:0;max-height:60%;overflow:auto;margin:0;padding:12px;background:rgba(160,0,0,.92);color:#fff;font:16px/1.4 monospace;z-index:2147483647;white-space:pre-wrap";
+      document.body.appendChild(box);
+    }
+    box.textContent = lines.join("\\n");
+  }
+  window.addEventListener("error", function (e) {
+    var where = e.filename ? " @ " + e.filename.split("/").pop() + ":" + e.lineno + ":" + e.colno : "";
+    show("[error] " + e.message + where);
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    show("[promise] " + (e.reason && (e.reason.stack || e.reason.message) || e.reason));
+  });
+  window.addEventListener("load", function () {
+    show("[load] " + navigator.userAgent);
+  });
+})();
+</script>`;
+
 function lower(code, label) {
   try {
     return esbuild.transformSync(code, { loader: "js", target: TARGET, charset: "utf8" }).code;
@@ -129,7 +159,7 @@ async function main() {
 
   // 5. Polyfills for missing built-ins (replaceAll, allSettled, flat, ...), loaded before anything else
   fs.copyFileSync(require.resolve("core-js-bundle/minified.js"), path.join(vendorDir, "core-js.min.js"));
-  html = html.replace(/<head([^>]*)>/i, `<head$1>\n<script src="js/vendor/core-js.min.js"></script>`);
+  html = html.replace(/<head([^>]*)>/i, `<head$1>\n<script src="js/vendor/core-js.min.js"></script>\n${TV_ERROR_OVERLAY}`);
 
   fs.writeFileSync(indexPath, html);
   console.log(`[legacy] frontend lowered to ${TARGET}`);
