@@ -4,10 +4,15 @@
     'use strict';
     const isTv = /Tizen|SMART-TV|Web0S|webOS|Android TV|AFT/i.test(navigator.userAgent) ||
         /[?&]tv=1\b/.test(location.search);
-    if (!isTv) return;
+    if (!isTv || window.__tvRemote) return;
+    window.__tvRemote = true;
 
-    const KEY = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13, BACK: 10009, ESC: 27 };
-    const FOCUSABLE = 'a[href], button, input, select, textarea, [onclick], [role="button"], [tabindex]:not([tabindex="-1"])';
+    const KEY = {
+        LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13, BACK: 10009, ESC: 27,
+        PLAY_PAUSE: 10252, PLAY: 415, PAUSE: 19, FAST_FORWARD: 417, REWIND: 412,
+    };
+    const SEEK_SECONDS = 10;
+    const FOCUSABLE = 'a[href], button, input, select, textarea, video, [onclick], [role="button"], .cursor-pointer, [tabindex]:not([tabindex="-1"])';
     const CLOSE_TEXT = /^(close|đóng|bỏ qua|huỷ|hủy|cancel|×|✕|x)$/i;
 
     const style = document.createElement('style');
@@ -45,16 +50,25 @@
         return layer || document.body;
     }
 
+    function area(el) {
+        const r = el.getBoundingClientRect();
+        return r.width * r.height;
+    }
+
     function candidates(root) {
         const list = root.querySelectorAll(FOCUSABLE);
-        const out = [];
+        const shown = [];
         for (let i = 0; i < list.length; i++) {
-            const el = list[i];
-            // a clickable wrapper around a single button: keep the button only
-            if (el.matches('[onclick]') && el.querySelector('button, a[href]')) continue;
-            if (visible(el)) out.push(el);
+            if (visible(list[i])) shown.push(list[i]);
         }
-        return out;
+        // A clickable wrapper that is mostly one inner control (a styled button around a button):
+        // keep the inner one. Cards with a small extra button inside (film cards) stay focusable.
+        return shown.filter(function (el) {
+            const own = area(el);
+            return !shown.some(function (other) {
+                return other !== el && el.contains(other) && area(other) >= own * 0.7;
+            });
+        });
     }
 
     function focus(el) {
@@ -101,7 +115,53 @@
         if (best) focus(best);
     }
 
+    // Native <select> popups don't open from a remote, so OK shows the options as a list instead.
+    let picker = null;
+
+    function openPicker(select) {
+        picker = document.createElement('div');
+        picker.className = 'tv-picker';
+        picker.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;z-index:2147483646;' +
+            'background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;';
+        const panel = document.createElement('div');
+        panel.style.cssText = 'background:#1a1a1a;border:1px solid #444;border-radius:16px;padding:16px;' +
+            'min-width:360px;max-width:80%;max-height:80%;overflow:auto;';
+        let selected = null;
+        Array.prototype.forEach.call(select.options, function (opt, i) {
+            if (opt.disabled || opt.hidden) return;
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = opt.textContent.trim() || opt.value;
+            b.style.cssText = 'display:block;width:100%;text-align:left;padding:12px 16px;margin:4px 0;' +
+                'font-size:20px;color:#fff;background:' + (i === select.selectedIndex ? '#333' : 'transparent') +
+                ';border:0;border-radius:10px;';
+            b.addEventListener('click', function () {
+                select.selectedIndex = i;
+                select.dispatchEvent(new Event('input', { bubbles: true }));
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                closePicker();
+            });
+            if (i === select.selectedIndex) selected = b;
+            panel.appendChild(b);
+        });
+        picker.returnTo = select;
+        picker.appendChild(panel);
+        document.body.appendChild(picker);
+        focus(selected || panel.querySelector('button'));
+    }
+
+    function closePicker() {
+        const back = picker && picker.returnTo;
+        if (picker) picker.remove();
+        picker = null;
+        if (back && visible(back)) focus(back);
+    }
+
     function closeDialog() {
+        if (picker) {
+            closePicker();
+            return true;
+        }
         const auth = document.getElementById('auth-modal');
         if (auth && !auth.classList.contains('hidden') && window.hideAuthModal) {
             window.hideAuthModal();
@@ -124,6 +184,81 @@
         return true;
     }
 
+    // --- video: OK goes full screen, then OK plays/pauses and left/right seek ---
+
+    function fullscreenElement() {
+        return document.fullscreenElement || document.webkitFullscreenElement || null;
+    }
+
+    function enterFullscreen(video) {
+        const req = video.requestFullscreen || video.webkitRequestFullscreen;
+        if (req) req.call(video);
+    }
+
+    function exitFullscreen() {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) exit.call(document);
+    }
+
+    function togglePlay(video) {
+        if (video.paused) {
+            const p = video.play();
+            if (p && p.catch) p.catch(function () { /* blocked or no source */ });
+        } else {
+            video.pause();
+        }
+    }
+
+    function seek(video, seconds) {
+        if (!isFinite(video.duration)) return;
+        video.currentTime = Math.max(0, Math.min(video.duration - 1, video.currentTime + seconds));
+    }
+
+    // The video the media keys act on: the full-screen one, the focused one, else one that is playing.
+    function activeVideo() {
+        const fs = fullscreenElement();
+        if (fs && fs.tagName === 'VIDEO') return fs;
+        if (current && current.tagName === 'VIDEO') return current;
+        const vids = document.querySelectorAll('video');
+        for (let i = 0; i < vids.length; i++) {
+            if (!vids[i].paused && visible(vids[i])) return vids[i];
+        }
+        return null;
+    }
+
+    // When a large video starts (a film was picked), move the focus onto it.
+    document.addEventListener('playing', function (e) {
+        const v = e.target;
+        if (v.tagName !== 'VIDEO' || v === current || v.muted) return;
+        if (v.getBoundingClientRect().width < innerWidth * 0.3) return;
+        focus(v);
+        v.scrollIntoView({ block: 'center' });
+    }, true);
+
+    function videoKey(e, video) {
+        const k = e.keyCode;
+        const full = fullscreenElement() === video;
+        if (k === KEY.PLAY_PAUSE || k === KEY.PLAY || k === KEY.PAUSE) {
+            if (k === KEY.PLAY && !video.paused) return true;
+            if (k === KEY.PAUSE && video.paused) return true;
+            togglePlay(video);
+            return true;
+        }
+        if (k === KEY.FAST_FORWARD) { seek(video, SEEK_SECONDS); return true; }
+        if (k === KEY.REWIND) { seek(video, -SEEK_SECONDS); return true; }
+        if (video !== current && !full) return false;
+        if (k === KEY.ENTER) {
+            if (full) togglePlay(video);
+            else enterFullscreen(video);
+            return true;
+        }
+        if (k === KEY.RIGHT) { seek(video, SEEK_SECONDS); return true; }
+        if (k === KEY.LEFT) { seek(video, -SEEK_SECONDS); return true; }
+        if (full && (k === KEY.UP || k === KEY.DOWN)) return true;
+        if (full && (k === KEY.BACK || k === KEY.ESC)) { exitFullscreen(); return true; }
+        return false;
+    }
+
     function typing(el) {
         return el && (el.tagName === 'TEXTAREA' || el.isContentEditable ||
             (el.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range)$/i.test(el.type)));
@@ -132,6 +267,12 @@
     // Capture phase so the page's own arrow-key shortcuts (seeking) don't also fire.
     document.addEventListener('keydown', function (e) {
         const k = e.keyCode;
+        const video = activeVideo();
+        if (video && videoKey(e, video)) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
         if (k === KEY.LEFT || k === KEY.RIGHT || k === KEY.UP || k === KEY.DOWN) {
             // inside a text field left/right move the caret; up/down leave the field
             if (typing(document.activeElement) && (k === KEY.LEFT || k === KEY.RIGHT)) return;
@@ -141,15 +282,14 @@
         } else if (k === KEY.ENTER) {
             const el = document.activeElement;
             if (!current || el !== current || typing(el)) return;
-            if (el.tagName === 'BUTTON' || el.tagName === 'A') return; // native activation
             e.preventDefault();
             e.stopPropagation();
-            el.click();
+            if (el.tagName === 'SELECT') openPicker(el);
+            else el.click();
         } else if (k === KEY.BACK || (k === KEY.ESC && e.isTrusted)) {
             if (closeDialog()) {
                 e.preventDefault();
                 e.stopPropagation();
-                current = null;
             }
         }
     }, true);
@@ -157,7 +297,7 @@
     // Tizen sends Back only when the app asks for it; media keys are optional extras.
     try {
         if (window.tizen && tizen.tvinputdevice) {
-            ['MediaPlayPause', 'MediaPlay', 'MediaPause'].forEach(function (name) {
+            ['MediaPlayPause', 'MediaPlay', 'MediaPause', 'MediaFastForward', 'MediaRewind'].forEach(function (name) {
                 try { tizen.tvinputdevice.registerKey(name); } catch (err) { /* key not on this remote */ }
             });
         }
