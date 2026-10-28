@@ -30,6 +30,8 @@ files:
   - .vscode/settings.json
   - icon.png
   - index.html
+  - main.js
+  - style.css
 
 # list of files to exclude based on the matched patterns
 excludes:
