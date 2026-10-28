@@ -27,6 +27,7 @@ const SHELL = [
   '/js/media-session.js',
   '/js/embed-bridge.js',
   '/js/i18n.js',
+  '/js/tv-remote.js',
   '/favicon-32x32.png',
   '/android-chrome-192x192.png',
   '/android-chrome-512x512.png',

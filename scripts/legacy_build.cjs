@@ -35,16 +35,20 @@ const TV_ERROR_OVERLAY = `<script>
       document.body.appendChild(box);
     }
     box.textContent = lines.join("\\n");
+    clearTimeout(show.timer);
+    show.timer = setTimeout(function () { box.style.display = "none"; }, 20000);
+    box.style.display = "";
   }
   window.addEventListener("error", function (e) {
-    var where = e.filename ? " @ " + e.filename.split("/").pop() + ":" + e.lineno + ":" + e.colno : "";
-    show("[error] " + e.message + where);
+    // "Script error." is a cross-origin CDN script with no details (Tailwind's play CDN is expected to fail)
+    if (!e.filename || /Script error/.test(e.message)) return;
+    show("[error] " + e.message + " @ " + e.filename.split("/").pop() + ":" + e.lineno + ":" + e.colno);
   });
   window.addEventListener("unhandledrejection", function (e) {
     show("[promise] " + (e.reason && (e.reason.stack || e.reason.message) || e.reason));
   });
   window.addEventListener("load", function () {
-    show("[load] " + navigator.userAgent);
+    if (lines.length) show(lines.pop());
   });
 })();
 </script>`;
@@ -78,6 +82,7 @@ async function buildTailwindCss(html, scripts) {
     .map((m) => m[1])
     .find((body) => body.includes("tailwind.config"));
   const sandbox = { tailwind: {} };
+  sandbox.window = sandbox;
   if (configScript) vm.runInNewContext(configScript, sandbox);
   const config = {
     ...(sandbox.tailwind.config || {}),
