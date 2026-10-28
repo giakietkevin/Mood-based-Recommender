@@ -7598,7 +7598,7 @@ let aiChatHistory = [];
                             <span class="material-icons-round text-sm">skip_next</span>
                             <span>Skip</span>
                         </button>
-                        <button onclick="document.getElementById('party-queue-panel')?.remove()" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-slate-400 hover:text-white">
+                        <button onclick="var p=document.getElementById('party-queue-panel'); if(p) p.remove()" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-slate-400 hover:text-white">
                             <span class="material-icons-round text-sm">close</span>
                         </button>
                     </div>
