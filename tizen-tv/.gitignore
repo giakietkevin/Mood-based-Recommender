@@ -1,0 +1,6 @@
+﻿# Tizen build output and extension state
+Debug/
+Release/
+.tizen-rds/
+.vscode/
+*.wgt

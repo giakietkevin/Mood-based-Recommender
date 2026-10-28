@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KietStation</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;flex-direction:column}
+  h1{font-size:48px;margin:0 0 16px}
+  p{font-size:24px;opacity:.7}
+</style>
+</head>
+<body>
+<h1>KietStation</h1>
+<p id="msg">Đang tải...</p>
+<script>
+  var APP_URL = 'https://kietvohcb-moodbasedrecommender.hf.space/?view=dashboard';
+  function go(){ window.location.replace(APP_URL); }
+  function check(){
+    if (navigator.onLine === false) {
+      document.getElementById('msg').textContent = 'Không có mạng. Đang thử lại...';
+      setTimeout(check, 3000);
+    } else { go(); }
+  }
+  check();
+</script>
+</body>
+</html>
