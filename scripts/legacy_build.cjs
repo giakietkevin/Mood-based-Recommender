@@ -45,6 +45,8 @@ const TV_ERROR_OVERLAY = `<script>
     show("[error] " + e.message + " @ " + e.filename.split("/").pop() + ":" + e.lineno + ":" + e.colno);
   });
   window.addEventListener("unhandledrejection", function (e) {
+    // play() cut short by pause() is routine (switching tracks), not a fault
+    if (e.reason && e.reason.name === "AbortError") return;
     show("[promise] " + (e.reason && (e.reason.stack || e.reason.message) || e.reason));
   });
   window.addEventListener("load", function () {

@@ -81,11 +81,31 @@
         el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
     }
 
-    function center(r) {
-        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    // Gap between two ranges on one axis; 0 when they overlap.
+    function gap(a1, a2, b1, b2) {
+        return Math.max(0, Math.max(a1, b1) - Math.min(a2, b2));
     }
 
-    // Nearest control in the pressed direction; sideways distance counts double so moves stay in line.
+    // Distance from `from` to `to` in the pressed direction, measured edge to edge, or null when `to`
+    // isn't that way. `strict` requires `to` to sit entirely past the near edge, so moving right from a
+    // wide button skips the small ones beside it in the same column.
+    function distance(dir, from, to, strict) {
+        let main;
+        let side;
+        if (dir === KEY.RIGHT || dir === KEY.LEFT) {
+            main = dir === KEY.RIGHT ? to.left - from.right : from.left - to.right;
+            if (!strict) main = dir === KEY.RIGHT ? to.left - from.left : from.right - to.right;
+            side = gap(from.top, from.bottom, to.top, to.bottom);
+        } else {
+            main = dir === KEY.DOWN ? to.top - from.bottom : from.top - to.bottom;
+            if (!strict) main = dir === KEY.DOWN ? to.top - from.top : from.bottom - to.bottom;
+            side = gap(from.left, from.right, to.left, to.right);
+        }
+        if (strict ? main < -2 : main <= 1) return null;
+        // controls in the same row/column win; sideways distance counts double
+        return Math.max(0, main) + side * 2;
+    }
+
     function move(dir) {
         const root = scope();
         const items = candidates(root);
@@ -94,24 +114,18 @@
             focus(items[0]);
             return;
         }
-        const from = center(current.getBoundingClientRect());
-        let best = null;
-        let bestScore = Infinity;
-        items.forEach(function (el) {
-            if (el === current) return;
-            const to = center(el.getBoundingClientRect());
-            const dx = to.x - from.x;
-            const dy = to.y - from.y;
-            let main;
-            let side;
-            if (dir === KEY.RIGHT) { main = dx; side = dy; }
-            else if (dir === KEY.LEFT) { main = -dx; side = dy; }
-            else if (dir === KEY.DOWN) { main = dy; side = dx; }
-            else { main = -dy; side = dx; }
-            if (main <= 1) return;
-            const score = main + Math.abs(side) * 2;
-            if (score < bestScore) { bestScore = score; best = el; }
-        });
+        const from = current.getBoundingClientRect();
+        const pick = function (strict) {
+            let best = null;
+            let bestScore = Infinity;
+            items.forEach(function (el) {
+                if (el === current || el.contains(current) || current.contains(el)) return;
+                const score = distance(dir, from, el.getBoundingClientRect(), strict);
+                if (score !== null && score < bestScore) { bestScore = score; best = el; }
+            });
+            return best;
+        };
+        const best = pick(true) || pick(false);
         if (best) focus(best);
     }
 
@@ -264,6 +278,13 @@
             (el.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range)$/i.test(el.type)));
     }
 
+    function caretAtEdge(el, k) {
+        let start = null;
+        try { start = el.selectionStart; } catch (err) { /* email/number inputs have no caret API */ }
+        if (start === null || start === undefined) return true;
+        return k === KEY.LEFT ? el.selectionEnd === 0 : start === el.value.length;
+    }
+
     // Capture phase so the page's own arrow-key shortcuts (seeking) don't also fire.
     document.addEventListener('keydown', function (e) {
         const k = e.keyCode;
@@ -274,8 +295,8 @@
             return;
         }
         if (k === KEY.LEFT || k === KEY.RIGHT || k === KEY.UP || k === KEY.DOWN) {
-            // inside a text field left/right move the caret; up/down leave the field
-            if (typing(document.activeElement) && (k === KEY.LEFT || k === KEY.RIGHT)) return;
+            // inside a text field left/right move the caret until it reaches the edge; up/down leave
+            if (typing(document.activeElement) && (k === KEY.LEFT || k === KEY.RIGHT) && !caretAtEdge(document.activeElement, k)) return;
             e.preventDefault();
             e.stopPropagation();
             move(k);
