@@ -108,6 +108,8 @@ class CinemaManager:
             out.append({
                 "id": room.id,
                 "name": room.name,
+                "layout": room.layout,
+                "occupied": sorted(room.seats),
                 "taken": len(room.seats),
                 "total": room.total_seats,
                 "media_kind": media.get("kind"),

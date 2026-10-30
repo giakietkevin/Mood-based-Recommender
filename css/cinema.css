@@ -1,0 +1,338 @@
+/* Rạp KietStation. Style: true-black flat (lớp nổi lên chỉ bằng độ sáng, không viền, không bóng).
+   Màu lime chỉ dùng cho ghế của bạn. Viết cho cả Chrome 63 trên TV: không dùng flex gap,
+   aspect-ratio, clamp() hay inset; grid dùng kèm grid-gap. */
+
+#view-cinema {
+    --c-ground: #0b0a0b;
+    --c-surface: #151314;
+    --c-raised: #221f20;
+    --c-rule: #2a2627;
+    --c-text: #f4f2f1;
+    --c-muted: #b4b4b4;
+    --c-meta: #949494;
+    --c-accent: #c6f24e;
+    --c-accent-ink: #141a05;
+    --c-velvet: #6e1f2c;
+    --c-velvet-dark: #4a141d;
+    --c-velvet-hover: #93303f;
+    --c-screen: #e9e6e3;
+    --seat-fs: 11.5px;     /* ghế rộng 4em: 46px */
+    --aisle-w: 30px;
+
+    position: relative;
+    color: var(--c-text);
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    padding-bottom: 96px;
+}
+
+/* Cả trang tối khi đang ở rạp, để phần quanh view không thành một tấm thẻ đen giữa nền sáng. */
+body.cinema-on { background: #0b0a0b; }
+
+#view-cinema button { font: inherit; color: inherit; }
+#view-cinema .cine-seat { font-size: var(--seat-fs); }  /* ghế đổi cỡ theo --seat-fs, không theo chữ */
+#view-cinema .tnum { font-variant-numeric: tabular-nums; }
+
+/* ---------- nút ---------- */
+.cine-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--c-raised);
+    color: var(--c-text);
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color .15s ease, transform .1s ease;
+}
+.cine-btn:hover { background: #2f2b2c; }
+.cine-btn:active { transform: scale(.97); }
+#view-cinema .cine-btn--primary { background: #fff; color: #000; }
+#view-cinema .cine-btn--primary:hover { background: #e6e6e6; }
+.cine-btn .material-symbols-outlined { font-size: 18px; margin-right: 6px; }
+#view-cinema :focus-visible { outline: 2px solid var(--c-text); outline-offset: 2px; }
+
+/* ---------- sảnh ---------- */
+.cine-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 28px 0 24px;
+}
+.cine-head h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+.cine-head p { margin: 6px 0 0; color: var(--c-muted); }
+.cine-head > div + div { margin-top: 12px; }
+
+.cine-rooms { list-style: none; margin: 0; padding: 0; }
+.cine-rooms li + li { margin-top: 8px; }
+.cine-room {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr) 140px 120px;
+    grid-column-gap: 24px;
+    column-gap: 24px;
+    align-items: center;
+    width: 100%;
+    padding: 16px 20px;
+    border: 0;
+    border-radius: 14px;
+    background: var(--c-surface);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color .15s ease;
+}
+.cine-room:hover { background: #1c191a; }
+.cine-room__name { display: block; font-size: 16px; font-weight: 600; }
+.cine-room__now { display: block; margin-top: 2px; color: var(--c-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cine-room__status { color: var(--c-muted); }
+.cine-room__status.is-live { color: var(--c-text); }
+.cine-room__status.is-live::before {
+    content: "";
+    display: inline-block;
+    width: 7px; height: 7px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--c-accent);
+    vertical-align: 1px;
+}
+.cine-room__seats { text-align: right; font-size: 16px; font-weight: 500; }
+.cine-room__seats small { font-size: 13px; color: var(--c-meta); font-weight: 400; }
+
+/* sơ đồ thu nhỏ trong sảnh: mỗi chấm là một ghế */
+.cine-mini { display: grid; grid-gap: 3px; gap: 3px; justify-content: start; }
+.cine-mini i { display: block; width: 8px; height: 6px; border-radius: 2px; background: var(--c-velvet-dark); }
+.cine-mini i.on { background: var(--c-screen); }
+.cine-mini b { display: block; width: 4px; }
+
+.cine-lobby-empty { padding: 48px 0; color: var(--c-muted); }
+
+/* ---------- phòng chiếu ---------- */
+.cine-room-head .cine-back { margin-bottom: 14px; padding-left: 10px; }
+.cine-room-head .cine-actions > * + * { margin-left: 8px; }
+
+.cine-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-column-gap: 24px;
+    column-gap: 24px;
+    align-items: start;
+}
+
+.cine-hall-wrap { background: var(--c-surface); border-radius: 16px; padding: 28px 20px 24px; }
+
+/* màn chiếu cong ở đầu sơ đồ */
+.cine-arc { margin: 0 auto 8px; width: 72%; height: 26px; overflow: hidden; position: relative; }
+.cine-arc::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 120px;
+    border-top: 5px solid var(--c-screen);
+    border-radius: 50% 50% 0 0 / 22px 22px 0 0;
+}
+.cine-arc-label { text-align: center; color: var(--c-meta); font-size: 12px; margin-bottom: 4px; }
+.cine-arc-title { text-align: center; color: var(--c-text); font-weight: 500; margin-bottom: 18px; min-height: 21px; }
+
+.cine-hall { overflow-x: auto; overflow-y: hidden; padding: 8px 0 4px; -webkit-overflow-scrolling: touch; }
+.cine-hall-inner { perspective: 900px; perspective-origin: 50% 0; min-width: min-content; width: -webkit-max-content; width: max-content; margin: 0 auto; }
+.cine-map {
+    display: grid;
+    grid-row-gap: 6px;
+    row-gap: 6px;
+    transform: rotateX(18deg);
+    transform-origin: 50% 100%;
+    padding: 0 4px;
+}
+.cine-rowlabel { color: var(--c-meta); font-size: 12px; text-align: center; align-self: center; }
+
+/* ghế: lưng nhung, đệm ngồi; người ngồi là thân màu riêng và đầu là ảnh đại diện */
+.cine-seat {
+    position: relative;
+    font-size: var(--seat-fs);
+    width: 4em;
+    height: 4.6em;
+    margin: 0 auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    transition: transform .12s ease, opacity .15s ease;
+}
+.cine-seat .s-back {
+    position: absolute;
+    left: .4em; right: .4em; top: 1.4em; height: 1.9em;
+    border-radius: .9em .9em .3em .3em;
+    background: var(--c-velvet);
+    transition: background-color .15s ease;
+}
+.cine-seat .s-base {
+    position: absolute;
+    left: .1em; right: .1em; top: 2.9em; height: 1.3em;
+    border-radius: .4em;
+    background: var(--c-velvet-dark);
+    z-index: 3;
+}
+.cine-seat .p-body {
+    position: absolute;
+    left: .9em; right: .9em; top: 2em; height: 1.4em;
+    border-radius: 1.1em 1.1em .2em .2em;
+    z-index: 2;
+}
+.cine-seat .p-head {
+    position: absolute;
+    left: 50%; top: 0;
+    width: 2.2em; height: 2.2em;
+    margin-left: -1.1em;
+    border-radius: 50%;
+    overflow: hidden;
+    z-index: 4;
+    font-weight: 600;
+    line-height: 2.2em;
+    text-align: center;
+    color: #111;
+}
+.cine-seat .p-head img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cine-seat .s-you {
+    position: absolute;
+    left: 0; right: 0; top: 2.95em;
+    z-index: 5;
+    font-size: .95em;
+    font-weight: 600;
+    line-height: 1.2em;
+    text-align: center;
+    color: var(--c-accent-ink);
+}
+
+.cine-seat.is-free:hover .s-back,
+.cine-seat.is-free:focus .s-back,
+.cine-seat.is-free.tv-focus .s-back { background: var(--c-velvet-hover); }
+.cine-seat.is-free:active { transform: scale(.94); }
+.cine-seat.is-taken { cursor: default; }
+.cine-seat.is-away .p-body,
+.cine-seat.is-away .p-head { opacity: .45; }
+.cine-seat.is-mine .s-back { background: var(--c-accent); }
+.cine-seat.is-mine .s-base { background: #a9d238; }
+.cine-seat.is-pending { opacity: .45; cursor: progress; }
+
+/* chú thích: mỗi mẫu là chính cái ghế thu nhỏ */
+.cine-legend { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 18px; color: var(--c-muted); font-size: 13px; }
+.cine-legend > span { display: inline-flex; align-items: center; margin: 4px 12px; }
+.cine-legend .cine-seat { display: inline-block; --seat-fs: 7px; margin: 0 8px 0 0; pointer-events: none; }
+
+/* thanh bên: người trong rạp */
+.cine-side { background: var(--c-surface); border-radius: 16px; padding: 18px 16px; }
+.cine-side h2 { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
+.cine-side h2 small { font-weight: 400; color: var(--c-meta); font-size: 14px; margin-left: 4px; }
+.cine-people { list-style: none; margin: 0; padding: 0; max-height: 460px; overflow-y: auto; }
+.cine-person { display: flex; align-items: center; min-height: 44px; }
+.cine-person.is-away { opacity: .55; }
+.cine-avatar {
+    flex: none;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 30px;
+    text-align: center;
+    color: #111;
+}
+.cine-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cine-person__name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cine-person__name small { display: block; color: var(--c-meta); font-size: 12px; line-height: 16px; }
+.cine-person__seat { flex: none; margin-left: 8px; color: var(--c-muted); font-variant-numeric: tabular-nums; }
+.cine-tag { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; background: var(--c-raised); color: var(--c-muted); font-size: 11px; line-height: 18px; vertical-align: 1px; }
+
+/* ---------- chế độ xem ---------- */
+.cine-stage { display: none; }
+.cine-strip { display: none; }
+#view-cinema.is-watching .cine-body { display: none; }
+#view-cinema.is-watching .cine-stage { display: block; }
+#view-cinema.is-watching .cine-strip { display: flex; }
+#view-cinema.is-watching #cine-to-stage { display: none; }
+
+.cine-stage {
+    position: relative;
+    width: 100%;
+    height: 480px;                   /* TV cũ chưa hiểu calc lồng vh thì vẫn có cỡ hợp lý */
+    height: calc(100vh - 340px);
+    min-height: 220px;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.cine-stage__msg {
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    transform: translateY(-50%);
+    padding: 0 24px;
+    text-align: center;
+}
+.cine-stage__msg strong { display: block; font-size: 20px; font-weight: 600; }
+.cine-stage__msg span { display: block; margin-top: 6px; color: var(--c-muted); }
+
+.cine-strip {
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--c-surface);
+    border-radius: 14px;
+}
+.cine-faces { display: flex; align-items: center; flex: 1 1 auto; min-width: 0; }
+.cine-faces .cine-avatar { width: 28px; height: 28px; line-height: 28px; margin-right: -6px; box-shadow: 0 0 0 2px var(--c-surface); }
+.cine-faces__count { margin-left: 18px; color: var(--c-muted); white-space: nowrap; }
+.cine-strip__seat { margin: 0 16px; white-space: nowrap; }
+.cine-strip__seat b { font-weight: 600; }
+
+/* ---------- thông báo ngắn ---------- */
+.cine-toast {
+    position: fixed;
+    left: 50%; bottom: 96px;
+    z-index: 60;
+    max-width: 92vw;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: #f4f2f1;
+    color: #111;
+    font-weight: 500;
+    transform: translate(-50%, 12px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .35);
+}
+.cine-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+.cine-conn { margin-left: 10px; color: var(--c-meta); font-size: 13px; }
+
+/* ---------- màn rộng / TV / điện thoại ---------- */
+html.tv-mode #view-cinema { --seat-fs: 13px; --aisle-w: 36px; }
+
+@media (max-width: 1023px) {
+    .cine-body { grid-template-columns: minmax(0, 1fr); grid-row-gap: 16px; row-gap: 16px; }
+    .cine-people { max-height: none; }
+}
+@media (max-width: 640px) {
+    #view-cinema { --seat-fs: 9px; --aisle-w: 14px; }
+    .cine-stage { height: 56vw; min-height: 0; }
+    .cine-room { grid-template-columns: 112px minmax(0, 1fr); grid-row-gap: 8px; row-gap: 8px; padding: 14px; }
+    .cine-room__status { grid-column: 2; }
+    .cine-room__seats { grid-column: 2; text-align: left; }
+    .cine-mini { grid-row: span 3; align-self: start; }
+    .cine-mini { grid-gap: 2px; gap: 2px; }
+    .cine-mini i { width: 7px; height: 5px; }
+    .cine-hall-wrap { padding: 20px 8px; margin: 0 -8px; border-radius: 12px; }
+    .cine-hall-inner { margin: 0; }
+    .cine-map { transform: rotateX(12deg); }
+    .cine-strip__seat { margin: 8px 12px 8px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #view-cinema *, .cine-toast { transition: none !important; }
+}

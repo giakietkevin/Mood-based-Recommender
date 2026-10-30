@@ -278,8 +278,8 @@
                 }
             }
 
-            const views = ['home', 'dashboard', 'studio', 'library', 'film', 'game', 'photobooth', 'discover', 'guide', 'about', 'djradio', 'focus'];
-            const moreMenuItems = ['library', 'photobooth', 'studio', 'about', 'discover', 'djradio', 'focus'];
+            const views = ['home', 'dashboard', 'studio', 'library', 'film', 'cinema', 'game', 'photobooth', 'discover', 'guide', 'about', 'djradio', 'focus'];
+            const moreMenuItems = ['library', 'photobooth', 'studio', 'about', 'discover', 'djradio', 'focus', 'cinema'];
 
             views.forEach(v => {
                 const el = document.getElementById(`view-${v}`);
@@ -318,6 +318,12 @@
 
             // Close more menu when navigating
             if (typeof window.closeMobileMoreMenu === 'function') window.closeMobileMoreMenu();
+
+            // Rạp: mở kết nối khi vào, đóng khi rời (ghế được giữ 15 giây)
+            if (window.Cinema) {
+                if (viewName === 'cinema') window.Cinema.onShow();
+                else window.Cinema.onHide();
+            }
 
             // Trigger view-specific functions
             if (viewName === 'home') {
