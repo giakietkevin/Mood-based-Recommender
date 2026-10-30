@@ -12,6 +12,8 @@
     const SEEK_DRIFT = 1.5;        // lệch hơn chừng này giây thì tua thẳng tới chỗ đúng
     const NUDGE_DRIFT = 0.25;      // lệch hơn chừng này thì phát nhanh/chậm 5% để bắt kịp êm
     const PING_EVERY_MS = 10000;
+    const DEAD_AFTER_MS = 25000;   // không nhận được gì (kể cả pong) chừng này thì coi như mất kết nối
+    const BUBBLE_MS = 6000;
     const PHIM_API = 'https://phimapi.com';
 
     const state = {
@@ -34,6 +36,8 @@
         shown: false,
         clockSamples: [],     // [{rtt, offset}] từ ping/pong, dùng mẫu có rtt nhỏ nhất
         pingTimer: null,
+        lastMsgAt: 0,         // lần cuối nhận được tin từ server, để phát hiện kết nối chết im
+        bubbles: {},          // uid -> {text, until}: bong bóng chat đang hiện
     };
 
     // Trình phát của máy này. Nó chỉ làm theo trạng thái server gửi; nút của chủ phòng gửi lệnh lên server.
@@ -265,6 +269,7 @@
 
         ws.onopen = () => {
             state.retry = 0;
+            state.lastMsgAt = Date.now();
             setConn('');
             send({ type: 'hello', name: myName(uid), avatar: myAvatar() });
             ping();
@@ -279,6 +284,9 @@
         ws.onclose = (ev) => {
             if (state.ws !== ws) return;
             state.ws = null;
+            clearInterval(state.pingTimer);
+            // Ghế đang chờ trả lời sẽ không bao giờ có trả lời trên kết nối này.
+            if (state.pending) { const p = state.pending; state.pending = null; renderSeat(p); }
             if (state.closedByUs || !state.roomId) return;
             if (ev.code === 4001) {
                 setConn('Bạn đang mở rạp ở một tab khác.');
@@ -298,7 +306,25 @@
     }
 
     function ping() {
+        // Wi-Fi rớt thường không đóng socket ngay: không nghe gì từ server quá lâu thì tự nối lại.
+        if (state.ws && state.ws.readyState === 1 && state.lastMsgAt && Date.now() - state.lastMsgAt > DEAD_AFTER_MS) {
+            setConn('Mất kết nối, đang nối lại...');
+            connect();
+            return;
+        }
         send({ type: 'ping', t: Date.now() });
+    }
+
+    // Có mạng lại hoặc quay lại tab: nối lại ngay, không chờ hết thời gian chờ của lần thử trước.
+    function reconnectNow() {
+        if (!state.roomId || !state.shown) return;
+        const ws = state.ws;
+        if (ws && ws.readyState <= 1) {
+            if (ws.readyState === 1) ping();
+            return;
+        }
+        state.retry = 0;
+        connect();
     }
 
     // Giờ server tính theo đồng hồ máy này (giây).
@@ -325,6 +351,8 @@
     }
 
     function onMessage(msg) {
+        state.lastMsgAt = Date.now();
+        setConn('');   // nghe được server tức là đã có kết nối, bỏ dòng "mất mạng"
         if (msg.type === 'pong' && typeof msg.t === 'number' && typeof msg.server_time === 'number') {
             // Server ghi giờ vào khoảng giữa lượt đi và lượt về.
             const now = Date.now();
@@ -401,7 +429,11 @@
             case 'denied':
                 if (msg.reason === 'not_host') toast('Chỉ chủ phòng mới điều khiển được màn chiếu');
                 else if (msg.reason === 'no_media') toast('Chưa có nội dung chiếu');
+                else if (msg.action === 'chat') toast('Bạn nhắn nhanh quá, chờ vài giây nhé');
                 else toast('Không đổi được nội dung chiếu');
+                break;
+            case 'chat':
+                showBubble(msg.uid, msg.text);
                 break;
             case 'replaced':
                 setConn('Bạn đang mở rạp ở một tab khác.');
@@ -496,6 +528,8 @@
         }
         btn.appendChild(el('span', 's-base'));
         if (mine) btn.appendChild(el('span', 's-you', 'Bạn'));
+        const said = uid && activeBubble(uid);
+        if (said) btn.appendChild(bubbleEl(said));
 
         let label;
         if (state.pending === code) label = code + ' · đang giữ chỗ...';
@@ -567,14 +601,69 @@
         // dải mặt người ở chế độ xem
         const faces = $('#cine-faces');
         faces.textContent = '';
-        uids.slice(0, 8).forEach((uid) => {
+        // Người vừa nhắn lên đầu dải, để bong bóng của họ luôn hiện.
+        // Dải này hẹp: chỉ hiện bong bóng của người nhắn gần nhất để các bong bóng không chồng lên nhau.
+        let latest = null;
+        uids.forEach((uid) => {
+            if (activeBubble(uid) && (!latest || state.bubbles[uid].until > state.bubbles[latest].until)) latest = uid;
+        });
+        const shown = uids.slice().sort((a, b) => (b === latest ? 1 : 0) - (a === latest ? 1 : 0)).slice(0, 8);
+        shown.forEach((uid) => {
+            const face = el('span', 'cine-face');
             const av = el('span', 'cine-avatar');
             av.title = state.members[uid].name;
             fillAvatar(av, state.members[uid]);
-            faces.appendChild(av);
+            face.appendChild(av);
+            if (uid === latest) face.appendChild(bubbleEl(activeBubble(uid)));
+            faces.appendChild(face);
         });
         faces.appendChild(el('span', 'cine-faces__count', uids.length + ' người trong rạp'));
         renderMeta();
+    }
+
+    // ---------- chat: bong bóng trên đầu người gửi ----------
+
+    function activeBubble(uid) {
+        const b = state.bubbles[uid];
+        return b && b.until > Date.now() ? b.text : null;
+    }
+
+    function bubbleEl(text) {
+        const b = el('span', 'cine-bubble', text);
+        b.setAttribute('aria-hidden', 'true');
+        return b;
+    }
+
+    function showBubble(uid, text) {
+        const m = state.members[uid];
+        if (!m) return;
+        state.bubbles[uid] = { text: text, until: Date.now() + BUBBLE_MS };
+        if (m.seat) renderSeat(m.seat);
+        renderPeople();
+        // Toàn màn hình thì chỉ màn chiếu được vẽ: hiện tin ở góc màn chiếu.
+        const feed = $('#cine-chat-feed');
+        const line = el('div', 'cine-feed-line');
+        line.appendChild(el('b', null, (uid === myUid() ? 'Bạn' : m.name) + ': '));
+        line.appendChild(document.createTextNode(text));
+        feed.appendChild(line);
+        while (feed.children.length > 4) feed.removeChild(feed.firstChild);
+        setTimeout(() => {
+            if (line.parentNode) line.parentNode.removeChild(line);
+            if (!activeBubble(uid) && state.members[uid]) {
+                if (state.members[uid].seat) renderSeat(state.members[uid].seat);
+                renderPeople();
+            }
+        }, BUBBLE_MS + 50);
+    }
+
+    function sendChat(text) {
+        text = String(text || '').trim();
+        if (!text) return false;
+        if (!send({ type: 'chat', text: text.slice(0, 300) })) {
+            toast('Đang nối lại với rạp, chưa gửi được tin');
+            return false;
+        }
+        return true;
     }
 
     function isHost() {
@@ -1184,6 +1273,18 @@
         $('#cine-back').addEventListener('click', leaveRoom);
         $('#cine-to-stage').addEventListener('click', () => setMode('watching'));
         $('#cine-change-seat').addEventListener('click', () => setMode('picking'));
+
+        $('#cine-chat').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = $('#cine-chat-input');
+            if (sendChat(input.value)) input.value = '';
+        });
+        Array.prototype.forEach.call(root.querySelectorAll('.cine-chip'), (chip) => {
+            chip.addEventListener('click', () => sendChat(chip.getAttribute('data-say')));
+        });
+        window.addEventListener('online', reconnectNow);
+        window.addEventListener('offline', () => { if (state.roomId && state.shown) setConn('Mất mạng, sẽ tự nối lại khi có mạng...'); });
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) reconnectNow(); });
 
         $('#cine-unlock').addEventListener('click', unlockPlayback);
         $('#cine-play').addEventListener('click', onPlayClick);

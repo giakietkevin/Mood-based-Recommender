@@ -3296,6 +3296,7 @@
                     <span id="cine-stage-sub"></span>
                     <button type="button" id="cine-pick-empty" class="cine-btn cine-btn--primary" hidden>Chọn nội dung chiếu</button>
                 </div>
+                <div id="cine-chat-feed" class="cine-chat-feed" aria-hidden="true"></div>
                 <button type="button" id="cine-unlock" class="cine-unlock" hidden>
                     <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
                     <span>Bấm để xem cùng mọi người</span>
@@ -3316,6 +3317,16 @@
                 <button type="button" id="cine-pick-open" class="cine-btn" hidden><span class="material-symbols-outlined" aria-hidden="true">movie</span>Chọn nội dung</button>
                 <button type="button" id="cine-change-seat" class="cine-btn"><span class="material-symbols-outlined" aria-hidden="true">event_seat</span>Đổi ghế</button>
             </div>
+            <form id="cine-chat" class="cine-chat" autocomplete="off">
+                <input id="cine-chat-input" type="text" maxlength="300" placeholder="Nhắn cả rạp..." aria-label="Tin nhắn cho cả rạp">
+                <button type="submit" class="cine-btn cine-btn--primary">Gửi</button>
+                <span class="cine-quick" role="group" aria-label="Câu nhanh">
+                    <button type="button" class="cine-chip" data-say="Hay quá!">Hay quá!</button>
+                    <button type="button" class="cine-chip" data-say="Haha">Haha</button>
+                    <button type="button" class="cine-chip" data-say="Chờ mình chút">Chờ mình chút</button>
+                    <button type="button" class="cine-chip" data-say="Tua lại đoạn đó đi">Tua lại đoạn đó</button>
+                </span>
+            </form>
         </section>
 
         <!-- Bảng chọn nội dung chiếu, chỉ chủ phòng mở được -->

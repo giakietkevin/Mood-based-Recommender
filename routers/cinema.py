@@ -23,6 +23,11 @@ SEAT_HOLD_SECONDS = 15
 SWEEP_INTERVAL = 5
 SEAT_RATE_LIMIT = 5        # số lần seat_request tối đa ...
 SEAT_RATE_WINDOW = 1.0     # ... trong khoảng này (giây)
+CHAT_RATE_LIMIT = 3        # tin chat tối đa ...
+CHAT_RATE_WINDOW = 5.0     # ... trong 5 giây
+MSG_RATE_LIMIT = 30        # mọi loại tin, chặn máy gửi dồn dập
+MSG_RATE_WINDOW = 1.0
+CHAT_MAX = 300
 NAME_MAX = 40
 ROW_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -79,7 +84,7 @@ class CinemaManager:
     def __init__(self, configs: List[dict] = ROOM_CONFIG, clock: Callable[[], float] = time.time):
         self.clock = clock
         self.rooms: Dict[str, Room] = {c["id"]: Room(c) for c in configs}
-        self._seat_requests: Dict[Tuple[str, str], deque] = {}
+        self._rates: Dict[Tuple[str, str, str], deque] = {}   # (phòng, uid, loại) -> các mốc giờ gần đây
 
     # ---------- đọc trạng thái ----------
 
@@ -183,7 +188,8 @@ class CinemaManager:
             room.seats.pop(member["seat"], None)
             msgs.append((None, {"type": "seat_changed", "seat": member["seat"], "uid": None}))
         msgs.append((None, {"type": "member_leave", "uid": uid}))
-        self._seat_requests.pop((room.id, uid), None)
+        for key in [k for k in self._rates if k[0] == room.id and k[1] == uid]:
+            del self._rates[key]
         if room.host == uid:
             room.host = next(iter(room.members), None)
             msgs.append((None, {"type": "host_changed", "host": room.host}))
@@ -204,12 +210,13 @@ class CinemaManager:
 
     # ---------- ghế ----------
 
-    def _rate_limited(self, room: Room, uid: str) -> bool:
+    def _rate_limited(self, room: Room, uid: str, kind: str = "seat",
+                      limit: int = SEAT_RATE_LIMIT, window: float = SEAT_RATE_WINDOW) -> bool:
         now = self.clock()
-        q = self._seat_requests.setdefault((room.id, uid), deque())
-        while q and now - q[0] >= SEAT_RATE_WINDOW:
+        q = self._rates.setdefault((room.id, uid, kind), deque())
+        while q and now - q[0] >= window:
             q.popleft()
-        if len(q) >= SEAT_RATE_LIMIT:
+        if len(q) >= limit:
             return True
         q.append(now)
         return False
@@ -318,11 +325,25 @@ class CinemaManager:
         room.playback = {"playing": playing, "position": pos, "updated_at": self.clock()}
         return [(None, {"type": "playback", "playback": dict(room.playback)})]
 
+    # ---------- chat ----------
+
+    def chat(self, room: Room, uid: str, text) -> List[Outgoing]:
+        if uid not in room.members:
+            return []
+        text = _clean_text(text, CHAT_MAX)
+        if not text:
+            return []
+        if self._rate_limited(room, uid, "chat", CHAT_RATE_LIMIT, CHAT_RATE_WINDOW):
+            return [(uid, {"type": "denied", "action": "chat", "reason": "too_fast"})]
+        return [(None, {"type": "chat", "uid": uid, "text": text})]
+
     # ---------- xử lý tin nhắn ----------
 
     def handle(self, room: Room, uid: str, data) -> List[Outgoing]:
         if not isinstance(data, dict):
             return []
+        if self._rate_limited(room, uid, "any", MSG_RATE_LIMIT, MSG_RATE_WINDOW):
+            return []  # gửi dồn dập: bỏ qua lặng lẽ
         t = data.get("type")
         if t == "hello":
             return self.hello(room, uid, data.get("name"), data.get("avatar"))
@@ -334,6 +355,8 @@ class CinemaManager:
             return self.set_media(room, uid, data)
         if t in ("play", "pause", "seek"):
             return self.set_playback(room, uid, t, data.get("position"))
+        if t == "chat":
+            return self.chat(room, uid, data.get("text"))
         if t == "ping":
             # Trả lại mốc giờ của máy gửi để máy đó tính độ lệch đồng hồ theo thời gian khứ hồi.
             sent = data.get("t")

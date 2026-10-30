@@ -140,7 +140,7 @@ body.cinema-on { background: #0b0a0b; }
 .cine-arc-label { text-align: center; color: var(--c-meta); font-size: 12px; margin-bottom: 4px; }
 .cine-arc-title { text-align: center; color: var(--c-text); font-weight: 500; margin-bottom: 18px; min-height: 21px; }
 
-.cine-hall { overflow-x: auto; overflow-y: hidden; padding: 8px 0 4px; -webkit-overflow-scrolling: touch; }
+.cine-hall { overflow-x: auto; overflow-y: hidden; padding: 44px 0 4px; margin-top: -36px;  /* chỗ cho bong bóng chat trên hàng A */ -webkit-overflow-scrolling: touch; }
 .cine-hall-inner { perspective: 900px; perspective-origin: 50% 0; min-width: min-content; width: -webkit-max-content; width: max-content; margin: 0 auto; }
 .cine-map {
     display: grid;
@@ -263,7 +263,7 @@ body.cinema-on { background: #0b0a0b; }
     position: relative;
     width: 100%;
     height: 480px;                   /* TV cũ chưa hiểu calc lồng vh thì vẫn có cỡ hợp lý */
-    height: calc(100vh - 400px);   /* chừa chỗ cho tiêu đề, thanh điều khiển và dải người xem */
+    height: calc(100vh - 460px);   /* chừa chỗ cho tiêu đề, thanh điều khiển, dải người xem và chat */
     min-height: 220px;
     background: #000;
     border-radius: 12px;
@@ -288,7 +288,10 @@ body.cinema-on { background: #0b0a0b; }
     border-radius: 14px;
 }
 .cine-faces { display: flex; align-items: center; flex: 1 1 auto; min-width: 0; }
-.cine-faces .cine-avatar { width: 28px; height: 28px; line-height: 28px; margin-right: -6px; box-shadow: 0 0 0 2px var(--c-surface); }
+.cine-face { position: relative; flex: none; margin-right: -6px; }
+.cine-face .cine-avatar { display: block; }
+.cine-face .cine-bubble { left: 0; transform: translate(-4px, -6px); }  /* neo trái để không tràn ra ngoài dải */
+.cine-faces .cine-avatar { width: 28px; height: 28px; line-height: 28px; margin-right: 0; box-shadow: 0 0 0 2px var(--c-surface); }
 .cine-faces__count { margin-left: 18px; color: var(--c-muted); white-space: nowrap; }
 .cine-strip__seat { margin: 0 16px; white-space: nowrap; }
 .cine-strip__seat b { font-weight: 600; }
@@ -469,6 +472,70 @@ body.cinema-on { background: #0b0a0b; }
 }
 .cine-ep:hover, .cine-ep:focus { background: #fff; color: #000; }
 
+/* ---------- chat ---------- */
+/* bong bóng trên đầu người gửi: trong sơ đồ ghế và trên dải mặt người xem */
+.cine-bubble {
+    position: absolute;
+    left: 50%; bottom: 100%;
+    z-index: 6;
+    width: -webkit-max-content;
+    width: max-content;
+    max-width: 180px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: #f4f2f1;
+    color: #111;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.35;
+    text-align: left;
+    white-space: normal;
+    word-break: break-word;
+    pointer-events: none;
+    transform: translate(-50%, -4px);
+    animation: cine-pop .18s ease-out;
+}
+#view-cinema .cine-seat .cine-bubble { font-size: 12px; }
+@keyframes cine-pop { from { opacity: 0; } to { opacity: 1; } }
+
+.cine-chat { display: flex; align-items: center; flex-wrap: wrap; margin-top: 10px; padding: 8px; background: var(--c-surface); border-radius: 14px; }
+.cine-chat input {
+    flex: 1 1 220px;
+    min-width: 0;
+    height: 36px;
+    margin-right: 8px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--c-raised);
+    color: var(--c-text);
+    font: inherit;
+}
+.cine-chat input::placeholder { color: var(--c-meta); }
+.cine-quick { display: flex; flex-wrap: wrap; margin-left: 8px; }
+.cine-chip {
+    height: 32px;
+    margin: 2px 4px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--c-raised);
+    color: var(--c-muted) !important;
+    font-size: 13px !important;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color .15s ease, transform .1s ease;
+}
+.cine-chip:hover, .cine-chip:focus { background: #2f2b2c; color: var(--c-text) !important; }
+.cine-chip:active { transform: scale(.96); }
+
+/* khi toàn màn hình: tin nhắn hiện ở góc màn chiếu */
+.cine-chat-feed { display: none; position: absolute; left: 24px; bottom: 24px; z-index: 3; max-width: 40%; pointer-events: none; }
+.cine-stage:-webkit-full-screen .cine-chat-feed { display: block; }
+.cine-stage:fullscreen .cine-chat-feed { display: block; }
+.cine-feed-line { display: table; margin-top: 6px; padding: 6px 12px; border-radius: 12px; background: rgba(0, 0, 0, .65); color: #fff; font-size: 18px; line-height: 1.35; animation: cine-pop .18s ease-out; }
+.cine-feed-line b { font-weight: 600; }
+
 /* ---------- thông báo ngắn ---------- */
 .cine-toast {
     position: fixed;
@@ -518,8 +585,10 @@ html.tv-mode #view-cinema { --seat-fs: 13px; --aisle-w: 36px; }
     .cine-time { min-width: 36px; margin: 0 4px; }
     .cine-guest-note { display: none; }
     .cine-picker { padding: 0; }
+    .cine-chat input { flex-basis: 140px; }
+    .cine-quick { flex-wrap: nowrap; overflow-x: auto; width: 100%; margin: 8px 0 0; -webkit-overflow-scrolling: touch; }
     .cine-picker__panel { height: 100%; max-width: none; border-radius: 0; padding: 16px 16px 4px; }
 }
 @media (prefers-reduced-motion: reduce) {
-    #view-cinema *, .cine-toast { transition: none !important; }
+    #view-cinema *, .cine-toast { transition: none !important; animation: none !important; }
 }
