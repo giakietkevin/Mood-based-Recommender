@@ -504,6 +504,7 @@
         // Sơ đồ rộng hơn màn hình điện thoại thì cuộn ngang, bắt đầu ở giữa.
         const hall = map.parentNode.parentNode;
         hall.scrollLeft = Math.max(0, (hall.scrollWidth - hall.clientWidth) / 2);
+        build3D();
     }
 
     function renderSeat(code) {
@@ -530,6 +531,8 @@
         if (mine) btn.appendChild(el('span', 's-you', 'Bạn'));
         const said = uid && activeBubble(uid);
         if (said) btn.appendChild(bubbleEl(said));
+        render3DSeat(code);
+        if (mine && view.mode !== 'flat') applyView(true);   // đổi ghế: camera đi tới chỗ ngồi mới
 
         let label;
         if (state.pending === code) label = code + ' · đang giữ chỗ...';
@@ -722,7 +725,7 @@
             root.classList.remove('is-buffering');
             $('#cine-unlock').hidden = true;
             $('#cine-cover').hidden = true;
-            $('#cine-controls').hidden = true;
+            root.classList.remove('has-media');
         }
     }
 
@@ -800,7 +803,7 @@
     }
 
     function loadFailed(what) {
-        $('#cine-controls').hidden = true;
+        root.classList.remove('has-media');
         stageMessage('Không tải được ' + what,
             isHost() ? 'Nguồn đang lỗi hoặc chậm. Hãy chọn tập hoặc nội dung khác.' : 'Nguồn đang lỗi hoặc chậm. Chờ chủ phòng đổi nội dung.',
             isHost());
@@ -812,7 +815,7 @@
             if (player.key !== key) return;
             player.ready = true;
             if (state.media && state.media.kind === 'film') stageMessage('', '', false);
-            $('#cine-controls').hidden = false;
+            root.classList.add('has-media');
             syncPlayer(true);
             renderControls();
         });
@@ -1151,6 +1154,292 @@
             .catch(() => { if (id === picker.reqId) pickNote('Tìm nhạc không thành công. Thử lại sau.'); });
     }
 
+    // ---------- rạp 3D: xem từ ghế ngồi (ngôi thứ nhất) hoặc từ sau lưng (ngôi thứ ba) ----------
+    // Dựng bằng CSS 3D, không dùng WebGL: TV Chrome 63 yếu, và video thật nằm thẳng trên mặt màn chiếu
+    // nên không phải vẽ lại từng khung hình. Hàng ghế là một mặt phẳng, ghế là phần tử 2D bên trong nó,
+    // để cả rạp chỉ khoảng 40 mặt phẳng 3D.
+
+    const VIEWS = ['flat', 'seat', 'third'];
+    const VIEW_LABEL = { flat: 'Màn chiếu', seat: 'Từ ghế', third: 'Ngôi thứ ba' };
+    const VIEW_ICON = { flat: 'tv', seat: 'event_seat', third: 'person' };
+    const VIEW_KEY = 'cinema_view';
+    // Kích thước rạp, tính bằng px trong thế giới 3D. x sang phải, y xuống dưới, z về phía người xem.
+    const HALL = {
+        halfW: 700,          // nửa bề ngang rạp
+        screenW: 1240,
+        screenZ: -1900,
+        screenBottom: -150,  // mép dưới màn chiếu cao hơn sàn trước hàng A
+        rowAZ: -1100,        // lưng ghế hàng A
+        rowGap: 110,         // khoảng cách giữa hai hàng
+        step: 32,            // mỗi hàng cao hơn hàng trước (sàn bậc thang)
+        seatGap: 80,
+        aisle: 70,
+        backZ: 80,           // tường sau
+        ceilY: -1000,
+        eye: 115,            // mắt người ngồi cao hơn sàn hàng đó
+        backH: 80,           // lưng ghế
+    };
+    HALL.screenH = HALL.screenW * 9 / 16;
+    HALL.screenCY = HALL.screenBottom - HALL.screenH / 2;
+    const LOOK_RETURN_MS = 2500;   // remote: thôi bấm chừng này thì quay về nhìn màn chiếu
+    const LOOK_STEP = 40;          // remote: mỗi lần bấm ← → quay đầu chừng này độ
+
+    const view = { mode: 'flat', yaw: 0, pitch: 0, drag: null, returnTimer: null, rows: [], seats: {}, xs: {} };
+    try { const v = localStorage.getItem(VIEW_KEY); if (VIEWS.indexOf(v) !== -1) view.mode = v; } catch (e) { /* bỏ qua */ }
+
+    function rowZ(r) { return HALL.rowAZ + r * HALL.rowGap; }
+    function rowFloor(r) { return -r * HALL.step; }
+
+    function plane(cls, w, h, transform) {
+        const p = el('div', 'cw3 ' + cls);
+        p.style.width = w + 'px';
+        p.style.height = h + 'px';
+        p.style.marginLeft = (-w / 2) + 'px';
+        p.style.marginTop = (-h / 2) + 'px';
+        p.style.transform = transform;
+        return p;
+    }
+
+    // Màu nhung tối dần về cuối rạp, xa ánh sáng màn chiếu (từng hàng một màu, không dùng gradient).
+    function rowVelvet(r, rows) {
+        const t = rows > 1 ? r / (rows - 1) : 0;
+        const mix = (a, b) => Math.round(a + (b - a) * t);
+        return 'rgb(' + mix(110, 58) + ',' + mix(31, 16) + ',' + mix(44, 25) + ')';
+    }
+
+    function build3D() {
+        const hall = $('#cine-hall3d');
+        hall.textContent = '';
+        view.rows = [];
+        view.seats = {};
+        const L = state.layout;
+        if (!L) return;
+        const H = HALL;
+
+        // vị trí x của từng cột, có lối đi, căn giữa rạp
+        let x = 0;
+        const raw = {};
+        const aisleXs = [];
+        for (let c = 1; c <= L.cols; c++) {
+            raw[c] = x;
+            x += H.seatGap;
+            if (L.aisles.indexOf(c) !== -1 && c !== L.cols) { aisleXs.push(x + H.aisle / 2 - H.seatGap / 2); x += H.aisle; }
+        }
+        const shift = raw[L.cols] / 2;
+        view.xs = {};
+        for (let c = 1; c <= L.cols; c++) view.xs[c] = raw[c] - shift;
+
+        const depth = H.backZ - H.screenZ;
+        const midZ = (H.backZ + H.screenZ) / 2;
+        const wallH = -H.ceilY;
+        const wide = H.halfW * 2;
+
+        // tường hai bên, có các tấm tiêu âm và biển lối ra ở gần màn chiếu
+        const left = plane('cw-wall', depth, wallH, 'translate3d(' + (-H.halfW) + 'px,' + (H.ceilY / 2) + 'px,' + midZ + 'px) rotateY(90deg)');
+        const right = plane('cw-wall', depth, wallH, 'translate3d(' + H.halfW + 'px,' + (H.ceilY / 2) + 'px,' + midZ + 'px) rotateY(-90deg)');
+        [left, right].forEach((wall, i) => {
+            for (let k = 0; k < 9; k++) {
+                const panel = el('span', 'cw-panel');
+                panel.style.left = (60 + k * 210) + 'px';
+                wall.appendChild(panel);
+            }
+            const exit = el('span', 'cw-exit', 'LỐI RA');
+            // tường trái: phía màn chiếu ở bên phải mặt phẳng; tường phải thì ngược lại
+            exit.style[i === 0 ? 'right' : 'left'] = '180px';
+            wall.appendChild(exit);
+            hall.appendChild(wall);
+        });
+        hall.appendChild(plane('cw-ceil', wide, depth, 'translate3d(0,' + H.ceilY + 'px,' + midZ + 'px) rotateX(-90deg)'));
+        hall.appendChild(plane('cw-front', wide, wallH, 'translate3d(0,' + (H.ceilY / 2) + 'px,' + (H.screenZ - 6) + 'px)'));
+        const back = plane('cw-back', wide, wallH, 'translate3d(0,' + (H.ceilY / 2) + 'px,' + H.backZ + 'px) rotateY(180deg)');
+        back.appendChild(el('span', 'cw-booth'));   // ô kính phòng máy chiếu
+        hall.appendChild(back);
+
+        // sàn trước hàng A, rồi từng hàng: mặt bậc, thành bậc (có đèn lối đi) và hàng ghế
+        const frontEnd = rowZ(0) - 95;
+        const frontDepth = frontEnd - H.screenZ;
+        hall.appendChild(plane('cw-floor', wide, frontDepth, 'translate3d(0,0,' + (H.screenZ + frontDepth / 2) + 'px) rotateX(90deg)'));
+        for (let r = 0; r < L.rows; r++) {
+            const y = rowFloor(r);
+            const z = rowZ(r);
+            hall.appendChild(plane('cw-tread', wide, H.rowGap, 'translate3d(0,' + y + 'px,' + (z - 40) + 'px) rotateX(90deg)'));
+            const riser = plane('cw-riser', wide, H.step, 'translate3d(0,' + (y + H.step / 2) + 'px,' + (z - 95) + 'px)');
+            // đèn ở các lối đi giữa và hai lối bên (toạ độ chưa căn giữa, nên trừ shift)
+            aisleXs.concat([-60, raw[L.cols] + 60]).forEach((ax) => {
+                const lamp = el('span', 'cw-lamp');
+                lamp.style.left = (H.halfW + ax - shift - 4) + 'px';
+                riser.appendChild(lamp);
+            });
+            if (r > 0) hall.appendChild(riser);
+            const row = plane('cw-row', wide, H.backH, 'translate3d(0,' + (y - H.backH / 2) + 'px,' + z + 'px)');
+            row.style.setProperty('--velvet', rowVelvet(r, L.rows));
+            for (let c = 1; c <= L.cols; c++) {
+                const code = ROW_LETTERS[r] + c;
+                const seat = el('span', 'cw-seat');
+                seat.style.left = (H.halfW + view.xs[c] - 30) + 'px';
+                row.appendChild(seat);
+                view.seats[code] = seat;
+            }
+            view.rows.push(row);
+            hall.appendChild(row);
+        }
+        Object.keys(view.seats).forEach(render3DSeat);
+        applyView(false);
+    }
+
+    // Từ sau lưng chỉ thấy đầu và vai người ngồi; đầu là ảnh đại diện để biết ai ngồi đâu.
+    function render3DSeat(code) {
+        const seat = view.seats[code];
+        if (!seat) return;
+        const uid = state.seats[code];
+        const member = uid ? (state.members[uid] || { uid: uid, name: '?', avatar: '' }) : null;
+        seat.className = 'cw-seat' + (uid === myUid() ? ' is-mine' : '') + (member && member.away ? ' is-away' : '');
+        seat.textContent = '';
+        if (!member) return;
+        const body = el('span', 'cw-body');
+        body.style.background = tintFor(member.uid);
+        seat.appendChild(body);
+        const head = el('span', 'cw-head');
+        fillAvatar(head, member);
+        seat.appendChild(head);
+        if (uid === myUid()) seat.appendChild(el('span', 'cw-you', 'Bạn'));
+        const said = activeBubble(uid);
+        if (said) seat.appendChild(el('span', 'cw-bubble', said));
+    }
+
+    function seatPlace(code) {
+        const L = state.layout;
+        const r = code ? ROW_LETTERS.indexOf(code.charAt(0)) : -1;
+        if (r < 0) return { x: 0, floor: rowFloor(L.rows - 1), z: rowZ(L.rows - 1) };   // chưa có ghế: đứng cuối rạp
+        return { x: view.xs[Number(code.slice(1))] || 0, floor: rowFloor(r), z: rowZ(r) };
+    }
+
+    function deg(rad) { return rad * 180 / Math.PI; }
+
+    function applyView(animate) {
+        if (!root) return;
+        const stage = $('#cine-stage');
+        const world = $('#cine-world');
+        const screen = $('#cine-wscreen');
+        const is3d = view.mode !== 'flat' && !!state.layout;
+        root.classList.toggle('view-3d', is3d);
+        root.classList.toggle('view-third', is3d && view.mode === 'third');
+        const btn = $('#cine-view');
+        btn.firstElementChild.textContent = VIEW_ICON[view.mode];
+        $('#cine-view-label').textContent = VIEW_LABEL[view.mode];
+        btn.setAttribute('aria-label', 'Đổi góc nhìn: đang xem ' + VIEW_LABEL[view.mode]);
+        if (!is3d) {
+            stage.style.perspective = '';
+            world.style.transform = '';
+            screen.style.transform = '';
+            return;
+        }
+        const H = HALL;
+        const me = seatPlace(mySeat());
+        // góc ngẩng (độ, dương là nhìn lên) từ camera tới một điểm
+        const elev = (c, pt) => deg(Math.atan2(c.y - pt.y, Math.sqrt((pt.x - c.x) * (pt.x - c.x) + (pt.z - c.z) * (pt.z - c.z))));
+        // Tiêu cự theo cả chiều cao: khung màn chiếu thường dẹt, tính theo bề ngang thì góc nhìn dọc chỉ còn ±13°.
+        let P = Math.round(Math.max(stage.clientHeight * 1.15, stage.clientWidth * 0.5));
+        let cam;
+        let yaw;
+        let pitch;
+        if (view.mode === 'seat') {
+            cam = { x: me.x, y: me.floor - H.eye, z: me.z - 20 };
+            const center = { x: 0, y: H.screenCY, z: H.screenZ };
+            yaw = deg(Math.atan2(center.x - cam.x, cam.z - center.z));
+            // mắt hơi chúc xuống so với tâm màn chiếu, để thấy hàng ghế và đầu người phía trước như ngồi rạp thật
+            pitch = elev(cam, center) - 6;
+        } else {
+            // Sau lưng và cao hơn đầu mình. Chúc xuống vừa đủ để trong khung có cả đầu mình (dưới) và mép trên màn chiếu.
+            cam = { x: me.x * 0.85, y: me.floor - H.eye - 150, z: Math.min(me.z + 450, H.backZ - 30) };
+            const head = { x: me.x, y: me.floor - 10, z: me.z };   // tới chân ghế, để thấy trọn mình trên ghế
+            const top = { x: 0, y: H.screenCY - H.screenH / 2, z: H.screenZ };
+            yaw = deg(Math.atan2((head.x + top.x) / 2 - cam.x, cam.z - (head.z + top.z) / 2));
+            const up = elev(cam, top);
+            const down = elev(cam, head);
+            pitch = (up + down) / 2;
+            // nới góc nhìn nếu cần để cả hai điểm nằm trong khung, chừa 4 độ mỗi bên
+            const half = (up - down) / 2 + 4;
+            P = Math.min(P, Math.round(stage.clientHeight / 2 / Math.tan(half * Math.PI / 180)));
+        }
+        yaw += view.yaw;
+        pitch += view.pitch;
+        stage.style.perspective = P + 'px';
+        world.classList.toggle('is-still', !animate);
+        world.style.transform = 'translateZ(' + P + 'px) rotateX(' + pitch.toFixed(2) + 'deg) rotateY(' + yaw.toFixed(2) + 'deg) translate3d(' +
+            (-cam.x).toFixed(1) + 'px,' + (-cam.y).toFixed(1) + 'px,' + (-cam.z).toFixed(1) + 'px)';
+        screen.style.transform = 'translate3d(0,' + H.screenCY + 'px,' + H.screenZ + 'px)';
+        // Ẩn hàng ghế đi xuyên qua chỗ camera (ngôi thứ nhất: hàng của mình) và các hàng chắn giữa camera với mình
+        // (ngôi thứ ba). Hàng phía sau vẫn giữ, để quay đầu lại thấy người ngồi sau.
+        view.rows.forEach((row, r) => {
+            const z = rowZ(r);
+            const hide = view.mode === 'seat' ? Math.abs(z - cam.z) < 60 : (z > me.z + 5 && z < cam.z + 60);
+            row.style.visibility = hide ? 'hidden' : '';
+            // hàng sau lưng camera được nhìn từ mặt sau: lật chữ và ảnh cho khỏi ngược
+            row.classList.toggle('is-behind', z > cam.z);
+        });
+    }
+
+    function setView(mode, quiet) {
+        view.mode = mode;
+        view.yaw = 0;
+        view.pitch = 0;
+        try { localStorage.setItem(VIEW_KEY, mode); } catch (e) { /* bỏ qua */ }
+        applyView(true);
+        if (!quiet) toast('Góc nhìn: ' + VIEW_LABEL[mode] + (mode !== 'flat' && !mySeat() ? ' (chọn ghế để xem từ chỗ ngồi)' : ''));
+    }
+
+    function cycleView() {
+        setView(VIEWS[(VIEWS.indexOf(view.mode) + 1) % VIEWS.length]);
+    }
+
+    // Nhìn quanh: kéo chuột/vuốt, hoặc ← → trên remote; thả ra (hoặc thôi bấm) thì quay về màn chiếu.
+    function lookBy(dYaw, dPitch) {
+        view.yaw = Math.max(-170, Math.min(170, view.yaw + dYaw));
+        view.pitch = Math.max(-35, Math.min(35, view.pitch + dPitch));
+        applyView(true);
+        clearTimeout(view.returnTimer);
+        view.returnTimer = setTimeout(lookHome, LOOK_RETURN_MS);
+    }
+
+    function lookHome() {
+        clearTimeout(view.returnTimer);
+        if (!view.yaw && !view.pitch) return;
+        view.yaw = 0;
+        view.pitch = 0;
+        applyView(true);
+    }
+
+    function bindLook() {
+        const stage = $('#cine-stage');
+        stage.addEventListener('pointerdown', (e) => {
+            if (view.mode === 'flat' || e.button > 0 || (e.target.closest && e.target.closest('button'))) return;
+            clearTimeout(view.returnTimer);
+            view.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, yaw: view.yaw, pitch: view.pitch };
+            $('#cine-world').classList.add('is-dragging');
+        });
+        stage.addEventListener('pointermove', (e) => {
+            const d = view.drag;
+            if (!d || d.id !== e.pointerId) return;
+            // kéo sang phải như nắm cả rạp kéo đi, tức là quay đầu sang trái
+            view.yaw = Math.max(-170, Math.min(170, d.yaw - (e.clientX - d.x) * 0.3));
+            view.pitch = Math.max(-35, Math.min(35, d.pitch + (e.clientY - d.y) * 0.2));
+            applyView(false);
+        });
+        const end = (e) => {
+            if (!view.drag || view.drag.id !== e.pointerId) return;
+            view.drag = null;
+            $('#cine-world').classList.remove('is-dragging');
+            lookHome();
+        };
+        stage.addEventListener('pointerup', end);
+        stage.addEventListener('pointercancel', end);
+        const refit = () => { if (view.mode !== 'flat') applyView(false); };
+        window.addEventListener('resize', refit);
+        document.addEventListener('fullscreenchange', refit);
+        document.addEventListener('webkitfullscreenchange', refit);
+    }
+
     function isTv() {
         return document.documentElement.classList.contains('tv-mode');
     }
@@ -1165,6 +1454,7 @@
     function setMode(mode) {
         state.mode = mode;
         root.classList.toggle('is-watching', mode === 'watching');
+        if (mode === 'watching') setTimeout(() => applyView(false), 0);   // màn chiếu vừa hiện: tính lại theo cỡ thật
         if (!isTv()) return;
         // Trên TV: vào chế độ xem thì đứng ở màn chiếu (OK để phóng to); về sơ đồ thì đứng ở ghế của mình.
         const target = mode === 'watching' ? $('#cine-stage') : (state.seatEls[mySeat()] || state.seatEls.E5 || $('#cine-back'));
@@ -1213,8 +1503,14 @@
                 else toast('Chủ phòng điều khiển màn chiếu');
                 return true;
             }
-            if (k === TV.LEFT || k === TV.RIGHT) { hostSeekBy(k === TV.RIGHT ? TV_SEEK : -TV_SEEK); return true; }
-            if (k === TV.UP || k === TV.DOWN) return true;
+            // ↑ đổi góc nhìn. ← → : ở rạp 3D thì quay đầu nhìn quanh, ở màn chiếu phẳng thì tua (chủ phòng)
+            if (k === TV.UP) { cycleView(); return true; }
+            if (k === TV.LEFT || k === TV.RIGHT) {
+                if (view.mode !== 'flat') lookBy(k === TV.RIGHT ? LOOK_STEP : -LOOK_STEP, 0);
+                else hostSeekBy(k === TV.RIGHT ? TV_SEEK : -TV_SEEK);
+                return true;
+            }
+            if (k === TV.DOWN) return true;
             if (k === TV.BACK || k === TV.ESC) { toggleFullscreen(); return true; }
             return false;
         }
@@ -1222,6 +1518,10 @@
         if (watching && focused === stage && k === TV.ENTER) {
             if (player.blocked) unlockPlayback();   // cú bấm OK cũng cho phép phát có tiếng
             toggleFullscreen();
+            return true;
+        }
+        if (watching && focused === stage && view.mode !== 'flat' && (k === TV.LEFT || k === TV.RIGHT)) {
+            lookBy(k === TV.RIGHT ? LOOK_STEP : -LOOK_STEP, 0);
             return true;
         }
         if (focused === $('#cine-seek') && (k === TV.LEFT || k === TV.RIGHT) && isHost()) {
@@ -1293,6 +1593,8 @@
         seek.addEventListener('change', onSeekChange);
         $('#cine-mute').addEventListener('click', onMuteClick);
         $('#cine-full').addEventListener('click', toggleFullscreen);
+        $('#cine-view').addEventListener('click', cycleView);
+        bindLook();
 
         $('#cine-pick-open').addEventListener('click', openPicker);
         $('#cine-pick-empty').addEventListener('click', openPicker);

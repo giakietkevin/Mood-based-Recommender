@@ -3283,6 +3283,8 @@
             </div>
 
             <div class="cine-stage" id="cine-stage" tabindex="0" role="button" aria-label="Màn chiếu. Bấm OK để xem toàn màn hình">
+                <div id="cine-world" class="cine-world">
+                <div id="cine-wscreen" class="cw-screen">
                 <div id="cine-screen" class="cine-screen"></div>
                 <div id="cine-cover" class="cine-cover" hidden>
                     <img id="cine-cover-img" alt="">
@@ -3296,19 +3298,24 @@
                     <span id="cine-stage-sub"></span>
                     <button type="button" id="cine-pick-empty" class="cine-btn cine-btn--primary" hidden>Chọn nội dung chiếu</button>
                 </div>
+                </div>
+                <div id="cine-hall3d" class="cine-hall3d" aria-hidden="true"></div>
+                </div>
                 <div id="cine-chat-feed" class="cine-chat-feed" aria-hidden="true"></div>
                 <button type="button" id="cine-unlock" class="cine-unlock" hidden>
                     <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
                     <span>Bấm để xem cùng mọi người</span>
                 </button>
             </div>
-            <div id="cine-controls" class="cine-controls" hidden>
-                <button type="button" id="cine-play" class="cine-icon-btn" aria-label="Phát"><span class="material-symbols-outlined" aria-hidden="true">play_arrow</span></button>
-                <span id="cine-guest-note" class="cine-guest-note">Chủ phòng điều khiển</span>
-                <span id="cine-time" class="cine-time tnum">0:00</span>
-                <input type="range" id="cine-seek" class="cine-seek" min="0" max="0" step="1" value="0" aria-label="Tua">
-                <span id="cine-duration" class="cine-time tnum">0:00</span>
-                <button type="button" id="cine-mute" class="cine-icon-btn" aria-label="Tắt tiếng"><span class="material-symbols-outlined" aria-hidden="true">volume_up</span></button>
+            <div id="cine-controls" class="cine-controls">
+                <button type="button" id="cine-play" class="cine-icon-btn needs-media" aria-label="Phát"><span class="material-symbols-outlined" aria-hidden="true">play_arrow</span></button>
+                <span id="cine-guest-note" class="cine-guest-note needs-media">Chủ phòng điều khiển</span>
+                <span id="cine-time" class="cine-time tnum needs-media">0:00</span>
+                <input type="range" id="cine-seek" class="cine-seek needs-media" min="0" max="0" step="1" value="0" aria-label="Tua">
+                <span id="cine-duration" class="cine-time tnum needs-media">0:00</span>
+                <button type="button" id="cine-mute" class="cine-icon-btn needs-media" aria-label="Tắt tiếng"><span class="material-symbols-outlined" aria-hidden="true">volume_up</span></button>
+                <span class="cine-controls__gap"></span>
+                <button type="button" id="cine-view" class="cine-view-btn" aria-label="Đổi góc nhìn: đang xem Màn chiếu"><span class="material-symbols-outlined" aria-hidden="true">tv</span><span id="cine-view-label">Màn chiếu</span></button>
                 <button type="button" id="cine-full" class="cine-icon-btn" aria-label="Toàn màn hình"><span class="material-symbols-outlined" aria-hidden="true">fullscreen</span></button>
             </div>
             <div class="cine-strip">
