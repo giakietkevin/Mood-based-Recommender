@@ -2826,11 +2826,17 @@
             fetch(`/films?uid=${window.currentUserUid}&slug=${encodeURIComponent(slug)}`, { method: 'DELETE' }).catch(console.error);
         };
 
+// Kiểm tra mật khẩu VIP của tab Phim; Rạp cũng dùng hàm này khi chủ phòng chọn phim.
+        window.checkFilmVipCode = (code) => {
+            if (String(code || '').trim() !== '101020') return false;
+            sessionStorage.setItem('filmVerified', 'true');
+            return true;
+        };
+
 window.verifyFilmVipCode = () => {
             const input = document.getElementById('film-vip-code');
             const code = input.value.trim();
-            if (code === '101020') {
-                sessionStorage.setItem('filmVerified', 'true');
+            if (window.checkFilmVipCode(code)) {
                 window.showView('film');
                 alert('Mở khóa thành công! Chào mừng bạn đến với KietFilm Station.');
             } else {

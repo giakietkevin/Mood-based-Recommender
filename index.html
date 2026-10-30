@@ -3283,17 +3283,65 @@
             </div>
 
             <div class="cine-stage" id="cine-stage">
-                <div class="cine-stage__msg">
+                <div id="cine-screen" class="cine-screen"></div>
+                <div id="cine-cover" class="cine-cover" hidden>
+                    <img id="cine-cover-img" alt="">
+                    <div>
+                        <strong id="cine-cover-title"></strong>
+                        <span id="cine-cover-artist"></span>
+                    </div>
+                </div>
+                <div id="cine-stage-msg" class="cine-stage__msg">
                     <strong id="cine-stage-title">Chưa có nội dung chiếu</strong>
                     <span id="cine-stage-sub"></span>
+                    <button type="button" id="cine-pick-empty" class="cine-btn cine-btn--primary" hidden>Chọn nội dung chiếu</button>
                 </div>
+                <button type="button" id="cine-unlock" class="cine-unlock" hidden>
+                    <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+                    <span>Bấm để xem cùng mọi người</span>
+                </button>
+            </div>
+            <div id="cine-controls" class="cine-controls" hidden>
+                <button type="button" id="cine-play" class="cine-icon-btn" aria-label="Phát"><span class="material-symbols-outlined" aria-hidden="true">play_arrow</span></button>
+                <span id="cine-guest-note" class="cine-guest-note">Chủ phòng điều khiển</span>
+                <span id="cine-time" class="cine-time tnum">0:00</span>
+                <input type="range" id="cine-seek" class="cine-seek" min="0" max="0" step="1" value="0" aria-label="Tua">
+                <span id="cine-duration" class="cine-time tnum">0:00</span>
+                <button type="button" id="cine-mute" class="cine-icon-btn" aria-label="Tắt tiếng"><span class="material-symbols-outlined" aria-hidden="true">volume_up</span></button>
+                <button type="button" id="cine-full" class="cine-icon-btn" aria-label="Toàn màn hình"><span class="material-symbols-outlined" aria-hidden="true">fullscreen</span></button>
             </div>
             <div class="cine-strip">
                 <div id="cine-faces" class="cine-faces"></div>
                 <span class="cine-strip__seat">Ghế <b id="cine-my-seat" class="tnum">chưa chọn</b></span>
+                <button type="button" id="cine-pick-open" class="cine-btn" hidden><span class="material-symbols-outlined" aria-hidden="true">movie</span>Chọn nội dung</button>
                 <button type="button" id="cine-change-seat" class="cine-btn"><span class="material-symbols-outlined" aria-hidden="true">event_seat</span>Đổi ghế</button>
             </div>
         </section>
+
+        <!-- Bảng chọn nội dung chiếu, chỉ chủ phòng mở được -->
+        <div id="cine-picker" class="cine-picker" hidden role="dialog" aria-modal="true" aria-labelledby="cine-picker-title">
+            <div class="cine-picker__panel">
+                <div class="cine-picker__head">
+                    <h2 id="cine-picker-title">Chọn nội dung chiếu</h2>
+                    <button type="button" id="cine-picker-close" class="cine-btn">Đóng</button>
+                </div>
+                <div class="cine-tabs" role="tablist">
+                    <button type="button" role="tab" id="cine-tab-film" class="cine-tab" aria-selected="true">Phim</button>
+                    <button type="button" role="tab" id="cine-tab-music" class="cine-tab" aria-selected="false">Nhạc</button>
+                </div>
+                <form id="cine-pick-vip" class="cine-pick-form" hidden>
+                    <label for="cine-vip-code">Chọn phim cần mật khẩu VIP của tab Phim.</label>
+                    <input id="cine-vip-code" type="password" inputmode="numeric" autocomplete="off" placeholder="Mật khẩu VIP">
+                    <button type="submit" class="cine-btn cine-btn--primary">Mở khoá</button>
+                </form>
+                <form id="cine-pick-search" class="cine-pick-form">
+                    <input id="cine-pick-q" type="search" autocomplete="off" placeholder="Tìm theo tên phim">
+                    <button type="submit" class="cine-btn cine-btn--primary">Tìm</button>
+                </form>
+                <p id="cine-pick-note" class="cine-pick-note"></p>
+                <ul id="cine-pick-list" class="cine-pick-list"></ul>
+            </div>
+        </div>
     </div>
 
     </main>

@@ -335,7 +335,10 @@ class CinemaManager:
         if t in ("play", "pause", "seek"):
             return self.set_playback(room, uid, t, data.get("position"))
         if t == "ping":
-            return [(uid, {"type": "pong"})]
+            # Trả lại mốc giờ của máy gửi để máy đó tính độ lệch đồng hồ theo thời gian khứ hồi.
+            sent = data.get("t")
+            ok = isinstance(sent, (int, float)) and not isinstance(sent, bool)
+            return [(uid, {"type": "pong", "t": sent if ok else None})]
         return []
 
     async def deliver(self, room: Room, msgs: List[Outgoing]) -> None:
