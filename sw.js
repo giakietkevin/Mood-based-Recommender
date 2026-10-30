@@ -47,6 +47,7 @@ const NETWORK_ONLY_PREFIXES = [
   '/trending-songs',
   '/track-play',
   '/study-rooms',
+  '/cinema',
   '/auth',
 ];
 
