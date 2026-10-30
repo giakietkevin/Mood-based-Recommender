@@ -151,7 +151,7 @@
                 window.refreshCameraDevices();
             }
 
-            if (initialView === 'studio' || initialView === 'guide' || initialView === 'home' || initialView === 'dashboard' || initialView === 'about' || initialView === 'focus') {
+            if (initialView === 'studio' || initialView === 'guide' || initialView === 'home' || initialView === 'dashboard' || initialView === 'about' || initialView === 'focus' || initialView === 'cinema') {
                 showView(initialView);
                 // Auto-join study room if room ID in URL
                 if (initialView === 'focus' && roomId && typeof window.joinStudyRoom === 'function') {

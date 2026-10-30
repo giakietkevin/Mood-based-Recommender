@@ -49,6 +49,8 @@
         blocked: false,     // trình duyệt chặn tự phát có tiếng, đang chờ người dùng bấm
         syncTimer: null,
         uiTimer: null,
+        eps: null,          // tên các tập của phim đang chiếu
+        endCard: false,     // màn chiếu đang hiện thẻ "Hết phim"
     };
 
     let root = null;
@@ -66,10 +68,19 @@
         return id;
     }
 
-    function myName(uid) {
+    const NAME_KEY = 'cinema_name';
+
+    function savedName() {
+        try { return (localStorage.getItem(NAME_KEY) || '').trim(); } catch (e) { return ''; }
+    }
+
+    function accountName() {
         const shown = document.getElementById('user-display');
-        const text = shown && window.currentUserUid ? shown.textContent.trim() : '';
-        return text || 'Khách ' + uid.slice(-4).toUpperCase();
+        return shown && window.currentUserUid ? shown.textContent.trim() : '';
+    }
+
+    function myName(uid) {
+        return savedName() || accountName() || 'Khách ' + uid.slice(-4).toUpperCase();
     }
 
     function myAvatar() {
@@ -81,6 +92,22 @@
         let h = 0;
         for (let i = 0; i < uid.length; i++) h = (h * 31 + uid.charCodeAt(i)) % 360;
         return 'hsl(' + h + ', 42%, 62%)';
+    }
+
+    function hashOf(uid) {
+        let h = 0;
+        for (let i = 0; i < uid.length; i++) h = (h * 31 + uid.charCodeAt(i)) % 100003;
+        return h;
+    }
+
+    const HAIR = ['#14100e', '#1f1712', '#2b1e16', '#3a291c', '#4b3523', '#5b4330', '#26201e', '#6a5440'];
+    function hairFor(uid) { return HAIR[hashOf(uid) % HAIR.length]; }
+
+    // màu áo: cùng sắc với màu nhận diện, nhưng tối và ít rực hơn, như quần áo dưới ánh màn chiếu
+    function clothFor(uid) {
+        let h = 0;
+        for (let i = 0; i < uid.length; i++) h = (h * 31 + uid.charCodeAt(i)) % 360;
+        return 'hsl(' + h + ', 22%, ' + (26 + hashOf(uid) % 14) + '%)';
     }
 
     function initialOf(name) {
@@ -184,45 +211,65 @@
             });
     }
 
+    // Ảnh phòng chiếu thật cho rạp chưa chiếu gì (assets/cinema/CREDITS.md); đang chiếu thì là ảnh của phim/bài.
+    const HALL_PHOTOS = { 'rap-1': '/assets/cinema/hall-1.jpg', 'rap-2': '/assets/cinema/hall-2.jpg', 'rap-3': '/assets/cinema/hall-3.jpg' };
+
     function renderLobby(rooms) {
         const list = $('#cine-rooms');
         const focusedId = document.activeElement && document.activeElement.getAttribute('data-room');
         list.textContent = '';
         let watching = 0;
+        let showing = 0;
         rooms.forEach((room) => {
-            watching += room.taken;
+            const people = typeof room.people === 'number' ? room.people : room.taken;
+            watching += people;
+            if (room.media_title) showing++;
             const li = el('li');
-            const btn = el('button', 'cine-room');
+            const btn = el('button', 'cine-room' + (room.playing ? ' is-live' : ''));
             btn.type = 'button';
             btn.setAttribute('data-room', room.id);
-            btn.appendChild(miniMap(room.layout, room.occupied || []));
 
-            const info = el('span');
+            // ảnh: phim/bài đang chiếu, hoặc ảnh phòng chiếu khi rạp trống
+            const pic = el('span', 'cine-room__pic');
+            const img = el('img');
+            img.alt = '';
+            const hallPhoto = hallPhotoFor(room.id);
+            img.src = room.media_thumb || hallPhoto;
+            img.onerror = () => { img.onerror = null; img.src = hallPhoto; };
+            pic.appendChild(img);
+            btn.appendChild(pic);
+
+            const info = el('span', 'cine-room__info');
             info.appendChild(el('span', 'cine-room__name', room.name));
-            const now = room.media_title
-                ? (room.media_kind === 'music' ? 'Nhạc: ' : 'Phim: ') + room.media_title
-                : 'Chưa chọn nội dung chiếu';
+            let now;
+            if (room.media_title) now = (room.media_kind === 'music' ? 'Đang phát: ' : 'Đang chiếu: ') + room.media_title;
+            else now = people ? 'Chủ phòng sắp chọn phim' : 'Chưa chiếu gì · đèn rạp đang sáng';
             info.appendChild(el('span', 'cine-room__now', now));
+            let status = 'Trống, bạn vào trước được';
+            if (room.media_title) status = room.playing ? 'Đang chiếu' : 'Tạm dừng';
+            else if (people) status = 'Đang chờ chiếu';
+            if (room.host_name) status += ' · Chủ phòng: ' + room.host_name;
+            info.appendChild(el('span', 'cine-room__status', status));
             btn.appendChild(info);
 
-            let status = 'Đang trống';
-            if (room.media_title) status = room.playing ? 'Đang chiếu' : 'Tạm dừng';
-            else if (room.taken) status = 'Đang chờ chiếu';
-            btn.appendChild(el('span', 'cine-room__status' + (room.playing ? ' is-live' : ''), status));
-
-            const seats = el('span', 'cine-room__seats tnum', String(room.taken));
-            seats.appendChild(el('small', null, ' /' + room.total + ' ghế'));
+            const seats = el('span', 'cine-room__seats');
+            seats.appendChild(miniMap(room.layout, room.occupied || []));
+            const count = el('span', 'cine-room__count tnum', String(people));
+            count.appendChild(el('small', null, ' người trong phòng'));
+            seats.appendChild(count);
+            seats.appendChild(el('span', 'cine-room__taken tnum', room.taken + ' /' + room.total + ' ghế đã có người'));
             btn.appendChild(seats);
 
+            btn.appendChild(el('span', 'cine-room__go', 'Vào rạp'));
             btn.setAttribute('aria-label', room.name + ', ' + now + ', ' + room.taken + ' trên ' + room.total + ' ghế có người');
             btn.addEventListener('click', () => enterRoom(room.id));
             li.appendChild(btn);
             list.appendChild(li);
             if (focusedId === room.id) btn.focus();
         });
-        $('#cine-lobby-sub').textContent = watching
-            ? rooms.length + ' phòng chiếu · ' + watching + ' người đang ngồi trong rạp'
-            : rooms.length + ' phòng chiếu · chưa có ai, bạn vào trước nhé';
+        $('#cine-lobby-sub').textContent = rooms.length + ' phòng chiếu · ' +
+            (showing ? showing + ' phòng đang chiếu · ' : '') +
+            (watching ? watching + ' người đang trong rạp' : 'chưa có ai, bạn vào trước nhé');
     }
 
     // ---------- phòng ----------
@@ -376,6 +423,7 @@
                 state.playback = msg.playback;
                 state.pending = null;
                 $('#cine-room-name').textContent = msg.room.name;
+                askNameOnce();
                 buildMap();
                 renderAll();
                 syncPlayer(false);
@@ -405,6 +453,7 @@
                 renderPeople();
                 renderStage();
                 if (msg.host === me) toast('Bạn đang là chủ phòng, bạn điều khiển màn chiếu');
+                renderMyName();
                 break;
             case 'seat_changed':
                 onSeatChanged(msg.seat, msg.uid, me);
@@ -434,6 +483,10 @@
                 break;
             case 'chat':
                 showBubble(msg.uid, msg.text);
+                break;
+            case 'room_renamed':
+                $('#cine-room-name').textContent = msg.name;
+                toast('Phòng đổi tên thành "' + msg.name + '"');
                 break;
             case 'replaced':
                 setConn('Bạn đang mở rạp ở một tab khác.');
@@ -574,7 +627,8 @@
         const total = state.layout.rows * state.layout.cols;
         const taken = Object.keys(state.seats).length;
         const host = state.members[state.host];
-        $('#cine-room-meta').textContent = taken + ' /' + total + ' ghế có người' +
+        const title = mediaTitle(state.media);
+        $('#cine-room-meta').textContent = (title ? 'Đang chiếu: ' + title + ' · ' : '') + taken + ' /' + total + ' ghế' +
             (host ? ' · Chủ phòng: ' + (state.host === myUid() ? 'bạn' : host.name) : '');
         const seat = mySeat();
         $('#cine-my-seat').textContent = seat || 'chưa chọn';
@@ -683,17 +737,84 @@
         return m.kind === 'film' ? 'film:' + m.slug + ':' + m.ep : 'music:' + m.track.link;
     }
 
-    function stageMessage(title, sub, showPick) {
+    function stageMessage(title, sub, showPick, nextEp) {
         $('#cine-stage-msg').hidden = !title;
         $('#cine-stage-title').textContent = title || '';
         $('#cine-stage-sub').textContent = sub || '';
         $('#cine-pick-empty').hidden = !showPick;
+        const next = $('#cine-next-ep');
+        next.hidden = !nextEp;
+        if (nextEp) next.textContent = 'Chiếu ' + nextEp;
+        player.endCard = false;
+    }
+
+    // ---------- đèn rạp ----------
+    // Như rạp thật: đèn sáng khi chưa chiếu, tắt dần khi phim bắt đầu, sáng một nửa khi tạm dừng,
+    // và sáng dần lên khi hết phim. Chỉ đổi class; CSS đổi màu nền các bề mặt trong 3,5 giây.
+
+    let lights = '';
+
+    function isEnded() {
+        const pb = state.playback;
+        if (!state.media || !pb || !player.el || !player.ready) return false;
+        const dur = player.el.duration;
+        // Tính theo giờ của rạp, không theo cờ "đang phát": server có thể còn ghi đang phát khi đã qua cuối phim.
+        return isFinite(dur) && dur > 0 && targetPosition() >= dur - (pb.playing ? 0.3 : 1.5);
+    }
+
+    function updateLights() {
+        if (!root) return;
+        const ended = isEnded();
+        const pb = state.playback;
+        const next = !state.media || ended ? 'on' : (!pb || !pb.playing ? 'half' : 'off');
+        if (ended !== root.classList.contains('is-ended')) {
+            root.classList.toggle('is-ended', ended);
+            showEndCard(ended);
+        }
+        if (next === lights) return;
+        lights = next;
+        root.classList.toggle('lights-on', next === 'on');
+        root.classList.toggle('lights-half', next === 'half');
+        document.body.classList.toggle('cinema-lit', next === 'on');
+    }
+
+    // Thẻ "Hết phim" trên màn chiếu; chủ phòng có nút chiếu tập tiếp (nếu còn) hoặc chọn phim khác.
+    function showEndCard(ended) {
+        if (!ended) {
+            if (player.endCard) stageMessage('', '', false);
+            return;
+        }
+        const m = state.media;
+        let nextEp = null;
+        if (isHost() && m && m.kind === 'film' && player.eps && m.ep + 1 < player.eps.length) {
+            nextEp = player.eps[m.ep + 1] || 'tập ' + (m.ep + 2);
+            if (!/^tập/i.test(nextEp)) nextEp = 'tập ' + nextEp;
+        }
+        const what = m && m.kind === 'music' ? 'Hết bài' : 'Hết phim';
+        stageMessage(what,
+            isHost() ? 'Đèn rạp đã sáng. ' + (nextEp ? 'Chiếu tiếp hoặc chọn nội dung khác.' : 'Chọn nội dung tiếp theo cho cả rạp.') : 'Đèn rạp đã sáng. Chờ chủ phòng chọn nội dung tiếp theo.',
+            isHost(), nextEp);
+        player.endCard = true;
+    }
+
+    function playNextEpisode() {
+        const m = state.media;
+        if (!isHost() || !m || m.kind !== 'film' || !player.eps || m.ep + 1 >= player.eps.length) return;
+        const base = (m.title || '').split(' · ')[0] || m.slug;
+        const label = player.eps[m.ep + 1] || 'Tập ' + (m.ep + 2);
+        setFilm(m.slug, m.ep + 1, base + ' · ' + label, m.thumb);
     }
 
     function renderStage() {
         const m = state.media;
         const title = mediaTitle(m);
-        $('#cine-arc-title').textContent = title ? 'Đang chiếu: ' + title : '';
+        $('#cine-arc-title').textContent = title ? 'Đang chiếu: ' + title : 'Màn chiếu · chưa chiếu gì';
+        // tấm màn chiếu ở đầu sơ đồ ghế hiện đúng thứ đang chiếu
+        const thumb = m ? (m.kind === 'music' ? m.track.thumbnail : m.thumb) : '';
+        const mini = $('#cine-mini-screen');
+        mini.style.backgroundImage = thumb ? 'url("' + thumb.replace(/"/g, '%22') + '")' : '';
+        mini.classList.toggle('has-picture', !!thumb);
+        renderMeta();
         $('#cine-pick-open').hidden = !isHost();
         if (!m) {
             destroyPlayer();
@@ -704,6 +825,7 @@
             loadMedia(m);
         }
         renderControls();
+        updateLights();
     }
 
     // ---------- trình phát ----------
@@ -721,8 +843,9 @@
         player.hls = null;
         player.ready = false;
         player.blocked = false;
+        player.eps = null;
         if (root) {
-            root.classList.remove('is-buffering');
+            root.classList.remove('is-buffering', 'is-ended');
             $('#cine-unlock').hidden = true;
             $('#cine-cover').hidden = true;
             root.classList.remove('has-media');
@@ -780,6 +903,7 @@
                 if (player.key !== key) return;  // trong lúc chờ, chủ phòng đã đổi nội dung
                 const eps = data && data.status && data.episodes && data.episodes[0] ? data.episodes[0].server_data : null;
                 if (!eps || !eps.length) throw new Error('no episodes');
+                player.eps = eps.map((e, i) => e.name || 'Tập ' + (i + 1));   // cho nút "chiếu tập tiếp" lúc hết phim
                 const ep = eps[Math.min(m.ep, eps.length - 1)];
                 const video = document.createElement('video');
                 video.playsInline = true;
@@ -853,6 +977,9 @@
             if (!el.paused) el.pause();
             if (Math.abs(el.currentTime - dur) > 1) { try { el.currentTime = Math.max(0, dur - 0.1); } catch (e) { /* bỏ qua */ } }
             el.playbackRate = 1;
+            // Video dừng trước khi tự phát sự kiện "ended", nên máy chủ phòng báo cả rạp dừng ở cuối tại đây.
+            if (pb.playing && isHost()) send({ type: 'pause', position: dur });
+            updateLights();
             return;
         }
         const drift = el.currentTime - target;
@@ -914,6 +1041,7 @@
             $('#cine-time').textContent = fmtTime(pos);
         }
         $('#cine-duration').textContent = fmtTime(dur);
+        updateLights();
     }
 
     function renderControls() {
@@ -1200,11 +1328,12 @@
         return p;
     }
 
-    // Màu nhung tối dần về cuối rạp, xa ánh sáng màn chiếu (từng hàng một màu, không dùng gradient).
-    function rowVelvet(r, rows) {
+    // Độ sáng phủ lên vải nhung của từng hàng, ở ba mức đèn: hàng gần màn chiếu sáng hơn
+    // (ánh màn chiếu hắt xuống), hàng cuối tối hơn. Mỗi hàng một màu xám, nhân với ảnh vải.
+    function rowTones(r, rows) {
         const t = rows > 1 ? r / (rows - 1) : 0;
-        const mix = (a, b) => Math.round(a + (b - a) * t);
-        return 'rgb(' + mix(110, 58) + ',' + mix(31, 16) + ',' + mix(44, 25) + ')';
+        const grey = (a, b) => { const v = Math.round(a + (b - a) * t); return 'rgb(' + v + ',' + v + ',' + v + ')'; };
+        return { dim: grey(118, 72), half: grey(170, 140), lit: grey(236, 214) };
     }
 
     function build3D() {
@@ -1243,13 +1372,40 @@
                 panel.style.left = (60 + k * 210) + 'px';
                 wall.appendChild(panel);
             }
+            // đèn tường ở khoảng giữa các tấm tiêu âm
+            for (let k = 0; k < 4; k++) {
+                const sconce = el('span', 'cw-sconce');
+                sconce.style.left = (427 + k * 420) + 'px';   // tâm khe hở 60px giữa hai tấm tiêu âm
+                wall.appendChild(sconce);
+            }
             const exit = el('span', 'cw-exit', 'LỐI RA');
             // tường trái: phía màn chiếu ở bên phải mặt phẳng; tường phải thì ngược lại
             exit.style[i === 0 ? 'right' : 'left'] = '180px';
             wall.appendChild(exit);
             hall.appendChild(wall);
         });
-        hall.appendChild(plane('cw-ceil', wide, depth, 'translate3d(0,' + H.ceilY + 'px,' + midZ + 'px) rotateX(-90deg)'));
+        const ceil = plane('cw-ceil', wide, depth, 'translate3d(0,' + H.ceilY + 'px,' + midZ + 'px) rotateX(-90deg)');
+        for (let a = 0; a < 3; a++) {        // đèn trần: 3 dãy dọc rạp
+            for (let b = 0; b < 6; b++) {
+                const dl = el('span', 'cw-downlight');
+                dl.style.left = (wide * (a + 1) / 4 - 17) + 'px';
+                dl.style.top = (160 + b * 300) + 'px';
+                ceil.appendChild(dl);
+            }
+        }
+        hall.appendChild(ceil);
+        // màn nhung hai bên màn chiếu
+        [-1, 1].forEach((side) => {
+            const w = 150;
+            const curtain = plane('cw-curtain', w, H.screenH + 220,
+                'translate3d(' + (side * (H.screenW / 2 + w / 2 + 10)) + 'px,' + (H.screenCY - 40) + 'px,' + (H.screenZ + 4) + 'px)');
+            for (let k = 0; k * 22 < w; k++) {
+                const pleat = el('span', 'cw-pleat' + (k % 2 ? ' is-deep' : ''));
+                pleat.style.left = (k * 22) + 'px';
+                curtain.appendChild(pleat);
+            }
+            hall.appendChild(curtain);
+        });
         hall.appendChild(plane('cw-front', wide, wallH, 'translate3d(0,' + (H.ceilY / 2) + 'px,' + (H.screenZ - 6) + 'px)'));
         const back = plane('cw-back', wide, wallH, 'translate3d(0,' + (H.ceilY / 2) + 'px,' + H.backZ + 'px) rotateY(180deg)');
         back.appendChild(el('span', 'cw-booth'));   // ô kính phòng máy chiếu
@@ -1272,7 +1428,10 @@
             });
             if (r > 0) hall.appendChild(riser);
             const row = plane('cw-row', wide, H.backH, 'translate3d(0,' + (y - H.backH / 2) + 'px,' + z + 'px)');
-            row.style.setProperty('--velvet', rowVelvet(r, L.rows));
+            const tones = rowTones(r, L.rows);
+            row.style.setProperty('--dim', tones.dim);
+            row.style.setProperty('--half', tones.half);
+            row.style.setProperty('--lit', tones.lit);
             for (let c = 1; c <= L.cols; c++) {
                 const code = ROW_LETTERS[r] + c;
                 const seat = el('span', 'cw-seat');
@@ -1295,12 +1454,15 @@
         const member = uid ? (state.members[uid] || { uid: uid, name: '?', avatar: '' }) : null;
         seat.className = 'cw-seat' + (uid === myUid() ? ' is-mine' : '') + (member && member.away ? ' is-away' : '');
         seat.textContent = '';
+        seat.appendChild(el('span', 'cw-num', code.slice(1)));   // biển số ghế trên lưng ghế
         if (!member) return;
+        // Từ sau lưng thấy vai áo và gáy tóc, không thấy mặt: áo là màu riêng của người đó nhưng trầm hơn
+        // (rạp tối), tóc là một màu tóc tự nhiên chọn theo uid. Ảnh đại diện vẫn ở sơ đồ ghế và danh sách.
         const body = el('span', 'cw-body');
-        body.style.background = tintFor(member.uid);
+        body.style.background = clothFor(member.uid);
         seat.appendChild(body);
         const head = el('span', 'cw-head');
-        fillAvatar(head, member);
+        head.style.background = hairFor(member.uid);
         seat.appendChild(head);
         if (uid === myUid()) seat.appendChild(el('span', 'cw-you', 'Bạn'));
         const said = activeBubble(uid);
@@ -1440,6 +1602,116 @@
         document.addEventListener('webkitfullscreenchange', refit);
     }
 
+    // ---------- hộp hỏi một dòng chữ: tạo phòng, đổi tên phòng, tên của bạn ----------
+
+    const ask = { onOk: null, back: null };
+
+    function openAsk(opts) {
+        ask.onOk = opts.onOk;
+        ask.back = document.activeElement;
+        $('#cine-ask-title').textContent = opts.title;
+        $('#cine-ask-sub').textContent = opts.sub || '';
+        $('#cine-ask-error').textContent = '';
+        $('#cine-ask-ok').textContent = opts.ok;
+        $('#cine-ask-ok').disabled = false;
+        const input = $('#cine-ask-input');
+        input.value = opts.value || '';
+        input.placeholder = opts.placeholder || '';
+        $('#cine-ask').hidden = false;
+        // trên TV đứng ở nút xác nhận: focus vào ô nhập sẽ bật bàn phím ảo ngay
+        if (isTv()) tvFocus(input.value ? $('#cine-ask-ok') : input);
+        else { input.focus(); input.select(); }
+    }
+
+    function closeAsk() {
+        $('#cine-ask').hidden = true;
+        ask.onOk = null;
+        if (ask.back && ask.back.focus) tvFocus(ask.back);
+    }
+
+    function askError(text) {
+        $('#cine-ask-error').textContent = text;
+        $('#cine-ask-ok').disabled = false;
+    }
+
+    function createRoom() {
+        const me = myName(myUid());
+        openAsk({
+            title: 'Tạo phòng chiếu',
+            sub: 'Đặt tên để bạn bè nhận ra phòng. Bạn vào trước nên là chủ phòng, chọn phim cho cả phòng.',
+            value: /^Khách /.test(me) ? '' : 'Phòng của ' + me,
+            placeholder: 'Ví dụ: Tối thứ sáu xem phim',
+            ok: 'Tạo phòng',
+            onOk: (name) => {
+                $('#cine-ask-ok').disabled = true;
+                fetch('/cinema/rooms', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name }),
+                })
+                    .then((r) => r.json().then((body) => ({ ok: r.ok, body: body })))
+                    .then((res) => {
+                        if (!res.ok) { askError(res.body.detail || 'Không tạo được phòng, thử lại nhé.'); return; }
+                        closeAsk();
+                        enterRoom(res.body.id);
+                    })
+                    .catch(() => askError('Chưa kết nối được tới rạp, thử lại sau giây lát.'));
+            },
+        });
+    }
+
+    function renameRoom() {
+        if (!isHost()) return;
+        openAsk({
+            title: 'Đổi tên phòng',
+            sub: 'Mọi người trong phòng và ở sảnh sẽ thấy tên mới.',
+            value: $('#cine-room-name').textContent,
+            ok: 'Đổi tên',
+            onOk: (name) => {
+                if (!send({ type: 'rename', name: name })) { askError('Đang nối lại với rạp, thử lại sau giây lát.'); return; }
+                closeAsk();
+            },
+        });
+    }
+
+    // Tên người xem: khách chưa đặt tên thì được hỏi một lần khi vào phòng; ai cũng đổi được bằng nút "Tên của bạn".
+    function askMyName(firstTime) {
+        openAsk({
+            title: firstTime ? 'Bạn tên gì?' : 'Tên của bạn',
+            sub: 'Mọi người trong phòng sẽ thấy tên này cạnh ghế bạn ngồi.',
+            value: savedName() || accountName(),
+            placeholder: 'Tên hiển thị',
+            ok: firstTime ? 'Vào rạp' : 'Lưu tên',
+            onOk: (name) => {
+                try { localStorage.setItem(NAME_KEY, name.slice(0, 40)); } catch (e) { /* bỏ qua */ }
+                send({ type: 'hello', name: myName(myUid()), avatar: myAvatar() });
+                renderMyName();
+                closeAsk();
+            },
+        });
+    }
+
+    let askedName = false;
+    function askNameOnce() {
+        renderMyName();
+        if (askedName || savedName() || accountName()) return;
+        askedName = true;
+        askMyName(true);
+    }
+
+    function renderMyName() {
+        $('#cine-me-name').textContent = myName(myUid());
+        $('#cine-rename').hidden = !isHost();
+    }
+
+    // phòng tự tạo không có ảnh riêng: lấy một trong ba ảnh phòng chiếu theo id
+    function hallPhotoFor(id) {
+        if (HALL_PHOTOS[id]) return HALL_PHOTOS[id];
+        let h = 0;
+        for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 997;
+        return HALL_PHOTOS['rap-' + (h % 3 + 1)];
+    }
+
     function isTv() {
         return document.documentElement.classList.contains('tv-mode');
     }
@@ -1480,7 +1752,8 @@
 
     // tv-remote.js gọi hàm này trước khi tự xử lý phím; trả true nghĩa là rạp đã xử lý.
     function tvKey(e, focused) {
-        if (!state.shown || !state.roomId || !root || !$('#cine-picker').hidden) return false;
+        // hộp chọn nội dung hoặc hộp hỏi tên đang mở: để tv-remote lo (Back sẽ bấm nút "Đóng")
+        if (!state.shown || !state.roomId || !root || !$('#cine-picker').hidden || !$('#cine-ask').hidden) return false;
         const k = e.keyCode;
         const stage = $('#cine-stage');
         const watching = state.mode === 'watching';
@@ -1571,6 +1844,20 @@
         root = document.getElementById('view-cinema');
         if (!root) return;
         $('#cine-back').addEventListener('click', leaveRoom);
+        $('#cine-create').addEventListener('click', createRoom);
+        $('#cine-rename').addEventListener('click', renameRoom);
+        $('#cine-me').addEventListener('click', () => askMyName(false));
+        $('#cine-ask-cancel').addEventListener('click', closeAsk);
+        $('#cine-ask').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeAsk(); });
+        $('#cine-ask-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const value = $('#cine-ask-input').value.trim();
+            if (!value) { $('#cine-ask-error').textContent = 'Nhập một cái tên nhé.'; return; }
+            if (ask.onOk) ask.onOk(value);
+        });
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'Escape' || e.keyCode === 27) && !$('#cine-ask').hidden) closeAsk();
+        });
         $('#cine-to-stage').addEventListener('click', () => setMode('watching'));
         $('#cine-change-seat').addEventListener('click', () => setMode('picking'));
 
@@ -1598,6 +1885,7 @@
 
         $('#cine-pick-open').addEventListener('click', openPicker);
         $('#cine-pick-empty').addEventListener('click', openPicker);
+        $('#cine-next-ep').addEventListener('click', playNextEpisode);
         $('#cine-picker-close').addEventListener('click', closePicker);
         $('#cine-picker').addEventListener('click', (e) => { if (e.target === e.currentTarget) closePicker(); });
         document.addEventListener('keydown', (e) => {

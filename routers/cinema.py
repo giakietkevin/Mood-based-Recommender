@@ -11,11 +11,12 @@ Các hàm trả về danh sách tin nhắn cần gửi; phần gửi (async) là
 import asyncio
 import json
 import re
+import secrets
 import time
 from collections import deque
 from typing import Callable, Dict, List, Optional, Tuple
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Body, HTTPException, WebSocket, WebSocketDisconnect
 
 router = APIRouter(tags=["Cinema"])
 
@@ -29,6 +30,11 @@ MSG_RATE_LIMIT = 30        # mọi loại tin, chặn máy gửi dồn dập
 MSG_RATE_WINDOW = 1.0
 CHAT_MAX = 300
 NAME_MAX = 40
+ROOM_NAME_MAX = 40
+MAX_ROOMS = 12              # tổng số phòng, kể cả 3 rạp có sẵn
+CUSTOM_ROOM_IDLE = 600      # phòng do người dùng tạo bị xoá sau chừng này giây trống người
+CREATE_RATE_LIMIT = 6       # số phòng tạo tối đa ...
+CREATE_RATE_WINDOW = 60.0   # ... mỗi phút, trên toàn server
 ROW_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 UID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -57,9 +63,12 @@ def _clean_url(value) -> str:
 
 
 class Room:
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, custom: bool = False, now: float = 0.0):
         self.id = config["id"]
         self.name = config["name"]
+        self.default_name = config["name"]
+        self.custom = custom                     # phòng do người dùng tạo: trống lâu thì bị xoá
+        self.empty_since = now                   # mốc phòng trống người (None khi có người)
         self.layout = dict(config["layout"])
         self.seats: Dict[str, str] = {}          # mã ghế -> uid
         self.members: Dict[str, dict] = {}       # uid -> {name, avatar, seat, ws, left_at}; giữ thứ tự vào phòng
@@ -85,6 +94,49 @@ class CinemaManager:
         self.clock = clock
         self.rooms: Dict[str, Room] = {c["id"]: Room(c) for c in configs}
         self._rates: Dict[Tuple[str, str, str], deque] = {}   # (phòng, uid, loại) -> các mốc giờ gần đây
+        self._creates: deque = deque()                        # mốc giờ các lần tạo phòng gần đây
+
+    # ---------- tạo, đổi tên, dọn phòng ----------
+
+    def create_room(self, name) -> Tuple[Optional[Room], Optional[str]]:
+        """Tạo phòng mới. Trả về (phòng, None) hoặc (None, lý do: invalid | full | too_fast)."""
+        clean = _clean_text(name, ROOM_NAME_MAX)
+        if not clean:
+            return None, "invalid"
+        if len(self.rooms) >= MAX_ROOMS:
+            return None, "full"
+        now = self.clock()
+        while self._creates and now - self._creates[0] >= CREATE_RATE_WINDOW:
+            self._creates.popleft()
+        if len(self._creates) >= CREATE_RATE_LIMIT:
+            return None, "too_fast"
+        self._creates.append(now)
+        room_id = "phong-" + secrets.token_hex(3)
+        while room_id in self.rooms:
+            room_id = "phong-" + secrets.token_hex(3)
+        layout = dict(ROOM_CONFIG[0]["layout"])
+        room = Room({"id": room_id, "name": clean, "layout": layout}, custom=True, now=now)
+        self.rooms[room_id] = room
+        return room, None
+
+    def rename(self, room: Room, uid: str, name) -> List[Outgoing]:
+        denied = self._host_only(room, uid, "rename")
+        if denied:
+            return denied
+        clean = _clean_text(name, ROOM_NAME_MAX)
+        if not clean:
+            return [(uid, {"type": "denied", "action": "rename", "reason": "invalid"})]
+        room.name = clean
+        return [(None, {"type": "room_renamed", "name": clean})]
+
+    def prune(self) -> List[str]:
+        """Xoá các phòng do người dùng tạo đã trống quá lâu. Trả về id các phòng đã xoá."""
+        now = self.clock()
+        gone = [rid for rid, r in self.rooms.items()
+                if r.custom and not r.members and r.empty_since is not None and now - r.empty_since >= CUSTOM_ROOM_IDLE]
+        for rid in gone:
+            del self.rooms[rid]
+        return gone
 
     # ---------- đọc trạng thái ----------
 
@@ -116,6 +168,10 @@ class CinemaManager:
                 "layout": room.layout,
                 "occupied": sorted(room.seats),
                 "taken": len(room.seats),
+                # số người đang ở trong phòng, kể cả người chưa chọn ghế (khác số ghế đã có người)
+                "people": sum(1 for m in room.members.values() if m["left_at"] is None),
+                "host_name": room.members[room.host]["name"] if room.host in room.members else None,
+                "custom": room.custom,
                 "total": room.total_seats,
                 "media_kind": media.get("kind"),
                 "media_title": title,
@@ -152,6 +208,7 @@ class CinemaManager:
             return msgs, old_ws
 
         room.members[uid] = {"name": "Khách", "avatar": "", "seat": None, "ws": ws, "left_at": None}
+        room.empty_since = None
         msgs = [(None, {"type": "member_join", "member": self._member_public(uid, room.members[uid])})]
         if room.host is None:
             room.host = uid
@@ -196,6 +253,9 @@ class CinemaManager:
         if not room.members:
             room.media = None
             room.playback = {"playing": False, "position": 0.0, "updated_at": self.clock()}
+            if not room.custom:
+                room.name = room.default_name   # 3 rạp có sẵn trả lại tên gốc khi trống
+            room.empty_since = self.clock()
         return msgs
 
     def sweep(self, room: Room) -> List[Outgoing]:
@@ -357,6 +417,8 @@ class CinemaManager:
             return self.set_playback(room, uid, t, data.get("position"))
         if t == "chat":
             return self.chat(room, uid, data.get("text"))
+        if t == "rename":
+            return self.rename(room, uid, data.get("name"))
         if t == "ping":
             # Trả lại mốc giờ của máy gửi để máy đó tính độ lệch đồng hồ theo thời gian khứ hồi.
             sent = data.get("t")
@@ -386,10 +448,11 @@ _sweeper: Optional[asyncio.Task] = None
 async def _sweep_loop():
     while True:
         await asyncio.sleep(SWEEP_INTERVAL)
-        for room in cinema.rooms.values():
+        for room in list(cinema.rooms.values()):
             msgs = cinema.sweep(room)
             if msgs:
                 await cinema.deliver(room, msgs)
+        cinema.prune()
 
 
 def _ensure_sweeper():
@@ -401,6 +464,19 @@ def _ensure_sweeper():
 @router.get("/cinema/rooms")
 async def list_cinema_rooms():
     return cinema.summary()
+
+
+@router.post("/cinema/rooms")
+async def create_cinema_room(payload: dict = Body(...)):
+    room, err = cinema.create_room(payload.get("name") if isinstance(payload, dict) else None)
+    if err == "invalid":
+        raise HTTPException(status_code=400, detail="Tên phòng không hợp lệ")
+    if err == "full":
+        raise HTTPException(status_code=409, detail="Đã đủ số phòng, thử lại sau")
+    if err == "too_fast":
+        raise HTTPException(status_code=429, detail="Tạo phòng nhanh quá, chờ một chút")
+    _ensure_sweeper()
+    return {"id": room.id, "name": room.name}
 
 
 @router.websocket("/ws/cinema/{room_id}/{uid}")

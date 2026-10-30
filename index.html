@@ -3243,27 +3243,39 @@
                     <h1 id="cine-lobby-title">Rạp KietStation</h1>
                     <p id="cine-lobby-sub">Đang xem rạp nào còn ghế...</p>
                 </div>
+                <div class="cine-actions">
+                    <button type="button" id="cine-create" class="cine-btn cine-btn--primary cine-btn--lg"><span class="material-symbols-outlined" aria-hidden="true">add</span>Tạo phòng</button>
+                </div>
             </div>
             <ul id="cine-rooms" class="cine-rooms"></ul>
+            <p class="cine-credits">Ảnh phòng chiếu:
+                <a href="https://commons.wikimedia.org/wiki/File:Columbia_City_Cinema_main_hall.jpg" target="_blank" rel="noopener">Joe Mabel</a> (CC BY-SA 3.0),
+                <a href="https://commons.wikimedia.org/wiki/File:Auditorium_at_Gilda_on_an_afternoon_in_January_2025.jpg" target="_blank" rel="noopener">JIP</a> (CC BY-SA 4.0),
+                <a href="https://commons.wikimedia.org/wiki/File:Movie_theater_seats_(Unsplash).jpg" target="_blank" rel="noopener">Elijah Flores baesik</a> (CC0), Wikimedia Commons.
+                Vải, thảm và nhung: <a href="https://ambientcg.com" target="_blank" rel="noopener">ambientCG</a> (CC0).</p>
         </section>
 
         <section id="cine-room" hidden aria-labelledby="cine-room-name">
             <div class="cine-head cine-room-head">
-                <div>
-                    <button type="button" id="cine-back" class="cine-btn cine-back"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>Sảnh</button>
-                    <h1 id="cine-room-name">Rạp</h1>
-                    <p><span id="cine-room-meta" class="tnum"></span><span id="cine-conn" class="cine-conn" role="status"></span></p>
+                <div class="cine-title-row">
+                    <button type="button" id="cine-back" class="cine-back" aria-label="Về sảnh"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span></button>
+                    <div>
+                        <h1><span id="cine-room-name">Rạp</span><button type="button" id="cine-rename" class="cine-rename" aria-label="Đổi tên phòng" title="Đổi tên phòng" hidden><span class="material-symbols-outlined" aria-hidden="true">edit</span></button></h1>
+                        <p><span id="cine-room-meta" class="tnum"></span><span id="cine-conn" class="cine-conn" role="status"></span></p>
+                    </div>
                 </div>
                 <div class="cine-actions">
+                    <button type="button" id="cine-me" class="cine-btn" title="Đổi tên hiển thị" aria-label="Đổi tên hiển thị"><span class="material-symbols-outlined" aria-hidden="true">badge</span><span id="cine-me-name">Tên của bạn</span></button>
                     <button type="button" id="cine-to-stage" class="cine-btn cine-btn--primary" hidden>Về màn chiếu</button>
                 </div>
             </div>
 
             <div class="cine-body">
                 <div class="cine-hall-wrap">
-                    <div class="cine-arc" aria-hidden="true"></div>
-                    <div class="cine-arc-label">Màn chiếu</div>
-                    <div id="cine-arc-title" class="cine-arc-title"></div>
+                    <div class="cine-minis">
+                        <div id="cine-mini-screen" class="cine-mini-screen" aria-hidden="true"></div>
+                    </div>
+                    <p id="cine-arc-title" class="cine-arc-title">Màn chiếu</p>
                     <div class="cine-hall">
                         <div class="cine-hall-inner">
                             <div id="cine-map" class="cine-map" role="group" aria-label="Sơ đồ ghế"></div>
@@ -3296,7 +3308,10 @@
                 <div id="cine-stage-msg" class="cine-stage__msg">
                     <strong id="cine-stage-title">Chưa có nội dung chiếu</strong>
                     <span id="cine-stage-sub"></span>
-                    <button type="button" id="cine-pick-empty" class="cine-btn cine-btn--primary" hidden>Chọn nội dung chiếu</button>
+                    <span class="cine-msg-actions">
+                        <button type="button" id="cine-next-ep" class="cine-btn cine-btn--primary" hidden>Chiếu tập tiếp</button>
+                        <button type="button" id="cine-pick-empty" class="cine-btn cine-btn--primary" hidden>Chọn nội dung chiếu</button>
+                    </span>
                 </div>
                 </div>
                 <div id="cine-hall3d" class="cine-hall3d" aria-hidden="true"></div>
@@ -3315,16 +3330,14 @@
                 <span id="cine-duration" class="cine-time tnum needs-media">0:00</span>
                 <button type="button" id="cine-mute" class="cine-icon-btn needs-media" aria-label="Tắt tiếng"><span class="material-symbols-outlined" aria-hidden="true">volume_up</span></button>
                 <span class="cine-controls__gap"></span>
+                <span class="cine-controls__seat">Ghế <b id="cine-my-seat" class="tnum">chưa chọn</b></span>
+                <button type="button" id="cine-change-seat" class="cine-icon-btn" aria-label="Đổi ghế" title="Đổi ghế"><span class="material-symbols-outlined" aria-hidden="true">event_seat</span></button>
+                <button type="button" id="cine-pick-open" class="cine-icon-btn" aria-label="Chọn nội dung chiếu" title="Chọn nội dung chiếu" hidden><span class="material-symbols-outlined" aria-hidden="true">movie</span></button>
                 <button type="button" id="cine-view" class="cine-view-btn" aria-label="Đổi góc nhìn: đang xem Màn chiếu"><span class="material-symbols-outlined" aria-hidden="true">tv</span><span id="cine-view-label">Màn chiếu</span></button>
                 <button type="button" id="cine-full" class="cine-icon-btn" aria-label="Toàn màn hình"><span class="material-symbols-outlined" aria-hidden="true">fullscreen</span></button>
             </div>
-            <div class="cine-strip">
-                <div id="cine-faces" class="cine-faces"></div>
-                <span class="cine-strip__seat">Ghế <b id="cine-my-seat" class="tnum">chưa chọn</b></span>
-                <button type="button" id="cine-pick-open" class="cine-btn" hidden><span class="material-symbols-outlined" aria-hidden="true">movie</span>Chọn nội dung</button>
-                <button type="button" id="cine-change-seat" class="cine-btn"><span class="material-symbols-outlined" aria-hidden="true">event_seat</span>Đổi ghế</button>
-            </div>
             <form id="cine-chat" class="cine-chat" autocomplete="off">
+                <div id="cine-faces" class="cine-faces"></div>
                 <input id="cine-chat-input" type="text" maxlength="300" placeholder="Nhắn cả rạp..." aria-label="Tin nhắn cho cả rạp">
                 <button type="submit" class="cine-btn cine-btn--primary">Gửi</button>
                 <span class="cine-quick" role="group" aria-label="Câu nhanh">
@@ -3335,6 +3348,20 @@
                 </span>
             </form>
         </section>
+
+        <!-- Hộp hỏi một dòng chữ: tên phòng mới, đổi tên phòng, tên của bạn -->
+        <div id="cine-ask" class="cine-picker cine-ask" hidden role="dialog" aria-modal="true" aria-labelledby="cine-ask-title">
+            <form id="cine-ask-form" class="cine-picker__panel cine-ask__panel" autocomplete="off">
+                <h2 id="cine-ask-title">Tạo phòng chiếu</h2>
+                <p id="cine-ask-sub" class="cine-ask__sub"></p>
+                <input id="cine-ask-input" type="text" maxlength="40" aria-labelledby="cine-ask-title">
+                <p id="cine-ask-error" class="cine-ask__error" role="alert"></p>
+                <div class="cine-ask__actions">
+                    <button type="button" id="cine-ask-cancel" class="cine-btn">Đóng</button>
+                    <button type="submit" id="cine-ask-ok" class="cine-btn cine-btn--primary">Tạo phòng</button>
+                </div>
+            </form>
+        </div>
 
         <!-- Bảng chọn nội dung chiếu, chỉ chủ phòng mở được -->
         <div id="cine-picker" class="cine-picker" hidden role="dialog" aria-modal="true" aria-labelledby="cine-picker-title">
