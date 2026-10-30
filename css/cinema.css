@@ -31,6 +31,8 @@
 body.cinema-on { background: #0b0a0b; }
 
 #view-cinema button { font: inherit; color: inherit; }
+/* Trên TV tailwind-legacy.css nạp trước file này, nên [hidden] của nó thua các lớp đặt display. */
+#view-cinema [hidden] { display: none !important; }
 #view-cinema .cine-seat { font-size: var(--seat-fs); }  /* ghế đổi cỡ theo --seat-fs, không theo chữ */
 #view-cinema .tnum { font-variant-numeric: tabular-nums; }
 
@@ -290,6 +292,7 @@ body.cinema-on { background: #0b0a0b; }
 .cine-faces__count { margin-left: 18px; color: var(--c-muted); white-space: nowrap; }
 .cine-strip__seat { margin: 0 16px; white-space: nowrap; }
 .cine-strip__seat b { font-weight: 600; }
+.cine-strip .cine-btn + .cine-btn { margin-left: 8px; }
 
 /* màn chiếu: video lấp đầy khung, nhạc thì bìa đĩa lớn */
 .cine-screen { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
@@ -495,7 +498,8 @@ html.tv-mode #view-cinema { --seat-fs: 13px; --aisle-w: 36px; }
     .cine-people { max-height: none; }
 }
 @media (max-width: 640px) {
-    #view-cinema { --seat-fs: 9px; --aisle-w: 14px; }
+    /* 40px; sau khi nghiêng 2.5D ghế còn khoảng 38px, vẫn trên mức 36px cho ngón tay */
+    #view-cinema { --seat-fs: 10px; --aisle-w: 14px; }
     .cine-stage { height: 56vw; min-height: 0; }
     .cine-room { grid-template-columns: 112px minmax(0, 1fr); grid-row-gap: 8px; row-gap: 8px; padding: 14px; }
     .cine-room__status { grid-column: 2; }

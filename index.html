@@ -3236,7 +3236,7 @@
 
 
     <!-- RẠP KIETSTATION: sảnh chọn rạp và phòng chiếu (js/cinema.js, css/cinema.css) -->
-    <div id="view-cinema" class="hidden">
+    <div id="view-cinema" class="hidden" data-tv-managed>
         <section id="cine-lobby" aria-labelledby="cine-lobby-title">
             <div class="cine-head">
                 <div>
@@ -3282,7 +3282,7 @@
                 </aside>
             </div>
 
-            <div class="cine-stage" id="cine-stage">
+            <div class="cine-stage" id="cine-stage" tabindex="0" role="button" aria-label="Màn chiếu. Bấm OK để xem toàn màn hình">
                 <div id="cine-screen" class="cine-screen"></div>
                 <div id="cine-cover" class="cine-cover" hidden>
                     <img id="cine-cover-img" alt="">

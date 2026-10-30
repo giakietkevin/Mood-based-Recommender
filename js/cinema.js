@@ -118,8 +118,10 @@
             box.id = 'cine-toast';
             box.setAttribute('role', 'status');
             box.setAttribute('aria-live', 'polite');
-            document.body.appendChild(box);
         }
+        // Khi đang toàn màn hình chỉ phần tử phóng to được vẽ, nên thông báo phải nằm trong nó.
+        const host = document.fullscreenElement || document.webkitFullscreenElement || document.body;
+        if (box.parentNode !== host) host.appendChild(box);
         box.textContent = text;
         box.classList.add('is-on');
         clearTimeout(toastTimer);
@@ -868,6 +870,8 @@
         } else {
             const req = stage.requestFullscreen || stage.webkitRequestFullscreen;
             if (req) req.call(stage);
+            // iPhone chỉ cho video tự phóng toàn màn hình
+            else if (player.el && player.el.webkitEnterFullscreen) player.el.webkitEnterFullscreen();
         }
     }
 
@@ -884,7 +888,7 @@
     function closePicker() {
         $('#cine-picker').hidden = true;
         const back = $('#cine-pick-open');
-        if (back && !back.hidden && root.classList.contains('is-watching')) back.focus();
+        if (back && !back.hidden && root.classList.contains('is-watching')) tvFocus(back);
     }
 
     function filmUnlocked() {
@@ -903,10 +907,11 @@
         $('#cine-pick-q').value = '';
         $('#cine-pick-list').textContent = '';
         pickNote('');
-        if (locked) { $('#cine-vip-code').focus(); return; }
-        if (tab === 'film') searchFilms('');
-        else showMusicDefaults();
-        $('#cine-pick-q').focus();
+        if (tab === 'film' && !locked) searchFilms('');
+        else if (tab === 'music') showMusicDefaults();
+        // Trên TV đứng ở tab đang chọn: focus vào ô nhập sẽ bật bàn phím ảo che mất danh sách.
+        if (isTv()) tvFocus($(tab === 'film' ? '#cine-tab-film' : '#cine-tab-music'));
+        else $(locked ? '#cine-vip-code' : '#cine-pick-q').focus();
     }
 
     function pickNote(text) {
@@ -1057,11 +1062,96 @@
             .catch(() => { if (id === picker.reqId) pickNote('Tìm nhạc không thành công. Thử lại sau.'); });
     }
 
+    function isTv() {
+        return document.documentElement.classList.contains('tv-mode');
+    }
+
+    // Đặt khung focus của remote (tv-remote.js); ngoài TV thì chỉ focus bình thường.
+    function tvFocus(target) {
+        if (!target) return;
+        if (window.tvFocus) window.tvFocus(target);
+        else target.focus();
+    }
+
     function setMode(mode) {
         state.mode = mode;
         root.classList.toggle('is-watching', mode === 'watching');
-        const target = mode === 'watching' ? $('#cine-change-seat') : (state.seatEls[mySeat()] || $('#cine-back'));
-        if (target && document.documentElement.classList.contains('tv-mode')) target.focus();
+        if (!isTv()) return;
+        // Trên TV: vào chế độ xem thì đứng ở màn chiếu (OK để phóng to); về sơ đồ thì đứng ở ghế của mình.
+        const target = mode === 'watching' ? $('#cine-stage') : (state.seatEls[mySeat()] || state.seatEls.E5 || $('#cine-back'));
+        setTimeout(() => tvFocus(target), 0);
+    }
+
+    // ---------- remote TV ----------
+
+    const TV = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13, BACK: 10009, ESC: 27, PLAY_PAUSE: 10252, PLAY: 415, PAUSE: 19, FF: 417, RW: 412 };
+    const TV_SEEK = 10;
+
+    function hostSeekBy(seconds) {
+        if (!state.media) return;
+        if (!isHost()) { toast('Chủ phòng điều khiển màn chiếu'); return; }
+        const pos = player.el && player.ready ? player.el.currentTime : targetPosition();
+        send({ type: 'seek', position: Math.max(0, pos + seconds) });
+    }
+
+    function isFullscreen() {
+        const full = document.fullscreenElement || document.webkitFullscreenElement;
+        return !!full && (full === $('#cine-stage') || root.contains(full));
+    }
+
+    // tv-remote.js gọi hàm này trước khi tự xử lý phím; trả true nghĩa là rạp đã xử lý.
+    function tvKey(e, focused) {
+        if (!state.shown || !state.roomId || !root || !$('#cine-picker').hidden) return false;
+        const k = e.keyCode;
+        const stage = $('#cine-stage');
+        const watching = state.mode === 'watching';
+        const playing = !!(state.playback && state.playback.playing);
+
+        // phím phát/dừng/tua trên remote: chỉ chủ phòng, và đi qua server để cả rạp cùng theo
+        if (k === TV.PLAY_PAUSE || k === TV.PLAY || k === TV.PAUSE) {
+            if (!state.media) return true;
+            if (!isHost()) { toast('Chủ phòng điều khiển màn chiếu'); return true; }
+            if ((k === TV.PLAY && playing) || (k === TV.PAUSE && !playing)) return true;
+            onPlayClick();
+            return true;
+        }
+        if (k === TV.FF || k === TV.RW) { hostSeekBy(k === TV.FF ? TV_SEEK : -TV_SEEK); return true; }
+
+        if (isFullscreen()) {
+            if (k === TV.ENTER) {
+                if (player.blocked) unlockPlayback();
+                else if (isHost()) onPlayClick();
+                else toast('Chủ phòng điều khiển màn chiếu');
+                return true;
+            }
+            if (k === TV.LEFT || k === TV.RIGHT) { hostSeekBy(k === TV.RIGHT ? TV_SEEK : -TV_SEEK); return true; }
+            if (k === TV.UP || k === TV.DOWN) return true;
+            if (k === TV.BACK || k === TV.ESC) { toggleFullscreen(); return true; }
+            return false;
+        }
+
+        if (watching && focused === stage && k === TV.ENTER) {
+            if (player.blocked) unlockPlayback();   // cú bấm OK cũng cho phép phát có tiếng
+            toggleFullscreen();
+            return true;
+        }
+        if (focused === $('#cine-seek') && (k === TV.LEFT || k === TV.RIGHT) && isHost()) {
+            hostSeekBy(k === TV.RIGHT ? TV_SEEK : -TV_SEEK);
+            return true;
+        }
+        // ↑ từ hàng ghế đầu: lên màn chiếu
+        if (!watching && k === TV.UP && focused && focused.getAttribute && /^A\d+$/.test(focused.getAttribute('data-seat') || '')) {
+            if (mySeat()) { setMode('watching'); return true; }
+            return false;
+        }
+        // Back: đang xem thì về sơ đồ ghế, đang ở sơ đồ ghế thì về sảnh
+        if (k === TV.BACK || (k === TV.ESC && e.isTrusted)) {
+            if (watching) { setMode('picking'); return true; }
+            leaveRoom();
+            setTimeout(() => tvFocus(root.querySelector('.cine-room')), 300);
+            return true;
+        }
+        return false;
     }
 
     // ---------- vào / ra view ----------
@@ -1132,7 +1222,7 @@
         });
     }
 
-    window.Cinema = { onShow: onShow, onHide: onHide, enter: enterRoom, leave: leaveRoom };
+    window.Cinema = { onShow: onShow, onHide: onHide, enter: enterRoom, leave: leaveRoom, tvKey: tvKey };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();

@@ -80,6 +80,8 @@
         el.focus({ preventScroll: true });
         el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
     }
+    // Other scripts (the cinema) move the visible focus with this.
+    window.tvFocus = focus;
 
     // Gap between two ranges on one axis; 0 when they overlap.
     function gap(a1, a2, b1, b2) {
@@ -229,13 +231,18 @@
     }
 
     // The video the media keys act on: the full-screen one, the focused one, else one that is playing.
+    // Videos inside [data-tv-managed] (the cinema) are driven by their own page code, not these keys.
+    function managed(el) {
+        return !!(el && el.closest && el.closest('[data-tv-managed]'));
+    }
+
     function activeVideo() {
         const fs = fullscreenElement();
-        if (fs && fs.tagName === 'VIDEO') return fs;
-        if (current && current.tagName === 'VIDEO') return current;
+        if (fs && fs.tagName === 'VIDEO' && !managed(fs)) return fs;
+        if (current && current.tagName === 'VIDEO' && !managed(current)) return current;
         const vids = document.querySelectorAll('video');
         for (let i = 0; i < vids.length; i++) {
-            if (!vids[i].paused && visible(vids[i])) return vids[i];
+            if (!vids[i].paused && visible(vids[i]) && !managed(vids[i])) return vids[i];
         }
         return null;
     }
@@ -243,7 +250,7 @@
     // When a large video starts (a film was picked), move the focus onto it.
     document.addEventListener('playing', function (e) {
         const v = e.target;
-        if (v.tagName !== 'VIDEO' || v === current || v.muted) return;
+        if (v.tagName !== 'VIDEO' || v === current || v.muted || managed(v)) return;
         if (v.getBoundingClientRect().width < innerWidth * 0.3) return;
         focus(v);
         v.scrollIntoView({ block: 'center' });
@@ -288,6 +295,12 @@
     // Capture phase so the page's own arrow-key shortcuts (seeking) don't also fire.
     document.addEventListener('keydown', function (e) {
         const k = e.keyCode;
+        // The cinema handles its own screen, seat map and media keys first.
+        if (window.Cinema && window.Cinema.tvKey && window.Cinema.tvKey(e, current)) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
         const video = activeVideo();
         if (video && videoKey(e, video)) {
             e.preventDefault();
