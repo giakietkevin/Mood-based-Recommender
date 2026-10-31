@@ -844,6 +844,7 @@
         player.ready = false;
         player.blocked = false;
         player.eps = null;
+        glVideo();
         if (root) {
             root.classList.remove('is-buffering', 'is-ended');
             $('#cine-unlock').hidden = true;
@@ -938,6 +939,7 @@
         media.addEventListener('loadedmetadata', () => {
             if (player.key !== key) return;
             player.ready = true;
+            glVideo();
             if (state.media && state.media.kind === 'film') stageMessage('', '', false);
             root.classList.add('has-media');
             syncPlayer(true);
@@ -1341,6 +1343,7 @@
         hall.textContent = '';
         view.rows = [];
         view.seats = {};
+        view.spec = null;
         const L = state.layout;
         if (!L) return;
         const H = HALL;
@@ -1412,6 +1415,8 @@
         hall.appendChild(back);
 
         // sàn trước hàng A, rồi từng hàng: mặt bậc, thành bậc (có đèn lối đi) và hàng ghế
+        // cùng phòng này cho rạp WebGL (cinema-gl.js), toạ độ đã căn giữa và trục y hướng lên
+        const spec = { H: H, rows: [] };
         const frontEnd = rowZ(0) - 95;
         const frontDepth = frontEnd - H.screenZ;
         hall.appendChild(plane('cw-floor', wide, frontDepth, 'translate3d(0,0,' + (H.screenZ + frontDepth / 2) + 'px) rotateX(90deg)'));
@@ -1421,7 +1426,9 @@
             hall.appendChild(plane('cw-tread', wide, H.rowGap, 'translate3d(0,' + y + 'px,' + (z - 40) + 'px) rotateX(90deg)'));
             const riser = plane('cw-riser', wide, H.step, 'translate3d(0,' + (y + H.step / 2) + 'px,' + (z - 95) + 'px)');
             // đèn ở các lối đi giữa và hai lối bên (toạ độ chưa căn giữa, nên trừ shift)
+            const lamps = [];
             aisleXs.concat([-60, raw[L.cols] + 60]).forEach((ax) => {
+                lamps.push(ax - shift);
                 const lamp = el('span', 'cw-lamp');
                 lamp.style.left = (H.halfW + ax - shift - 4) + 'px';
                 riser.appendChild(lamp);
@@ -1432,8 +1439,11 @@
             row.style.setProperty('--dim', tones.dim);
             row.style.setProperty('--half', tones.half);
             row.style.setProperty('--lit', tones.lit);
+            const glRow = { y: -y, z: z, lamps: lamps, seats: [] };
+            spec.rows.push(glRow);
             for (let c = 1; c <= L.cols; c++) {
                 const code = ROW_LETTERS[r] + c;
+                glRow.seats.push({ code: code, x: view.xs[c] });
                 const seat = el('span', 'cw-seat');
                 seat.style.left = (H.halfW + view.xs[c] - 30) + 'px';
                 row.appendChild(seat);
@@ -1442,6 +1452,8 @@
             view.rows.push(row);
             hall.appendChild(row);
         }
+        view.spec = spec;
+        if (gl.inst) gl.inst.build(spec);
         Object.keys(view.seats).forEach(render3DSeat);
         applyView(false);
     }
@@ -1453,6 +1465,7 @@
         const uid = state.seats[code];
         const member = uid ? (state.members[uid] || { uid: uid, name: '?', avatar: '' }) : null;
         seat.className = 'cw-seat' + (uid === myUid() ? ' is-mine' : '') + (member && member.away ? ' is-away' : '');
+        if (gl.inst) gl.inst.setSeat(code, uid === myUid());
         seat.textContent = '';
         seat.appendChild(el('span', 'cw-num', code.slice(1)));   // biển số ghế trên lưng ghế
         if (!member) return;
@@ -1467,6 +1480,57 @@
         if (uid === myUid()) seat.appendChild(el('span', 'cw-you', 'Bạn'));
         const said = activeBubble(uid);
         if (said) seat.appendChild(el('span', 'cw-bubble', said));
+    }
+
+    // ---------- rạp WebGL (js/cinema-gl.js) ----------
+    // Máy có WebGL thì phòng chiếu được vẽ bằng Three.js phía sau lớp DOM; camera vẫn là transform CSS ở trên,
+    // nên người ngồi, bong bóng chat và chữ trên màn chiếu giữ nguyên. Trên TV, máy không có WebGL hoặc chạy
+    // không nổi thì dùng rạp CSS-3D như cũ. Tắt hẳn: localStorage cinema_gl = 'off'.
+    const GL_KEY = 'cinema_gl';
+    const gl = { inst: null, loading: false, off: false };
+
+    function glWanted() {
+        if (gl.off || isTv()) return false;
+        try { if (localStorage.getItem(GL_KEY) === 'off') return false; } catch (e) { /* bỏ qua */ }
+        return true;
+    }
+
+    function loadGL() {
+        gl.loading = true;
+        let load;
+        // import() bọc trong Function: trình duyệt cũ (TV) không hiểu cú pháp này vẫn chạy được phần còn lại của file
+        try { load = new Function('u', 'return import(u)')('/js/cinema-gl.js'); } catch (e) { load = Promise.reject(e); }
+        load.then((mod) => {
+            gl.loading = false;
+            if (!mod.supported() || !root) { gl.off = true; return; }
+            gl.inst = mod.create($('#cine-stage'), root, { onFail: glFail });
+            if (view.spec) gl.inst.build(view.spec);
+            Object.keys(view.seats).forEach((code) => gl.inst.setSeat(code, state.seats[code] === myUid()));
+            glVideo();
+            applyView(false);
+        }).catch((e) => {
+            gl.loading = false;
+            gl.off = true;
+            console.warn('Rạp WebGL không chạy được, dùng rạp CSS-3D', e);
+        });
+    }
+
+    function glFail(why) {
+        if (!gl.inst) return;
+        gl.inst.dispose();
+        gl.inst = null;
+        gl.off = true;
+        root.classList.remove('gl-on', 'gl-video');
+        if (why === 'slow') toast('Máy chạy hơi chậm, chuyển về rạp 3D nhẹ');
+        applyView(false);
+    }
+
+    // Phim qua hls.js là luồng MSE cùng nguồn nên vẽ được lên màn cong. HLS gốc (Safari) thường khác nguồn,
+    // WebGL không được đọc: để video DOM phẳng hiện như cũ.
+    function glVideo() {
+        const v = player.ready && player.hls && player.el && player.el.tagName === 'VIDEO' ? player.el : null;
+        if (gl.inst) gl.inst.setVideo(v);
+        if (root) root.classList.toggle('gl-video', !!(gl.inst && v));
     }
 
     function seatPlace(code) {
@@ -1486,6 +1550,9 @@
         const is3d = view.mode !== 'flat' && !!state.layout;
         root.classList.toggle('view-3d', is3d);
         root.classList.toggle('view-third', is3d && view.mode === 'third');
+        if (is3d && !gl.inst && !gl.loading && glWanted()) loadGL();
+        root.classList.toggle('gl-on', is3d && !!gl.inst);
+        if (gl.inst) gl.inst.setActive(is3d);
         const btn = $('#cine-view');
         btn.firstElementChild.textContent = VIEW_ICON[view.mode];
         $('#cine-view-label').textContent = VIEW_LABEL[view.mode];
@@ -1540,6 +1607,7 @@
             // hàng sau lưng camera được nhìn từ mặt sau: lật chữ và ảnh cho khỏi ngược
             row.classList.toggle('is-behind', z > cam.z);
         });
+        if (gl.inst) gl.inst.setRows(view.rows.map((row) => row.style.visibility !== 'hidden'));
     }
 
     function setView(mode, quiet) {
@@ -1837,6 +1905,7 @@
         clearInterval(state.lobbyTimer);
         disconnect();
         destroyPlayer();
+        if (gl.inst) gl.inst.setActive(false);
         $('#cine-picker').hidden = true;
     }
 

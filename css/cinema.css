@@ -716,6 +716,18 @@ body.cinema-on { background: #0b0a0b; }
 body.cinema-on { transition: background-color 3.5s ease; }
 body.cinema-on.cinema-lit { background-color: #19161a; }
 
+/* Rạp WebGL (js/cinema-gl.js): canvas vẽ cả phòng phía sau. Lớp DOM chỉ còn người ngồi, bong bóng, số ghế
+   và chữ trên màn chiếu; tường, sàn, lưng ghế DOM ẩn đi. */
+.cine-gl { display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+#view-cinema.gl-on .cine-gl { display: block; }
+#view-cinema.gl-on .cw3:not(.cw-row) { visibility: hidden; }
+#view-cinema.gl-on .cw-seat,
+#view-cinema.gl-on .cw-seat.is-mine { background: none; transition: none; }
+#view-cinema.gl-on .cw-seat::before { display: none; }
+#view-cinema.gl-on .cw-screen,
+#view-cinema.gl-on:not(.has-media) .cw-screen { background: none; outline: 0; }
+#view-cinema.gl-on.gl-video .cine-screen video { opacity: 0; transition: none; }
+
 /* hàng ghế: một mặt phẳng, ghế là phần tử 2D bên trong; nhìn từ sau thấy lưng ghế và đầu người ngồi */
 .cw-row { overflow: visible; }
 .cw-seat {
