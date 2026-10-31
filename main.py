@@ -1527,7 +1527,7 @@ def _youtube_api_search(keyword, type, limit):
         "part": "snippet",
         "type": "video",
         "maxResults": min(max(limit, 1), 25),
-        "q": keyword if type == "music" else f"{keyword} podcast",
+        "q": keyword if type in ("music", "video") else f"{keyword} podcast",
         "regionCode": "VN",
         "relevanceLanguage": "vi",
         "videoEmbeddable": "true",

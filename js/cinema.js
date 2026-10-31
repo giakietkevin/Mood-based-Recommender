@@ -834,7 +834,9 @@
         clearInterval(player.syncTimer);
         clearInterval(player.uiTimer);
         if (player.hls) { try { player.hls.destroy(); } catch (e) { /* bỏ qua */ } }
-        if (player.el) {
+        if (player.el && player.el.destroy) {
+            player.el.destroy();
+        } else if (player.el) {
             try { player.el.pause(); player.el.removeAttribute('src'); player.el.load(); } catch (e) { /* bỏ qua */ }
             if (player.el.parentNode) player.el.parentNode.removeChild(player.el);
         }
@@ -889,11 +891,21 @@
                 return;
             }
             stageMessage('', '', false);
-            const audio = document.createElement('audio');
-            audio.preload = 'auto';
-            attachPlayer(audio, key, 'bài hát');
-            audio.src = '/api/yt-stream/' + id;
-            screen.appendChild(audio);
+            // Xem cả hình qua trình phát nhúng chính thức của YouTube. Không tải được API (mạng chặn) thì nghe
+            // tiếng như trước, bìa đĩa vẫn hiện.
+            loadYouTubeApi().then(() => {
+                if (player.key !== key) return;
+                const yt = youTubeMedia(id, screen);
+                attachPlayer(yt, key, 'video');
+                yt.addEventListener('playing', () => { if (player.key === key) $('#cine-cover').hidden = true; });
+            }).catch(() => {
+                if (player.key !== key) return;
+                const audio = document.createElement('audio');
+                audio.preload = 'auto';
+                attachPlayer(audio, key, 'bài hát');
+                audio.src = '/api/yt-stream/' + id;
+                screen.appendChild(audio);
+            });
             return;
         }
 
@@ -927,6 +939,127 @@
             .catch(() => { if (player.key === key) loadFailed('phim'); });
     }
 
+    // ---------- YouTube: trình phát nhúng chính thức (IFrame Player API) ----------
+    // Bọc player YouTube cho giống thẻ <video> (currentTime, duration, paused, play/pause, muted và vài sự kiện),
+    // để phần đồng bộ, thanh điều khiển và đèn rạp ở trên dùng chung. YouTube không phát nhanh/chậm 5% được,
+    // nên chỉ còn tua khi lệch quá SEEK_DRIFT.
+
+    let ytApi = null;
+    function loadYouTubeApi() {
+        if (ytApi) return ytApi;
+        ytApi = new Promise((resolve, reject) => {
+            if (window.YT && window.YT.Player) { resolve(window.YT); return; }
+            const prev = window.onYouTubeIframeAPIReady;   // app.js cũng đợi API này
+            window.onYouTubeIframeAPIReady = function () {
+                if (typeof prev === 'function') { try { prev(); } catch (e) { /* bỏ qua */ } }
+                resolve(window.YT);
+            };
+            const script = document.createElement('script');
+            script.src = 'https://www.youtube.com/iframe_api';
+            script.onerror = () => { ytApi = null; reject(new Error('YouTube API')); };
+            document.head.appendChild(script);
+            setTimeout(() => { if (!(window.YT && window.YT.Player)) { ytApi = null; reject(new Error('YouTube API timeout')); } }, 12000);
+        });
+        return ytApi;
+    }
+
+    const YT_ERRORS = {
+        100: 'video này (đã bị xoá hoặc để riêng tư)',
+        101: 'video này (chủ kênh không cho phát nhúng)',
+        150: 'video này (chủ kênh không cho phát nhúng)',
+    };
+
+    function youTubeMedia(id, screen) {
+        const listeners = {};
+        const emit = (type) => (listeners[type] || []).forEach((fn) => fn());
+        let yt = null;            // có sau onReady
+        let ytp = null;           // player vừa tạo, để huỷ được cả khi chưa sẵn sàng
+        let gone = false;
+        let durTimer = null;
+        let muted = false;
+        const box = el('div', 'cine-yt');
+        screen.appendChild(box);
+        const media = {
+            tagName: 'YOUTUBE',
+            errorText: '',
+            addEventListener: (type, fn) => { (listeners[type] = listeners[type] || []).push(fn); },
+            play() {
+                if (!yt) return Promise.reject(new Error('not ready'));
+                yt.playVideo();
+                // Trình duyệt chặn tự phát có tiếng thì player đứng yên: coi như bị chặn để hiện nút "Bấm để xem".
+                return new Promise((resolve, reject) => {
+                    let n = 0;
+                    const t = setInterval(() => {
+                        const st = yt ? yt.getPlayerState() : -1;
+                        n++;
+                        if (st === 1) { clearInterval(t); resolve(); return; }
+                        if (st === 3 && n < 40) return;   // đang tải: chờ thêm, tới 10 giây
+                        if (n > 10) {
+                            clearInterval(t);
+                            const err = new Error('blocked');
+                            err.name = 'NotAllowedError';
+                            reject(err);
+                        }
+                    }, 250);
+                });
+            },
+            pause() { if (yt) yt.pauseVideo(); },
+            destroy() {
+                gone = true;
+                clearInterval(durTimer);
+                if (ytp) { try { ytp.destroy(); } catch (e) { /* bỏ qua */ } }
+                yt = null;
+                Array.prototype.forEach.call(screen.querySelectorAll('.cine-yt'), (n) => n.parentNode.removeChild(n));
+            },
+        };
+        Object.defineProperties(media, {
+            currentTime: {
+                get: () => (yt ? yt.getCurrentTime() || 0 : 0),
+                set: (t) => { if (yt) yt.seekTo(t, true); },
+            },
+            duration: { get: () => (yt && yt.getDuration() > 0 ? yt.getDuration() : NaN) },
+            paused: { get: () => !yt || (yt.getPlayerState() !== 1 && yt.getPlayerState() !== 3) },
+            playbackRate: { get: () => 1, set: () => { /* YouTube không có tốc độ 0,95/1,05 */ } },
+            muted: {
+                get: () => muted,
+                set: (v) => { muted = !!v; if (yt) { if (muted) yt.mute(); else yt.unMute(); } },
+            },
+        });
+        ytp = new window.YT.Player(box, {
+            videoId: id,
+            width: '100%',
+            height: '100%',
+            // Không có nút của YouTube: chủ phòng điều khiển bằng thanh của rạp, người xem không tự dừng được.
+            playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, rel: 0, playsinline: 1, iv_load_policy: 3, modestbranding: 1, origin: location.origin },
+            events: {
+                onReady: (e) => {
+                    if (gone) return;
+                    yt = e.target;
+                    const frame = yt.getIframe();
+                    frame.classList.add('cine-yt');
+                    frame.setAttribute('tabindex', '-1');
+                    if (muted) yt.mute();
+                    // Thời lượng có sau khi YouTube nạp xong thông tin video; tới lúc đó mới báo "loadedmetadata".
+                    let n = 0;
+                    durTimer = setInterval(() => {
+                        if (!yt) { clearInterval(durTimer); return; }
+                        if (yt.getDuration() > 0 || ++n > 40) { clearInterval(durTimer); emit('loadedmetadata'); }
+                    }, 250);
+                },
+                onStateChange: (e) => {
+                    if (e.data === 0) emit('ended');
+                    else if (e.data === 1) emit('playing');
+                    else if (e.data === 3) emit('waiting');
+                },
+                onError: (e) => {
+                    media.errorText = YT_ERRORS[e.data] || '';
+                    emit('error');
+                },
+            },
+        });
+        return media;
+    }
+
     function loadFailed(what) {
         root.classList.remove('has-media');
         stageMessage('Không tải được ' + what,
@@ -945,7 +1078,7 @@
             syncPlayer(true);
             renderControls();
         });
-        media.addEventListener('error', () => { if (player.key === key) loadFailed(what); });
+        media.addEventListener('error', () => { if (player.key === key) loadFailed(media.errorText || what); });
         // Hết bài/phim: máy chủ phòng báo cả rạp dừng ở cuối, để thanh điều khiển không còn hiện "đang phát".
         media.addEventListener('ended', () => {
             if (player.key === key && isHost() && state.playback && state.playback.playing) {
@@ -1122,17 +1255,20 @@
         picker.reqId++;
         $('#cine-tab-film').setAttribute('aria-selected', String(tab === 'film'));
         $('#cine-tab-music').setAttribute('aria-selected', String(tab === 'music'));
+        $('#cine-tab-video').setAttribute('aria-selected', String(tab === 'video'));
         const locked = tab === 'film' && !filmUnlocked();
         $('#cine-pick-vip').hidden = !locked;
         $('#cine-pick-search').hidden = locked;
-        $('#cine-pick-q').placeholder = tab === 'film' ? 'Tìm theo tên phim' : 'Tìm bài hát hoặc ca sĩ';
+        $('#cine-pick-q').placeholder = tab === 'film' ? 'Tìm theo tên phim'
+            : tab === 'video' ? 'Tìm video hoặc dán link YouTube' : 'Tìm bài hát, ca sĩ hoặc dán link YouTube';
         $('#cine-pick-q').value = '';
         $('#cine-pick-list').textContent = '';
         pickNote('');
         if (tab === 'film' && !locked) searchFilms('');
         else if (tab === 'music') showMusicDefaults();
+        else if (tab === 'video') pickNote('Phim, trailer, MV hay bất kỳ video YouTube nào cho phép nhúng');
         // Trên TV đứng ở tab đang chọn: focus vào ô nhập sẽ bật bàn phím ảo che mất danh sách.
-        if (isTv()) tvFocus($(tab === 'film' ? '#cine-tab-film' : '#cine-tab-music'));
+        if (isTv()) tvFocus($('#cine-tab-' + tab));
         else $(locked ? '#cine-vip-code' : '#cine-pick-q').focus();
     }
 
@@ -1235,21 +1371,41 @@
         startMedia({ type: 'media_set', kind: 'film', slug: slug, ep: ep, title: title, thumb: thumb });
     }
 
-    function trackRow(t, label) {
+    // Nội dung YouTube (nhạc hay video đều vậy) gửi lên server với kind 'music'; máy nào cũng phát bằng trình
+    // phát nhúng của YouTube.
+    function setYouTube(id, t) {
+        startMedia({
+            type: 'media_set',
+            kind: 'music',
+            track: {
+                title: t.title || '',
+                artist: t.artist || '',
+                thumbnail: t.thumbnail || 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg',
+                link: 'https://www.youtube.com/watch?v=' + id,
+            },
+        });
+    }
+
+    function trackRow(t, label, wide) {
         const id = youtubeId(t.link);
         if (!id) return null;
-        return pickRow(t.thumbnail || '', t.title || 'Bài hát', [label, t.artist].filter(Boolean).join(' · '), () => {
-            startMedia({
-                type: 'media_set',
-                kind: 'music',
-                track: {
-                    title: t.title || '',
-                    artist: t.artist || '',
-                    thumbnail: t.thumbnail || '',
-                    link: 'https://www.youtube.com/watch?v=' + id,
-                },
+        return pickRow(t.thumbnail || '', t.title || 'Bài hát', [label, t.artist].filter(Boolean).join(' · '), () => setYouTube(id, t), !wide);
+    }
+
+    // Dán link YouTube vào ô tìm: lấy tên video qua oEmbed rồi chiếu luôn.
+    function pickYouTubeLink(q) {
+        const id = /youtu\.?be/.test(q) ? youtubeId(q) : null;
+        if (!id) return false;
+        const reqId = ++picker.reqId;
+        pickNote('Đang mở video...');
+        fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id))
+            .then((r) => (r.ok ? r.json() : {}))
+            .catch(() => ({}))
+            .then((info) => {
+                if (reqId !== picker.reqId) return;
+                setYouTube(id, { title: info.title || 'Video YouTube', artist: info.author_name || '', thumbnail: info.thumbnail_url || '' });
             });
-        }, true);
+        return true;
     }
 
     function showMusicDefaults() {
@@ -1268,18 +1424,21 @@
     }
 
     function searchMusic(q) {
-        if (!q) { showMusicDefaults(); return; }
+        const video = picker.tab === 'video';
+        if (!q) { if (video) switchTab('video'); else showMusicDefaults(); return; }
+        if (pickYouTubeLink(q)) return;
         const id = ++picker.reqId;
         const list = $('#cine-pick-list');
         list.textContent = '';
         pickNote('Đang tìm "' + q + '"...');
-        fetch('/search?q=' + encodeURIComponent(q) + '&type=music')
+        fetch('/search?q=' + encodeURIComponent(q) + '&type=' + (video ? 'video' : 'music'))
             .then((r) => r.json())
             .then((data) => {
                 if (id !== picker.reqId) return;
-                const rows = (data.recommendations || []).map((t) => trackRow(t, '')).filter(Boolean);
+                const rows = (data.recommendations || []).map((t) => trackRow(t, '', video)).filter(Boolean);
                 rows.forEach((r) => list.appendChild(r));
-                pickNote(rows.length ? rows.length + ' bài tìm được' : (data.blocked ? 'Máy chủ đang bị YouTube chặn, thử lại sau ít phút.' : 'Không tìm thấy bài nào. Thử từ khoá khác.'));
+                pickNote(rows.length ? rows.length + (video ? ' video tìm được' : ' bài tìm được')
+                    : (data.blocked ? 'Máy chủ đang bị YouTube chặn, thử lại sau ít phút.' : 'Không tìm thấy gì. Thử từ khoá khác.'));
             })
             .catch(() => { if (id === picker.reqId) pickNote('Tìm nhạc không thành công. Thử lại sau.'); });
     }
@@ -1962,6 +2121,7 @@
         });
         $('#cine-tab-film').addEventListener('click', () => switchTab('film'));
         $('#cine-tab-music').addEventListener('click', () => switchTab('music'));
+        $('#cine-tab-video').addEventListener('click', () => switchTab('video'));
         $('#cine-pick-search').addEventListener('submit', (e) => {
             e.preventDefault();
             const q = $('#cine-pick-q').value.trim();

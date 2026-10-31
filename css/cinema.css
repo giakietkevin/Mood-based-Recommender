@@ -410,6 +410,9 @@ body.cinema-on { background: #0b0a0b; }
 .cine-screen { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
 .cine-screen video { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; }
 .cine-screen audio { display: none; }
+/* video YouTube nhúng: lấp đầy màn chiếu và không nhận chuột (chủ phòng điều khiển bằng thanh của rạp,
+   kéo để nhìn quanh vẫn chạy) */
+.cine-screen .cine-yt { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 0; pointer-events: none; background: #000; }
 .cine-cover {
     position: absolute;
     left: 0; top: 0; right: 0; bottom: 0;
